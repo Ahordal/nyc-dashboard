@@ -1,3 +1,4 @@
+import DashboardTitle from "./DashboardTitle";
 import FiltersPanel from "./FiltersPanel";
 import StatsPanel from "./StatsPanel";
 import GradeChart from "./GradeChart";
@@ -8,34 +9,42 @@ import PerformanceChart from "./PerformanceChart";
 
 export default function Dashboard() {
   return (
-    <main className="dashboard">
-      <div className="filters">
-        <FiltersPanel />
-      </div>
+    <div className="dashboard-container">
+      <header className="dashboard-header">
+        <div className="dashboard-title">
+          <DashboardTitle />
+        </div>
 
-      <div className="stats">
-        <StatsPanel />
-      </div>
+        <div className="dashboard-filters">
+          <FiltersPanel />
+        </div>
+      </header>
 
-      <div className="grade-chart">
-        <GradeChart />
-      </div>
+      <main className="dashboard">
+        <div className="stats">
+          <StatsPanel />
+        </div>
 
-      <div className="restaurant-list">
-        <RestaurantList />
-      </div>
+        <div className="restaurant-list">
+          <RestaurantList />
+        </div>
 
-      <div className="restaurant-details">
-        <RestaurantDetails />
-      </div>
+        <div className="map-view">
+          <MapView />
+        </div>
 
-      <div className="map-view">
-        <MapView />
-      </div>
+        <div className="grade-chart">
+          <GradeChart />
+        </div>
 
-      <div className="performance-chart">
-        <PerformanceChart />
-      </div>
-    </main>
+        <div className="restaurant-details">
+          <RestaurantDetails />
+        </div>
+
+        <div className="performance-chart">
+          <PerformanceChart />
+        </div>
+      </main>
+    </div>
   );
 }
