@@ -1,5 +1,6 @@
 import DashboardTitle from "./DashboardTitle";
-import FiltersPanel from "./FiltersPanel";
+import GradeFilters from "./GradeFilters";
+import BoroughFilters from "./BoroughFilters";
 import StatsPanel from "./StatsPanel";
 import GradeChart from "./GradeChart";
 import RestaurantList from "./RestaurantList";
@@ -15,8 +16,12 @@ export default function Dashboard() {
           <DashboardTitle />
         </div>
 
-        <div className="dashboard-filters">
-          <FiltersPanel />
+        <div className="dashboard-grade-filters">
+          <GradeFilters />
+        </div>
+
+        <div className="dashboard-borough-filters">
+          <BoroughFilters />
         </div>
       </header>
 
