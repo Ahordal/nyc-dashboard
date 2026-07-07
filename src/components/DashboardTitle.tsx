@@ -3,7 +3,7 @@
 export default function DashboardTitle() {
   return (
     <section className="panel">
-      <h1>NYC: Dining Under the Microscope</h1>
+      <h1>NYC: Dining Under the Microscope: Inspection Trends and Insights</h1>
     </section>
   );
 }

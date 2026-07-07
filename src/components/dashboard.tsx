@@ -8,7 +8,14 @@ import RestaurantDetails from "./RestaurantDetails";
 import MapView from "./MapView";
 import PerformanceChart from "./PerformanceChart";
 
+import { useState } from "react";
+
 export default function Dashboard() {
+  const [filters, setFilters] = useState({
+    grades: [] as string[],
+    boroughs: [] as string[],
+  });
+
   return (
     <div className="dashboard-container">
       <header className="dashboard-header">
@@ -17,11 +24,11 @@ export default function Dashboard() {
         </div>
 
         <div className="dashboard-grade-filters">
-          <GradeFilters />
+          <GradeFilters filters={filters} setFilters={setFilters} />
         </div>
 
         <div className="dashboard-borough-filters">
-          <BoroughFilters />
+          <BoroughFilters filters={filters} setFilters={setFilters} />
         </div>
       </header>
 

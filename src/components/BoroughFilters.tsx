@@ -2,7 +2,26 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCity } from "@fortawesome/free-solid-svg-icons";
 import FilterButton from "./FilterButton";
 
-export default function BoroughFilters() {
+type BoroughFiltersProps = {
+  filters: {
+    grades: string[];
+    boroughs: string[];
+  };
+
+  setFilters: React.Dispatch<
+    React.SetStateAction<{
+      grades: string[];
+      boroughs: string[];
+    }>
+  >;
+};
+
+const boroughs = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"];
+
+export default function BoroughFilters({
+  filters,
+  setFilters,
+}: BoroughFiltersProps) {
   return (
     <section className="panel">
       <div className="filter-group">
@@ -10,14 +29,37 @@ export default function BoroughFilters() {
           <FontAwesomeIcon icon={faCity} />
           <span>Borough</span>
         </span>
-
-        <FilterButton>Clear</FilterButton>
-
-        <FilterButton>Bronx</FilterButton>
-        <FilterButton>Brooklyn</FilterButton>
-        <FilterButton>Manhattan</FilterButton>
-        <FilterButton>Queens</FilterButton>
-        <FilterButton>Staten Island</FilterButton>
+<span className="filter-clear">
+        <FilterButton
+          onClick={() =>
+            setFilters({
+              ...filters,
+              boroughs: [],
+            })
+          }>
+          Clear
+        </FilterButton>
+</span>
+        {boroughs.map((borough) => (
+          <FilterButton
+            key={borough}
+            active={filters.boroughs.includes(borough)}
+            onClick={() => {
+              if (filters.boroughs.includes(borough)) {
+                setFilters({
+                  ...filters,
+                  boroughs: filters.boroughs.filter((b) => b !== borough),
+                });
+              } else {
+                setFilters({
+                  ...filters,
+                  boroughs: [...filters.boroughs, borough],
+                });
+              }
+            }}>
+            {borough}
+          </FilterButton>
+        ))}
       </div>
     </section>
   );
