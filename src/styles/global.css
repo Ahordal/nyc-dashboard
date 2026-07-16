@@ -228,6 +228,7 @@ body {
   font: inherit;
   cursor: pointer;
   white-space: nowrap;
+
 }
 .filter-button.active {
   background-color: #0066cc;

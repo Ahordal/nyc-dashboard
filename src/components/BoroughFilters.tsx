@@ -1,66 +1,24 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// BoroughFilters.tsx
 import { faCity } from "@fortawesome/free-solid-svg-icons";
-import FilterButton from "./FilterButton";
+import FilterSection from "./FiltersSection";
+import type { Filters, SetFilters } from "../types/filters.tsx";
 
-type BoroughFiltersProps = {
-  filters: {
-    grades: string[];
-    boroughs: string[];
-  };
-
-  setFilters: React.Dispatch<
-    React.SetStateAction<{
-      grades: string[];
-      boroughs: string[];
-    }>
-  >;
-};
-
-const boroughs = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"];
+const boroughs = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"] as const;
 
 export default function BoroughFilters({
   filters,
   setFilters,
-}: BoroughFiltersProps) {
+}: {
+  filters: Filters;
+  setFilters: SetFilters;
+}) {
   return (
-    <section className="panel">
-      <div className="filter-group">
-        <span className="filter-label">
-          <FontAwesomeIcon icon={faCity} />
-          <span>Borough</span>
-        </span>
-<span className="filter-clear">
-        <FilterButton
-          onClick={() =>
-            setFilters({
-              ...filters,
-              boroughs: [],
-            })
-          }>
-          Clear
-        </FilterButton>
-</span>
-        {boroughs.map((borough) => (
-          <FilterButton
-            key={borough}
-            active={filters.boroughs.includes(borough)}
-            onClick={() => {
-              if (filters.boroughs.includes(borough)) {
-                setFilters({
-                  ...filters,
-                  boroughs: filters.boroughs.filter((b) => b !== borough),
-                });
-              } else {
-                setFilters({
-                  ...filters,
-                  boroughs: [...filters.boroughs, borough],
-                });
-              }
-            }}>
-            {borough}
-          </FilterButton>
-        ))}
-      </div>
-    </section>
+    <FilterSection
+      label="Borough"
+      icon={faCity}
+      options={boroughs}
+      selected={filters.boroughs}
+      onChange={(boroughs) => setFilters({ ...filters, boroughs })}
+    />
   );
 }

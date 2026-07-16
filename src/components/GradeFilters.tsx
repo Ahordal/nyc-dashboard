@@ -1,66 +1,24 @@
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+// GradeFilters.tsx
 import { faGraduationCap } from "@fortawesome/free-solid-svg-icons";
-import FilterButton from "./FilterButton";
+import FilterSection from "./FiltersSection";
+import type { Filters, SetFilters } from "../types/filters.ts";
 
-const grades = ["A", "B", "C", "N", "Z"];
-
-type GradeFiltersProps = {
-  filters: {
-    grades: string[];
-    boroughs: string[];
-  };
-
-  setFilters: React.Dispatch<
-    React.SetStateAction<{
-      grades: string[];
-      boroughs: string[];
-    }>
-  >;
-};
+const grades = ["A", "B", "C", "N", "Z"] as const;
 
 export default function GradeFilters({
   filters,
   setFilters,
-}: GradeFiltersProps) {
+}: {
+  filters: Filters;
+  setFilters: SetFilters;
+}) {
   return (
-    <section className="panel">
-      <div className="filter-group">
-        <span className="filter-label">
-          <FontAwesomeIcon icon={faGraduationCap} />
-          <span>Grade</span>
-        </span>
-        <span className="filter-clear">
-          <FilterButton
-            onClick={() =>
-              setFilters({
-                ...filters,
-                grades: [],
-              })
-            }>
-            Clear
-          </FilterButton>
-        </span>
-        {grades.map((grade) => (
-          <FilterButton
-            key={grade}
-            active={filters.grades.includes(grade)}
-            onClick={() => {
-              if (filters.grades.includes(grade)) {
-                setFilters({
-                  ...filters,
-                  grades: filters.grades.filter((g) => g !== grade),
-                });
-              } else {
-                setFilters({
-                  ...filters,
-                  grades: [...filters.grades, grade],
-                });
-              }
-            }}>
-            {grade}
-          </FilterButton>
-        ))}
-      </div>
-    </section>
+    <FilterSection
+      label="Grade"
+      icon={faGraduationCap}
+      options={grades}
+      selected={filters.grades}
+      onChange={(grades) => setFilters({ ...filters, grades })}
+    />
   );
 }
