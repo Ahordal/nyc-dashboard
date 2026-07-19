@@ -1,7 +1,7 @@
 // GradeFilters.tsx
 import { faGraduationCap } from "@fortawesome/free-solid-svg-icons";
 import FilterSection from "./FiltersSection";
-import type { Filters, SetFilters } from "../types/filters.ts";
+import type { Filters, SetFilters } from "../types/filters";
 
 const grades = ["A", "B", "C", "N", "Z"] as const;
 

@@ -7,13 +7,14 @@ import RestaurantList from "./RestaurantList";
 import RestaurantDetails from "./RestaurantDetails";
 import MapView from "./MapView";
 import PerformanceChart from "./PerformanceChart";
+import type { Filters } from "../types/filters.ts";
 
 import { useState } from "react";
 
 export default function Dashboard() {
-  const [filters, setFilters] = useState({
-    grades: [] as string[],
-    boroughs: [] as string[],
+  const [filters, setFilters] = useState<Filters>({
+    grades: [],
+    boroughs: [],
   });
 
   return (

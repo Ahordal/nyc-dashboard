@@ -1,7 +1,7 @@
 // BoroughFilters.tsx
 import { faCity } from "@fortawesome/free-solid-svg-icons";
 import FilterSection from "./FiltersSection";
-import type { Filters, SetFilters } from "../types/filters.tsx";
+import type { Filters, SetFilters } from "../types/filters";
 
 const boroughs = ["Bronx", "Brooklyn", "Manhattan", "Queens", "Staten Island"] as const;
 

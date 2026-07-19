@@ -1,4 +1,4 @@
-// FilterSection.tsx
+// FiltersSection.tsx
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import FilterButton from "./FilterButton";
@@ -18,10 +18,12 @@ export default function FilterSection({
   selected,
   onChange,
 }: FilterSectionProps) {
+  const labelId = `filter-label-${label.toLowerCase().replace(/\s+/g, "-")}`;
+
   return (
     <section className="panel">
-      <div className="filter-group">
-        <span className="filter-label">
+      <div className="filter-group" role="group" aria-labelledby={labelId}>
+        <span className="filter-label" id={labelId}>
           <FontAwesomeIcon icon={icon} />
           <span>{label}</span>
         </span>
