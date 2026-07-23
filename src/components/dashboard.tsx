@@ -43,8 +43,8 @@ export default function Dashboard() {
         </div>
 
         <div className="map-view">
-          <MapView />
-        </div>
+  <MapView filters={filters} />
+</div>
 
         <div className="grade-chart">
           <GradeChart />
