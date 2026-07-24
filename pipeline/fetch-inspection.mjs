@@ -132,8 +132,8 @@ const CLOSED_ACTIONS = new Set([
  * be the wrong kind of mistake on a public health tool.
  */
 function deriveCurrentStatus(action) {
-  if (OPEN_ACTIONS.has(action)) return "open";
-  if (CLOSED_ACTIONS.has(action)) return "closed_by_doh";
+  if (OPEN_ACTIONS.has(action)) return "Open";
+  if (CLOSED_ACTIONS.has(action)) return "Closed by DOHMH";
   return "unknown";
 }
 
@@ -371,7 +371,13 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
   const features = [];
 
   for (const [camis, events] of eventsByRestaurant) {
-    const scoredEvents = events.filter((event) => event.primary.score != null);
+    // A placeholder-dated (1900) event should never count as "real,"
+    // even if a data glitch on that row happened to leave a stray
+    // non-null score -- score != null alone isn't a strong enough
+    // signal that an inspection actually happened.
+    const scoredEvents = events.filter(
+      (event) => event.primary.score != null && event.date !== NOT_YET_INSPECTED_DATE
+    );
     if (scoredEvents.length === 0) continue;
 
     const latest = scoredEvents[scoredEvents.length - 1];
@@ -427,7 +433,12 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
         inspection_date: latest.date,
         inspection_type: primary.inspection_type ?? "",
         action: primary.action ?? "",
-        violations,
+        // JSON-stringified, not a raw array -- ArcGIS's GeoJSONLayer
+        // does not support Object/Array as an attribute value (confirmed
+        // in Esri's own docs), so a plain array here would silently fail
+        // to load as a usable attribute at all. Consumers should
+        // JSON.parse() this back into an array when rendering.
+        violations: JSON.stringify(violations),
         // Whether DOHMH currently considers this restaurant open, based
         // on the ACTION text of its most recent SCORED inspection -- see
         // deriveCurrentStatus for how "closed" vs "open" vs "unknown" is
