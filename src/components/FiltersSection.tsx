@@ -1,4 +1,4 @@
-// FiltersSection.tsx
+// FilterSection.tsx
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import FilterButton from "./FilterButton";
@@ -9,6 +9,7 @@ type FilterSectionProps = {
   options: readonly string[];
   selected: string[];
   onChange: (next: string[]) => void;
+  getActiveColor?: (option: string) => string | undefined;
 };
 
 export default function FilterSection({
@@ -17,34 +18,44 @@ export default function FilterSection({
   options,
   selected,
   onChange,
+  getActiveColor,
 }: FilterSectionProps) {
-  const labelId = `filter-label-${label.toLowerCase().replace(/\s+/g, "-")}`;
-
   return (
     <section className="panel">
-      <div className="filter-group" role="group" aria-labelledby={labelId}>
-        <span className="filter-label" id={labelId}>
+      <div className="filter-group">
+        <span className="filter-label">
           <FontAwesomeIcon icon={icon} />
           <span>{label}</span>
         </span>
         <span className="filter-clear">
           <FilterButton onClick={() => onChange([])}>Clear</FilterButton>
         </span>
-        {options.map((option) => (
-          <FilterButton
-            key={option}
-            active={selected.includes(option)}
-            aria-pressed={selected.includes(option)}
-            onClick={() =>
-              onChange(
-                selected.includes(option)
-                  ? selected.filter((o) => o !== option)
-                  : [...selected, option]
-              )
-            }>
-            {option}
-          </FilterButton>
-        ))}
+        {options.map((option) => {
+          const isActive = selected.includes(option);
+          const activeColor = isActive ? getActiveColor?.(option) : undefined;
+
+          return (
+            <FilterButton
+              key={option}
+              active={isActive}
+              aria-pressed={isActive}
+              style={
+                activeColor
+                  ? { backgroundColor: activeColor, borderColor: activeColor }
+                  : undefined
+              }
+              onClick={() =>
+                onChange(
+                  isActive
+                    ? selected.filter((o) => o !== option)
+                    : [...selected, option]
+                )
+              }
+            >
+              {option}
+            </FilterButton>
+          );
+        })}
       </div>
     </section>
   );

@@ -3,6 +3,10 @@ dist/
 # generated types
 .astro/
 
+# Generated output — updated dynamically during Vercel builds (pipeline/fetch-inspection.mjs).
+# DO NOT COMMIT: Excluded from git to prevent adding 27,000+ build-generated JSON/GeoJSON files.
+public/data/
+
 # dependencies
 node_modules/
 
@@ -22,3 +26,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Dashboard TO-DOs
+NYC_Dashboard_TO-DOs.txt

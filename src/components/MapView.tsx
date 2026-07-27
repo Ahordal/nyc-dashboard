@@ -5,6 +5,7 @@ import MapView from "@arcgis/core/views/MapView";
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
 import esriConfig from "@arcgis/core/config";
 import type { Filters } from "../types/filters";
+import type { RestaurantProperties } from "../types/restaurant";
 
 esriConfig.apiKey = import.meta.env.PUBLIC_ARCGIS_API_KEY;
 
@@ -15,7 +16,7 @@ const gradeCategoryExpression = `
   }
 
   var g = $feature.grade;
-  if (g == "Z" || g == "P") {
+  if (g == "Z" || g == "P" || g == "N") {
     return "pending";
   }
 
@@ -39,52 +40,21 @@ const renderer = {
     { value: "B", symbol: { type: "simple-marker", color: "#3CB44B", outline: { color: "#1a1a1a", width: 0.5 }, size: 6 } },
     { value: "C", symbol: { type: "simple-marker", color: "#F58231", outline: { color: "#1a1a1a", width: 0.5 }, size: 6 } },
     { value: "pending", symbol: { type: "simple-marker", color: "#E6007E", outline: { color: "#1a1a1a", width: 0.5 }, size: 6 } },
-    { value: "closed", symbol: { type: "simple-marker", color: "#8B0000", outline: { color: "#FFFFFF", width: 1 }, size: 7 } },
+    { value: "closed", symbol: { type: "simple-marker", color: "#8B0000", outline: { color: "#1a1a1a", width: 1 }, size: 7 } },
   ],
 };
 
-const popupTemplate = {
-  title: "{name}",
-  content: [
-    {
-      type: "fields",
-      fieldInfos: [
-        { fieldName: "cuisine", label: "Cuisine" },
-        { fieldName: "grade", label: "Grade" },
-        { fieldName: "score", label: "Score" },
-        { fieldName: "inspection_date", label: "Inspection Date", format: { dateFormat: "short-date" } },
-        { fieldName: "inspection_type", label: "Inspection Type" },
-        { fieldName: "action", label: "Action" },
-        { fieldName: "current_status", label: "Current Status" },
-        { fieldName: "boro", label: "Borough" },
-        { fieldName: "street", label: "Street" },
-        { fieldName: "building", label: "Building" },
-        { fieldName: "zipcode", label: "Zipcode" },
-        { fieldName: "phone", label: "Phone" },
-      ],
-    },
-  ],
-};
-
-// Mirrors gradeCategoryExpression's logic above, but as SQL rather than
-// Arcade, since definitionExpression is a WHERE clause, not a renderer
-// expression. These two must be kept in sync manually -- if the
-// category logic ever changes, update both places.
-//
-// SQL note: `grade NOT IN ('Z','P')` alone would silently exclude
-// null-grade rows too, since NULL comparisons evaluate to unknown (not
-// true) in SQL -- hence the explicit `grade IS NULL OR` guard.
 const CATEGORY_CLAUSES: Record<string, string> = {
-  A: `current_status <> 'closed_by_doh' AND (grade IS NULL OR grade NOT IN ('Z','P')) AND score <= 13`,
-  B: `current_status <> 'closed_by_doh' AND (grade IS NULL OR grade NOT IN ('Z','P')) AND score BETWEEN 14 AND 27`,
-  C: `current_status <> 'closed_by_doh' AND (grade IS NULL OR grade NOT IN ('Z','P')) AND score >= 28`,
-  Pending: `current_status <> 'closed_by_doh' AND grade IN ('Z','P')`,
+  A: `current_status <> 'closed_by_doh' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score <= 13`,
+  B: `current_status <> 'closed_by_doh' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score BETWEEN 14 AND 27`,
+  C: `current_status <> 'closed_by_doh' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score >= 28`,
+  Pending: `current_status <> 'closed_by_doh' AND grade IN ('Z','P','N')`,
   Closed: `current_status = 'closed_by_doh'`,
 };
 
 type MapViewProps = {
   filters: Filters;
-  onSelectRestaurant?: (camis: string) => void;
+  onSelectRestaurant?: (restaurant: RestaurantProperties) => void;
 };
 
 export default function InspectionMapView({ filters, onSelectRestaurant }: MapViewProps) {
@@ -98,7 +68,6 @@ export default function InspectionMapView({ filters, onSelectRestaurant }: MapVi
       url: "/data/latest-inspections.geojson",
       title: "NYC Restaurant Inspections",
       renderer: renderer as any,
-      popupTemplate,
       outFields: ["*"],
       copyright: "NYC DOHMH | Cartography: Alex Hordal",
     });
@@ -117,26 +86,43 @@ export default function InspectionMapView({ filters, onSelectRestaurant }: MapVi
       constraints: { snapToZoom: false },
     });
 
+    // Set post-construction rather than in the constructor's config
+    // object -- this project's installed @arcgis/core type definitions
+    // reject autoOpenEnabled inside the typed constructor options, even
+    // though it's a real, documented property on the Popup instance
+    // itself. Assigning it directly here sidesteps that typing mismatch.
+    view.popupEnabled = false; 
+
     const clickHandle = view.on("click", async (event) => {
       const response = await view.hitTest(event);
       const graphicHit = response.results.find(
         (result) => "graphic" in result && (result as any).graphic.layer === layer
-      ) as { graphic: { attributes: Record<string, any> } } | undefined;
+      ) as { graphic: { attributes: RestaurantProperties } } | undefined;
 
       if (graphicHit && onSelectRestaurant) {
-        onSelectRestaurant(graphicHit.graphic.attributes.camis);
+        onSelectRestaurant(graphicHit.graphic.attributes);
       }
     });
 
+    // Shows a pointer cursor while hovering a restaurant point, signaling
+    // it's clickable, same way a link would.
+const pointerMoveHandle = view.on("pointer-move", async (event) => {
+  const response = await view.hitTest(event);
+  const isOverFeature = response.results.some(
+    (result) => "graphic" in result && (result as any).graphic.layer === layer
+  );
+  if (view.container) {
+    view.container.style.cursor = isOverFeature ? "pointer" : "default";
+  }
+});
+
     return () => {
       clickHandle.remove();
+      pointerMoveHandle.remove();
       view.destroy();
     };
   }, []);
 
-  // Applies the current grade/borough filters as a definitionExpression.
-  // Grade categories here match the map's actual color buckets (via
-  // CATEGORY_CLAUSES above), not the raw `grade` field.
   useEffect(() => {
     const layer = layerRef.current;
     if (!layer) return;

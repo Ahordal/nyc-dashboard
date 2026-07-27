@@ -7,7 +7,8 @@ import RestaurantList from "./RestaurantList";
 import RestaurantDetails from "./RestaurantDetails";
 import MapView from "./MapView";
 import PerformanceChart from "./PerformanceChart";
-import type { Filters } from "../types/filters.ts";
+import type { Filters } from "../types/filters";
+import type { RestaurantProperties } from "../types/restaurant";
 
 import { useState } from "react";
 
@@ -16,6 +17,9 @@ export default function Dashboard() {
     grades: [],
     boroughs: [],
   });
+  const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantProperties | null>(
+    null
+  );
 
   return (
     <div className="dashboard-container">
@@ -43,15 +47,15 @@ export default function Dashboard() {
         </div>
 
         <div className="map-view">
-  <MapView filters={filters} />
-</div>
+          <MapView filters={filters} onSelectRestaurant={setSelectedRestaurant} />
+        </div>
 
         <div className="grade-chart">
           <GradeChart />
         </div>
 
         <div className="restaurant-details">
-          <RestaurantDetails />
+          <RestaurantDetails restaurant={selectedRestaurant} />
         </div>
 
         <div className="performance-chart">

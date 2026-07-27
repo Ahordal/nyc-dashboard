@@ -1,7 +1,7 @@
 // fetch-inspections.mjs
 //
 // Fetches the full NYC DOHMH Restaurant Inspection Results dataset from the
-// Socrata (SODA) API, then produces two output files:
+// Socrata (SODA) API, then produces three output files:
 //
 //   1. public/data/latest-inspections.geojson
 //      One point feature per restaurant (CAMIS), representing that
@@ -34,6 +34,22 @@
 //      requires valid coordinates, so a restaurant with bad/missing
 //      lat-long data could have a history file here without appearing
 //      on the map.
+//
+//   3. public/data/violation-codes.json
+//      A single small lookup object mapping each violation `code` (e.g.
+//      "06B") to its full description text. There are only ~115 distinct
+//      codes across the whole dataset, but tens of thousands of
+//      inspection events cite them -- embedding the full description on
+//      every single violation entry in the two files above means the
+//      same ~115 strings get duplicated thousands of times over. Instead,
+//      violations in both other output files carry only `code` and
+//      `critical_flag`; consumers look up the description here by code.
+//      Cuts the combined output size roughly in half.
+//
+// public/data/ is regenerated from scratch on every run and is NOT meant
+// to be committed to Git -- see the project README for how this fits into
+// the Vercel build step vs. the scheduled GitHub Action that pings a
+// Vercel Deploy Hook to keep data fresh without any code changes.
 //
 // Run with: node fetch-inspections.mjs
 // Requires Node 18+ (for built-in fetch).
@@ -248,6 +264,23 @@ async function fetchAllRows() {
 }
 
 /**
+ * Builds the code -> description lookup table written to
+ * violation-codes.json. Scans the raw rows once, keeping the first
+ * description seen for each code (in practice the text for a given code
+ * is consistent across the dataset, so "first seen" and "only seen" are
+ * the same thing here).
+ */
+export function buildViolationCodeLookup(rows) {
+  const lookup = {};
+  for (const row of rows) {
+    if (row.violation_code && !(row.violation_code in lookup)) {
+      lookup[row.violation_code] = row.violation_description ?? "";
+    }
+  }
+  return lookup;
+}
+
+/**
  * Groups raw inspection rows by restaurant (CAMIS). Because rows were
  * fetched in camis, inspection_date order, each group's records are
  * already sorted oldest -> newest.
@@ -313,11 +346,14 @@ export function groupRowsByInspectionDate(camis, records) {
       // 0) avoids misclassifying a graded restaurant as "no grade data"
       // just because of which row happened to come first.
       primary: rowsForDate.find((r) => r.score != null) ?? rowsForDate[0],
+      // No `description` field here -- the same ~115 codes repeat across
+      // tens of thousands of events, so the full text lives once in
+      // violation-codes.json instead of being duplicated on every
+      // violation entry. Consumers look up code -> description there.
       violations: rowsForDate
         .filter((r) => r.violation_code)
         .map((r) => ({
           code: r.violation_code,
-          description: r.violation_description ?? "",
           critical_flag: r.critical_flag ?? "",
         })),
     });
@@ -396,7 +432,11 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
       type: "Feature",
       geometry: {
         type: "Point",
-        coordinates: [lon, lat],
+        // Rounded to 6 decimal places (~11cm precision) -- the source
+        // data carries ~12 decimal places, which is sub-millimeter
+        // precision that's meaningless for a restaurant map and just
+        // bloats every coordinate pair for no benefit.
+        coordinates: [Math.round(lon * 1e6) / 1e6, Math.round(lat * 1e6) / 1e6],
       },
       properties: {
         id: latest.id,
@@ -545,13 +585,18 @@ async function main() {
     throw new Error(`Failed while fetching inspections: ${err.message}`, { cause: err });
   }
 
-  let latestGeoJSON, history;
+  let latestGeoJSON, history, violationCodes;
   try {
     const grouped = groupByCamis(rows);
     const eventsByRestaurant = buildEventsByRestaurant(grouped);
     const generatedAt = new Date().toISOString();
     latestGeoJSON = buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt);
     history = buildInspectionHistory(eventsByRestaurant, generatedAt);
+    // Built from the raw rows directly (not the grouped events), since
+    // every code's description needs to be captured once regardless of
+    // which restaurants/events happen to survive the scored/coordinate
+    // filtering above.
+    violationCodes = buildViolationCodeLookup(rows);
   } catch (err) {
     throw new Error(`Failed while building output data: ${err.message}`, { cause: err });
   }
@@ -565,6 +610,11 @@ async function main() {
         JSON.stringify(latestGeoJSON),
         "utf-8"
       ),
+      writeFile(
+        path.join(OUTPUT_DIR, "violation-codes.json"),
+        JSON.stringify(violationCodes),
+        "utf-8"
+      ),
       writeHistoryFiles(history.restaurants),
     ]);
   } catch (err) {
@@ -573,6 +623,9 @@ async function main() {
 
   console.log(
     `Wrote ${latestGeoJSON.features.length} restaurants to latest-inspections.geojson`
+  );
+  console.log(
+    `Wrote ${Object.keys(violationCodes).length} codes to violation-codes.json`
   );
   console.log(
     `Wrote ${Object.keys(history.restaurants).length} individual history files to ${HISTORY_DIR}`

@@ -7,7 +7,7 @@
   },
   "scripts": {
     "dev": "astro dev",
-    "build": "astro build",
+    "build": "node pipeline/fetch-inspection.mjs && astro build",
     "preview": "astro preview",
     "astro": "astro"
   },

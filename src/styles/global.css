@@ -45,7 +45,9 @@ body,
   width: 100%;
   height: 100%;
 }
-
+html {
+  scrollbar-color: #4a4a4a #2b2b2b;
+}
 body {
   background-color: var(--bg);
   color: var(--text-body);
@@ -138,7 +140,13 @@ body {
 
 .map-view {
   grid-area: map;
+  
 }
+.map-view :focus,
+.map-view :focus-visible {
+  outline: none;
+}
+
 
 .performance-chart {
   grid-area: performance;
@@ -164,7 +172,7 @@ body {
   font-size: 1.25rem;
 }
 
-/*///////////////////////////////////////////// HEADER PANELS //////////////////////////////////////////////*/
+/*///////////////////////////////////////////// PANELS //////////////////////////////////////////////*/
 
 .dashboard-title .panel,
 .dashboard-grade-filters .panel,
@@ -185,15 +193,97 @@ body {
   justify-self: start;
 }
 
+/*///////////////////////////////////////////// PANEL HEADER //////////////////////////////////////////////*/
+
+.panel-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-s);
+  background-color: #252525;
+  padding-top:.25rem;
+  padding-bottom:.25rem;
+  
+}
+
+.panel-header-title {
+  
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  font-weight:700;
+  padding: 0.2rem var(--space-s);
+ 
+}
+
+.panel-header-info-button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem var(--space-s);
+  font-size: 1rem;
+}
+
+.panel-header-info-button:hover {
+  color: var(--text-heading);
+}
+/*///////////////////////////////////////////// PANEL HEADER INFORMATION POPUP //////////////////////////////////////////////*/
+.panel-header-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 10;  
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: var(--space-s);
+  font-size: 0.9em;
+  line-height: 1.6;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+
+.panel-header-popup ul {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+}
+
+.info-popup-section {
+  margin-bottom: var(--space-s);
+}
+
+.info-popup-section:last-child {
+  margin-bottom: 0;
+}
+
+
+.section-header {
+  background-color: var(--bg-alt);
+  padding: 0.4rem var(--space-s);
+  margin-top: var(--space-s);
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+
+
+.panel-scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+
 /*///////////////////////////////////////////// FILTER COMPONENTS //////////////////////////////////////////////*/
 
 .filter-group {
   display: flex;
   align-items: center;
   justify-content: center;
-
   gap: var(--space-xs);
-
   width: 100%;
   height: 100%;
 }
@@ -201,14 +291,10 @@ body {
 .filter-label {
   display: flex;
   align-items: center;
-
   margin-right: var(--space-xs);
-
   font-size: 0.875rem;
   font-weight: 600;
-
   color: var(--text-heading);
-
   white-space: nowrap;
 }
 
@@ -238,3 +324,184 @@ body {
 .filter-clear {
   margin-right: var(--space-s);
 }
+/*///////////////////////////////////////////// RESTAURANT DETAILS //////////////////////////////////////////////*/
+
+.details-empty {
+  color: var(--text-muted);
+  margin-top: var(--space-s);
+}
+
+.details-name {
+  text-align: center;
+  font-size: 1.5rem;
+  margin: var(--space-s) 0;
+}
+
+.details-grade-score {
+  display: flex;
+  justify-content: space-around;
+  text-align: center;
+  margin-bottom: var(--space-s);
+}
+
+.details-label {
+  display: block;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.details-value {
+  display: block;
+  font-size: 2rem;
+  font-weight: 700;
+}
+
+
+.restaurant-details-panel {
+  display: flex;
+  flex-direction: column;
+}
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+  margin-bottom: var(--space-xs);
+}
+.details-table td {
+  padding: 0.4rem var(--space-xs);
+}
+
+.details-table td:first-child {
+  color: var(--text-muted);
+  width: 40%;
+}
+
+.details-table td:last-child {
+  color: var(--text-body);
+}
+
+.details-table tr:nth-child(even) {
+  background-color:#292929;
+}
+.details-stale-note {
+  font-size: 0.85em;
+  color: #e6b800;
+  
+}
+
+.details-pending-note {
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  
+  margin-top: -0.5rem;
+  margin-bottom: var(--space-s);
+}
+
+.details-loading {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: 0.85rem;
+  padding: var(--space-xs) 0;
+}
+/*///////////////////////////////////////////// RESTAURANT VIOLATIONS //////////////////////////////////////////////*/
+.violations-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.violations-list li {
+  background-color:#292929;
+  border-left: 3px solid var(--border-panel);
+  padding: var(--space-xs);
+  font-size: 0.8125rem;
+}
+
+.violation-code {
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+.violation-tag {
+    display: inline-block;    
+    padding: 0.05rem 0.3rem;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border-radius: 2px;
+  }
+/*///////////////////////////////////////////// RESTAURANT INSPECTION HISTORY //////////////////////////////////////////////*/
+
+.inspection-history-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.inspection-history-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.4rem var(--space-xs);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.inspection-history-list li:nth-child(even) {
+  background-color: #292929;
+}
+
+.inspection-history-list li:hover {
+  background-color: var(--border-panel);
+}
+
+.inspection-row-selected {
+  outline: 1px solid #0066cc;
+}
+
+.inspection-row-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.inspection-row-date {
+  flex: 1;
+}
+
+.inspection-row-grade {
+  font-weight: 700;
+  width: 2rem;
+  text-align: center;
+}
+
+.inspection-row-score {
+  width: 2rem;
+  text-align: right;
+  color: var(--text-muted);
+}
+/*///////////////////////////////////////////// RESTAURANT STATUS //////////////////////////////////////////////*/
+.status-flag {
+  margin-left: -0.1rem;
+}
+
+
+.status-open {
+  background-color: #3cb44b;
+  color: #ffffff;
+}
+
+.status-closed_by_doh {
+  background-color: #8b0000;
+  color: #ffffff;
+}
+
+.status-unknown {
+  background-color: var(--border-panel);
+  color: var(--text-muted);
+}
+
