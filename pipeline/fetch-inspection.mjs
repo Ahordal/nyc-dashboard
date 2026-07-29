@@ -146,11 +146,17 @@ const CLOSED_ACTIONS = new Set([
  * one of the known values falls through to "unknown" rather than
  * guessing -- silently assuming "open" for an unrecognized value would
  * be the wrong kind of mistake on a public health tool.
+ *
+ * Returns { code, label }: `code` is a stable machine-readable value
+ * ("open" / "closed" / "unknown") meant for filtering and rendering
+ * logic, while `label` is the human-readable display text. Consumers
+ * should always match on `code`, never on `label` -- the label is free
+ * to change wording without that being a breaking change.
  */
 function deriveCurrentStatus(action) {
-  if (OPEN_ACTIONS.has(action)) return "Open";
-  if (CLOSED_ACTIONS.has(action)) return "Closed by DOHMH";
-  return "unknown";
+  if (OPEN_ACTIONS.has(action)) return { code: "open", label: "Open" };
+  if (CLOSED_ACTIONS.has(action)) return { code: "closed", label: "Closed by DOHMH" };
+  return { code: "unknown", label: "Unknown" };
 }
 
 export function normalizeBoro(rawBoro) {
@@ -428,6 +434,8 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
     // doesn't silently produce a real-looking point in the wrong place.
     if (Number.isNaN(lat) || Number.isNaN(lon) || !isWithinNYC(lat, lon)) continue;
 
+    const status = deriveCurrentStatus(primary.action);
+
     features.push({
       type: "Feature",
       geometry: {
@@ -482,8 +490,11 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
         // Whether DOHMH currently considers this restaurant open, based
         // on the ACTION text of its most recent SCORED inspection -- see
         // deriveCurrentStatus for how "closed" vs "open" vs "unknown" is
-        // decided.
-        current_status: deriveCurrentStatus(primary.action),
+        // decided. Consumers (map filters, renderer, popups) should match
+        // on current_status_code, not current_status_label -- the label
+        // is display text and can change wording without notice.
+        current_status_code: status.code,
+        current_status_label: status.label,
         record_date: primary.record_date ?? null,
         community_board: primary.community_board ?? "",
         council_district: primary.council_district ?? "",
