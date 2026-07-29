@@ -50,13 +50,6 @@
 // to be committed to Git -- see the project README for how this fits into
 // the Vercel build step vs. the scheduled GitHub Action that pings a
 // Vercel Deploy Hook to keep data fresh without any code changes.
-//
-// Run with: node fetch-inspections.mjs
-// Requires Node 18+ (for built-in fetch).
-//
-// Optional: set a SOCRATA_APP_TOKEN environment variable to get a higher,
-// dedicated rate limit from Socrata instead of the shared unauthenticated
-// pool. Sign up for a free token at https://data.cityofnewyork.us/profile/app_tokens
 
 import { writeFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
@@ -68,10 +61,12 @@ const PAGE_SIZE = 50000; // Socrata's max recommended page size
 // directory -- so this always resolves to <repo root>/public/data,
 // whether the script is run from the repo root, from inside pipeline/,
 // or (as in the GitHub Action) with pipeline/ set as the working directory.
+
 const OUTPUT_DIR = path.resolve(import.meta.dirname, "../public/data");
 // Per-restaurant history files live here (one small file per CAMIS)
 // instead of one giant inspection-history.json, so a visitor only ever
 // downloads the one restaurant's history they actually click into.
+
 export const HISTORY_DIR = path.join(OUTPUT_DIR, "history");
 
 const REQUEST_HEADERS = process.env.SOCRATA_APP_TOKEN
@@ -83,7 +78,7 @@ const MAX_RETRIES = 4;
 const BASE_RETRY_DELAY_MS = 1000; // 1s, then 2s, then 4s, then 8s
 
 // The placeholder date Socrata uses for restaurants that haven't been
-// inspected yet. We exclude these from "most recent inspection" logic
+// inspected yet. These are excluded from the "most recent inspection" logic
 // but they could still appear in the raw data. Comparisons below rely on
 // this being a fixed-format ISO-8601 string, same shape as inspection_date
 // values returned by the API, so plain string comparison stays valid.
@@ -110,7 +105,7 @@ function isWithinNYC(lat, lon) {
 }
 
 // The API returns BORO as a title-case string already ("Brooklyn", "Bronx"),
-// matching the app's BoroughFilters values directly. This map is kept as a
+// matching BoroughFilters values directly. This map is kept as a
 // safety net in case that casing ever drifts, normalizing whatever comes
 // back to the exact values the UI expects.
 const BORO_DISPLAY_NAMES = {
@@ -127,9 +122,7 @@ const BORO_DISPLAY_NAMES = {
 // is "re-closed," they're currently closed; if it's "re-opened" (or just a
 // normal inspection with or without violations), they're open. Anything
 // that doesn't exactly match one of these known values falls through to
-// "unknown" rather than guessing -- silently assuming "open" for an
-// unrecognized value would be the wrong kind of mistake on a public
-// health tool.
+// "unknown" rather than guessing.
 const OPEN_ACTIONS = new Set([
   "Violations were cited in the following area(s).",
   "No violations were recorded at the time of this inspection.",
@@ -155,7 +148,8 @@ const CLOSED_ACTIONS = new Set([
  */
 function deriveCurrentStatus(action) {
   if (OPEN_ACTIONS.has(action)) return { code: "open", label: "Open" };
-  if (CLOSED_ACTIONS.has(action)) return { code: "closed", label: "Closed by DOHMH" };
+  if (CLOSED_ACTIONS.has(action))
+    return { code: "closed", label: "Closed by DOHMH" };
   return { code: "unknown", label: "Unknown" };
 }
 
@@ -170,9 +164,9 @@ function sleep(ms) {
 }
 
 /**
- * Fetches a single URL with retry + exponential backoff for transient
- * server errors. Throws immediately on non-retryable failures (e.g. a
- * malformed request), and after MAX_RETRIES attempts on persistent ones.
+ * Fetches a URL with retry and exponential backoff.
+ * Retries transient network failures and retryable HTTP responses,
+ * throwing immediately on non-retryable errors.
  */
 async function fetchWithRetry(url, attempt = 1) {
   let response;
@@ -181,10 +175,11 @@ async function fetchWithRetry(url, attempt = 1) {
     response = await fetch(url, { headers: REQUEST_HEADERS });
   } catch (networkErr) {
     // Network-level failure (DNS, connection reset, etc) -- also retryable.
+
     if (attempt > MAX_RETRIES) throw networkErr;
     const delay = BASE_RETRY_DELAY_MS * 2 ** (attempt - 1);
     console.warn(
-      `Network error on attempt ${attempt}, retrying in ${delay}ms: ${networkErr.message}`
+      `Network error on attempt ${attempt}, retrying in ${delay}ms: ${networkErr.message}`,
     );
     await sleep(delay);
     return fetchWithRetry(url, attempt + 1);
@@ -195,25 +190,22 @@ async function fetchWithRetry(url, attempt = 1) {
   const isRetryable = [429, 500, 502, 503, 504].includes(response.status);
   if (!isRetryable || attempt > MAX_RETRIES) {
     throw new Error(
-      `Socrata request failed: ${response.status} ${response.statusText}`
+      `Socrata request failed: ${response.status} ${response.statusText}`,
     );
   }
 
   const delay = BASE_RETRY_DELAY_MS * 2 ** (attempt - 1);
   console.warn(
-    `Got ${response.status} on attempt ${attempt}, retrying in ${delay}ms...`
+    `Got ${response.status} on attempt ${attempt}, retrying in ${delay}ms...`,
   );
   await sleep(delay);
   return fetchWithRetry(url, attempt + 1);
 }
 
-// Only these fields are ever read anywhere in this script (see
-// buildLatestInspectionsGeoJSON/buildInspectionHistory). Passing them as
-// a $select clause tells Socrata to drop everything else -- the
-// @computed_region_* spatial-join columns, the redundant `location`
-// Point object that duplicates latitude/longitude -- before it ever
-// leaves their server, shrinking the actual payload downloaded on every
-// page rather than filtering it out locally after the fact.
+// Request only the fields this pipeline actually uses. Using Socrata's
+// $select clause trims unused columns (such as @computed_region_* and
+// the redundant `location` object) server-side, reducing the amount of
+// data downloaded on each request.
 const SELECT_FIELDS = [
   "camis",
   "dba",
@@ -240,14 +232,13 @@ const SELECT_FIELDS = [
 ].join(",");
 
 /**
- * Fetches every row of the dataset via paginated SODA API requests.
- * Socrata returns fewer than PAGE_SIZE rows on the final page, which is
- * how we know to stop. Ordering by camis, inspection_date means each
- * restaurant's records already arrive in chronological order, so later
- * steps don't need to re-sort them from scratch. Note this dataset returns
- * one row PER VIOLATION, so several rows can legitimately share the same
- * camis + inspection_date -- that's handled explicitly below, not assumed
- * away by the ordering.
+ * Fetches every row from the dataset using paginated SODA API requests.
+ *
+ * Pagination ends when Socrata returns fewer than PAGE_SIZE rows. Results
+ * are requested in camis, inspection_date order, so each restaurant's
+ * records arrive chronologically. Because the dataset contains one row per
+ * violation, multiple rows may legitimately share the same restaurant and
+ * inspection date.
  */
 async function fetchAllRows() {
   const rows = [];
@@ -270,11 +261,12 @@ async function fetchAllRows() {
 }
 
 /**
- * Builds the code -> description lookup table written to
- * violation-codes.json. Scans the raw rows once, keeping the first
- * description seen for each code (in practice the text for a given code
- * is consistent across the dataset, so "first seen" and "only seen" are
- * the same thing here).
+ * Builds the code-to-description lookup written to
+ * violation-codes.json.
+ *
+ * The first description encountered for each violation code is retained.
+ * In practice, violation descriptions are consistent across the dataset,
+ * so each code maps to a single description.
  */
 export function buildViolationCodeLookup(rows) {
   const lookup = {};
@@ -306,28 +298,18 @@ export function groupByCamis(rows) {
 }
 
 /**
- * Groups one restaurant's raw rows into distinct inspection EVENTS --
- * one entry per unique inspection_date, with every violation row from
- * that date rolled up into a single `violations` array. Both
- * buildLatestInspectionsGeoJSON and buildInspectionHistory need this same
- * grouping (one just wants the last entry, the other wants all of them),
- * so it's factored out here rather than duplicated.
+ * Groups one restaurant's raw inspection rows into inspection events.
  *
- * Returns an array of { id, date, primary, violations }, in chronological
- * order (oldest first) -- relying on the fact that `records` already
- * arrives sorted, per groupByCamis's contract.
+ * Each event represents a unique inspection date, combining all
+ * violation rows from that inspection into a single `violations` array.
+ * Returns the events in chronological order (oldest first).
  *
- * `id` is a stable `${camis}-${date}` key (date trimmed to YYYY-MM-DD,
- * since inspection_date is always midnight and colons don't belong in a
- * URL path segment). It's the same string every time the pipeline runs,
- * for any inspection that's already happened -- camis never changes, and
- * a past inspection's date doesn't change either -- so it's safe to use
- * for stable selection state now, and for deep links/sharing later if
- * that's ever added.
+ * This grouping is shared by both buildLatestInspectionsGeoJSON() and
+ * buildInspectionHistory() to avoid duplicating the same logic.
  */
 export function groupRowsByInspectionDate(camis, records) {
   const inspected = records.filter(
-    (r) => r.inspection_date && r.inspection_date !== NOT_YET_INSPECTED_DATE
+    (r) => r.inspection_date && r.inspection_date !== NOT_YET_INSPECTED_DATE,
   );
   const candidates = inspected.length > 0 ? inspected : records;
 
@@ -340,22 +322,25 @@ export function groupRowsByInspectionDate(camis, records) {
   const events = [];
   for (const [date, rowsForDate] of byDate) {
     events.push({
+      // Stable inspection identifier used throughout the application.
+      // CAMIS never changes, and past inspection dates are immutable, so this
+      // remains consistent across pipeline runs and is suitable for selection
+      // state and future deep-linking.
       id: `${camis}-${date.slice(0, 10)}`,
       date,
-      // Restaurant/inspection-level fields (name, address, grade, score,
-      // etc.) are SUPPOSED to be identical across every row sharing a
-      // date -- but the dataset's own documentation warns of "illogical
-      // values" from data entry/transfer errors, so it's possible one
-      // sibling row has a null grade/score due to a glitch while another
-      // row from the same inspection has the real value. Preferring a
-      // row that actually has a score (rather than blindly taking index
-      // 0) avoids misclassifying a graded restaurant as "no grade data"
-      // just because of which row happened to come first.
+
+      // Fields such as name, address, grade, and score should be identical
+      // across every row for a given inspection. However, the dataset's
+      // documentation warns of occasional data-quality issues. Prefer a row
+      // that actually has a score rather than blindly taking the first one.
+      // This avoids treating a graded inspection as "no grade data" simply
+      // because the first sibling row happened to contain a null score.
       primary: rowsForDate.find((r) => r.score != null) ?? rowsForDate[0],
-      // No `description` field here -- the same ~115 codes repeat across
-      // tens of thousands of events, so the full text lives once in
-      // violation-codes.json instead of being duplicated on every
-      // violation entry. Consumers look up code -> description there.
+
+      // No `description` field here -- the same ~115 violation codes repeat
+      // across tens of thousands of events, so the full text lives once in
+      // violation-codes.json instead of being duplicated on every violation.
+      // Consumers look up the description by code.
       violations: rowsForDate
         .filter((r) => r.violation_code)
         .map((r) => ({
@@ -365,20 +350,20 @@ export function groupRowsByInspectionDate(camis, records) {
     });
   }
 
-  // byDate iteration order follows insertion order, which follows the
-  // pre-sorted input -- but sort explicitly by date string anyway so this
-  // helper's correctness doesn't silently depend on that upstream ordering
-  // being preserved if fetchAllRows' $order clause ever changes.
+  // Map iteration preserves insertion order, which currently reflects the
+  // pre-sorted input. Sort explicitly by date anyway so this helper doesn't
+  // silently depend on fetchAllRows() continuing to return ordered records.
   events.sort((a, b) => (a.date > b.date ? 1 : a.date < b.date ? -1 : 0));
 
   return events;
 }
 
 /**
- * Computes groupRowsByInspectionDate ONCE per restaurant, rather than
- * having both buildLatestInspectionsGeoJSON and buildInspectionHistory
- * independently re-derive it for every restaurant. Returns a
- * Map<camis, events[]> that both builders consume directly.
+ * Precomputes each restaurant's grouped inspection events so both
+ * buildLatestInspectionsGeoJSON() and buildInspectionHistory() can reuse
+ * the same result instead of deriving it independently.
+ *
+ * Returns a Map<camis, events[]>.
  */
 export function buildEventsByRestaurant(grouped) {
   const eventsByRestaurant = new Map();
@@ -391,34 +376,30 @@ export function buildEventsByRestaurant(grouped) {
 /**
  * Builds the most-recent-per-restaurant GeoJSON FeatureCollection.
  *
- * "Most recent" here means the most recent inspection EVENT that
- * actually has a score -- not just whichever event is chronologically
- * last. A restaurant's truly-latest visit might be a non-substantive
- * check (smoke-free compliance, an administrative visit) that produces
- * neither a grade nor a score; in that case we fall back to their last
- * real graded/scored inspection instead of showing stale placeholder
- * data. A restaurant with NO scored inspection anywhere in its history
- * (including one that's never been inspected at all -- see
- * NOT_YET_INSPECTED_DATE) is excluded from this output entirely, rather
- * than appearing as a "no data" placeholder feature.
+ * "Most recent" means the most recent inspection event with a score, not
+ * simply the chronologically latest event. Administrative visits and
+ * other non-substantive inspections may not produce a grade or score, so
+ * the most recent scored inspection is used instead.
  *
- * A single inspection can produce several rows (one per violation cited)
- * that share the same camis + inspection_date. Rather than treating one
- * arbitrary row as "the" inspection, groupRowsByInspectionDate groups by
- * inspection_date first and rolls up every violation from that date into
- * a `violations` array on the feature -- so no violation is silently
- * dropped or overwritten.
+ * Restaurants with no scored inspection anywhere in their history
+ * (including those represented only by NOT_YET_INSPECTED_DATE) are
+ * omitted from the output rather than emitted as placeholder features.
+ *
+ * Because the dataset contains one row per violation, each inspection is
+ * first grouped by inspection_date so all violations from that inspection
+ * are rolled into a single `violations` array on the resulting feature.
  */
 export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
   const features = [];
 
   for (const [camis, events] of eventsByRestaurant) {
-    // A placeholder-dated (1900) event should never count as "real,"
-    // even if a data glitch on that row happened to leave a stray
-    // non-null score -- score != null alone isn't a strong enough
-    // signal that an inspection actually happened.
+    // A placeholder-dated (1900) event should never count as a real
+    // inspection, even if a data glitch left a non-null score on that row.
+    // `score != null` alone isn't sufficient evidence that an inspection
+    // actually occurred.
     const scoredEvents = events.filter(
-      (event) => event.primary.score != null && event.date !== NOT_YET_INSPECTED_DATE
+      (event) =>
+        event.primary.score != null && event.date !== NOT_YET_INSPECTED_DATE,
     );
     if (scoredEvents.length === 0) continue;
 
@@ -428,11 +409,13 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
     const lat = parseFloat(primary.latitude);
     const lon = parseFloat(primary.longitude);
 
-    // Skip records with no usable coordinates -- can't place them on the
-    // map. Beyond just NaN, also reject anything outside a loose NYC
-    // bounding box (e.g. (0, 0), swapped lat/lon) so a garbage value
-    // doesn't silently produce a real-looking point in the wrong place.
-    if (Number.isNaN(lat) || Number.isNaN(lon) || !isWithinNYC(lat, lon)) continue;
+    // Skip records with unusable coordinates -- they can't be placed on the
+    // map. Beyond rejecting NaN values, also reject anything outside a loose
+    // NYC bounding box (e.g. (0, 0) or swapped latitude/longitude) so bad
+    // data doesn't silently produce plausible-looking points in the wrong
+    // place.
+    if (Number.isNaN(lat) || Number.isNaN(lon) || !isWithinNYC(lat, lon))
+      continue;
 
     const status = deriveCurrentStatus(primary.action);
 
@@ -440,10 +423,9 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
       type: "Feature",
       geometry: {
         type: "Point",
-        // Rounded to 6 decimal places (~11cm precision) -- the source
-        // data carries ~12 decimal places, which is sub-millimeter
-        // precision that's meaningless for a restaurant map and just
-        // bloats every coordinate pair for no benefit.
+        // Rounded to 6 decimal places (~11 cm precision). The source data
+        // carries ~12 decimal places, but sub-millimeter precision is
+        // meaningless for a restaurant map and only increases file size.
         coordinates: [Math.round(lon * 1e6) / 1e6, Math.round(lat * 1e6) / 1e6],
       },
       properties: {
@@ -456,43 +438,37 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
         zipcode: primary.zipcode ?? "",
         phone: primary.phone ?? "",
         cuisine: primary.cuisine_description ?? "",
-        // Left as-is rather than defaulting to "N" -- the raw dataset
-        // already has an official "N" (Not Yet Graded) grade value, which
-        // is a different thing from a genuinely blank/missing grade field
-        // on a real inspection ("no grade data available"). Collapsing
-        // both into "N" would lose a distinction the reference dashboard
-        // itself keeps separate in its KPI panel. Downstream UI should
-        // treat grade == null as its own "no grade data" bucket, distinct
-        // from grade === "N".
-        //
-        // Uses || rather than ?? deliberately: Socrata's docs say null
-        // fields are omitted from the response (so primary.grade would be
-        // undefined), but this also normalizes the edge case of the key
-        // being present with an empty string ("grade":"") to null --
-        // there's no legitimate real grade value that's falsy, so this is
-        // a safe defensive net against that data-quality edge case, not
-        // just the documented one.
+        // Leave missing grades as null rather than defaulting to "N". The raw
+        // dataset already uses "N" (Not Yet Graded) as an official grade, which
+        // is distinct from a genuinely missing grade on an inspection.
+        // Downstream UI should treat grade == null as its own "no grade data"
+        // state rather than collapsing it into "N".
+
+        // Use || rather than ?? deliberately. Socrata documents that null fields
+        // are omitted from the response (yielding undefined), but || also
+        // normalizes the defensive edge case of an empty string ("grade": "") to
+        // null. Since no valid grade is falsy, this is a safe normalization.
+
         grade: primary.grade || null,
         grade_date: primary.grade_date ?? null,
-        // Guaranteed non-null here -- every feature that reaches this
-        // point came from scoredEvents, which already filtered on
-        // score != null above.
+        // Guaranteed non-null here. Every feature reaching this point came from
+        // scoredEvents, which already filtered on score != null.
         score: Number(primary.score),
         inspection_date: latest.date,
         inspection_type: primary.inspection_type ?? "",
         action: primary.action ?? "",
-        // JSON-stringified, not a raw array -- ArcGIS's GeoJSONLayer
-        // does not support Object/Array as an attribute value (confirmed
-        // in Esri's own docs), so a plain array here would silently fail
-        // to load as a usable attribute at all. Consumers should
+        // JSON-stringified rather than stored as a raw array. ArcGIS's
+        // GeoJSONLayer doesn't support Object/Array attribute values, so a plain
+        // array wouldn't load as a usable feature attribute. Consumers should
         // JSON.parse() this back into an array when rendering.
         violations: JSON.stringify(violations),
-        // Whether DOHMH currently considers this restaurant open, based
-        // on the ACTION text of its most recent SCORED inspection -- see
-        // deriveCurrentStatus for how "closed" vs "open" vs "unknown" is
-        // decided. Consumers (map filters, renderer, popups) should match
-        // on current_status_code, not current_status_label -- the label
-        // is display text and can change wording without notice.
+        // Whether DOHMH currently considers the restaurant open, based on the
+        // ACTION text of its most recent scored inspection (see
+        // deriveCurrentStatus()).
+        //
+        // Consumers should match on current_status_code, not
+        // current_status_label. The label is display text and may change without
+        // affecting the underlying status.
         current_status_code: status.code,
         current_status_label: status.label,
         record_date: primary.record_date ?? null,
@@ -510,15 +486,16 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
 }
 
 /**
- * Builds the per-restaurant inspection history used for the
- * "Score Over Time" chart. Each point now represents one full inspection
- * EVENT -- not just a bare (date, score) pair -- including its grade and
- * rolled-up violations, so clicking a point on the chart can open that
- * specific past inspection's full results (matching the map's popup/detail
- * panel behavior), not just show a number.
+ * Builds the per-restaurant inspection history used by the
+ * "Score Over Time" chart.
  *
- * Returns { generated_at, restaurants }, mirroring the GeoJSON output's
- * generated_at field so both files carry the same freshness metadata.
+ * Each history entry represents a complete inspection event rather than
+ * just a (date, score) pair. Along with the score, it includes the
+ * inspection's grade and rolled-up violations so selecting a point on
+ * the chart can display that inspection's full details.
+ *
+ * Returns { generated_at, restaurants }, mirroring the GeoJSON output so
+ * both files carry the same freshness metadata.
  */
 export function buildInspectionHistory(eventsByRestaurant, generatedAt) {
   const restaurants = {};
@@ -549,11 +526,12 @@ export function buildInspectionHistory(eventsByRestaurant, generatedAt) {
 
 /**
  * Runs an async operation over `items` in fixed-size batches, awaiting
- * each batch before starting the next -- rather than firing everything
- * at once via a single Promise.all. Needed because opening tens of
- * thousands of file handles simultaneously exceeds the OS's concurrent
- * open-file limit (hit in practice around ~8,000 on Windows), causing an
- * EMFILE error partway through.
+ * each batch before starting the next rather than launching every
+ * operation in a single Promise.all().
+ *
+ * This avoids exceeding the operating system's concurrent open-file
+ * limit when writing thousands of files, which would otherwise result
+ * in an EMFILE error.
  */
 async function runInBatches(items, batchSize, fn) {
   for (let i = 0; i < items.length; i += batchSize) {
@@ -564,27 +542,33 @@ async function runInBatches(items, batchSize, fn) {
 
 /**
  * Writes one small JSON file per restaurant (history/{camis}.json)
- * instead of one giant combined file, so a visitor only downloads the
- * one restaurant's history they actually select.
+ * instead of one large combined file, so visitors only download the
+ * history for the restaurant they actually select.
  *
- * Wipes and fully regenerates the directory on every run, rather than
- * only adding/updating files, so a restaurant that drops out of the
- * dataset (closes, gets re-coded, etc) doesn't leave an orphaned file
- * behind forever -- the directory always exactly matches the current
- * run's data, with no separate bookkeeping of "what existed yesterday"
- * that could itself drift out of sync.
+ * The output directory is wiped and regenerated on every run rather than
+ * incrementally updated. This ensures restaurants that disappear from
+ * the dataset (closures, CAMIS changes, etc.) don't leave orphaned files
+ * behind, and keeps the directory exactly in sync with the current
+ * dataset.
  *
- * Writes in batches (see runInBatches) rather than one giant Promise.all
- * across every restaurant, since at ~27,000+ files that would exceed the
- * OS's concurrent open-file limit and fail partway through with EMFILE.
+ * Files are written in batches (see runInBatches()) rather than one
+ * large Promise.all() to avoid exceeding the operating system's
+ * concurrent open-file limit (EMFILE).
  */
 export async function writeHistoryFiles(restaurants) {
   await rm(HISTORY_DIR, { recursive: true, force: true });
   await mkdir(HISTORY_DIR, { recursive: true });
 
   const HISTORY_WRITE_BATCH_SIZE = 500;
-  await runInBatches(Object.entries(restaurants), HISTORY_WRITE_BATCH_SIZE, ([camis, points]) =>
-    writeFile(path.join(HISTORY_DIR, `${camis}.json`), JSON.stringify(points), "utf-8")
+  await runInBatches(
+    Object.entries(restaurants),
+    HISTORY_WRITE_BATCH_SIZE,
+    ([camis, points]) =>
+      writeFile(
+        path.join(HISTORY_DIR, `${camis}.json`),
+        JSON.stringify(points),
+        "utf-8",
+      ),
   );
 }
 
@@ -593,7 +577,9 @@ async function main() {
   try {
     rows = await fetchAllRows();
   } catch (err) {
-    throw new Error(`Failed while fetching inspections: ${err.message}`, { cause: err });
+    throw new Error(`Failed while fetching inspections: ${err.message}`, {
+      cause: err,
+    });
   }
 
   let latestGeoJSON, history, violationCodes;
@@ -601,15 +587,19 @@ async function main() {
     const grouped = groupByCamis(rows);
     const eventsByRestaurant = buildEventsByRestaurant(grouped);
     const generatedAt = new Date().toISOString();
-    latestGeoJSON = buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt);
+    latestGeoJSON = buildLatestInspectionsGeoJSON(
+      eventsByRestaurant,
+      generatedAt,
+    );
     history = buildInspectionHistory(eventsByRestaurant, generatedAt);
-    // Built from the raw rows directly (not the grouped events), since
-    // every code's description needs to be captured once regardless of
-    // which restaurants/events happen to survive the scored/coordinate
-    // filtering above.
+    // Built directly from the raw rows rather than the grouped events, since
+    // every violation code needs to be captured once regardless of which
+    // restaurants or inspections survive the scored/coordinate filtering.
     violationCodes = buildViolationCodeLookup(rows);
   } catch (err) {
-    throw new Error(`Failed while building output data: ${err.message}`, { cause: err });
+    throw new Error(`Failed while building output data: ${err.message}`, {
+      cause: err,
+    });
   }
 
   try {
@@ -619,43 +609,40 @@ async function main() {
       writeFile(
         path.join(OUTPUT_DIR, "latest-inspections.geojson"),
         JSON.stringify(latestGeoJSON),
-        "utf-8"
+        "utf-8",
       ),
       writeFile(
         path.join(OUTPUT_DIR, "violation-codes.json"),
         JSON.stringify(violationCodes),
-        "utf-8"
+        "utf-8",
       ),
       writeHistoryFiles(history.restaurants),
     ]);
   } catch (err) {
-    throw new Error(`Failed while writing output files: ${err.message}`, { cause: err });
+    throw new Error(`Failed while writing output files: ${err.message}`, {
+      cause: err,
+    });
   }
 
   console.log(
-    `Wrote ${latestGeoJSON.features.length} restaurants to latest-inspections.geojson`
+    `Wrote ${latestGeoJSON.features.length} restaurants to latest-inspections.geojson`,
   );
   console.log(
-    `Wrote ${Object.keys(violationCodes).length} codes to violation-codes.json`
+    `Wrote ${Object.keys(violationCodes).length} codes to violation-codes.json`,
   );
   console.log(
-    `Wrote ${Object.keys(history.restaurants).length} individual history files to ${HISTORY_DIR}`
+    `Wrote ${Object.keys(history.restaurants).length} individual history files to ${HISTORY_DIR}`,
   );
 }
 
 // Only run automatically when this file is executed directly
-// (`node fetch-inspections.mjs`), not when its functions are imported by
-// something else (e.g. a test file or the demo script) -- otherwise every
-// import would also trigger a live network fetch as a side effect.
-//
-// Uses pathToFileURL rather than a plain `file://${process.argv[1]}`
-// string, because process.argv[1] is a raw filesystem path (backslashes
-// and a drive letter on Windows, e.g. K:\...\fetch-inspections.mjs) while
-// import.meta.url is always a proper file:// URL (forward slashes,
-// percent-encoding, e.g. file:///K:/.../fetch-inspections.mjs) -- naively
-// concatenating "file://" + the raw path never matches on Windows, which
-// silently skips main() entirely with no error at all. pathToFileURL
-// converts the path into that same URL format correctly on every OS.
+// (`node fetch-inspections.mjs`), not when its functions are imported.
+// This avoids triggering a live network fetch as an import side effect.
+
+// Use pathToFileURL() because process.argv[1] is a filesystem path,
+// whereas import.meta.url is a file:// URL. pathToFileURL() converts the
+// path into the same URL format so the comparison works correctly across
+// operating systems, including Windows.
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((err) => {
     console.error(err.message);
