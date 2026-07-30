@@ -1,8 +1,14 @@
+# daily-data-refresh.yml
+
+# Triggers a daily Vercel deployment to refresh restaurant inspection data
+# without requiring a code change.
+
+# Delegates all data fetching to `pipeline/fetch-inspections.mjs`,
+# ensuring a single source of truth for the data generation pipeline.
+
 name: Daily data refresh
 
-# Triggers a daily Vercel deployment to refresh inspection data without code changes.
-# Delegates all data fetching to Vercel's build script (`pipeline/fetch-inspection.mjs`)
-# to maintain a single source of truth for the data generation pipeline.
+
 on:
   schedule:
     # Runs at 06:00 UTC daily    

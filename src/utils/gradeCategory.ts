@@ -1,23 +1,23 @@
-// utils/gradeCategory.ts
+// gradeCategory.ts
+//
+// Maps raw NYC DOHMH inspection data to the dashboard's display
+// categories and re-exports the shared grade color definitions.
+
+import { CATEGORY_COLORS } from "./gradeColours";
+import type { GradeCategory } from "./gradeColours";
+
+export { CATEGORY_COLORS };
+export type { GradeCategory };
+
+// DOHMH closure actions take precedence over any letter grade.
+
 const CLOSED_ACTIONS = new Set([
   "Establishment re-closed by DOHMH",
   "Establishment Closed by DOHMH. Violations were cited in the following area(s) and those requiring immediate action were addressed.",
 ]);
 
-export type GradeCategory = "A" | "B" | "C" | "pending" | "closed";
+// Normalizes raw inspection data into the dashboard's display categories.
 
-export const CATEGORY_COLORS: Record<GradeCategory, string> = {
-  A: "#2E7BE4",
-  B: "#3CB44B",
-  C: "#F58231",
-  pending: "#E6007E",
-  closed: "#8B0000",
-};
-
-// Derived from {action, grade, score} directly, rather than relying on a
-// precomputed current_status field -- that field only exists on the
-// "latest" map feature, not on individual historical inspection events,
-// so this works consistently for both.
 export function getGradeCategory(action: string, grade: string | null, score: number): GradeCategory {
   if (CLOSED_ACTIONS.has(action)) return "closed";
   if (grade === "Z" || grade === "P" || grade === "N") return "pending";

@@ -1,4 +1,10 @@
 // PanelHeader.tsx
+//
+// Reusable header displayed at the top of dashboard panels.
+//
+// Displays a panel title with an optional information button that
+// toggles a contextual help popup.
+
 import { useState, useRef, useEffect } from "react";
 import type { ReactNode } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -13,14 +19,18 @@ export default function PanelHeader({ title, infoContent }: PanelHeaderProps) {
   const [showInfo, setShowInfo] = useState(false);
   const headerRef = useRef<HTMLDivElement | null>(null);
 
-  // Since this component renders in every panel at once, closing on an
-  // outside click prevents multiple popups from staying open across the
-  // dashboard simultaneously with no way to dismiss them individually.
+  // Close the popup when clicking outside the header. Since every panel
+  // renders its own PanelHeader, this prevents multiple help popups from
+  // remaining open at the same time.
+
   useEffect(() => {
     if (!showInfo) return;
 
     function handleClickOutside(event: MouseEvent) {
-      if (headerRef.current && !headerRef.current.contains(event.target as Node)) {
+      if (
+        headerRef.current &&
+        !headerRef.current.contains(event.target as Node)
+      ) {
         setShowInfo(false);
       }
     }
@@ -37,8 +47,7 @@ export default function PanelHeader({ title, infoContent }: PanelHeaderProps) {
         className="panel-header-info-button"
         onClick={() => setShowInfo((v) => !v)}
         aria-label={`About ${title}`}
-        aria-expanded={showInfo}
-      >
+        aria-expanded={showInfo}>
         <FontAwesomeIcon icon={faCircleInfo} />
       </button>
 

@@ -1,4 +1,12 @@
 // RestaurantDetails.tsx
+//
+// Displays detailed information for the currently selected restaurant.
+//
+// Shows the latest inspection, historical inspection reports,
+// violations, restaurant metadata, and supporting reference
+// information. Loads additional inspection history and violation
+// descriptions on demand.
+
 import { useEffect, useState, useRef } from "react";
 import PanelHeader from "./PanelHeader";
 import type {
@@ -10,6 +18,8 @@ import type {
 import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";
 import { formatPhoneNumber } from "../utils/formatPhoneNumber";
 import { toTitleCase } from "../utils/toTitleCase";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 
 function parseViolations(raw: string): Violation[] {
   try {
@@ -24,6 +34,7 @@ function parseViolations(raw: string): Violation[] {
 // midnight-UTC timestamp (e.g. "2026-02-13T00:00:00.000") doesn't
 // silently shift back a day when the viewer's local timezone is
 // behind UTC.
+
 function formatDate(raw: string | null): string {
   if (!raw) return "—";
   const date = new Date(raw);
@@ -39,12 +50,13 @@ function yearsSince(dateStr: string): number {
 
 const STATUS_LABELS: Record<string, string> = {
   open: "Open",
-  closed_by_doh: "Closed by DOHMH",
+  closed: "Closed by DOHMH",
   unknown: "Unknown",
 };
 
-// Only Z and P have a plain-English clarifying note -- a normal A/B/C
-// grade needs no extra explanation.
+// Only Z, P and N grades have a plain-English clarifying note. A/B/C
+// grades need no extra explanation.
+
 const GRADE_PENDING_NOTES: Record<string, string> = {
   Z: "Grade pending official confirmation.",
   P: "Grade pending — reopened after a prior closure.",
@@ -53,9 +65,9 @@ const GRADE_PENDING_NOTES: Record<string, string> = {
 
 // The dataset's critical_flag field has three documented values:
 // "Critical", "Not Critical", and "Not Applicable". Only the first two
-// get a visible tag -- "Not Applicable" (used on clean inspections with
-// no violations at all) has nothing meaningful to flag, so it falls
-// through with no style and no tag.
+// are surfaced in the UI. "Not Applicable" carries no meaningful
+// severity information, so it is intentionally rendered without a tag.
+
 const VIOLATION_FLAG_STYLES: Record<
   string,
   { label: string; background: string; color: string }
@@ -97,6 +109,10 @@ const RESTAURANT_INFO_CONTENT = (
           <strong style={{ color: CATEGORY_COLORS.pending }}>Z</strong> — Grade
           Pending, awaiting official confirmation
         </li>
+        <li>
+          <strong>N/A</strong> — No grade recorded; shown in the color of its
+          score-based category.
+        </li>
       </ul>
     </div>
 
@@ -112,10 +128,8 @@ const RESTAURANT_INFO_CONTENT = (
           reliable status recorded
         </li>
         <li>
-          <span className="violation-tag status-closed_by_doh">
-            Closed by DOHMH
-          </span>{" "}
-          — Most recent inspection resulted in a closure
+          <span className="violation-tag status-closed">Closed by DOHMH</span> —
+          Most recent inspection resulted in a closure
         </li>
       </ul>
     </div>
@@ -150,8 +164,32 @@ const RESTAURANT_INFO_CONTENT = (
     <div className="info-popup-section">
       <h4 className="section-header">NYC Health Information</h4>
       <ul>
-        <li>How We Score and Grade</li>
-        <li>Inspection Cycle Overview</li>
+        <li>
+          <a
+            href="https://www.nyc.gov/assets/doh/downloads/pdf/rii/restaurant-grading-faq.pdf"
+            target="_blank"
+            rel="noopener noreferrer">
+            How We Score and Grade
+          </a>{" "}
+          <FontAwesomeIcon
+            icon={faArrowUpRightFromSquare}
+            className="external-link-icon"
+            aria-hidden="true"
+          />
+        </li>
+        <li>
+          <a
+            href="https://www.nyc.gov/assets/doh/downloads/pdf/rii/inspection-cycle-and-letter-grading.pdf"
+            target="_blank"
+            rel="noopener noreferrer">
+            Inspection Cycle Overview
+          </a>{" "}
+          <FontAwesomeIcon
+            icon={faArrowUpRightFromSquare}
+            className="external-link-icon"
+            aria-hidden="true"
+          />
+        </li>
       </ul>
     </div>
   </>
@@ -167,16 +205,12 @@ export default function RestaurantDetails({
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
   const historyCache = useRef<Map<string, InspectionEvent[]>>(new Map());
 
-  // Violation descriptions no longer travel with each violation entry --
-  // the pipeline now writes them once to violation-codes.json (code ->
-  // description) instead of duplicating the text on every violation
-  // instance across every restaurant/inspection. Fetched once here,
-  // independent of which restaurant is selected, since this lookup is
-  // the same for every restaurant and rarely (if ever) changes within a
-  // single page session.
-  const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>(
-    {},
-  );
+  // The pipeline writes violation descriptions once to
+  // violation-codes.json instead of embedding them in every violation
+  // record. Because this lookup is shared by all restaurants, it's fetched
+  // once when the component mounts and reused throughout the session.
+
+  const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>({});
 
   useEffect(() => {
     const controller = new AbortController();
@@ -191,10 +225,10 @@ export default function RestaurantDetails({
     return () => controller.abort();
   }, []);
 
-  // Fetch this restaurant's full history whenever a new one is selected
-  // on the map. Reset the in-panel selection back to "show the latest"
-  // each time too, so switching restaurants doesn't leave a stale
-  // historical inspection selected from the previous restaurant.
+  // Fetch the selected restaurant's inspection history whenever the
+  // selection changes. Also reset the in-panel history selection so each
+  // newly selected restaurant initially displays its latest inspection.
+
   useEffect(() => {
     setSelectedId(null);
 
@@ -204,8 +238,9 @@ export default function RestaurantDetails({
       return;
     }
 
-    // Serve from cache instantly if we've already fetched this
-    // restaurant before -- no network request at all.
+    // Reuse the cached history if we've already fetched this restaurant,
+    // allowing it to display immediately without another network request.
+
     const cached = historyCache.current.get(restaurant.camis);
     if (cached) {
       setHistory(cached);
@@ -215,6 +250,7 @@ export default function RestaurantDetails({
 
     // Clear stale data immediately, rather than leaving the previous
     // restaurant's history visible while the new one loads.
+
     setHistory([]);
     setIsLoadingHistory(true);
 
@@ -255,11 +291,10 @@ export default function RestaurantDetails({
     );
   }
 
-  // The currently-displayed inspection: either whichever Inspection
-  // Reports row was clicked, or the restaurant's latest by default.
-  // This is what "opens in the same window" means -- clicking a past
-  // inspection swaps this panel's content in place, no navigation, no
-  // popup.
+  // The inspection currently shown in the panel: either the selected
+  // historical inspection or, by default, the restaurant's latest
+  // inspection. Selecting a history entry updates this view in place.
+
   const selectedEvent = history.find((e) => e.id === selectedId) ?? null;
 
   const displayed = selectedEvent
@@ -288,22 +323,24 @@ export default function RestaurantDetails({
   const categoryColor = CATEGORY_COLORS[category];
   const displayName = toTitleCase(restaurant.name);
 
-  // current_status/staleness reflect the restaurant overall, not
-  // whichever historical inspection is currently selected -- "is this
-  // restaurant currently open" is a property of the restaurant, not of
-  // whichever old record you happen to be looking at.
+  // Current status and staleness are properties of the restaurant itself,
+  // not individual inspection records. They remain unchanged when viewing
+  // historical inspections.
+
   const inspectionAge = yearsSince(restaurant.inspection_date);
   const isStale = inspectionAge >= 2;
 
   // Critical first, then Not Critical, then anything else (e.g. Not
   // Applicable) last.
+
   const sortedViolations = [...displayed.violations].sort((a, b) => {
     const rank = (flag: string) =>
       flag === "Critical" ? 0 : flag === "Not Critical" ? 1 : 2;
     return rank(a.critical_flag) - rank(b.critical_flag);
   });
 
-  // Most recent inspection first in the list.
+  // Most recent inspection appears first in the list.
+
   const historyDescending = [...history].reverse();
 
   return (
@@ -347,9 +384,9 @@ export default function RestaurantDetails({
               <td>Status</td>
               <td>
                 <span
-                  className={`violation-tag status-flag status-${restaurant.current_status}`}>
-                  {STATUS_LABELS[restaurant.current_status] ??
-                    restaurant.current_status}
+                  className={`violation-tag status-flag status-${restaurant.current_status_code}`}>
+                  {STATUS_LABELS[restaurant.current_status_code] ??
+                    restaurant.current_status_label}
                 </span>
                 {isStale && (
                   <span className="details-stale-note">
@@ -426,7 +463,7 @@ export default function RestaurantDetails({
                     <span
                       className="inspection-row-grade"
                       style={{ color: CATEGORY_COLORS[eventCategory] }}>
-                      {event.grade ?? "—"}
+                      {event.grade ?? "N/A"}
                     </span>
                     <span className="inspection-row-score">{event.score}</span>
                   </li>
@@ -451,7 +488,7 @@ export default function RestaurantDetails({
             </tr>
             <tr>
               <td>Grade</td>
-              <td>{displayed.grade ?? "No Grade Data Available"}</td>
+              <td>{displayed.grade ?? "N/A"}</td>
             </tr>
             <tr>
               <td>Score</td>
@@ -481,7 +518,8 @@ export default function RestaurantDetails({
                     <span className="violation-code">{v.code}</span>
                     <span className="violation-description">
                       {violationCodes[v.code] ?? "Description unavailable"}
-                    </span> &nbsp;
+                    </span>{" "}
+                    &nbsp;
                     {flagStyle && (
                       <span
                         className="violation-tag"

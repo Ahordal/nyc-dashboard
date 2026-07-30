@@ -1,4 +1,11 @@
 // FilterSection.tsx
+
+// Reusable filter control used throughout the dashboard.
+//
+// Renders a labeled group of toggle buttons with an optional "Clear"
+// action. The component is intentionally generic so it can be reused for
+// grade, borough, cuisine, neighborhood, or other multi-select filters.
+
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
 import FilterButton from "./FilterButton";

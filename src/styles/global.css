@@ -17,7 +17,7 @@
 
   /*///// TEXT COLOURS /////*/
 
-  --text-body: #e5e5e5;
+  --text-body: #d6d8d4;
   --text-heading: #ffffff;
   --text-muted: #a0a0a0;
 
@@ -35,6 +35,10 @@
   /*///// TYPOGRAPHY /////*/
 
   --font-body: system-ui, sans-serif;
+
+  /*///// LINKS /////*/
+--link-hover: #f2f3f1;
+
 }
 
 /*///////////////////////////////////////////// DOCUMENT FOUNDATION //////////////////////////////////////////////*/
@@ -101,19 +105,19 @@ body {
   height: 100%;
 
   grid-template-columns:
-    28fr
     20fr
-    52fr;
+    60fr
+    20fr;
 
   grid-template-rows:
-    240px
+    auto
     1fr
     240px;
 
   grid-template-areas:
-    "stats list map"
-    "chart details map"
-    "chart details performance";
+    "stats map search"
+    "stats map explorer"
+    "chart performance explorer";
 
   gap: var(--space-xs);
 
@@ -130,16 +134,9 @@ body {
   grid-area: chart;
 }
 
-.restaurant-list {
-  grid-area: list;
-}
-
-.restaurant-details {
-  grid-area: details;
-}
-
 .map-view {
   grid-area: map;
+  
   
 }
 .map-view :focus,
@@ -152,27 +149,129 @@ body {
   grid-area: performance;
 }
 
-/*///////////////////////////////////////////// PANELS //////////////////////////////////////////////*/
+.search-panel {
+  grid-area: search;
+}
 
-.panel {
-  width: 100%;
+/*///////////////////////////////////////////// EXPLORER (LIST + DETAILS) //////////////////////////////////////////////*/
+
+.explorer {
+  grid-area: explorer;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
   height: 100%;
+  min-height: 0;
+}
 
-  background-color: var(--bg-panel);
-
-  border: 1px solid var(--border-panel);
-
-  padding: var(--space-s);
-
+.explorer .restaurant-list,
+.explorer .restaurant-details {
+  height: 100%;
+  min-height: 0;
   overflow: hidden;
 }
 
-.panel h2 {
-  color: var(--text-heading);
-  font-size: 1.25rem;
+.explorer-tabs {
+  display: flex;
+  border: 1px solid var(--border-panel);
+  border-bottom: none;
+  background-color: var(--bg-panel);
+  flex-shrink: 0;
+  
 }
 
-/*///////////////////////////////////////////// PANELS //////////////////////////////////////////////*/
+.explorer-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  padding: 0.5rem var(--space-s);
+  font: inherit;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+  
+}
+
+.explorer-tab:hover {
+  color: var(--text-heading);
+}
+
+.explorer-tab.active {
+  color: var(--text-heading);
+  border-bottom-color: var(--border-panel);
+  background-color: #252525;
+
+  
+}
+.explorer-tab:first-child { 
+  border-right: 1px solid var(--border-panel);
+ }
+.explorer-content {
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/*///////////////////////////////////////////// SEARCH PANEL //////////////////////////////////////////////*/
+
+.search-panel-body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--bg-alt);
+  border: 1px solid var(--border-panel);
+  color: var(--text-body);
+  padding: 0.4rem var(--space-xs);
+  font: inherit;
+  font-size: 0.875rem;
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+.search-input:focus {
+  outline: none;
+  border-color: #0066cc;
+}
+
+.search-filter-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border-panel);
+  color: var(--text-body);
+  padding: 0.4rem;
+  cursor: pointer;
+}
+
+.search-filter-toggle:hover {
+  background-color: var(--border-panel);
+}
+
+
+
+/*///////////////////////////////////////////// MAPVIEW //////////////////////////////////////////////*/
+.esri-view {
+  --esri-view-outline-color: transparent !important;
+  --esri-view-outline: transparent!important;
+}
+.esri-view-surface canvas {
+  transition: opacity 0.25s ease-out !important;
+}
+
+/*///////////////////////////////////////////// GENERIC PANELS //////////////////////////////////////////////*/
 
 .dashboard-title .panel,
 .dashboard-grade-filters .panel,
@@ -191,6 +290,20 @@ body {
 
 .dashboard-borough-filters {
   justify-self: start;
+}
+
+.panel {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: var(--space-s);
+  overflow: hidden;
+}
+
+.panel h2 {
+  color: var(--text-heading);
+  font-size: 1.25rem;
 }
 
 /*///////////////////////////////////////////// PANEL HEADER //////////////////////////////////////////////*/
@@ -324,6 +437,34 @@ body {
 .filter-clear {
   margin-right: var(--space-s);
 }
+.search-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  
+  /* Match your original 19px dimensions */
+  font-size: 19px; 
+  width: 36px;  /* Touch target size */
+  height: 36px;
+  
+  background: transparent;
+  border: none;
+  color: inherit; /* Inherits hover/active text colors automatically */
+  cursor: pointer;
+}
+/*///////////////////////////////////////////// LINKS //////////////////////////////////////////////*/
+
+a {
+  color: var(--text-body);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--link-hover);
+}
+
 /*///////////////////////////////////////////// RESTAURANT DETAILS //////////////////////////////////////////////*/
 
 .details-empty {
@@ -495,7 +636,7 @@ body {
   color: #ffffff;
 }
 
-.status-closed_by_doh {
+.status-closed {
   background-color: #8b0000;
   color: #ffffff;
 }
@@ -504,4 +645,3 @@ body {
   background-color: var(--border-panel);
   color: var(--text-muted);
 }
-

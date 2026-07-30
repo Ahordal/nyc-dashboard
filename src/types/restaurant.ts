@@ -1,16 +1,27 @@
-// types/restaurant.ts
-export type CurrentStatus = "open" | "closed_by_doh" | "unknown";
+// restaurant.ts
+//
+// Shared data models for restaurant inspection data.
+//
+// Defines the TypeScript types used throughout the dashboard for
+// restaurants, inspection history, violations, and related lookup data.
+
+// Status types
+
+export type CurrentStatus = "open" | "closed" | "unknown";
+
+// Violation types
 
 export type Violation = {
   code: string;
   critical_flag: string;
 };
 
-// The shape of violation-codes.json: a lookup from violation `code` to
-// its full description text. Kept as one small shared file (rather than
-// embedded on every Violation) since the same ~115 codes repeat across
-// tens of thousands of inspection events -- see pipeline notes.
+// Maps each violation code to its full description. Stored separately
+// from individual inspection records because the same ~115 codes are
+// reused across tens of thousands of violations. See pipeline notes.
 export type ViolationCodeLookup = Record<string, string>;
+
+// Restaurant data
 
 export type RestaurantProperties = {
   id: string;
@@ -29,15 +40,19 @@ export type RestaurantProperties = {
   inspection_type: string;
   action: string;
   violations: string; // JSON-stringified -- GeoJSONLayer limitation, see pipeline notes
-  current_status: CurrentStatus;
+  current_status_code: CurrentStatus;
+  current_status_label: string;
   record_date: string | null;
   community_board: string;
   council_district: string;
 };
 
-// One entry from history/{camis}.json -- unlike RestaurantProperties,
-// violations here is already a real array (this file is read via plain
-// fetch + JSON.parse, not GeoJSONLayer, so no stringification was needed).
+// One inspection event from history/{camis}.json. Unlike
+// RestaurantProperties, violations is a real array because this file is
+// loaded with fetch + JSON.parse instead of GeoJSONLayer.
+
+// Inspection history
+
 export type InspectionEvent = {
   id: string;
   date: string;

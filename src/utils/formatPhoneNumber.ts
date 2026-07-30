@@ -1,4 +1,8 @@
-// utils/formatPhoneNumber.ts
+// formatPhoneNumber.ts
+//
+// Formats 10-digit phone numbers for display. Values that aren't valid
+// 10-digit numbers are returned unchanged.
+
 export function formatPhoneNumber(raw: string | null | undefined): string {
   if (!raw) return "";
 
