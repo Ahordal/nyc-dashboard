@@ -3,15 +3,20 @@
 // Displays the interactive ArcGIS map used by the dashboard.
 //
 // Creates the map and inspection layer, renders restaurants using the
-// project's grading symbology, handles restaurant selection, and keeps
-// the displayed features synchronized with the active dashboard filters.
+// project's grading symbology, handles restaurant selection, keeps the
+// displayed features synchronized with the active dashboard filters, and
+// reports the set of restaurants currently visible in the map's extent.
 
 import { useEffect, useRef } from "react";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
-import esriConfig from "@arcgis/core/config";
+import LabelClass from "@arcgis/core/layers/support/LabelClass";
+import FeatureEffect from "@arcgis/core/layers/support/FeatureEffect";
+import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 
+import esriConfig from "@arcgis/core/config";
+import type Graphic from "@arcgis/core/Graphic";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 import { CATEGORY_COLORS } from "../utils/gradeColours";
@@ -45,11 +50,11 @@ const renderer = {
     size: 6,
   },
   uniqueValueInfos: [
-    { value: "A", symbol: { type: "simple-marker", color: CATEGORY_COLORS.A, outline: { color: "#1a1a1a", width: 0.5 }, size: 6 } },
-    { value: "B", symbol: { type: "simple-marker", color: CATEGORY_COLORS.B, outline: { color: "#1a1a1a", width: 0.5 }, size: 6 } },
-    { value: "C", symbol: { type: "simple-marker", color: CATEGORY_COLORS.C, outline: { color: "#1a1a1a", width: 0.5 }, size: 6 } },
-    { value: "pending", symbol: { type: "simple-marker", color: CATEGORY_COLORS.pending, outline: { color: "#1a1a1a", width: 0.5 }, size: 6 } },
-    { value: "closed", symbol: { type: "simple-marker", color: CATEGORY_COLORS.closed, outline: { color: "#1a1a1a", width: 1 }, size: 7 } },
+    { value: "A", symbol: { type: "simple-marker", color: CATEGORY_COLORS.A, outline: { color: "#1a1a1a", width: 0.5 }, size: 5 } },
+    { value: "B", symbol: { type: "simple-marker", color: CATEGORY_COLORS.B, outline: { color: "#1a1a1a", width: 0.5 }, size: 5 } },
+    { value: "C", symbol: { type: "simple-marker", color: CATEGORY_COLORS.C, outline: { color: "#1a1a1a", width: 0.5 }, size: 5 } },
+    { value: "pending", symbol: { type: "simple-marker", color: CATEGORY_COLORS.pending, outline: { color: "#1a1a1a", width: 0.5 }, size: 5 } },
+    { value: "closed", symbol: { type: "simple-marker", color: CATEGORY_COLORS.closed, outline: { color: "#1a1a1a", width: 1 }, size: 5 } },
   ],
 };
 
@@ -61,15 +66,93 @@ const CATEGORY_CLAUSES: Record<string, string> = {
   Closed: `current_status_code = 'closed'`,
 };
 
+// Labels appear next to the map points at or below a scale of 1:2,000.
+const LABEL_MIN_SCALE = 2000;
+
+const labelClass = new LabelClass({
+  labelExpressionInfo: { expression: "$feature.name" },
+  symbol: {
+    type: "text",
+    color: "#ffffff",
+    haloColor: "#000000",
+    haloSize: 1,
+    font: { size: 10, family: "sans-serif", weight: "bold" },
+  } as any,
+  labelPlacement: "above-right",
+  minScale: LABEL_MIN_SCALE,
+  maxScale: 0,
+});
+
+// A FeatureFilter with an empty objectIds array is treated as "no ID constraint".
+// -1 is guaranteed not to exist as a real object ID, so this filter reliably matches zero features.
+const NO_SELECTION_FILTER = new FeatureFilter({ objectIds: [-1] });
+
+// Page size for querying visible restaurants. Kept safely under typical
+// ArcGIS maxRecordCount limits (commonly 1000-2000) so each page request
+// is well within what the layer will actually return.
+const VISIBLE_QUERY_PAGE_SIZE = 2000;
+
+// Queries ALL restaurants intersecting the current map extent, not just the
+// first page. A single queryFeatures() call is capped by the layer's
+// maxRecordCount -- if more restaurants are in view than that limit, the
+// server (or GeoJSONLayer's client-side query engine) silently truncates
+// the result and sets exceededTransferLimit instead of erroring. Looping
+// with start/num until exceededTransferLimit is false ensures downstream
+// consumers (like RestaurantList's sort) always operate on the complete
+// set of restaurants actually in view, not a partial slice.
+async function queryVisibleRestaurants(
+  view: MapView,
+  layer: GeoJSONLayer
+): Promise<RestaurantProperties[]> {
+  await layer.load();
+
+  const baseQuery = layer.createQuery();
+  baseQuery.geometry = view.extent;
+  baseQuery.spatialRelationship = "intersects";
+  baseQuery.returnGeometry = false;
+  baseQuery.outFields = ["*"];
+
+  const allFeatures: Graphic[] = [];
+  let start = 0;
+
+  while (true) {
+    const query = baseQuery.clone();
+    query.start = start;
+    query.num = VISIBLE_QUERY_PAGE_SIZE;
+
+    const result = await layer.queryFeatures(query);
+    allFeatures.push(...result.features);
+
+    if (!result.exceededTransferLimit || result.features.length === 0) {
+      break;
+    }
+    start += VISIBLE_QUERY_PAGE_SIZE;
+  }
+
+  return allFeatures.map(
+    (feature) => feature.attributes as RestaurantProperties
+  );
+}
+
+
+
 type MapViewProps = {
   filters: Filters;
+  selectedRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties | null) => void;
+  onVisibleRestaurantsChange?: (restaurants: RestaurantProperties[]) => void;
 };
 
-export default function InspectionMapView({ filters, onSelectRestaurant }: MapViewProps) {
+export default function InspectionMapView({
+  filters,
+  selectedRestaurantId = null,
+  onSelectRestaurant,
+  onVisibleRestaurantsChange,
+}: MapViewProps) {
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<GeoJSONLayer | null>(null);
-  const highlightHandleRef = useRef<{ remove: () => void } | null>(null);
+  const viewRef = useRef<MapView | null>(null);
+  const featureEffectRef = useRef<FeatureEffect | null>(null);
 
   useEffect(() => {
     if (!mapDivRef.current) return;
@@ -80,6 +163,8 @@ export default function InspectionMapView({ filters, onSelectRestaurant }: MapVi
       renderer: renderer as any,
       outFields: ["*"],
       copyright: "NYC DOHMH | Cartography: Alex Hordal",
+      labelingInfo: [labelClass],
+      labelsVisible: true,
     });
     layerRef.current = layer;
 
@@ -95,42 +180,43 @@ export default function InspectionMapView({ filters, onSelectRestaurant }: MapVi
       zoom: 11,
       constraints: { snapToZoom: false },
     });
-
-    // High-contrast highlight styling applied directly to the view
-    (view as any).highlightOptions = {
-      color: [255, 255, 255, 1],
-      haloColor: [255, 255, 255, 1], // Pure white ring; swap to [0, 225, 255, 1] for cyan accent
-      haloOpacity: 1.0,
-      fillOpacity: 0.4,
-    };
+    viewRef.current = view;
 
     view.popupEnabled = false;
 
+    const reportVisibleRestaurants = async () => {
+      if (!onVisibleRestaurantsChange) return;
+      try {
+        const restaurants = await queryVisibleRestaurants(view, layer);
+        onVisibleRestaurantsChange(restaurants);
+      } catch (err) {
+        console.error("MapView: failed to query visible restaurants", err);
+      }
+    };
+
+    view.when(() => {
+      reportVisibleRestaurants();
+    });
+
+    const stationaryWatchHandle = view.watch("stationary", (isStationary) => {
+      if (isStationary) {
+        reportVisibleRestaurants();
+      }
+    });
+
     const clickHandle = view.on("click", async (event) => {
       const response = await view.hitTest(event);
-      const layerView = await view.whenLayerView(layer);
+      await layer.load();
 
       const graphicHit = response.results.find(
         (result) => "graphic" in result && (result as any).graphic.layer === layer
       ) as { graphic: { attributes: RestaurantProperties } } | undefined;
 
-      // Clear previous highlight instantly (zero flash)
-      if (highlightHandleRef.current) {
-        highlightHandleRef.current.remove();
-        highlightHandleRef.current = null;
-      }
-
       if (graphicHit) {
-        const attributes = graphicHit.graphic.attributes;
-
-        // Native WebGL highlight (zero drift)
-        highlightHandleRef.current = layerView.highlight(graphicHit.graphic as any);
-
         if (onSelectRestaurant) {
-          onSelectRestaurant(attributes);
+          onSelectRestaurant(graphicHit.graphic.attributes);
         }
       } else {
-        // Deselect when clicking empty canvas
         if (onSelectRestaurant) {
           onSelectRestaurant(null);
         }
@@ -150,15 +236,72 @@ export default function InspectionMapView({ filters, onSelectRestaurant }: MapVi
     return () => {
       clickHandle.remove();
       pointerMoveHandle.remove();
-      if (highlightHandleRef.current) {
-        highlightHandleRef.current.remove();
-      }
+      stationaryWatchHandle.remove();
       view.destroy();
     };
   }, []);
 
+  // Synchronize selection changes (from either map clicks or list selections)
   useEffect(() => {
     const layer = layerRef.current;
+    const view = viewRef.current;
+    if (!layer || !view) return;
+
+    const applySelectionHighlight = async () => {
+      await layer.load();
+      const layerView = await view.whenLayerView(layer);
+
+      if (!featureEffectRef.current) {
+        featureEffectRef.current = new FeatureEffect({
+          filter: NO_SELECTION_FILTER,
+          includedEffect: "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)",
+          excludedLabelsVisible: true,
+        });
+        layerView.featureEffect = featureEffectRef.current;
+      }
+
+      if (!selectedRestaurantId) {
+        featureEffectRef.current.filter = NO_SELECTION_FILTER;
+        return;
+      }
+
+      const query = layer.createQuery();
+      query.where = `id = '${selectedRestaurantId}'`;
+      query.returnGeometry = true;
+
+      try {
+        const result = await layer.queryFeatures(query);
+        if (result.features.length > 0) {
+          const feature = result.features[0];
+          const idField = layer.objectIdField;
+          const objectId = idField ? feature.attributes[idField] : null;
+
+          if (objectId !== null && objectId !== undefined) {
+            featureEffectRef.current.filter = new FeatureFilter({ objectIds: [objectId] });
+          }
+
+          // Pan and zoom to point whenever selected (from map or list)
+          if (feature.geometry) {
+            view.goTo(
+              { target: feature.geometry, zoom: Math.max(view.zoom, 14) },
+              { duration: 500, easing: "ease-in-out" }
+            );
+          }
+        } else {
+          featureEffectRef.current.filter = NO_SELECTION_FILTER;
+        }
+      } catch (err) {
+        console.error("MapView: failed to query feature for selection highlight", err);
+      }
+    };
+
+    applySelectionHighlight();
+  }, [selectedRestaurantId]);
+
+  // Handle active filter updates
+  useEffect(() => {
+    const layer = layerRef.current;
+    const view = viewRef.current;
     if (!layer) return;
 
     const clauses: string[] = [];
@@ -179,11 +322,21 @@ export default function InspectionMapView({ filters, onSelectRestaurant }: MapVi
 
     layer.definitionExpression = clauses.length > 0 ? clauses.join(" AND ") : "";
 
-    if (highlightHandleRef.current) {
-      highlightHandleRef.current.remove();
-      highlightHandleRef.current = null;
+    if (featureEffectRef.current) {
+      featureEffectRef.current.filter = NO_SELECTION_FILTER;
     }
-  }, [filters]);
+
+    if (view && onVisibleRestaurantsChange) {
+      queryVisibleRestaurants(view, layer)
+        .then(onVisibleRestaurantsChange)
+        .catch((err) =>
+          console.error(
+            "MapView: failed to query visible restaurants after filter change",
+            err
+          )
+        );
+    }
+  }, [filters, onVisibleRestaurantsChange]);
 
   return <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />;
 }

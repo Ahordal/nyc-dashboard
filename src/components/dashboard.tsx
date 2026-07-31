@@ -13,37 +13,126 @@ import GradeChart from "./GradeChart";
 import ExplorerSearch from "./ExplorerSearch";
 import RestaurantList from "./RestaurantList";
 import RestaurantDetails from "./RestaurantDetails";
+import RestaurantReport from "./RestaurantReport";
 import MapView from "./MapView";
 import PerformanceChart from "./PerformanceChart";
 import type { Filters } from "../types/filters";
-import type { RestaurantProperties } from "../types/restaurant";
+import type {
+  RestaurantProperties,
+  InspectionEvent,
+  ViolationCodeLookup,
+} from "../types/restaurant";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
+
+type ExplorerTab = "list" | "details" | "report";
 
 export default function Dashboard() {
   const [filters, setFilters] = useState<Filters>({
     grades: [],
     boroughs: [],
   });
-  const [selectedRestaurant, setSelectedRestaurant] = useState<RestaurantProperties | null>(
-    null
-  );
-  const [activeExplorerTab, setActiveExplorerTab] = useState<"list" | "details">(
-    "list"
+  const [selectedRestaurant, setSelectedRestaurant] =
+    useState<RestaurantProperties | null>(null);
+  const [activeExplorerTab, setActiveExplorerTab] =
+    useState<ExplorerTab>("list");
+  const [visibleRestaurants, setVisibleRestaurants] = useState<
+    RestaurantProperties[]
+  >([]);
+
+  // Inspection history for the currently selected restaurant, and which
+  // single inspection (if any) is selected for the Report tab. Lifted up
+  // here -- rather than owned inside RestaurantDetails -- because both
+  // RestaurantDetails (the history list) and RestaurantReport (the report
+  // detail view) need to read the same data.
+  const [history, setHistory] = useState<InspectionEvent[]>([]);
+  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+  const [selectedInspectionId, setSelectedInspectionId] = useState<
+    string | null
+  >(null);
+  const historyCache = useRef<Map<string, InspectionEvent[]>>(new Map());
+
+  // Violation code descriptions -- fetched once, shared by both Details
+  // and Report.
+  const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>(
+    {}
   );
 
-  // Map clicks should both select the restaurant and bring the person to
-  // the tab that actually shows it -- selecting one without switching
-  // would silently update a panel nobody's looking at.
-function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
-  setSelectedRestaurant(restaurant);
-  
-  if (restaurant) {
-    setActiveExplorerTab("details");
-  } else {
-    setActiveExplorerTab("list"); // Swaps back to list view when deselected
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/data/violation-codes.json", { signal: controller.signal })
+      .then((res) => (res.ok ? res.json() : {}))
+      .then((data: ViolationCodeLookup) => setViolationCodes(data))
+      .catch((err) => {
+        if (err.name !== "AbortError") setViolationCodes({});
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  // Load inspection history whenever the selected restaurant changes.
+  useEffect(() => {
+    setSelectedInspectionId(null);
+
+    if (!selectedRestaurant) {
+      setHistory([]);
+      setIsLoadingHistory(false);
+      return;
+    }
+
+    const cached = historyCache.current.get(selectedRestaurant.camis);
+    if (cached) {
+      setHistory(cached);
+      setIsLoadingHistory(false);
+      return;
+    }
+
+    setHistory([]);
+    setIsLoadingHistory(true);
+
+    const controller = new AbortController();
+
+    fetch(`/data/history/${selectedRestaurant.camis}.json`, {
+      signal: controller.signal,
+    })
+      .then((res) => (res.ok ? res.json() : []))
+      .then((data: InspectionEvent[]) => {
+        historyCache.current.set(selectedRestaurant.camis, data);
+        setHistory(data);
+        setIsLoadingHistory(false);
+      })
+      .catch((err) => {
+        if (err.name !== "AbortError") {
+          setHistory([]);
+          setIsLoadingHistory(false);
+        }
+      });
+
+    return () => controller.abort();
+  }, [selectedRestaurant?.camis]);
+
+  // Map clicks (and list-row clicks) should both select the
+  // restaurant and bring the person to the tab that actually shows it --
+  // selecting one without switching would silently update a panel
+  // nobody's looking at.
+  function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
+    setSelectedRestaurant(restaurant);
+
+    if (restaurant) {
+      setActiveExplorerTab("details");
+    } else {
+      setActiveExplorerTab("list"); // Swaps back to list view when deselected
+    }
   }
-}
+
+  // Clicking a row in Inspection History selects that inspection AND
+  // jumps straight to the Report tab -- the report is the whole reason
+  // for the click, so landing anywhere else would just add a second click.
+  function handleSelectInspection(inspectionId: string) {
+    setSelectedInspectionId(inspectionId);
+    setActiveExplorerTab("report");
+  }
 
   return (
     <div className="dashboard-container">
@@ -67,7 +156,12 @@ function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
         </div>
 
         <div className="map-view">
-          <MapView filters={filters} onSelectRestaurant={handleSelectRestaurant} />
+          <MapView
+            filters={filters}
+            selectedRestaurantId={selectedRestaurant?.id ?? null}
+            onSelectRestaurant={handleSelectRestaurant}
+            onVisibleRestaurantsChange={setVisibleRestaurants}
+          />
         </div>
 
         <div className="grade-chart">
@@ -100,18 +194,57 @@ function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
               onClick={() => setActiveExplorerTab("details")}>
               Restaurant Details
             </button>
+            <button
+              type="button"
+              className={
+                activeExplorerTab === "report"
+                  ? "explorer-tab active"
+                  : "explorer-tab"
+              }
+              disabled={!selectedRestaurant}
+              onClick={() => setActiveExplorerTab("report")}>
+              Inspection Reports
+            </button>
           </div>
 
+          {/*
+            All three panes stay mounted at all times -- only visibility is
+            toggled via CSS (explorer-pane-hidden).
+          */}
           <div className="explorer-content">
-            {activeExplorerTab === "list" ? (
-              <div className="restaurant-list">
-                <RestaurantList />
-              </div>
-            ) : (
-              <div className="restaurant-details">
-                <RestaurantDetails restaurant={selectedRestaurant} />
-              </div>
-            )}
+            <div
+              className={`restaurant-list ${
+                activeExplorerTab === "list" ? "" : "explorer-pane-hidden"
+              }`}>
+              <RestaurantList
+                restaurants={visibleRestaurants}
+                selectedRestaurantId={selectedRestaurant?.id ?? null}
+                onSelectRestaurant={handleSelectRestaurant}
+              />
+            </div>
+            <div
+              className={`restaurant-details ${
+                activeExplorerTab === "details" ? "" : "explorer-pane-hidden"
+              }`}>
+              <RestaurantDetails
+                restaurant={selectedRestaurant}
+                history={history}
+                isLoadingHistory={isLoadingHistory}
+                selectedInspectionId={selectedInspectionId}
+                onSelectInspection={handleSelectInspection}
+              />
+            </div>
+            <div
+              className={`restaurant-report ${
+                activeExplorerTab === "report" ? "" : "explorer-pane-hidden"
+              }`}>
+              <RestaurantReport
+                restaurant={selectedRestaurant}
+                history={history}
+                selectedInspectionId={selectedInspectionId}
+                violationCodes={violationCodes}
+              />
+            </div>
           </div>
         </div>
 

@@ -37,8 +37,7 @@
   --font-body: system-ui, sans-serif;
 
   /*///// LINKS /////*/
---link-hover: #f2f3f1;
-
+  --link-hover: #f2f3f1;
 }
 
 /*///////////////////////////////////////////// DOCUMENT FOUNDATION //////////////////////////////////////////////*/
@@ -136,14 +135,12 @@ body {
 
 .map-view {
   grid-area: map;
-  
-  
 }
+
 .map-view :focus,
 .map-view :focus-visible {
   outline: none;
 }
-
 
 .performance-chart {
   grid-area: performance;
@@ -162,13 +159,19 @@ body {
   gap: 0;
   height: 100%;
   min-height: 0;
+  min-width: 0; 
+  width: 100%;  
 }
 
 .explorer .restaurant-list,
-.explorer .restaurant-details {
+.explorer .restaurant-details,
+.explorer .restaurant-report
+ {
   height: 100%;
   min-height: 0;
   overflow: hidden;
+  min-width: 0; 
+  width: 100%;  
 }
 
 .explorer-tabs {
@@ -177,7 +180,6 @@ body {
   border-bottom: none;
   background-color: var(--bg-panel);
   flex-shrink: 0;
-  
 }
 
 .explorer-tab {
@@ -193,7 +195,6 @@ body {
   text-transform: uppercase;
   letter-spacing: 0.05em;
   cursor: pointer;
-  
 }
 
 .explorer-tab:hover {
@@ -204,16 +205,32 @@ body {
   color: var(--text-heading);
   border-bottom-color: var(--border-panel);
   background-color: #252525;
-
-  
 }
-.explorer-tab:first-child { 
+
+.explorer-tab:first-child,
+.explorer-tab:nth-child(2) { 
   border-right: 1px solid var(--border-panel);
- }
+}
+
+.explorer-tab:hover:disabled {
+  color: var(--text-muted);
+}
+
+.explorer-tab:disabled {
+  cursor:default;
+}
+
+
 .explorer-content {
   flex: 1;
   min-height: 0;
   overflow: hidden;
+  min-width: 0; 
+  width: 100%;  
+}
+
+.explorer-pane-hidden {
+  display: none;
 }
 
 /*///////////////////////////////////////////// SEARCH PANEL //////////////////////////////////////////////*/
@@ -260,15 +277,11 @@ body {
   background-color: var(--border-panel);
 }
 
-
-
 /*///////////////////////////////////////////// MAPVIEW //////////////////////////////////////////////*/
+
 .esri-view {
   --esri-view-outline-color: transparent !important;
-  --esri-view-outline: transparent!important;
-}
-.esri-view-surface canvas {
-  transition: opacity 0.25s ease-out !important;
+  --esri-view-outline: transparent !important;
 }
 
 /*///////////////////////////////////////////// GENERIC PANELS //////////////////////////////////////////////*/
@@ -308,6 +321,7 @@ body {
 
 /*///////////////////////////////////////////// PANEL HEADER //////////////////////////////////////////////*/
 
+/* Header that appears in all panels */
 .panel-header {
   position: relative;
   display: flex;
@@ -315,19 +329,16 @@ body {
   justify-content: space-between;
   margin-bottom: var(--space-s);
   background-color: #252525;
-  padding-top:.25rem;
-  padding-bottom:.25rem;
-  
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
 }
 
 .panel-header-title {
-  
   color: var(--text-muted);
   font-size: 0.8rem;
   text-transform: uppercase;
-  font-weight:700;
+  font-weight: 700;
   padding: 0.2rem var(--space-s);
- 
 }
 
 .panel-header-info-button {
@@ -342,7 +353,9 @@ body {
 .panel-header-info-button:hover {
   color: var(--text-heading);
 }
+
 /*///////////////////////////////////////////// PANEL HEADER INFORMATION POPUP //////////////////////////////////////////////*/
+
 .panel-header-popup {
   position: absolute;
   top: calc(100% + 4px);
@@ -370,25 +383,12 @@ body {
 }
 
 
-.section-header {
-  background-color: var(--bg-alt);
-  padding: 0.4rem var(--space-s);
-  margin-top: var(--space-s);
-  margin-bottom: 0.4rem;
-  font-weight: 700;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-}
-
 
 .panel-scroll-content {
   flex: 1;
   overflow-y: auto;
   min-height: 0;
 }
-
 
 /*///////////////////////////////////////////// FILTER COMPONENTS //////////////////////////////////////////////*/
 
@@ -427,31 +427,31 @@ body {
   font: inherit;
   cursor: pointer;
   white-space: nowrap;
-
 }
+
 .filter-button.active {
   background-color: #0066cc;
   border-color: #0066cc;
   color: white;
 }
+
 .filter-clear {
   margin-right: var(--space-s);
 }
+
 .search-filter-toggle {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  
-  /* Match your original 19px dimensions */
   font-size: 19px; 
-  width: 36px;  /* Touch target size */
+  width: 36px;
   height: 36px;
-  
   background: transparent;
   border: none;
-  color: inherit; /* Inherits hover/active text colors automatically */
+  color: inherit;
   cursor: pointer;
 }
+
 /*///////////////////////////////////////////// LINKS //////////////////////////////////////////////*/
 
 a {
@@ -472,44 +472,72 @@ a:focus-visible {
   margin-top: var(--space-s);
 }
 
-.details-name {
-  text-align: center;
-  font-size: 1.5rem;
-  margin: var(--space-s) 0;
-}
 
-.details-grade-score {
+.details-hero-header {
   display: flex;
-  justify-content: space-around;
-  text-align: center;
-  margin-bottom: var(--space-s);
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.25rem 0.5rem 0.25rem 0.5rem;
+  width: 100%;
+  min-width: 0;
+  
 }
 
-.details-label {
-  display: block;
-  font-size: 0.75rem;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  color: var(--text-muted);
+.details-hero-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding-right: 0.75rem;
+  flex: 1;
+  min-width: 0;
 }
 
-.details-value {
-  display: block;
-  font-size: 2rem;
+.details-hero-title {
   font-weight: 700;
+  font-size: 1.15rem; /* Scaled up for visual prominence */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  width: 100%;
+  line-height: 1.1;
 }
 
+/* Enlarged Badge Squares for Details Hero */
+.details-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.details-hero-badges .badge-box {
+  width: 46px;  /* Scaled up from 40px */
+  height: 46px;
+}
+
+.details-hero-badges .badge-label {
+  font-size: 0.6rem;
+  margin-bottom: 2px;
+}
+
+.details-hero-badges .badge-val {
+  font-size: 1.1rem;
+}
 
 .restaurant-details-panel {
   display: flex;
   flex-direction: column;
 }
+
 .details-table {
   width: 100%;
   border-collapse: collapse;
   font-size: 0.875rem;
   margin-bottom: var(--space-xs);
 }
+
 .details-table td {
   padding: 0.4rem var(--space-xs);
 }
@@ -524,19 +552,18 @@ a:focus-visible {
 }
 
 .details-table tr:nth-child(even) {
-  background-color:#292929;
+  background-color: #292929;
 }
+
 .details-stale-note {
   font-size: 0.85em;
   color: #e6b800;
-  
 }
 
 .details-pending-note {
   text-align: center;
   font-size: 0.8rem;
   color: var(--text-muted);
-  
   margin-top: -0.5rem;
   margin-bottom: var(--space-s);
 }
@@ -547,7 +574,22 @@ a:focus-visible {
   font-size: 0.85rem;
   padding: var(--space-xs) 0;
 }
+/* Restaurant Details Section Header */
+.section-header {
+  background-color: var(--bg-alt);
+ padding-left:0.5rem;
+ padding-bottom:0.5rem;
+ padding-top:0.5rem;
+  margin-top: var(--space-s);
+  margin-bottom: 0.4rem;
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
 /*///////////////////////////////////////////// RESTAURANT VIOLATIONS //////////////////////////////////////////////*/
+
 .violations-list {
   list-style: none;
   display: flex;
@@ -556,7 +598,7 @@ a:focus-visible {
 }
 
 .violations-list li {
-  background-color:#292929;
+  background-color: #292929;
   border-left: 3px solid var(--border-panel);
   padding: var(--space-xs);
   font-size: 0.8125rem;
@@ -568,12 +610,13 @@ a:focus-visible {
 }
 
 .violation-tag {
-    display: inline-block;    
-    padding: 0.05rem 0.3rem;
-    font-size: 0.7rem;
-    font-weight: 700;
-    border-radius: 2px;
-  }
+  display: inline-block;    
+  padding: 0.05rem 0.3rem;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 2px;
+}
+
 /*///////////////////////////////////////////// RESTAURANT INSPECTION HISTORY //////////////////////////////////////////////*/
 
 .inspection-history-list {
@@ -625,11 +668,12 @@ a:focus-visible {
   text-align: right;
   color: var(--text-muted);
 }
+
 /*///////////////////////////////////////////// RESTAURANT STATUS //////////////////////////////////////////////*/
+
 .status-flag {
   margin-left: -0.1rem;
 }
-
 
 .status-open {
   background-color: #3cb44b;
@@ -644,4 +688,214 @@ a:focus-visible {
 .status-unknown {
   background-color: var(--border-panel);
   color: var(--text-muted);
+}
+
+/*///////////////////////////////////////////// RESTAURANT LIST //////////////////////////////////////////////*/
+
+.restaurant-list-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+/* Main Container Layout */
+.restaurant-list-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  width: 100%; 
+  min-width: 0;
+}
+
+/* Sort Header Bar */
+.restaurant-list-sort-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.25rem 0.5rem 0.5rem;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.sort-label {
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.sort-select {
+  background: var(--bg-alt);
+  color: var(--text-body);
+  border: 1px solid var(--border-panel);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.sort-direction-toggle {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: var(--bg-alt);
+  color: var(--text-body);
+  border: 1px solid var(--border-panel);
+  border-radius: 4px;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.sort-direction-toggle:hover,
+.sort-select:hover {
+  background-color: var(--border-panel);
+}
+
+/* Card List Area */
+.restaurant-card-list {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  overflow: hidden;
+  margin-bottom: 0.5rem;
+  width: 100%;    
+  min-width: 0;   
+}
+
+.restaurant-card {
+  height: 64px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-panel);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  min-width: 0; 
+  width: 100%;
+  opacity: 0.75;
+}
+
+.restaurant-card:hover {
+  background: #2f2f2f;
+  border-color: #555;
+  opacity: 1;
+  filter: brightness(1.2);
+}
+
+.restaurant-card.selected {
+  opacity: 1;
+  background: #2a2a2a;  
+  filter: brightness(1.2);
+}
+
+.card-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-right: 0.5rem;
+  flex: 1;        
+  min-width: 0;  
+  justify-content: center;
+  height: 100%;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-transform: uppercase;
+  width: 100%;
+  line-height: 1;
+}
+
+.card-subtext,
+.card-meta {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+/* Side-by-side Badge Squares */
+.card-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+.badge-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.25);
+  box-sizing: border-box;
+}
+
+.badge-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.badge-val {
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+}
+
+/* Empty State */
+.restaurant-list-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: var(--space-s);
+}
+
+/* Pinned Pagination Controls */
+.restaurant-list-pagination {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.restaurant-list-pagination button {
+  background: transparent;
+  color: var(--text-body);
+  border: 1px solid var(--border-panel);
+  padding: 0.25rem 0.6rem;
+  font: inherit;
+  cursor: pointer;
+}
+
+.restaurant-list-pagination button:hover:not(:disabled) {
+  background-color: var(--border-panel);
+}
+
+.restaurant-list-pagination button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+
+.restaurant-report-panel {
+  display: flex;
+  flex-direction: column;
+
 }
