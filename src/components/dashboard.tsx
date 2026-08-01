@@ -54,9 +54,7 @@ export default function Dashboard() {
 
   // Violation code descriptions -- fetched once, shared by both Details
   // and Report.
-  const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>(
-    {}
-  );
+  const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>({});
 
   useEffect(() => {
     const controller = new AbortController();
@@ -127,8 +125,7 @@ export default function Dashboard() {
   }
 
   // Clicking a row in Inspection History selects that inspection AND
-  // jumps straight to the Report tab -- the report is the whole reason
-  // for the click, so landing anywhere else would just add a second click.
+  // jumps straight to the Report tab.
   function handleSelectInspection(inspectionId: string) {
     setSelectedInspectionId(inspectionId);
     setActiveExplorerTab("report");
@@ -201,16 +198,11 @@ export default function Dashboard() {
                   ? "explorer-tab active"
                   : "explorer-tab"
               }
-              disabled={!selectedRestaurant}
               onClick={() => setActiveExplorerTab("report")}>
               Inspection Reports
             </button>
           </div>
 
-          {/*
-            All three panes stay mounted at all times -- only visibility is
-            toggled via CSS (explorer-pane-hidden).
-          */}
           <div className="explorer-content">
             <div
               className={`restaurant-list ${
@@ -243,6 +235,7 @@ export default function Dashboard() {
                 history={history}
                 selectedInspectionId={selectedInspectionId}
                 violationCodes={violationCodes}
+                onSelectInspection={handleSelectInspection}
               />
             </div>
           </div>

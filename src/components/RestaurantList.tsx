@@ -10,10 +10,12 @@ import { toTitleCase } from "../utils/toTitleCase";
 
 const RESTAURANT_LIST_INFO_CONTENT = (
   <div className="info-popup-section">
+    <h4 className="section-header">How it Works</h4>
     <p>
-      Shows restaurants currently visible in the map view, respecting any active
-      Grade and Borough filters and the search field above.
+      The Restaurant List shows restaurants currently visible in the map view, and is sorted by inspection date by default.
     </p>
+    
+    
   </div>
 );
 
@@ -57,12 +59,6 @@ export default function RestaurantList({
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cardListRef = useRef<HTMLDivElement | null>(null);
   const prevCountRef = useRef(restaurants.length);
-
-  // Tracks the last selection we auto-navigated for, so re-sorting
-  // (which reshuffles where an already-selected restaurant lands) doesn't
-  // yank the user away from page 1 -- only a NEW selection should trigger
-  // the jump-to-page behavior below.
-  const prevSelectedIdRef = useRef<string | null>(null);
 
   // Guard page resets on dataset count changes
   useEffect(() => {
@@ -152,16 +148,12 @@ export default function RestaurantList({
     return withCategory;
   }, [restaurants, sortField, sortDirection]);
 
-  // Automatically navigate to the page containing the selected restaurant.
-  // Only fires when the SELECTION itself changes -- not every time `sorted`
-  // gets a new identity from a sort-field/direction toggle. Otherwise,
-  // re-sorting with a restaurant already selected would silently drag the
-  // user to wherever that restaurant landed in the new order, overriding
-  // the page-1 reset the sort controls just triggered.
+  // Automatically navigate to the page containing the selected restaurant --
+  // runs whenever the selection, the sort order, or the visible-restaurants
+  // set changes, so the page always reflects where the selected restaurant
+  // actually sits, regardless of what caused sorted's contents to change.
   useEffect(() => {
     if (!selectedRestaurantId || sorted.length === 0) return;
-    if (prevSelectedIdRef.current === selectedRestaurantId) return;
-    prevSelectedIdRef.current = selectedRestaurantId;
 
     const index = sorted.findIndex(
       ({ restaurant }) => restaurant.id === selectedRestaurantId,
@@ -189,7 +181,7 @@ export default function RestaurantList({
         {/* Sort Controls Bar */}
         <div className="restaurant-list-sort-bar">
           <label htmlFor="sort-field-select" className="sort-label">
-            Sort by:
+            Sort Results by:
           </label>
           <select
             id="sort-field-select"

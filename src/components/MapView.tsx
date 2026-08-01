@@ -134,8 +134,6 @@ async function queryVisibleRestaurants(
   );
 }
 
-
-
 type MapViewProps = {
   filters: Filters;
   selectedRestaurantId?: string | null;
@@ -153,6 +151,16 @@ export default function InspectionMapView({
   const layerRef = useRef<GeoJSONLayer | null>(null);
   const viewRef = useRef<MapView | null>(null);
   const featureEffectRef = useRef<FeatureEffect | null>(null);
+  // Tracks the latest selectedRestaurantId so the filter effect (below,
+  // which only depends on [filters, onVisibleRestaurantsChange]) can read
+  // the current selection without needing selectedRestaurantId added to
+  // its own dependency array -- that would make it re-run on every
+  // selection change too, not just filter changes.
+  const selectedRestaurantIdRef = useRef<string | null>(selectedRestaurantId);
+
+  useEffect(() => {
+    selectedRestaurantIdRef.current = selectedRestaurantId;
+  }, [selectedRestaurantId]);
 
   useEffect(() => {
     if (!mapDivRef.current) return;
@@ -241,6 +249,59 @@ export default function InspectionMapView({
     };
   }, []);
 
+  // Applies (or clears) the map highlight for a given restaurant ID.
+  // Shared by both the selection-sync effect and the filter effect below,
+  // so filtering doesn't have to choose between "leave the old highlight
+  // possibly stale" and "just wipe it" -- it can re-derive the correct
+  // highlight for whatever's currently selected.
+  async function applyHighlightForId(restaurantId: string | null) {
+    const layer = layerRef.current;
+    const view = viewRef.current;
+    if (!layer || !view) return;
+
+    await layer.load();
+    const layerView = await view.whenLayerView(layer);
+
+    if (!featureEffectRef.current) {
+      featureEffectRef.current = new FeatureEffect({
+        filter: NO_SELECTION_FILTER,
+        includedEffect: "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)",
+        excludedLabelsVisible: true,
+      });
+      layerView.featureEffect = featureEffectRef.current;
+    }
+
+    if (!restaurantId) {
+      featureEffectRef.current.filter = NO_SELECTION_FILTER;
+      return;
+    }
+
+    const query = layer.createQuery();
+    query.where = `id = '${restaurantId}'`;
+    query.returnGeometry = false;
+
+    try {
+      const result = await layer.queryFeatures(query);
+      if (result.features.length > 0) {
+        const feature = result.features[0];
+        const idField = layer.objectIdField;
+        const objectId = idField ? feature.attributes[idField] : null;
+
+        if (objectId !== null && objectId !== undefined) {
+          featureEffectRef.current.filter = new FeatureFilter({ objectIds: [objectId] });
+        }
+      } else {
+        // The selected restaurant no longer matches the active
+        // definitionExpression (filtered out by grade/borough) -- clear
+        // the highlight since there's nothing on-screen to highlight,
+        // even though it's still selected in the other panels.
+        featureEffectRef.current.filter = NO_SELECTION_FILTER;
+      }
+    } catch (err) {
+      console.error("MapView: failed to query feature for selection highlight", err);
+    }
+  }
+
   // Synchronize selection changes (from either map clicks or list selections)
   useEffect(() => {
     const layer = layerRef.current;
@@ -248,50 +309,25 @@ export default function InspectionMapView({
     if (!layer || !view) return;
 
     const applySelectionHighlight = async () => {
-      await layer.load();
-      const layerView = await view.whenLayerView(layer);
+      await applyHighlightForId(selectedRestaurantId);
 
-      if (!featureEffectRef.current) {
-        featureEffectRef.current = new FeatureEffect({
-          filter: NO_SELECTION_FILTER,
-          includedEffect: "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)",
-          excludedLabelsVisible: true,
-        });
-        layerView.featureEffect = featureEffectRef.current;
-      }
+      if (!selectedRestaurantId) return;
 
-      if (!selectedRestaurantId) {
-        featureEffectRef.current.filter = NO_SELECTION_FILTER;
-        return;
-      }
-
+      // Pan and zoom to point whenever selected (from map or list)
       const query = layer.createQuery();
       query.where = `id = '${selectedRestaurantId}'`;
       query.returnGeometry = true;
 
       try {
         const result = await layer.queryFeatures(query);
-        if (result.features.length > 0) {
-          const feature = result.features[0];
-          const idField = layer.objectIdField;
-          const objectId = idField ? feature.attributes[idField] : null;
-
-          if (objectId !== null && objectId !== undefined) {
-            featureEffectRef.current.filter = new FeatureFilter({ objectIds: [objectId] });
-          }
-
-          // Pan and zoom to point whenever selected (from map or list)
-          if (feature.geometry) {
-            view.goTo(
-              { target: feature.geometry, zoom: Math.max(view.zoom, 14) },
-              { duration: 500, easing: "ease-in-out" }
-            );
-          }
-        } else {
-          featureEffectRef.current.filter = NO_SELECTION_FILTER;
+        if (result.features.length > 0 && result.features[0].geometry) {
+          view.goTo(
+            { target: result.features[0].geometry, zoom: Math.max(view.zoom, 14) },
+            { duration: 500, easing: "ease-in-out" }
+          );
         }
       } catch (err) {
-        console.error("MapView: failed to query feature for selection highlight", err);
+        console.error("MapView: failed to query feature for pan/zoom", err);
       }
     };
 
@@ -322,9 +358,13 @@ export default function InspectionMapView({
 
     layer.definitionExpression = clauses.length > 0 ? clauses.join(" AND ") : "";
 
-    if (featureEffectRef.current) {
-      featureEffectRef.current.filter = NO_SELECTION_FILTER;
-    }
+    // Re-apply the highlight for whatever's currently selected, rather
+    // than unconditionally clearing it -- filtering shouldn't remove the
+    // map highlight for a restaurant that's still selected and still
+    // matches the new filters. (If the selected restaurant no longer
+    // matches, applyHighlightForId's own "not found" branch clears it,
+    // which is correct in that specific case.)
+    applyHighlightForId(selectedRestaurantIdRef.current);
 
     if (view && onVisibleRestaurantsChange) {
       queryVisibleRestaurants(view, layer)

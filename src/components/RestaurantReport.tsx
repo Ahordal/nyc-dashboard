@@ -3,7 +3,9 @@
 // Displays the full inspection report for a single selected inspection --
 // the detail view reached by clicking a row in Restaurant Details'
 // Inspection History list. Falls back to the restaurant's most recent
-// inspection when nothing has been explicitly selected yet.
+// inspection when nothing has been explicitly selected yet. Includes
+// newer/older navigation to browse between inspections without leaving
+// this tab.
 
 import PanelHeader from "./PanelHeader";
 import type {
@@ -49,6 +51,8 @@ const REPORT_INFO_CONTENT = (
       Shows the full inspection report for whichever inspection was last
       selected from the Inspection History list on the Details tab.
     </p>
+    <br/>
+    <p>When a restaurant is selected, the most recent inspection report is shown here.</p>
   </div>
 );
 
@@ -57,6 +61,7 @@ type RestaurantReportProps = {
   history: InspectionEvent[];
   selectedInspectionId: string | null;
   violationCodes: ViolationCodeLookup;
+  onSelectInspection: (inspectionId: string) => void;
 };
 
 export default function RestaurantReport({
@@ -64,6 +69,7 @@ export default function RestaurantReport({
   history,
   selectedInspectionId,
   violationCodes,
+  onSelectInspection,
 }: RestaurantReportProps) {
   if (!restaurant) {
     return (
@@ -74,8 +80,7 @@ export default function RestaurantReport({
         />
         <div className="panel-scroll-content">
           <p className="details-empty">
-            Select a restaurant, then click an inspection on the Details tab to
-            view its report here.
+            Select a restaurant on the map or restaurant list, then click an inspection on the Restaurant Details tab to view its report here.
           </p>
         </div>
       </section>
@@ -117,18 +122,38 @@ export default function RestaurantReport({
   const categoryColor = CATEGORY_COLORS[category];
   const displayName = toTitleCase(restaurant.name);
 
+  // The panel header itself now carries the date of whichever inspection
+  // is currently displayed -- defaulting to the most recent when nothing's
+  // been explicitly selected -- so there's no need for a second, redundant
+  // "Inspection Report - <date>" section header below it.
+  const panelTitle = `Inspection Report - ${formatDate(displayed.date)}`;
+
   const sortedViolations = [...displayed.violations].sort((a, b) => {
     const rank = (flag: string) =>
       flag === "Critical" ? 0 : flag === "Not Critical" ? 1 : 2;
     return rank(a.critical_flag) - rank(b.critical_flag);
   });
 
+  // Newer/older navigation between inspections. `history` is ordered
+  // oldest -> newest, so "newer" is the NEXT index and "older" is the
+  // PREVIOUS index. When nothing has been explicitly selected yet
+  // (selectedEvent is null, displaying the restaurant's latest via
+  // fallback), that's equivalent to sitting at the last index -- the
+  // most recent entry -- for navigation purposes.
+  const currentIndex = selectedEvent
+    ? history.findIndex((e) => e.id === selectedEvent.id)
+    : history.length - 1;
+
+  const newerEvent =
+    currentIndex >= 0 && currentIndex < history.length - 1
+      ? history[currentIndex + 1]
+      : null;
+  const olderEvent =
+    currentIndex > 0 ? history[currentIndex - 1] : null;
+
   return (
     <section className="panel restaurant-report-panel">
-      <PanelHeader
-        title="Inspection Report"
-        infoContent={REPORT_INFO_CONTENT}
-      />
+      <PanelHeader title={panelTitle} infoContent={REPORT_INFO_CONTENT} />
       <div className="panel-scroll-content">
         {/* Same hero header block as RestaurantDetails -- name + Grade/Score
             badges, styled identically. Here it reflects the SELECTED
@@ -160,26 +185,42 @@ export default function RestaurantReport({
           </div>
         </div>
 
-        <h4 className="section-header">
-          Inspection Report - {formatDate(displayed.date)}
-        </h4>
+        {history.length > 0 && (
+          <div className="report-nav">
+            {newerEvent ? (
+              <button
+                type="button"
+                className="report-nav-btn"
+                onClick={() => onSelectInspection(newerEvent.id)}>
+                ← {formatDate(newerEvent.date)}
+              </button>
+            ) : (
+              <span className="report-nav-placeholder">
+                Most Current Report
+              </span>
+            )}
+
+            {olderEvent ? (
+              <button
+                type="button"
+                className="report-nav-btn"
+                onClick={() => onSelectInspection(olderEvent.id)}>
+                {formatDate(olderEvent.date)} →
+              </button>
+            ) : (
+              <span className="report-nav-placeholder">
+                Earliest Report
+              </span>
+            )}
+          </div>
+        )}
+
+        <h4 className="section-header">Inspection Information</h4>
         <table className="details-table">
           <tbody>
             <tr>
-              <td>Inspection Date</td>
-              <td>{formatDate(displayed.date)}</td>
-            </tr>
-            <tr>
               <td>Inspection Type</td>
               <td>{displayed.inspection_type || "—"}</td>
-            </tr>
-            <tr>
-              <td>Grade</td>
-              <td>{displayed.grade ?? "N/A"}</td>
-            </tr>
-            <tr>
-              <td>Score</td>
-              <td>{displayed.score}</td>
             </tr>
             <tr>
               <td>Action</td>

@@ -37,7 +37,10 @@
   --font-body: system-ui, sans-serif;
 
   /*///// LINKS /////*/
-  --link-hover: #f2f3f1;
+  --link-hover: #ffffff;
+  --link-background-hover: #424242;
+  --link-selected:#ffffff;
+  
 }
 
 /*///////////////////////////////////////////// DOCUMENT FOUNDATION //////////////////////////////////////////////*/
@@ -60,6 +63,10 @@ body {
 
   padding: var(--space-s);
   overflow: hidden;
+}
+/*///////////////////////////////////////////// MISC //////////////////////////////////////////////*/
+p {
+  text-align: justify;
 }
 
 /*///////////////////////////////////////////// ROOT CONTAINERS //////////////////////////////////////////////*/
@@ -159,19 +166,18 @@ body {
   gap: 0;
   height: 100%;
   min-height: 0;
-  min-width: 0; 
-  width: 100%;  
+  min-width: 0;
+  width: 100%;
 }
 
 .explorer .restaurant-list,
 .explorer .restaurant-details,
-.explorer .restaurant-report
- {
+.explorer .restaurant-report {
   height: 100%;
   min-height: 0;
   overflow: hidden;
-  min-width: 0; 
-  width: 100%;  
+  min-width: 0;
+  width: 100%;
 }
 
 .explorer-tabs {
@@ -199,6 +205,7 @@ body {
 
 .explorer-tab:hover {
   color: var(--text-heading);
+  background-color: var(--link-background-hover);
 }
 
 .explorer-tab.active {
@@ -208,25 +215,18 @@ body {
 }
 
 .explorer-tab:first-child,
-.explorer-tab:nth-child(2) { 
+.explorer-tab:nth-child(2) {
   border-right: 1px solid var(--border-panel);
 }
 
-.explorer-tab:hover:disabled {
-  color: var(--text-muted);
-}
-
-.explorer-tab:disabled {
-  cursor:default;
-}
 
 
 .explorer-content {
   flex: 1;
   min-height: 0;
   overflow: hidden;
-  min-width: 0; 
-  width: 100%;  
+  min-width: 0;
+  width: 100%;
 }
 
 .explorer-pane-hidden {
@@ -338,7 +338,9 @@ body {
   font-size: 0.8rem;
   text-transform: uppercase;
   font-weight: 700;
-  padding: 0.2rem var(--space-s);
+  padding-left:0.4rem;
+
+  
 }
 
 .panel-header-info-button {
@@ -360,7 +362,7 @@ body {
   position: absolute;
   top: calc(100% + 4px);
   right: 0;
-  z-index: 10;  
+  z-index: 10;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
   padding: var(--space-s);
@@ -381,8 +383,6 @@ body {
 .info-popup-section:last-child {
   margin-bottom: 0;
 }
-
-
 
 .panel-scroll-content {
   flex: 1;
@@ -443,7 +443,7 @@ body {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-size: 19px; 
+  font-size: 19px;
   width: 36px;
   height: 36px;
   background: transparent;
@@ -472,7 +472,6 @@ a:focus-visible {
   margin-top: var(--space-s);
 }
 
-
 .details-hero-header {
   display: flex;
   align-items: center;
@@ -480,7 +479,6 @@ a:focus-visible {
   padding: 0.25rem 0.5rem 0.25rem 0.5rem;
   width: 100%;
   min-width: 0;
-  
 }
 
 .details-hero-main {
@@ -513,7 +511,7 @@ a:focus-visible {
 }
 
 .details-hero-badges .badge-box {
-  width: 46px;  /* Scaled up from 40px */
+  width: 46px; /* Scaled up from 40px */
   height: 46px;
 }
 
@@ -577,10 +575,10 @@ a:focus-visible {
 /* Restaurant Details Section Header */
 .section-header {
   background-color: var(--bg-alt);
- padding-left:0.5rem;
- padding-bottom:0.5rem;
- padding-top:0.5rem;
-  margin-top: var(--space-s);
+  padding-left: 0.4rem;
+  padding-bottom: 0.4rem;
+  padding-top: 0.4rem;
+  
   margin-bottom: 0.4rem;
   font-weight: 700;
   font-size: 0.75rem;
@@ -610,7 +608,7 @@ a:focus-visible {
 }
 
 .violation-tag {
-  display: inline-block;    
+  display: inline-block;
   padding: 0.05rem 0.3rem;
   font-size: 0.7rem;
   font-weight: 700;
@@ -703,11 +701,11 @@ a:focus-visible {
   flex-direction: column;
   height: 100%;
   overflow: hidden;
-  width: 100%; 
+  width: 100%;
   min-width: 0;
 }
 
-/* Sort Header Bar */
+/*///////////////////////////////////////////// RESTAURANT SORTING //////////////////////////////////////////////*/
 .restaurant-list-sort-bar {
   display: flex;
   align-items: center;
@@ -725,8 +723,7 @@ a:focus-visible {
 .sort-select {
   background: var(--bg-alt);
   color: var(--text-body);
-  border: 1px solid var(--border-panel);
-  border-radius: 4px;
+  border: 1px solid var(--border-panel);  
   padding: 0.25rem 0.5rem;
   font-size: 0.85rem;
   cursor: pointer;
@@ -738,8 +735,7 @@ a:focus-visible {
   gap: 0.35rem;
   background: var(--bg-alt);
   color: var(--text-body);
-  border: 1px solid var(--border-panel);
-  border-radius: 4px;
+  border: 1px solid var(--border-panel);  
   padding: 0.25rem 0.5rem;
   font-size: 0.85rem;
   cursor: pointer;
@@ -758,8 +754,8 @@ a:focus-visible {
   gap: 0.5rem;
   overflow: hidden;
   margin-bottom: 0.5rem;
-  width: 100%;    
-  min-width: 0;   
+  width: 100%;
+  min-width: 0;
 }
 
 .restaurant-card {
@@ -772,7 +768,7 @@ a:focus-visible {
   border: 1px solid var(--border-panel);
   padding: 0.5rem 0.75rem;
   cursor: pointer;
-  min-width: 0; 
+  min-width: 0;
   width: 100%;
   opacity: 0.75;
 }
@@ -786,7 +782,7 @@ a:focus-visible {
 
 .restaurant-card.selected {
   opacity: 1;
-  background: #2a2a2a;  
+  background: #2a2a2a;
   filter: brightness(1.2);
 }
 
@@ -795,8 +791,8 @@ a:focus-visible {
   flex-direction: column;
   overflow: hidden;
   padding-right: 0.5rem;
-  flex: 1;        
-  min-width: 0;  
+  flex: 1;
+  min-width: 0;
   justify-content: center;
   height: 100%;
 }
@@ -864,7 +860,7 @@ a:focus-visible {
   padding: var(--space-s);
 }
 
-/* Pinned Pagination Controls */
+/* Pagination Controls */
 .restaurant-list-pagination {
   flex-shrink: 0;
   display: flex;
@@ -892,10 +888,53 @@ a:focus-visible {
   opacity: 0.4;
   cursor: not-allowed;
 }
-
-
+/*///////////////////////////////////////////// RESTAURANT REPORTS //////////////////////////////////////////////*/
 .restaurant-report-panel {
   display: flex;
   flex-direction: column;
+}
+.report-nav {
+  display: flex;
+  border: 1px solid var(--border-panel);  
+  margin:1rem 0rem 1rem 0rem;
+  overflow: hidden; 
 
+}
+
+.report-nav-btn,
+.report-nav-placeholder {
+  flex: 1;
+  text-align: center;
+  padding: 0.4rem 0.6rem;
+  font-size: 0.8rem;
+}
+
+.report-nav-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-right: 1px solid var(--border-panel);
+  font: inherit;
+  cursor: pointer;
+  font-weight: 700;
+  font-size:0.8rem;
+}
+
+.report-nav-btn:last-child {
+  border-right: none;
+}
+
+.report-nav-btn:hover {
+  background-color: var(--link-background-hover);
+  color:var(--link-hover);
+}
+
+.report-nav-placeholder {
+  color: var(--text-muted);  
+  opacity: 0.6;
+  border-right: 1px solid var(--border-panel);
+}
+
+.report-nav-placeholder:last-child {
+  border-right: none;
 }
