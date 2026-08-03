@@ -4,8 +4,13 @@
 //
 // Creates the map and inspection layer, renders restaurants using the
 // project's grading symbology, handles restaurant selection, keeps the
-// displayed features synchronized with the active dashboard filters, and
-// reports the set of restaurants currently visible in the map's extent.
+// displayed features synchronized with the active dashboard filters and
+// search query, and reports the set of restaurants currently visible in
+// the map's extent.
+//
+// Query/geometry logic (visible-restaurant queries, filter extent
+// computation, selection-vs-filter checks) lives in ./mapQueries -- this
+// file focuses on React state, effects, and ArcGIS event wiring.
 
 import { useEffect, useRef } from "react";
 import Map from "@arcgis/core/Map";
@@ -16,10 +21,15 @@ import FeatureEffect from "@arcgis/core/layers/support/FeatureEffect";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 
 import esriConfig from "@arcgis/core/config";
-import type Graphic from "@arcgis/core/Graphic";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 import { CATEGORY_COLORS } from "../utils/gradeColours";
+import {
+  buildDefinitionExpression,
+  queryVisibleRestaurants,
+  checkSelectionAgainstFilters,
+  queryFilterExtent,
+} from "../types/mapQueries";
 
 esriConfig.apiKey = import.meta.env.PUBLIC_ARCGIS_API_KEY;
 
@@ -58,14 +68,6 @@ const renderer = {
   ],
 };
 
-const CATEGORY_CLAUSES: Record<string, string> = {
-  A: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score <= 13`,
-  B: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score BETWEEN 14 AND 27`,
-  C: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score >= 28`,
-  Pending: `current_status_code <> 'closed' AND grade IN ('Z','P','N')`,
-  Closed: `current_status_code = 'closed'`,
-};
-
 // Labels appear next to the map points at or below a scale of 1:2,000.
 const LABEL_MIN_SCALE = 2000;
 
@@ -87,55 +89,15 @@ const labelClass = new LabelClass({
 // -1 is guaranteed not to exist as a real object ID, so this filter reliably matches zero features.
 const NO_SELECTION_FILTER = new FeatureFilter({ objectIds: [-1] });
 
-// Page size for querying visible restaurants. Kept safely under typical
-// ArcGIS maxRecordCount limits (commonly 1000-2000) so each page request
-// is well within what the layer will actually return.
-const VISIBLE_QUERY_PAGE_SIZE = 2000;
-
-// Queries ALL restaurants intersecting the current map extent, not just the
-// first page. A single queryFeatures() call is capped by the layer's
-// maxRecordCount -- if more restaurants are in view than that limit, the
-// server (or GeoJSONLayer's client-side query engine) silently truncates
-// the result and sets exceededTransferLimit instead of erroring. Looping
-// with start/num until exceededTransferLimit is false ensures downstream
-// consumers (like RestaurantList's sort) always operate on the complete
-// set of restaurants actually in view, not a partial slice.
-async function queryVisibleRestaurants(
-  view: MapView,
-  layer: GeoJSONLayer
-): Promise<RestaurantProperties[]> {
-  await layer.load();
-
-  const baseQuery = layer.createQuery();
-  baseQuery.geometry = view.extent;
-  baseQuery.spatialRelationship = "intersects";
-  baseQuery.returnGeometry = false;
-  baseQuery.outFields = ["*"];
-
-  const allFeatures: Graphic[] = [];
-  let start = 0;
-
-  while (true) {
-    const query = baseQuery.clone();
-    query.start = start;
-    query.num = VISIBLE_QUERY_PAGE_SIZE;
-
-    const result = await layer.queryFeatures(query);
-    allFeatures.push(...result.features);
-
-    if (!result.exceededTransferLimit || result.features.length === 0) {
-      break;
-    }
-    start += VISIBLE_QUERY_PAGE_SIZE;
-  }
-
-  return allFeatures.map(
-    (feature) => feature.attributes as RestaurantProperties
-  );
-}
+// Default map view -- used both for the initial load and to reset the
+// camera when borough/search filters are cleared back to "none" with
+// nothing selected (see the filter effect below).
+const DEFAULT_CENTER: [number, number] = [-73.98, 40.75];
+const DEFAULT_ZOOM = 11;
 
 type MapViewProps = {
   filters: Filters;
+  searchQuery?: string;
   selectedRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties | null) => void;
   onVisibleRestaurantsChange?: (restaurants: RestaurantProperties[]) => void;
@@ -143,6 +105,7 @@ type MapViewProps = {
 
 export default function InspectionMapView({
   filters,
+  searchQuery = "",
   selectedRestaurantId = null,
   onSelectRestaurant,
   onVisibleRestaurantsChange,
@@ -151,16 +114,42 @@ export default function InspectionMapView({
   const layerRef = useRef<GeoJSONLayer | null>(null);
   const viewRef = useRef<MapView | null>(null);
   const featureEffectRef = useRef<FeatureEffect | null>(null);
-  // Tracks the latest selectedRestaurantId so the filter effect (below,
-  // which only depends on [filters, onVisibleRestaurantsChange]) can read
-  // the current selection without needing selectedRestaurantId added to
-  // its own dependency array -- that would make it re-run on every
-  // selection change too, not just filter changes.
+
+  // Tracks the latest selectedRestaurantId AND the latest onSelectRestaurant
+  // callback in refs, so the filter effect (below, which should only
+  // re-run when FILTERS/search change) can read/call both without needing
+  // them in its own dependency array -- Dashboard doesn't memoize
+  // handleSelectRestaurant, so adding it directly as a dependency would
+  // make this effect re-run on every Dashboard render, not just filter
+  // changes.
   const selectedRestaurantIdRef = useRef<string | null>(selectedRestaurantId);
+  const onSelectRestaurantRef = useRef(onSelectRestaurant);
+  // Tracks the previous borough selection and search query so the filter
+  // effect can tell whether either specifically changed (which should
+  // move the camera) versus only GRADE changing (which never should).
+  const prevBoroughsRef = useRef<string[]>(filters.boroughs);
+  const prevSearchRef = useRef<string>(searchQuery);
+
+  // Monotonically increasing counter, incremented every time a
+  // visible-restaurants query is ISSUED. Rapid filter/search toggling can
+  // fire several of these async queries in quick succession, and they are
+  // NOT guaranteed to resolve in the order they were started -- a slow
+  // but stale response can land AFTER a faster, newer one and silently
+  // overwrite the correct result with an outdated one. Each query call
+  // captures the counter's value at the moment it's issued as its own
+  // "request ID"; when a query resolves, its result is only applied if
+  // that ID still matches the counter's CURRENT value -- i.e., no newer
+  // query has been issued since. Anything else is a stale, discarded
+  // response.
+  const queryRequestIdRef = useRef(0);
 
   useEffect(() => {
     selectedRestaurantIdRef.current = selectedRestaurantId;
   }, [selectedRestaurantId]);
+
+  useEffect(() => {
+    onSelectRestaurantRef.current = onSelectRestaurant;
+  }, [onSelectRestaurant]);
 
   useEffect(() => {
     if (!mapDivRef.current) return;
@@ -184,8 +173,8 @@ export default function InspectionMapView({
     const view = new MapView({
       container: mapDivRef.current,
       map,
-      center: [-73.98, 40.75],
-      zoom: 11,
+      center: DEFAULT_CENTER,
+      zoom: DEFAULT_ZOOM,
       constraints: { snapToZoom: false },
     });
     viewRef.current = view;
@@ -194,8 +183,10 @@ export default function InspectionMapView({
 
     const reportVisibleRestaurants = async () => {
       if (!onVisibleRestaurantsChange) return;
+      const requestId = ++queryRequestIdRef.current;
       try {
         const restaurants = await queryVisibleRestaurants(view, layer);
+        if (requestId !== queryRequestIdRef.current) return;
         onVisibleRestaurantsChange(restaurants);
       } catch (err) {
         console.error("MapView: failed to query visible restaurants", err);
@@ -250,11 +241,15 @@ export default function InspectionMapView({
   }, []);
 
   // Applies (or clears) the map highlight for a given restaurant ID.
-  // Shared by both the selection-sync effect and the filter effect below,
-  // so filtering doesn't have to choose between "leave the old highlight
-  // possibly stale" and "just wipe it" -- it can re-derive the correct
-  // highlight for whatever's currently selected.
-  async function applyHighlightForId(restaurantId: string | null) {
+  // Optionally accepts an already-known objectId (from a prior query) to
+  // skip a redundant re-fetch -- used by the filter effect below, which
+  // now performs ONE combined query (checkSelectionAgainstFilters) rather
+  // than a separate "does it still match" query followed by a second
+  // "what's its objectId" query the way this used to work.
+async function applyHighlightForId(
+  restaurantId: string | null,
+  knownObjectId?: number | null,
+) {
     const layer = layerRef.current;
     const view = viewRef.current;
     if (!layer || !view) return;
@@ -276,27 +271,26 @@ export default function InspectionMapView({
       return;
     }
 
-    const query = layer.createQuery();
-    query.where = `id = '${restaurantId}'`;
-    query.returnGeometry = false;
+    if (knownObjectId !== undefined) {
+      featureEffectRef.current.filter =
+        knownObjectId !== null
+          ? new FeatureFilter({ objectIds: [knownObjectId] })
+          : NO_SELECTION_FILTER;
+      return;
+    }
 
+    // No pre-fetched objectId available (e.g. called from the selection
+    // effect below, which doesn't already have this data) -- look it up.
     try {
-      const result = await layer.queryFeatures(query);
-      if (result.features.length > 0) {
-        const feature = result.features[0];
-        const idField = layer.objectIdField;
-        const objectId = idField ? feature.attributes[idField] : null;
-
-        if (objectId !== null && objectId !== undefined) {
-          featureEffectRef.current.filter = new FeatureFilter({ objectIds: [objectId] });
-        }
-      } else {
-        // The selected restaurant no longer matches the active
-        // definitionExpression (filtered out by grade/borough) -- clear
-        // the highlight since there's nothing on-screen to highlight,
-        // even though it's still selected in the other panels.
-        featureEffectRef.current.filter = NO_SELECTION_FILTER;
-      }
+      const { objectId } = await checkSelectionAgainstFilters(
+        layer,
+        restaurantId,
+        layer.definitionExpression ?? "",
+      );
+      featureEffectRef.current.filter =
+        objectId !== null
+          ? new FeatureFilter({ objectIds: [objectId] })
+          : NO_SELECTION_FILTER;
     } catch (err) {
       console.error("MapView: failed to query feature for selection highlight", err);
     }
@@ -314,15 +308,16 @@ export default function InspectionMapView({
       if (!selectedRestaurantId) return;
 
       // Pan and zoom to point whenever selected (from map or list)
-      const query = layer.createQuery();
-      query.where = `id = '${selectedRestaurantId}'`;
-      query.returnGeometry = true;
-
       try {
-        const result = await layer.queryFeatures(query);
-        if (result.features.length > 0 && result.features[0].geometry) {
+        const { geometry } = await checkSelectionAgainstFilters(
+          layer,
+          selectedRestaurantId,
+          "",
+          { returnGeometry: true },
+        );
+        if (geometry) {
           view.goTo(
-            { target: result.features[0].geometry, zoom: Math.max(view.zoom, 14) },
+            { target: geometry, zoom: Math.max(view.zoom, 14) },
             { duration: 500, easing: "ease-in-out" }
           );
         }
@@ -334,41 +329,114 @@ export default function InspectionMapView({
     applySelectionHighlight();
   }, [selectedRestaurantId]);
 
-  // Handle active filter updates
+  // Handle active filter and search updates
   useEffect(() => {
     const layer = layerRef.current;
     const view = viewRef.current;
     if (!layer) return;
 
-    const clauses: string[] = [];
+    const newDefinitionExpression = buildDefinitionExpression(
+      filters,
+      searchQuery,
+    );
+    layer.definitionExpression = newDefinitionExpression;
 
-    if (filters.grades.length > 0) {
-      const gradeClause = filters.grades
-        .map((g) => CATEGORY_CLAUSES[g])
-        .filter(Boolean)
-        .map((c) => `(${c})`)
-        .join(" OR ");
-      if (gradeClause) clauses.push(`(${gradeClause})`);
+    // Detect whether BOROUGHS or SEARCH specifically changed, as opposed
+    // to only GRADE changing -- only a borough or search change should
+    // ever move the camera.
+    const prevBoroughsSorted = [...prevBoroughsRef.current].sort().join(",");
+    const nextBoroughsSorted = [...filters.boroughs].sort().join(",");
+    const boroughsChanged = prevBoroughsSorted !== nextBoroughsSorted;
+    prevBoroughsRef.current = filters.boroughs;
+
+    const searchChanged = prevSearchRef.current !== searchQuery;
+    prevSearchRef.current = searchQuery;
+
+    const cameraTrigger = boroughsChanged || searchChanged;
+
+    async function syncSelectionAndZoom() {
+      if (!layer) return;
+
+      const currentId = selectedRestaurantIdRef.current;
+      let stillMatches = false;
+      let objectId: number | string | null = null;
+
+      if (currentId) {
+        // ONE combined query serves both "does the selection still
+        // match the new filters" AND "what's its objectId for
+        // highlighting" -- previously these were two separate round
+        // trips to the layer.
+        try {
+          const checkResult = await checkSelectionAgainstFilters(
+            layer,
+            currentId,
+            newDefinitionExpression,
+          );
+          stillMatches = checkResult.stillMatches;
+          objectId = checkResult.objectId;
+        } catch (err) {
+          console.error(
+            "MapView: failed to verify selection against new filters",
+            err
+          );
+        }
+      }
+
+      if (currentId && !stillMatches) {
+        // Selected restaurant no longer falls within the active
+        // grade/borough/search filters -- deselect it entirely, same as
+        // a manual map deselect (clears List/Details/Report too, not
+        // just the map highlight).
+        onSelectRestaurantRef.current?.(null);
+      } else {
+        // Either nothing is selected, or the selection still matches --
+        // keep/refresh its highlight using the objectId we already
+        // fetched above, rather than issuing a second query for it.
+        await applyHighlightForId(currentId, objectId);
+      }
+
+      // Camera behavior triggered only by borough or search changes.
+      // Grade-only changes never reach this block.
+      if (cameraTrigger && view) {
+        if (newDefinitionExpression) {
+          // Zoom to fit the full extent of whatever currently matches
+          // ALL active filters combined (grade + borough + search) --
+          // not just the borough or search clause in isolation.
+          try {
+            const { count, extent } = await queryFilterExtent(
+              layer,
+              newDefinitionExpression,
+            );
+            if (count > 0 && extent) {
+              view.goTo(extent.expand(1.2));
+            }
+          } catch (err) {
+            console.error(
+              "MapView: failed to compute filter/search extent",
+              err
+            );
+          }
+        } else if (!(currentId && stillMatches)) {
+          // Filters/search cleared back to none, AND nothing is
+          // currently selected (or the selection just got cleared
+          // above) -- reset to the default city-wide view. If a
+          // restaurant IS still selected and still matches, leave the
+          // camera where it is instead of zooming away from what the
+          // user is looking at.
+          view.goTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM });
+        }
+      }
     }
 
-    if (filters.boroughs.length > 0) {
-      const boroList = filters.boroughs.map((b) => `'${b}'`).join(",");
-      clauses.push(`boro IN (${boroList})`);
-    }
-
-    layer.definitionExpression = clauses.length > 0 ? clauses.join(" AND ") : "";
-
-    // Re-apply the highlight for whatever's currently selected, rather
-    // than unconditionally clearing it -- filtering shouldn't remove the
-    // map highlight for a restaurant that's still selected and still
-    // matches the new filters. (If the selected restaurant no longer
-    // matches, applyHighlightForId's own "not found" branch clears it,
-    // which is correct in that specific case.)
-    applyHighlightForId(selectedRestaurantIdRef.current);
+    syncSelectionAndZoom();
 
     if (view && onVisibleRestaurantsChange) {
+      const requestId = ++queryRequestIdRef.current;
       queryVisibleRestaurants(view, layer)
-        .then(onVisibleRestaurantsChange)
+        .then((restaurants) => {
+          if (requestId !== queryRequestIdRef.current) return;
+          onVisibleRestaurantsChange(restaurants);
+        })
         .catch((err) =>
           console.error(
             "MapView: failed to query visible restaurants after filter change",
@@ -376,7 +444,7 @@ export default function InspectionMapView({
           )
         );
     }
-  }, [filters, onVisibleRestaurantsChange]);
+  }, [filters, searchQuery, onVisibleRestaurantsChange]);
 
   return <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />;
 }

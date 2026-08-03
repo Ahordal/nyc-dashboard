@@ -2,28 +2,40 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import PanelHeader from "./PanelHeader";
+import SortDropdown from "./SortDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowUp, faArrowDown } from "@fortawesome/free-solid-svg-icons";
+import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 import type { RestaurantProperties } from "../types/restaurant";
 import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";
 import { toTitleCase } from "../utils/toTitleCase";
 
 const RESTAURANT_LIST_INFO_CONTENT = (
   <div className="info-popup-section">
-    <h4 className="section-header">How it Works</h4>
     <p>
-      The Restaurant List shows restaurants currently visible in the map view, and is sorted by inspection date by default.
+      Shows restaurants currently visible in the map view, respecting any active
+      Grade and Borough filters and the search field above.
     </p>
-    
-    
   </div>
 );
 
-type SortField = "name" | "grade" | "score" | "inspection_date";
+type SortField = "name" | "grade" | "score" | "inspection_date" | "cuisine";
 type SortDirection = "asc" | "desc";
 
+const SORT_FIELD_OPTIONS: { value: SortField; label: string }[] = [
+  { value: "inspection_date", label: "Inspection Date" },
+  { value: "name", label: "Restaurant Name" },
+  { value: "cuisine", label: "Cuisine Description" },
+  { value: "grade", label: "Grade" },
+  { value: "score", label: "Score" },
+];
+
+// How long the sort-change overlay stays visible before fading out --
+// same duration as the global filter-change overlay in Dashboard.tsx,
+// for visual consistency between the two.
+const SORT_NOTICE_DURATION_MS = 1750;
+
 // Fixed card height (including padding/margins) for deterministic pageSize math
-const CARD_HEIGHT = 72;
+const CARD_HEIGHT = 88;
 const MIN_PAGE_SIZE = 4;
 
 function formatDate(raw: string | null): string {
@@ -44,12 +56,14 @@ type RestaurantListProps = {
   restaurants: RestaurantProperties[];
   selectedRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties) => void;
+  onCountChange?: (count: number) => void;
 };
 
 export default function RestaurantList({
   restaurants,
   selectedRestaurantId = null,
   onSelectRestaurant,
+  onCountChange,
 }: RestaurantListProps) {
   const [sortField, setSortField] = useState<SortField>("inspection_date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
@@ -58,17 +72,45 @@ export default function RestaurantList({
 
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cardListRef = useRef<HTMLDivElement | null>(null);
-  const prevCountRef = useRef(restaurants.length);
 
-  // Guard page resets on dataset count changes
+  const prevRestaurantCountRef = useRef(restaurants.length);
+  const prevSelectedIdForResetRef = useRef<string | null>(selectedRestaurantId);
+
+  // Local, List-panel-scoped notice confirming a sort change -- distinct
+  // from Dashboard's cross-tab filter-change overlay, since sort never
+  // affects which restaurants are shown or the map itself; it's purely
+  // this panel's own display order. Skips the initial mount (the default
+  // sort applying on first render isn't a "change").
+  const [showSortNotice, setShowSortNotice] = useState(false);
+  const isFirstSortRender = useRef(true);
+  const sortNoticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
   useEffect(() => {
-    if (prevCountRef.current !== restaurants.length) {
-      setPage(1);
-      prevCountRef.current = restaurants.length;
+    if (isFirstSortRender.current) {
+      isFirstSortRender.current = false;
+      return;
     }
-  }, [restaurants.length]);
 
-  // Compute exact number of cards that fit in the available pane height
+    if (sortNoticeTimeoutRef.current) {
+      clearTimeout(sortNoticeTimeoutRef.current);
+    }
+
+    setShowSortNotice(true);
+    sortNoticeTimeoutRef.current = setTimeout(() => {
+      setShowSortNotice(false);
+    }, SORT_NOTICE_DURATION_MS);
+  }, [sortField, sortDirection]);
+
+  useEffect(() => {
+    return () => {
+      if (sortNoticeTimeoutRef.current) {
+        clearTimeout(sortNoticeTimeoutRef.current);
+      }
+    };
+  }, []);
+
   useEffect(() => {
     const cardList = cardListRef.current;
     if (!cardList) return;
@@ -107,6 +149,12 @@ export default function RestaurantList({
       switch (sortField) {
         case "name":
           return a.restaurant.name.localeCompare(b.restaurant.name) * dir;
+        case "cuisine":
+          return (
+            (a.restaurant.cuisine || "").localeCompare(
+              b.restaurant.cuisine || "",
+            ) * dir
+          );
         case "score":
           return (a.restaurant.score - b.restaurant.score) * dir;
         case "inspection_date":
@@ -122,22 +170,14 @@ export default function RestaurantList({
           const aPending = isPending(a.restaurant);
           const bPending = isPending(b.restaurant);
 
-          // Pending/ungraded restaurants aren't a 4th tier below C -- they simply
-          // haven't been graded yet. Always keep them at the end of the list,
-          // regardless of the asc/desc toggle, rather than letting them flip to
-          // the top when sorting descending.
           if (aPending !== bPending) return aPending ? 1 : -1;
-          if (aPending && bPending) return 0; // no meaningful order among pending restaurants
+          if (aPending && bPending) return 0;
 
-          // Both actually graded (A/B/C) -- rank normally, respecting direction
           const rank = (r: RestaurantProperties) =>
-            r.grade === "A" ? 0 : r.grade === "B" ? 1 : 2; // r.grade === "C"
+            r.grade === "A" ? 0 : r.grade === "B" ? 1 : 2;
           const rankDiff = rank(a.restaurant) - rank(b.restaurant);
           if (rankDiff !== 0) return rankDiff * dir;
 
-          // Tiebreak within the same grade tier -- respects the same direction as
-          // the outer sort, so descending ("worst first") also surfaces the
-          // worst-scoring restaurant within a tier first, not the best one.
           return (a.restaurant.score - b.restaurant.score) * dir;
         }
         default:
@@ -148,27 +188,41 @@ export default function RestaurantList({
     return withCategory;
   }, [restaurants, sortField, sortDirection]);
 
-  // Automatically navigate to the page containing the selected restaurant --
-  // runs whenever the selection, the sort order, or the visible-restaurants
-  // set changes, so the page always reflects where the selected restaurant
-  // actually sits, regardless of what caused sorted's contents to change.
   useEffect(() => {
-    if (!selectedRestaurantId || sorted.length === 0) return;
+    onCountChange?.(sorted.length);
+  }, [sorted.length, onCountChange]);
 
-    const index = sorted.findIndex(
-      ({ restaurant }) => restaurant.id === selectedRestaurantId,
-    );
+  useEffect(() => {
+    const countChanged = prevRestaurantCountRef.current !== restaurants.length;
+    const justDeselected =
+      prevSelectedIdForResetRef.current !== null &&
+      selectedRestaurantId === null;
 
-    if (index !== -1) {
-      const targetPage = Math.floor(index / pageSize) + 1;
-      setPage(targetPage);
+    prevRestaurantCountRef.current = restaurants.length;
+    prevSelectedIdForResetRef.current = selectedRestaurantId;
+
+    if (selectedRestaurantId && sorted.length > 0) {
+      const index = sorted.findIndex(
+        ({ restaurant }) => restaurant.id === selectedRestaurantId,
+      );
+      if (index !== -1) {
+        setPage(Math.floor(index / pageSize) + 1);
+        return;
+      }
     }
-  }, [selectedRestaurantId, sorted, pageSize]);
+
+    if (countChanged || justDeselected) {
+      setPage(1);
+    }
+  }, [restaurants.length, selectedRestaurantId, sorted, pageSize]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const clampedPage = Math.min(page, totalPages);
   const pageStart = (clampedPage - 1) * pageSize;
   const pageItems = sorted.slice(pageStart, pageStart + pageSize);
+
+  const currentSortLabel =
+    SORT_FIELD_OPTIONS.find((o) => o.value === sortField)?.label ?? "";
 
   return (
     <section className="panel restaurant-list-panel">
@@ -180,22 +234,18 @@ export default function RestaurantList({
       <div className="restaurant-list-container" ref={containerRef}>
         {/* Sort Controls Bar */}
         <div className="restaurant-list-sort-bar">
-          <label htmlFor="sort-field-select" className="sort-label">
+          <span id="sort-field-label" className="sort-label">
             Sort Results by:
-          </label>
-          <select
-            id="sort-field-select"
-            className="sort-select"
+          </span>
+          <SortDropdown
             value={sortField}
-            onChange={(e) => {
-              setSortField(e.target.value as SortField);
+            options={SORT_FIELD_OPTIONS}
+            onChange={(value) => {
+              setSortField(value);
               setPage(1);
-            }}>
-            <option value="inspection_date">Inspection Date</option>
-            <option value="name">Restaurant Name</option>
-            <option value="grade">Grade</option>
-            <option value="score">Score</option>
-          </select>
+            }}
+            labelId="sort-field-label"
+          />
 
           <button
             type="button"
@@ -206,9 +256,10 @@ export default function RestaurantList({
             }}
             aria-label={`Sort ${sortDirection === "asc" ? "descending" : "ascending"}`}>
             <FontAwesomeIcon
-              icon={sortDirection === "asc" ? faArrowUp : faArrowDown}
+              icon={faArrowUp}
+              className={`sort-direction-arrow ${sortDirection === "desc" ? "flipped" : ""}`}
             />
-            <span>{sortDirection === "asc" ? "Asc" : "Desc"}</span>
+            <span>{sortDirection === "asc" ? "Ascending" : "Descending"}</span>
           </button>
         </div>
 
@@ -224,9 +275,14 @@ export default function RestaurantList({
               <div
                 key={restaurant.id}
                 className={`restaurant-card ${isSelected ? "selected" : ""}`}
+                style={
+                  {
+                    "--card-grade-color": categoryColor,
+                    ...(isSelected ? { borderColor: categoryColor } : {}),
+                  } as React.CSSProperties
+                }
                 onClick={() => onSelectRestaurant?.(restaurant)}>
                 <div className="card-main">
-                  {/* Colored restaurant title matching grade category */}
                   <div
                     className="card-title"
                     style={{ color: categoryColor }}
@@ -234,12 +290,18 @@ export default function RestaurantList({
                     {name}
                   </div>
                   {address && <div className="card-subtext">{address}</div>}
+                  {restaurant.cuisine && (
+                    <div className="card-meta">
+                      <span className="card-meta-label">Cuisine:</span>{" "}
+                      {restaurant.cuisine}
+                    </div>
+                  )}
                   <div className="card-meta">
-                    Inspected: {formatDate(restaurant.inspection_date)}
+                    <span className="card-meta-label">Inspected:</span>{" "}
+                    {formatDate(restaurant.inspection_date)}
                   </div>
                 </div>
 
-                {/* Side-by-side Grade and Score badge squares */}
                 <div className="card-badges">
                   <div className="badge-box">
                     <span className="badge-label">GRADE</span>
@@ -270,7 +332,6 @@ export default function RestaurantList({
           )}
         </div>
 
-        {/* Pinned Pagination */}
         {sorted.length > 0 && (
           <div className="restaurant-list-pagination">
             <button
@@ -280,8 +341,8 @@ export default function RestaurantList({
               Previous
             </button>
             <span>
-              Page {clampedPage} of {totalPages} ({sorted.length} restaurants in
-              map view)
+              Page {clampedPage} of {totalPages.toLocaleString()} (
+              {sorted.length.toLocaleString()} restaurants in map view)
             </span>
             <button
               type="button"
@@ -289,6 +350,20 @@ export default function RestaurantList({
               disabled={clampedPage === totalPages}>
               Next
             </button>
+          </div>
+        )}
+
+        {/* Transient overlay confirming a sort change -- local to THIS
+            panel only, since sort never affects other tabs or the map.
+            Reuses the same visual classes as Dashboard's filter-change
+            overlay for consistency, but is positioned/scoped separately. */}
+        {showSortNotice && (
+          <div className="filter-notice-overlay">
+            <div className="filter-notice-text">
+              Sorted by {currentSortLabel} —{" "}
+              {sortDirection === "asc" ? "Ascending" : "Descending"} · Page{" "}
+              {clampedPage.toLocaleString()} of {totalPages.toLocaleString()}
+            </div>
           </div>
         )}
       </div>

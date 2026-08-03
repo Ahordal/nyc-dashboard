@@ -22,16 +22,33 @@ import type {
   InspectionEvent,
   ViolationCodeLookup,
 } from "../types/restaurant";
+import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 import { useEffect, useRef, useState } from "react";
 
 type ExplorerTab = "list" | "details" | "report";
+
+// How long the filter-change overlay stays visible before fading out.
+const FILTER_NOTICE_DURATION_MS = 2500;
+
+// Maps the Grade filter's button labels ("Pending", "Closed") to the
+// corresponding CATEGORY_COLORS keys, same mapping GradeFilters.tsx uses
+// for its own buttons -- needed here too so the overlay can color each
+// grade letter individually.
+const GRADE_FILTER_COLORS: Record<string, string> = {
+  A: CATEGORY_COLORS.A,
+  B: CATEGORY_COLORS.B,
+  C: CATEGORY_COLORS.C,
+  Pending: CATEGORY_COLORS.pending,
+  Closed: CATEGORY_COLORS.closed,
+};
 
 export default function Dashboard() {
   const [filters, setFilters] = useState<Filters>({
     grades: [],
     boroughs: [],
   });
+  const [searchQuery, setSearchQuery] = useState("");
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<RestaurantProperties | null>(null);
   const [activeExplorerTab, setActiveExplorerTab] =
@@ -39,6 +56,7 @@ export default function Dashboard() {
   const [visibleRestaurants, setVisibleRestaurants] = useState<
     RestaurantProperties[]
   >([]);
+  const [restaurantCount, setRestaurantCount] = useState<number>(0);
 
   // Inspection history for the currently selected restaurant, and which
   // single inspection (if any) is selected for the Report tab. Lifted up
@@ -55,6 +73,56 @@ export default function Dashboard() {
   // Violation code descriptions -- fetched once, shared by both Details
   // and Report.
   const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>({});
+
+  // Transient overlay shown across the whole explorer panel (regardless
+  // of which tab is active) whenever the Grade/Borough filters OR the
+  // search query change -- just a visibility flag. The restaurant count
+  // is provided directly via `onCountChange` from RestaurantList so that
+  // the overlay always mirrors the exact total shown in the pagination
+  // footer.
+  const [showFilterNotice, setShowFilterNotice] = useState(false);
+  const isFirstFilterRender = useRef(true);
+  const filterNoticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
+    null,
+  );
+
+  // Convert array state to string keys so React detects ANY addition/removal
+  const gradesKey = filters.grades.join(",");
+  const boroughsKey = filters.boroughs.join(",");
+
+  useEffect(() => {
+    if (isFirstFilterRender.current) {
+      isFirstFilterRender.current = false;
+      return;
+    }
+
+    if (filterNoticeTimeoutRef.current) {
+      clearTimeout(filterNoticeTimeoutRef.current);
+    }
+
+    // Briefly reset to trigger re-render / animation update on rapid succession
+    setShowFilterNotice(false);
+
+    // Request animation frame ensures DOM acknowledges the state reset before showing again
+    const animationFrame = requestAnimationFrame(() => {
+      setShowFilterNotice(true);
+      filterNoticeTimeoutRef.current = setTimeout(() => {
+        setShowFilterNotice(false);
+      }, FILTER_NOTICE_DURATION_MS);
+    });
+
+    return () => {
+      cancelAnimationFrame(animationFrame);
+    };
+  }, [gradesKey, boroughsKey, searchQuery]);
+
+  useEffect(() => {
+    return () => {
+      if (filterNoticeTimeoutRef.current) {
+        clearTimeout(filterNoticeTimeoutRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -155,6 +223,7 @@ export default function Dashboard() {
         <div className="map-view">
           <MapView
             filters={filters}
+            searchQuery={searchQuery}
             selectedRestaurantId={selectedRestaurant?.id ?? null}
             onSelectRestaurant={handleSelectRestaurant}
             onVisibleRestaurantsChange={setVisibleRestaurants}
@@ -166,7 +235,7 @@ export default function Dashboard() {
         </div>
 
         <div className="search-panel">
-          <ExplorerSearch />
+          <ExplorerSearch onSearchChange={setSearchQuery} />
         </div>
 
         <div className="explorer">
@@ -212,6 +281,7 @@ export default function Dashboard() {
                 restaurants={visibleRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
                 onSelectRestaurant={handleSelectRestaurant}
+                onCountChange={setRestaurantCount}
               />
             </div>
             <div
@@ -238,6 +308,69 @@ export default function Dashboard() {
                 onSelectInspection={handleSelectInspection}
               />
             </div>
+
+            {/* Transient overlay confirming a filter or search change --
+                key forces React to tear down and re-render the element
+                on filter/search changes */}
+            {showFilterNotice && (
+              <div
+                key={`${gradesKey}-${boroughsKey}-${searchQuery}`}
+                className="filter-notice-overlay"
+              >
+                <div className="filter-notice-text">
+                  {filters.grades.length > 0 && (
+                    <span className="filter-notice-group">
+                      Grade:{" "}
+                      {filters.grades.map((grade, i) => (
+                        <span key={grade}>
+                          <span
+                            style={{ color: GRADE_FILTER_COLORS[grade] }}>
+                            {grade}
+                          </span>
+                          {i < filters.grades.length - 1 && ", "}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+
+                  {filters.grades.length > 0 &&
+                    filters.boroughs.length > 0 && (
+                      <span className="filter-notice-separator"> · </span>
+                    )}
+
+                  {filters.boroughs.length > 0 && (
+                    <span className="filter-notice-group">
+                      Borough: {filters.boroughs.join(", ")}
+                    </span>
+                  )}
+
+                  {(filters.grades.length > 0 ||
+                    filters.boroughs.length > 0) &&
+                    searchQuery && (
+                      <span className="filter-notice-separator"> · </span>
+                    )}
+
+                  {searchQuery && (
+                    <span className="filter-notice-group">
+                      Search: "{searchQuery}"
+                    </span>
+                  )}
+
+                  {filters.grades.length === 0 &&
+                    filters.boroughs.length === 0 &&
+                    !searchQuery && (
+                      <span className="filter-notice-group">
+                        All Restaurants
+                      </span>
+                    )}
+
+                  <span className="filter-notice-separator"> — </span>
+                  <span className="filter-notice-group">
+                    {restaurantCount.toLocaleString()} restaurants
+                  </span>
+                </div>
+              </div>
+            )}
           </div>
         </div>
 

@@ -98,8 +98,8 @@ const RESTAURANT_INFO_CONTENT = (
       <h4 className="section-header">NYC Health Information</h4>
       <ul>
         <li>
-          
-            <a href="https://www.nyc.gov/assets/doh/downloads/pdf/rii/restaurant-grading-faq.pdf"
+          <a
+            href="https://www.nyc.gov/assets/doh/downloads/pdf/rii/restaurant-grading-faq.pdf"
             target="_blank"
             rel="noopener noreferrer">
             How We Score and Grade
@@ -111,8 +111,8 @@ const RESTAURANT_INFO_CONTENT = (
           />
         </li>
         <li>
-          
-            <a href="https://www.nyc.gov/assets/doh/downloads/pdf/rii/inspection-cycle-and-letter-grading.pdf"
+          <a
+            href="https://www.nyc.gov/assets/doh/downloads/pdf/rii/inspection-cycle-and-letter-grading.pdf"
             target="_blank"
             rel="noopener noreferrer">
             Inspection Cycle Overview
@@ -147,7 +147,7 @@ export default function RestaurantDetails({
     return (
       <section className="panel restaurant-details-panel">
         <PanelHeader
-          title="Restaurant & Inspection Details"
+          title="Restaurant Details"
           infoContent={RESTAURANT_INFO_CONTENT}
         />
         <div className="panel-scroll-content">
@@ -159,10 +159,6 @@ export default function RestaurantDetails({
     );
   }
 
-  // The hero header always reflects the restaurant's own latest
-  // inspection -- not whichever inspection is selected for the Report
-  // tab. Details is a fixed overview of the restaurant; drilling into a
-  // specific historical report now happens entirely on the Report tab.
   const category = getGradeCategory(
     restaurant.action,
     restaurant.grade,
@@ -179,7 +175,7 @@ export default function RestaurantDetails({
   return (
     <section className="panel restaurant-details-panel">
       <PanelHeader
-        title="Restaurant & Inspection Details"
+        title="Restaurant Details"
         infoContent={RESTAURANT_INFO_CONTENT}
       />
       <div className="panel-scroll-content">
@@ -272,46 +268,46 @@ export default function RestaurantDetails({
           </tbody>
         </table>
 
+        {/* Section Header always rendered regardless of loading state */}
+        <h4 className="section-header">Inspection History</h4>
+
         {isLoadingHistory && (
           <p className="details-loading">Loading inspection history…</p>
         )}
 
         {!isLoadingHistory && historyDescending.length > 0 && (
-          <>
-            <h4 className="section-header">Inspection History</h4>
-            <ul className="inspection-history-list">
-              {historyDescending.map((event) => {
-                const eventCategory = getGradeCategory(
-                  event.action,
-                  event.grade,
-                  event.score,
-                );
-                const isSelected = event.id === selectedInspectionId;
-                return (
-                  <li
-                    key={event.id}
-                    className={isSelected ? "inspection-row-selected" : ""}
-                    onClick={() => onSelectInspection(event.id)}>
-                    <span
-                      className="inspection-row-dot"
-                      style={{
-                        backgroundColor: CATEGORY_COLORS[eventCategory],
-                      }}
-                    />
-                    <span className="inspection-row-date">
-                      {formatDate(event.date)}
-                    </span>
-                    <span
-                      className="inspection-row-grade"
-                      style={{ color: CATEGORY_COLORS[eventCategory] }}>
-                      {event.grade ?? "N/A"}
-                    </span>
-                    <span className="inspection-row-score">{event.score}</span>
-                  </li>
-                );
-              })}
-            </ul>
-          </>
+          <ul className="inspection-history-list">
+            {historyDescending.map((event) => {
+              const eventCategory = getGradeCategory(
+                event.action,
+                event.grade,
+                event.score,
+              );
+              const isSelected = event.id === selectedInspectionId;
+              return (
+                <li
+                  key={event.id}
+                  className={isSelected ? "inspection-row-selected" : ""}
+                  onClick={() => onSelectInspection(event.id)}>
+                  <span
+                    className="inspection-row-dot"
+                    style={{
+                      backgroundColor: CATEGORY_COLORS[eventCategory],
+                    }}
+                  />
+                  <span className="inspection-row-date">
+                    {formatDate(event.date)}
+                  </span>
+                  <span
+                    className="inspection-row-grade"
+                    style={{ color: CATEGORY_COLORS[eventCategory] }}>
+                    {event.grade ?? "N/A"}
+                  </span>
+                  <span className="inspection-row-score">{event.score}</span>
+                </li>
+              );
+            })}
+          </ul>
         )}
       </div>
     </section>

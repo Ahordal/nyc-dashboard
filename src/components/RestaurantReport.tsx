@@ -185,7 +185,8 @@ export default function RestaurantReport({
           </div>
         </div>
 
-        {history.length > 0 && (
+        {/* Only render navigation controls if there are multiple reports to browse */}
+        {history.length > 1 && (
           <div className="report-nav">
             {newerEvent ? (
               <button
