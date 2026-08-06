@@ -60,11 +60,51 @@ const renderer = {
     size: 6,
   },
   uniqueValueInfos: [
-    { value: "A", symbol: { type: "simple-marker", color: CATEGORY_COLORS.A, outline: { color: "#1a1a1a", width: 0.5 }, size: 5 } },
-    { value: "B", symbol: { type: "simple-marker", color: CATEGORY_COLORS.B, outline: { color: "#1a1a1a", width: 0.5 }, size: 5 } },
-    { value: "C", symbol: { type: "simple-marker", color: CATEGORY_COLORS.C, outline: { color: "#1a1a1a", width: 0.5 }, size: 5 } },
-    { value: "pending", symbol: { type: "simple-marker", color: CATEGORY_COLORS.pending, outline: { color: "#1a1a1a", width: 0.5 }, size: 5 } },
-    { value: "closed", symbol: { type: "simple-marker", color: CATEGORY_COLORS.closed, outline: { color: "#1a1a1a", width: 1 }, size: 5 } },
+    {
+      value: "A",
+      symbol: {
+        type: "simple-marker",
+        color: CATEGORY_COLORS.A,
+        outline: { color: "#1a1a1a", width: 0.5 },
+        size: 5,
+      },
+    },
+    {
+      value: "B",
+      symbol: {
+        type: "simple-marker",
+        color: CATEGORY_COLORS.B,
+        outline: { color: "#1a1a1a", width: 0.5 },
+        size: 5,
+      },
+    },
+    {
+      value: "C",
+      symbol: {
+        type: "simple-marker",
+        color: CATEGORY_COLORS.C,
+        outline: { color: "#1a1a1a", width: 0.5 },
+        size: 5,
+      },
+    },
+    {
+      value: "pending",
+      symbol: {
+        type: "simple-marker",
+        color: CATEGORY_COLORS.pending,
+        outline: { color: "#1a1a1a", width: 0.5 },
+        size: 5,
+      },
+    },
+    {
+      value: "closed",
+      symbol: {
+        type: "simple-marker",
+        color: CATEGORY_COLORS.closed,
+        outline: { color: "#1a1a1a", width: 1 },
+        size: 5,
+      },
+    },
   ],
 };
 
@@ -208,7 +248,8 @@ export default function InspectionMapView({
       await layer.load();
 
       const graphicHit = response.results.find(
-        (result) => "graphic" in result && (result as any).graphic.layer === layer
+        (result) =>
+          "graphic" in result && (result as any).graphic.layer === layer,
       ) as { graphic: { attributes: RestaurantProperties } } | undefined;
 
       if (graphicHit) {
@@ -225,7 +266,8 @@ export default function InspectionMapView({
     const pointerMoveHandle = view.on("pointer-move", async (event) => {
       const response = await view.hitTest(event);
       const isOverFeature = response.results.some(
-        (result) => "graphic" in result && (result as any).graphic.layer === layer
+        (result) =>
+          "graphic" in result && (result as any).graphic.layer === layer,
       );
       if (view.container) {
         view.container.style.cursor = isOverFeature ? "pointer" : "default";
@@ -246,10 +288,10 @@ export default function InspectionMapView({
   // now performs ONE combined query (checkSelectionAgainstFilters) rather
   // than a separate "does it still match" query followed by a second
   // "what's its objectId" query the way this used to work.
-async function applyHighlightForId(
-  restaurantId: string | null,
-  knownObjectId?: number | null,
-) {
+  async function applyHighlightForId(
+    restaurantId: string | null,
+    knownObjectId?: number | null,
+  ) {
     const layer = layerRef.current;
     const view = viewRef.current;
     if (!layer || !view) return;
@@ -260,7 +302,8 @@ async function applyHighlightForId(
     if (!featureEffectRef.current) {
       featureEffectRef.current = new FeatureEffect({
         filter: NO_SELECTION_FILTER,
-        includedEffect: "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)",
+        includedEffect:
+          "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)",
         excludedLabelsVisible: true,
       });
       layerView.featureEffect = featureEffectRef.current;
@@ -292,7 +335,10 @@ async function applyHighlightForId(
           ? new FeatureFilter({ objectIds: [objectId] })
           : NO_SELECTION_FILTER;
     } catch (err) {
-      console.error("MapView: failed to query feature for selection highlight", err);
+      console.error(
+        "MapView: failed to query feature for selection highlight",
+        err,
+      );
     }
   }
 
@@ -318,7 +364,7 @@ async function applyHighlightForId(
         if (geometry) {
           view.goTo(
             { target: geometry, zoom: Math.max(view.zoom, 14) },
-            { duration: 500, easing: "ease-in-out" }
+            { duration: 500, easing: "ease-in-out" },
           );
         }
       } catch (err) {
@@ -377,7 +423,7 @@ async function applyHighlightForId(
         } catch (err) {
           console.error(
             "MapView: failed to verify selection against new filters",
-            err
+            err,
           );
         }
       }
@@ -399,30 +445,26 @@ async function applyHighlightForId(
       // Grade-only changes never reach this block.
       if (cameraTrigger && view) {
         if (newDefinitionExpression) {
-          // Zoom to fit the full extent of whatever currently matches
-          // ALL active filters combined (grade + borough + search) --
-          // not just the borough or search clause in isolation.
           try {
-            const { count, extent } = await queryFilterExtent(
+            const { count, extent, isDegenerate } = await queryFilterExtent(
               layer,
               newDefinitionExpression,
             );
+
             if (count > 0 && extent) {
-              view.goTo(extent.expand(1.2));
+              if (isDegenerate) {
+                view.goTo({ center: extent.center, zoom: 16 });
+              } else {
+                view.goTo(extent.expand(1.2));
+              }
             }
           } catch (err) {
             console.error(
               "MapView: failed to compute filter/search extent",
-              err
+              err,
             );
           }
         } else if (!(currentId && stillMatches)) {
-          // Filters/search cleared back to none, AND nothing is
-          // currently selected (or the selection just got cleared
-          // above) -- reset to the default city-wide view. If a
-          // restaurant IS still selected and still matches, leave the
-          // camera where it is instead of zooming away from what the
-          // user is looking at.
           view.goTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM });
         }
       }
@@ -440,8 +482,8 @@ async function applyHighlightForId(
         .catch((err) =>
           console.error(
             "MapView: failed to query visible restaurants after filter change",
-            err
-          )
+            err,
+          ),
         );
     }
   }, [filters, searchQuery, onVisibleRestaurantsChange]);

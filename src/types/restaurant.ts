@@ -27,6 +27,9 @@ export type RestaurantProperties = {
   id: string;
   camis: string;
   name: string;
+  latitude?: number;
+  longitude?: number;
+  search_index: string;
   boro: string;
   building: string;
   street: string;
@@ -56,9 +59,20 @@ export type RestaurantProperties = {
 export type InspectionEvent = {
   id: string;
   date: string;
-  score: number;
+  // Administrative grades (N - Not Yet Graded in particular) often have
+  // no computed score. The pipeline can emit `null` or omit the key
+  // entirely for these, so this is genuinely nullable -- consumers must
+  // check before using it numerically (see PerformanceChart.tsx).
+  score: number | null;
   grade: string | null;
   inspection_type: string;
   action: string;
   violations: Violation[];
+};
+export type ChartPoint = {
+  id: string;
+  timestamp: number;
+  score: number;
+  grade: string | null; 
+  action: string | null;
 };

@@ -159,6 +159,157 @@ export function normalizeBoro(rawBoro) {
   return BORO_DISPLAY_NAMES[key] ?? rawBoro;
 }
 
+// Legal/corporate suffixes stripped from search tokens -- these rarely
+// help someone find a restaurant and only add noise to the index.
+const CORPORATE_SUFFIXES = new Set([
+  "INC",
+  "LLC",
+  "CORP",
+  "CO",
+  "LTD",
+  "LP",
+  "PC",
+]);
+
+// Two-way street/word abbreviation expansions. Each key maps to the
+// expansion added as an EXTRA token alongside the original -- both forms
+// end up in the search index, so a query in either form matches. "ST" is
+// deliberately mapped to both "STREET" and "SAINT" since it's genuinely
+// ambiguous without positional context (e.g. "1st St" vs "St. Mark's");
+// adding both extra tokens is harmless for matching purposes, it just
+// means "ST" contributes a bit of redundant searchable text.
+const ABBREVIATION_EXPANSIONS = {
+  ST: ["STREET", "SAINT"],
+  AVE: ["AVENUE"],
+  BLVD: ["BOULEVARD"],
+  RD: ["ROAD"],
+  DR: ["DRIVE"],
+  LN: ["LANE"],
+  PL: ["PLACE"],
+  CT: ["COURT"],
+  PKWY: ["PARKWAY"],
+  HWY: ["HIGHWAY"],
+  EXPY: ["EXPRESSWAY"],
+  SQ: ["SQUARE"],
+  TER: ["TERRACE"],
+  BLDG: ["BUILDING"],
+  INTL: ["INTERNATIONAL"],
+  N: ["NORTH"],
+  S: ["SOUTH"],
+  E: ["EAST"],
+  W: ["WEST"],
+};
+
+/**
+ * Normalizes a single free-text field into a set of searchable tokens:
+ * uppercased, apostrophes/periods stripped (so "INT'L" and "ST." become
+ * "INTL" and "ST" before abbreviation lookup), corporate suffixes
+ * dropped, and each remaining word expanded via ABBREVIATION_EXPANSIONS
+ * where applicable (original word is always kept alongside its
+ * expansion(s), never replaced).
+ *
+ * Returns an array of tokens rather than a joined string, so callers can
+ * combine tokens from multiple source fields before deduping/joining
+ * once at the end.
+ */
+// Strips diacritics (á -> a, é -> e, ñ -> n, etc.) 
+function stripDiacritics(text) {
+  return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+function normalizeToTokens(raw) {
+  if (!raw) return [];
+
+  const cleaned = stripDiacritics(String(raw))
+    .toUpperCase()
+    .replace(/&/g, " AND ") // & -> AND as its own token, not stripped
+    .replace(/['".]/g, "") // strip apostrophes and periods
+    .replace(/[^A-Z0-9\s]/g, " "); // any other punctuation -> space
+
+  const words = cleaned.split(/\s+/).filter(Boolean);
+  const tokens = [];
+
+  for (const word of words) {
+    if (CORPORATE_SUFFIXES.has(word)) continue; // drop entirely, no value as a search term
+    tokens.push(word);
+    const expansions = ABBREVIATION_EXPANSIONS[word];
+    if (expansions) tokens.push(...expansions);
+  }
+
+  return tokens;
+}
+
+/**
+ * Builds the single normalized `search_index` string stored on each
+ * restaurant feature, combining name, cuisine, street, and building into
+ * one searchable field. This is where several categories of search
+ * discrepancy get resolved ONCE at build time rather than via live query
+ * variants:
+ *
+ *   - Apostrophe omissions ("mcdonalds" / "McDonald's") -- apostrophes
+ *     stripped from both sides before matching
+ *   - Casing anomalies -- everything uppercased
+ *   - Conjunction variations (& vs AND) -- & expanded to AND as an extra
+ *     token, original & also preserved via the raw join below
+ *   - Corporate suffixes (INC/LLC/CORP) -- dropped as noise
+ *   - Street/word abbreviations (St/Saint, Ave/Avenue, Bldg/Building,
+ *     Int'l/International, etc.) -- both forms indexed via
+ *     ABBREVIATION_EXPANSIONS
+ *   - Leading "THE " -- NOT stripped from name itself (needed to
+ *     preserve the restaurant's real name for display), but a
+ *     "THE "-stripped variant of the name is ALSO added as an extra
+ *     token so "Bitter End" matches "The Bitter End"
+ *   - Parenthetical location/sub-venue tags (e.g. "The Pecking Order
+ *     (The Bronx Zoo)") -- parenthetical content extracted and indexed
+ *     as its own additional tokens, so searching "Bronx Zoo" surfaces
+ *     this record even though it's not part of the primary name
+ *   - Slash-joined multi-concept spaces ("2A / Berlin / Old Flings") --
+ *     each segment split out and indexed separately, so searching
+ *     "Berlin" alone matches
+ 
+ */
+export function buildSearchIndex({ name, cuisine, street, building }) {
+  const tokenSets = [];
+
+  if (name) {
+    // Parenthetical content (e.g. "(The Bronx Zoo)") extracted and
+    // indexed separately from the main name.
+    const parenMatches = [...name.matchAll(/\(([^)]+)\)/g)].map((m) => m[1]);
+    const nameWithoutParens = name.replace(/\([^)]*\)/g, " ");
+
+    // Slash-joined multi-concept names ("2A / Berlin / Old Flings") --
+    // split into individual segments, each indexed on its own.
+    const slashSegments = nameWithoutParens
+      .split("/")
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    for (const segment of slashSegments) {
+      tokenSets.push(...normalizeToTokens(segment));
+    }
+    for (const paren of parenMatches) {
+      tokenSets.push(...normalizeToTokens(paren));
+    }
+
+    // "THE "-stripped variant, so "Bitter End" matches "The Bitter End"
+    // -- only adds the stripped tokens if the name actually starts with
+    // "The ", rather than unconditionally re-tokenizing.
+    if (/^THE\s+/i.test(name.trim())) {
+      tokenSets.push(
+        ...normalizeToTokens(name.trim().replace(/^THE\s+/i, "")),
+      );
+    }
+  }
+
+  for (const field of [cuisine, street, building]) {
+    tokenSets.push(...normalizeToTokens(field));
+  }
+
+  // Dedupe while preserving a stable order, then join into one
+  // space-separated string -- this is what gets stored on the feature
+  // and matched against with a single LIKE '%QUERY%' at query time.
+  return [...new Set(tokenSets)].join(" ");
+}
+
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
@@ -419,19 +570,35 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
 
     const status = deriveCurrentStatus(primary.action);
 
+    // Rounded coordinates to 6 decimal places (~11 cm precision)
+    const roundedLat = Math.round(lat * 1e6) / 1e6;
+    const roundedLon = Math.round(lon * 1e6) / 1e6;
+
     features.push({
       type: "Feature",
       geometry: {
         type: "Point",
-        // Rounded to 6 decimal places (~11 cm precision). The source data
-        // carries ~12 decimal places, but sub-millimeter precision is
-        // meaningless for a restaurant map and only increases file size.
-        coordinates: [Math.round(lon * 1e6) / 1e6, Math.round(lat * 1e6) / 1e6],
+        coordinates: [roundedLon, roundedLat],
       },
       properties: {
         id: latest.id,
         camis,
         name: primary.dba ?? "",
+        latitude: roundedLat,
+        longitude: roundedLon,
+        // Precomputed, normalized search field -- see buildSearchIndex()
+        // for the full list of what this resolves (apostrophes, casing,
+        // &/AND, corporate suffixes, street abbreviations, parenthetical
+        // sub-venue tags, slash-joined multi-concept names, leading
+        // "THE "). Search should query this field with a single
+        // UPPER(search_index) LIKE '%QUERY%' rather than separately
+        // matching name/cuisine/street/building.
+        search_index: buildSearchIndex({
+          name: primary.dba ?? "",
+          cuisine: primary.cuisine_description ?? "",
+          street: primary.street ?? "",
+          building: primary.building ?? "",
+        }),
         boro: normalizeBoro(primary.boro),
         building: primary.building ?? "",
         street: primary.street ?? "",

@@ -7,7 +7,7 @@
 
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faFilter, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 
 const DEBOUNCE_MS = 350;
 
@@ -44,7 +44,7 @@ export default function ExplorerSearch({
           <input
             type="text"
             className="search-input"
-            placeholder="Search restaurants..."
+            placeholder="Search restaurants by name, or cuisine"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />
@@ -58,13 +58,7 @@ export default function ExplorerSearch({
             </button>
           )}
         </div>
-        <button
-          type="button"
-          className="search-filter-toggle"
-          aria-label="Search filters"
-        >
-          <FontAwesomeIcon icon={faFilter} aria-hidden="true" />
-        </button>
+       
       </div>
     </section>
   );

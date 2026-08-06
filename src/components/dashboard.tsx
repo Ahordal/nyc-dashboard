@@ -5,10 +5,13 @@
 // Owns the dashboard's shared state, assembles the application layout,
 // and coordinates data flow between the dashboard's child components.
 
+import { useEffect, useRef, useState } from "react";
+
 import DashboardTitle from "./DashboardTitle";
 import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
 import StatsPanel from "./StatsPanel";
+import DashboardGuide from "./DashboardGuide";
 import GradeChart from "./GradeChart";
 import ExplorerSearch from "./ExplorerSearch";
 import RestaurantList from "./RestaurantList";
@@ -16,25 +19,23 @@ import RestaurantDetails from "./RestaurantDetails";
 import RestaurantReport from "./RestaurantReport";
 import MapView from "./MapView";
 import PerformanceChart from "./PerformanceChart";
+
 import type { Filters } from "../types/filters";
+
 import type {
   RestaurantProperties,
   InspectionEvent,
   ViolationCodeLookup,
 } from "../types/restaurant";
-import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
-import { useEffect, useRef, useState } from "react";
+import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 type ExplorerTab = "list" | "details" | "report";
 
 // How long the filter-change overlay stays visible before fading out.
 const FILTER_NOTICE_DURATION_MS = 2500;
 
-// Maps the Grade filter's button labels ("Pending", "Closed") to the
-// corresponding CATEGORY_COLORS keys, same mapping GradeFilters.tsx uses
-// for its own buttons -- needed here too so the overlay can color each
-// grade letter individually.
+// Maps the Grade filter's button labels to the corresponding category colours.
 const GRADE_FILTER_COLORS: Record<string, string> = {
   A: CATEGORY_COLORS.A,
   B: CATEGORY_COLORS.B,
@@ -48,51 +49,65 @@ export default function Dashboard() {
     grades: [],
     boroughs: [],
   });
+
   const [searchQuery, setSearchQuery] = useState("");
+
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<RestaurantProperties | null>(null);
+
   const [activeExplorerTab, setActiveExplorerTab] =
     useState<ExplorerTab>("list");
+
   const [visibleRestaurants, setVisibleRestaurants] = useState<
     RestaurantProperties[]
   >([]);
-  const [restaurantCount, setRestaurantCount] = useState<number>(0);
 
-  // Inspection history for the currently selected restaurant, and which
-  // single inspection (if any) is selected for the Report tab. Lifted up
-  // here -- rather than owned inside RestaurantDetails -- because both
-  // RestaurantDetails (the history list) and RestaurantReport (the report
-  // detail view) need to read the same data.
+  const [restaurantCount, setRestaurantCount] = useState(0);
+
+  // Inspection history for the currently selected restaurant.
   const [history, setHistory] = useState<InspectionEvent[]>([]);
+
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
+
+  // The inspection currently displayed in the Inspection Reports tab.
   const [selectedInspectionId, setSelectedInspectionId] = useState<
     string | null
   >(null);
+
+  // The inspection currently hovered or keyboard-focused in the Details
+  // history list. This previews the matching chart point without selecting it.
+  const [hoveredInspectionId, setHoveredInspectionId] = useState<string | null>(
+    null,
+  );
+
   const historyCache = useRef<Map<string, InspectionEvent[]>>(new Map());
 
-  // Violation code descriptions -- fetched once, shared by both Details
-  // and Report.
+  // Violation code descriptions are fetched once and shared by the report.
   const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>({});
 
-  // Transient overlay shown across the whole explorer panel (regardless
-  // of which tab is active) whenever the Grade/Borough filters OR the
-  // search query change -- just a visibility flag. The restaurant count
-  // is provided directly via `onCountChange` from RestaurantList so that
-  // the overlay always mirrors the exact total shown in the pagination
-  // footer.
+  // Transient overlay shown when filters or search terms change.
   const [showFilterNotice, setShowFilterNotice] = useState(false);
+
   const isFirstFilterRender = useRef(true);
+
   const filterNoticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
 
-  // Convert array state to string keys so React detects ANY addition/removal
   const gradesKey = filters.grades.join(",");
+
   const boroughsKey = filters.boroughs.join(",");
+
+  // A report is pinned on the chart only while the Inspection Reports tab
+  // is active. Changing to Restaurant List or Restaurant Details removes the
+  // pinned chart popup without forgetting which report was last selected.
+  const pinnedInspectionId =
+    activeExplorerTab === "report" ? selectedInspectionId : null;
 
   useEffect(() => {
     if (isFirstFilterRender.current) {
       isFirstFilterRender.current = false;
+
       return;
     }
 
@@ -100,12 +115,11 @@ export default function Dashboard() {
       clearTimeout(filterNoticeTimeoutRef.current);
     }
 
-    // Briefly reset to trigger re-render / animation update on rapid succession
     setShowFilterNotice(false);
 
-    // Request animation frame ensures DOM acknowledges the state reset before showing again
     const animationFrame = requestAnimationFrame(() => {
       setShowFilterNotice(true);
+
       filterNoticeTimeoutRef.current = setTimeout(() => {
         setShowFilterNotice(false);
       }, FILTER_NOTICE_DURATION_MS);
@@ -127,30 +141,44 @@ export default function Dashboard() {
   useEffect(() => {
     const controller = new AbortController();
 
-    fetch("/data/violation-codes.json", { signal: controller.signal })
-      .then((res) => (res.ok ? res.json() : {}))
-      .then((data: ViolationCodeLookup) => setViolationCodes(data))
-      .catch((err) => {
-        if (err.name !== "AbortError") setViolationCodes({});
+    fetch("/data/violation-codes.json", {
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : {}))
+      .then((data: ViolationCodeLookup) => {
+        setViolationCodes(data);
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setViolationCodes({});
+        }
       });
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+    };
   }, []);
 
   // Load inspection history whenever the selected restaurant changes.
   useEffect(() => {
     setSelectedInspectionId(null);
 
+    setHoveredInspectionId(null);
+
     if (!selectedRestaurant) {
       setHistory([]);
       setIsLoadingHistory(false);
+
       return;
     }
 
-    const cached = historyCache.current.get(selectedRestaurant.camis);
-    if (cached) {
-      setHistory(cached);
+    const cachedHistory = historyCache.current.get(selectedRestaurant.camis);
+
+    if (cachedHistory) {
+      setHistory(cachedHistory);
+
       setIsLoadingHistory(false);
+
       return;
     }
 
@@ -162,76 +190,105 @@ export default function Dashboard() {
     fetch(`/data/history/${selectedRestaurant.camis}.json`, {
       signal: controller.signal,
     })
-      .then((res) => (res.ok ? res.json() : []))
+      .then((response) => (response.ok ? response.json() : []))
       .then((data: InspectionEvent[]) => {
         historyCache.current.set(selectedRestaurant.camis, data);
+
         setHistory(data);
+
         setIsLoadingHistory(false);
       })
-      .catch((err) => {
-        if (err.name !== "AbortError") {
+      .catch((error) => {
+        if (error.name !== "AbortError") {
           setHistory([]);
+
           setIsLoadingHistory(false);
         }
       });
 
-    return () => controller.abort();
+    return () => {
+      controller.abort();
+    };
   }, [selectedRestaurant?.camis]);
 
-  // Map clicks (and list-row clicks) should both select the
-  // restaurant and bring the person to the tab that actually shows it --
-  // selecting one without switching would silently update a panel
-  // nobody's looking at.
+  // Selecting a restaurant from the list or map opens its Details tab.
   function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
+    setHoveredInspectionId(null);
+
     setSelectedRestaurant(restaurant);
 
     if (restaurant) {
       setActiveExplorerTab("details");
     } else {
-      setActiveExplorerTab("list"); // Swaps back to list view when deselected
+      setActiveExplorerTab("list");
     }
   }
 
-  // Clicking a row in Inspection History selects that inspection AND
-  // jumps straight to the Report tab.
+  // Selecting an inspection opens its report and pins the matching chart point.
   function handleSelectInspection(inspectionId: string) {
+    setHoveredInspectionId(null);
+
     setSelectedInspectionId(inspectionId);
+
     setActiveExplorerTab("report");
+  }
+
+  // Preview an inspection from the Details history list without opening it.
+  function handleHoverInspection(inspectionId: string | null) {
+    setHoveredInspectionId(inspectionId);
+  }
+
+  // Clear transient and pinned chart popups when moving away from Report.
+  // selectedInspectionId remains stored so returning to Report restores it.
+  function handleExplorerTabChange(tab: ExplorerTab) {
+    setHoveredInspectionId(null);
+
+    setActiveExplorerTab(tab);
   }
 
   return (
     <div className="dashboard-container">
-      <header className="dashboard-header">
-        <div className="dashboard-title">
-          <DashboardTitle />
-        </div>
-
-        <div className="dashboard-grade-filters">
-          <GradeFilters filters={filters} setFilters={setFilters} />
-        </div>
-
-        <div className="dashboard-borough-filters">
-          <BoroughFilters filters={filters} setFilters={setFilters} />
-        </div>
-      </header>
-
       <main className="dashboard">
-        <div className="stats">
-          <StatsPanel />
+        <div className="left-sidebar">
+          <div className="dashboard-title">
+            <DashboardTitle />
+          </div>
+
+          <div className="dashboard-guide">
+            <DashboardGuide />
+          </div>
+
+          <div className="grade-chart">
+            <GradeChart />
+          </div>
         </div>
 
-        <div className="map-view">
-          <MapView
-            filters={filters}
-            searchQuery={searchQuery}
-            selectedRestaurantId={selectedRestaurant?.id ?? null}
-            onSelectRestaurant={handleSelectRestaurant}
-            onVisibleRestaurantsChange={setVisibleRestaurants}
-          />
-        </div>
+        <div className="map-column">
+          <div className="map-top">
+            <div className="dashboard-filters">
+              <div className="dashboard-grade-filters">
+                <GradeFilters filters={filters} setFilters={setFilters} />
+              </div>
 
-        <div className="grade-chart">
-          <GradeChart />
+              <div className="dashboard-borough-filters">
+                <BoroughFilters filters={filters} setFilters={setFilters} />
+              </div>
+            </div>
+
+            <div className="map-stats">
+              <StatsPanel />
+            </div>
+          </div>
+
+          <div className="map-view">
+            <MapView
+              filters={filters}
+              searchQuery={searchQuery}
+              selectedRestaurantId={selectedRestaurant?.id ?? null}
+              onSelectRestaurant={handleSelectRestaurant}
+              onVisibleRestaurantsChange={setVisibleRestaurants}
+            />
+          </div>
         </div>
 
         <div className="search-panel">
@@ -247,9 +304,12 @@ export default function Dashboard() {
                   ? "explorer-tab active"
                   : "explorer-tab"
               }
-              onClick={() => setActiveExplorerTab("list")}>
+              onClick={() => {
+                handleExplorerTabChange("list");
+              }}>
               Restaurant List
             </button>
+
             <button
               type="button"
               className={
@@ -257,9 +317,12 @@ export default function Dashboard() {
                   ? "explorer-tab active"
                   : "explorer-tab"
               }
-              onClick={() => setActiveExplorerTab("details")}>
+              onClick={() => {
+                handleExplorerTabChange("details");
+              }}>
               Restaurant Details
             </button>
+
             <button
               type="button"
               className={
@@ -267,7 +330,9 @@ export default function Dashboard() {
                   ? "explorer-tab active"
                   : "explorer-tab"
               }
-              onClick={() => setActiveExplorerTab("report")}>
+              onClick={() => {
+                handleExplorerTabChange("report");
+              }}>
               Inspection Reports
             </button>
           </div>
@@ -284,6 +349,7 @@ export default function Dashboard() {
                 onCountChange={setRestaurantCount}
               />
             </div>
+
             <div
               className={`restaurant-details ${
                 activeExplorerTab === "details" ? "" : "explorer-pane-hidden"
@@ -294,8 +360,10 @@ export default function Dashboard() {
                 isLoadingHistory={isLoadingHistory}
                 selectedInspectionId={selectedInspectionId}
                 onSelectInspection={handleSelectInspection}
+                onHoverInspection={handleHoverInspection}
               />
             </div>
+
             <div
               className={`restaurant-report ${
                 activeExplorerTab === "report" ? "" : "explorer-pane-hidden"
@@ -309,34 +377,32 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Transient overlay confirming a filter or search change --
-                key forces React to tear down and re-render the element
-                on filter/search changes */}
             {showFilterNotice && (
               <div
                 key={`${gradesKey}-${boroughsKey}-${searchQuery}`}
-                className="filter-notice-overlay"
-              >
+                className="filter-notice-overlay">
                 <div className="filter-notice-text">
                   {filters.grades.length > 0 && (
                     <span className="filter-notice-group">
                       Grade:{" "}
-                      {filters.grades.map((grade, i) => (
+                      {filters.grades.map((grade, index) => (
                         <span key={grade}>
                           <span
-                            style={{ color: GRADE_FILTER_COLORS[grade] }}>
+                            style={{
+                              color: GRADE_FILTER_COLORS[grade],
+                            }}>
                             {grade}
                           </span>
-                          {i < filters.grades.length - 1 && ", "}
+
+                          {index < filters.grades.length - 1 && ", "}
                         </span>
                       ))}
                     </span>
                   )}
 
-                  {filters.grades.length > 0 &&
-                    filters.boroughs.length > 0 && (
-                      <span className="filter-notice-separator"> · </span>
-                    )}
+                  {filters.grades.length > 0 && filters.boroughs.length > 0 && (
+                    <span className="filter-notice-separator"> · </span>
+                  )}
 
                   {filters.boroughs.length > 0 && (
                     <span className="filter-notice-group">
@@ -344,15 +410,16 @@ export default function Dashboard() {
                     </span>
                   )}
 
-                  {(filters.grades.length > 0 ||
-                    filters.boroughs.length > 0) &&
+                  {(filters.grades.length > 0 || filters.boroughs.length > 0) &&
                     searchQuery && (
                       <span className="filter-notice-separator"> · </span>
                     )}
 
                   {searchQuery && (
                     <span className="filter-notice-group">
-                      Search: "{searchQuery}"
+                      Search: &quot;
+                      {searchQuery}
+                      &quot;
                     </span>
                   )}
 
@@ -365,6 +432,7 @@ export default function Dashboard() {
                     )}
 
                   <span className="filter-notice-separator"> — </span>
+
                   <span className="filter-notice-group">
                     {restaurantCount.toLocaleString()} restaurants
                   </span>
@@ -375,7 +443,14 @@ export default function Dashboard() {
         </div>
 
         <div className="performance-chart">
-          <PerformanceChart />
+          <PerformanceChart
+            restaurant={selectedRestaurant}
+            history={history}
+            isLoadingHistory={isLoadingHistory}
+            onSelectInspection={handleSelectInspection}
+            hoveredInspectionId={hoveredInspectionId}
+            selectedInspectionId={pinnedInspectionId}
+          />
         </div>
       </main>
     </div>
