@@ -15,11 +15,16 @@ name: Geocode Backfill
 
 on:
   schedule:
-    # 09:00 UTC daily (~4-5am Eastern, outside typical usage hours).
-    # Cron minute/hour only -- GitHub Actions schedules can be delayed by a
-    # few minutes under load, which is fine for a daily job like this.
-    - cron: '0 9 * * *'
+    # 11:00 UTC daily (8:00 AM ADT)
+    - cron: '0 11 * * *'
   workflow_dispatch: {} # allows manually triggering a run from the Actions tab
+
+# The default GITHUB_TOKEN is read-only unless explicitly granted write
+# access -- without this, the "Commit updated cache" step can create a
+# commit locally on the runner but fails with a 403 when it tries to push,
+# silently losing that run's entire geocoding progress.
+permissions:
+  contents: write
 
 # Prevents overlapping runs (e.g. a manual trigger while the scheduled run
 # is still in progress) from racing to write the cache file.
