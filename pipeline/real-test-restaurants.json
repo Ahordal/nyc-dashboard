@@ -1,0 +1,5 @@
+[
+  {"camis": "K79", "dba": "Kitchen 79", "building": "37-70", "street": "79 Street", "boro": "Queens", "zip": "11372", "dohmhLat": 40.749079, "dohmhLon": -73.887042},
+  {"camis": "BWW", "dba": "Buffalo Wild Wings Go", "building": "79-23", "street": "Main Street", "boro": "Queens", "zip": "11367", "dohmhLat": 40.7183086, "dohmhLon": -73.8167019},
+  {"camis": "XX88", "dba": "Xin Xing 88 Chinese Restaurant", "building": "188-13", "street": "Jamaica Avenue", "boro": "Queens", "zip": "11423", "dohmhLat": 40.7112702, "dohmhLon": -73.7705501}
+]

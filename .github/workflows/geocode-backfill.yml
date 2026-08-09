@@ -1,0 +1,62 @@
+name: Geocode Backfill
+
+# Runs the geocoding backfill against live DOHMH data and commits the
+# updated cache back to the repo. Decoupled from the Vercel build entirely --
+# this is the ONLY workflow that calls LocationIQ. fetch-inspection.mjs
+# (run during the Vercel build) only ever reads whatever this commits.
+#
+# Runs once daily. Each run resolves up to ~4,900 new/changed restaurants
+# (LocationIQ's free tier is 5,000/day; kept a small buffer). Restaurants
+# already resolved are skipped automatically via the cache, so this is
+# resumable across days without any manual intervention -- during the
+# initial backfill it'll take about a week to cover the full dataset, then
+# settle into resolving only the small trickle of new/changed restaurants
+# each day.
+
+on:
+  schedule:
+    # 09:00 UTC daily (~4-5am Eastern, outside typical usage hours).
+    # Cron minute/hour only -- GitHub Actions schedules can be delayed by a
+    # few minutes under load, which is fine for a daily job like this.
+    - cron: '0 9 * * *'
+  workflow_dispatch: {} # allows manually triggering a run from the Actions tab
+
+# Prevents overlapping runs (e.g. a manual trigger while the scheduled run
+# is still in progress) from racing to write the cache file.
+concurrency:
+  group: geocode-backfill
+  cancel-in-progress: false
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run geocode backfill
+        working-directory: pipeline
+        env:
+          LOCATIONIQ_API_KEY: ${{ secrets.LOCATIONIQ_API_KEY }}
+          SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
+        run: node run-geocode-backfill.mjs
+
+      - name: Commit updated cache
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add pipeline/geocode-cache.json pipeline/suspicious-shifts.json
+          # Only commit if something actually changed -- avoids empty
+          # "no-op" commits on days where nothing new needed resolving.
+          git diff --cached --quiet || git commit -m "chore: update geocode cache [automated]"
+          git push

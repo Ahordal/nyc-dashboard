@@ -54,6 +54,16 @@
 import { writeFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import { loadCache } from "./cache.mjs";
+import { formatDisplayAddress } from "./normalize.mjs";
+
+// Path to the geocode cache committed to the repo by the scheduled
+// GitHub Action (see run-geocode-backfill.mjs). This file is READ ONLY
+// here -- no network calls, no LocationIQ API key needed at build time.
+// If the cache doesn't exist yet (e.g. before the first backfill run),
+// loadCache() returns {} and every restaurant simply falls back to its
+// DOHMH coordinate with location_status "pending".
+const GEOCODE_CACHE_PATH = path.join(import.meta.dirname, "geocode-cache.json");
 
 const DATASET_URL = "https://data.cityofnewyork.us/resource/43nn-pn8j.json";
 const PAGE_SIZE = 50000; // Socrata's max recommended page size
@@ -391,7 +401,7 @@ const SELECT_FIELDS = [
  * violation, multiple rows may legitimately share the same restaurant and
  * inspection date.
  */
-async function fetchAllRows() {
+export async function fetchAllRows() {
   const rows = [];
   let offset = 0;
 
@@ -525,6 +535,52 @@ export function buildEventsByRestaurant(grouped) {
 }
 
 /**
+ * Builds the restaurant list consumed by the geocode backfill
+ * (run-geocode-backfill.mjs / backfill-core.mjs).
+ *
+ * Deliberately includes EVERY restaurant with at least one inspection
+ * event, regardless of whether that event is scored -- unlike
+ * buildLatestInspectionsGeoJSON(), which only includes scored,
+ * coordinate-valid restaurants. Geocoding needs a restaurant's ADDRESS,
+ * not its inspection outcome, so a restaurant with no scored inspection
+ * (or with bad/missing DOHMH coordinates -- exactly the ones most worth
+ * geocoding) is still included here.
+ *
+ * Uses the most recent event overall (not the most recent SCORED one)
+ * for building/street/boro/zip, since address details are independent
+ * of scoring and the latest record on file is most likely to be current.
+ *
+ * dohmhLat/dohmhLon are parsed to numbers where possible, or null when
+ * missing/unparseable -- resolveRestaurant() and scoreCandidate() both
+ * treat a null DOHMH coordinate as "skip the distance sanity check"
+ * rather than failing, so this is safe.
+ */
+export function buildGeocodeInputList(eventsByRestaurant) {
+  const restaurants = [];
+
+  for (const [camis, events] of eventsByRestaurant) {
+    if (events.length === 0) continue;
+    const { primary } = events[events.length - 1];
+
+    const lat = parseFloat(primary.latitude);
+    const lon = parseFloat(primary.longitude);
+
+    restaurants.push({
+      camis,
+      dba: primary.dba ?? "",
+      building: primary.building ?? "",
+      street: primary.street ?? "",
+      boro: normalizeBoro(primary.boro),
+      zip: primary.zipcode ?? "",
+      dohmhLat: Number.isNaN(lat) ? null : lat,
+      dohmhLon: Number.isNaN(lon) ? null : lon,
+    });
+  }
+
+  return restaurants;
+}
+
+/**
  * Builds the most-recent-per-restaurant GeoJSON FeatureCollection.
  *
  * "Most recent" means the most recent inspection event with a score, not
@@ -540,7 +596,11 @@ export function buildEventsByRestaurant(grouped) {
  * first grouped by inspection_date so all violations from that inspection
  * are rolled into a single `violations` array on the resulting feature.
  */
-export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
+export function buildLatestInspectionsGeoJSON(
+  eventsByRestaurant,
+  generatedAt,
+  geocodeCache = {},
+) {
   const features = [];
 
   for (const [camis, events] of eventsByRestaurant) {
@@ -557,22 +617,59 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
     const latest = scoredEvents[scoredEvents.length - 1];
     const { primary, violations } = latest;
 
-    const lat = parseFloat(primary.latitude);
-    const lon = parseFloat(primary.longitude);
+    const dohmhLatRaw = parseFloat(primary.latitude);
+    const dohmhLonRaw = parseFloat(primary.longitude);
 
-    // Skip records with unusable coordinates -- they can't be placed on the
-    // map. Beyond rejecting NaN values, also reject anything outside a loose
-    // NYC bounding box (e.g. (0, 0) or swapped latitude/longitude) so bad
-    // data doesn't silently produce plausible-looking points in the wrong
-    // place.
-    if (Number.isNaN(lat) || Number.isNaN(lon) || !isWithinNYC(lat, lon))
-      continue;
+    // Beyond rejecting NaN values, also reject anything outside a loose NYC
+    // bounding box (e.g. (0, 0) or swapped latitude/longitude) so bad data
+    // doesn't silently produce plausible-looking points in the wrong place.
+    const dohmhValid =
+      !Number.isNaN(dohmhLatRaw) &&
+      !Number.isNaN(dohmhLonRaw) &&
+      isWithinNYC(dohmhLatRaw, dohmhLonRaw);
+
+    // geocodeCache is a plain object keyed by CAMIS (see cache.mjs), read
+    // once per pipeline run -- no network calls happen here, this is purely
+    // merging in whatever the scheduled backfill Action already resolved
+    // and committed to the repo.
+    const cacheEntry = geocodeCache[camis];
+    const hasVerifiedResolution =
+      cacheEntry?.status === "verified" && cacheEntry.resolved;
+
+    // A restaurant needs EITHER a valid DOHMH coordinate OR a verified
+    // geocoder resolution to be placeable on the map. This is a deliberate
+    // improvement over the previous "skip if DOHMH coords are bad" rule --
+    // some restaurants that used to be silently excluded (unusable DOHMH
+    // coordinates) now appear on the map once geocoding resolves them.
+    if (!dohmhValid && !hasVerifiedResolution) continue;
+
+    // display_* coordinates are what the map actually renders. They ONLY
+    // move away from the DOHMH point on an accepted "verified" resolution --
+    // never on "pending" or "unverified", and never on an ambiguous/rejected
+    // candidate. dohmh_* coordinates are preserved separately, untouched,
+    // regardless of geocoding outcome.
+    const displayLat = hasVerifiedResolution ? cacheEntry.resolved.lat : dohmhLatRaw;
+    const displayLon = hasVerifiedResolution ? cacheEntry.resolved.lon : dohmhLonRaw;
+
+    const locationStatus = hasVerifiedResolution
+      ? "verified"
+      : cacheEntry?.status === "unverified"
+        ? "unverified"
+        // No cache entry yet, or the cached entry is itself still "pending"
+        // (a prior run's API error/timeout/quota cutoff) -- either way,
+        // this restaurant hasn't been successfully checked yet.
+        : "pending";
 
     const status = deriveCurrentStatus(primary.action);
 
     // Rounded coordinates to 6 decimal places (~11 cm precision)
-    const roundedLat = Math.round(lat * 1e6) / 1e6;
-    const roundedLon = Math.round(lon * 1e6) / 1e6;
+    const roundedLat = Math.round(displayLat * 1e6) / 1e6;
+    const roundedLon = Math.round(displayLon * 1e6) / 1e6;
+    const roundedDohmhLat = dohmhValid ? Math.round(dohmhLatRaw * 1e6) / 1e6 : null;
+    const roundedDohmhLon = dohmhValid ? Math.round(dohmhLonRaw * 1e6) / 1e6 : null;
+    const neighbourhood = hasVerifiedResolution
+      ? cacheEntry.resolved.neighbourhood ?? null
+      : null;
 
     features.push({
       type: "Feature",
@@ -602,9 +699,34 @@ export function buildLatestInspectionsGeoJSON(eventsByRestaurant, generatedAt) {
         boro: normalizeBoro(primary.boro),
         building: primary.building ?? "",
         street: primary.street ?? "",
+        // Formatted for human display (ordinal suffixes, proper casing,
+        // e.g. "37-70 79th Street"), independent of geocoding status --
+        // this is pure text formatting via normalize.mjs, not something
+        // the geocoder needs to have resolved. Includes neighbourhood only
+        // when a verified resolution provided one.
+        display_address: formatDisplayAddress({
+          building: primary.building ?? "",
+          street: primary.street ?? "",
+          neighbourhood,
+        }),
         zipcode: primary.zipcode ?? "",
         phone: primary.phone ?? "",
         cuisine: primary.cuisine_description ?? "",
+        // The DOHMH-supplied coordinate, always preserved as originally
+        // provided -- never overwritten by geocoding. null when DOHMH's
+        // own data was unusable (NaN or outside the NYC bounding box).
+        dohmh_latitude: roundedDohmhLat,
+        dohmh_longitude: roundedDohmhLon,
+        // "verified"   -- an independent geocoder confirmed this location
+        //                 (house number + street match); displayed
+        //                 latitude/longitude come from that resolution.
+        // "unverified" -- geocoding ran and found no acceptable match;
+        //                 displayed coordinates fall back to DOHMH's own.
+        // "pending"    -- not yet attempted, or a prior attempt hit a
+        //                 transient error/timeout/quota cutoff and will be
+        //                 retried by a future scheduled run.
+        location_status: locationStatus,
+        neighbourhood,
         // Leave missing grades as null rather than defaulting to "N". The raw
         // dataset already uses "N" (Not Yet Graded) as an official grade, which
         // is distinct from a genuinely missing grade on an inspection.
@@ -749,6 +871,15 @@ async function main() {
     });
   }
 
+  // Read-only merge of whatever the scheduled geocode backfill Action has
+  // already resolved and committed to the repo. NO network calls happen
+  // here, and no LocationIQ API key is needed at build time -- geocoding
+  // itself runs entirely separately, via run-geocode-backfill.mjs on its
+  // own schedule. If this file doesn't exist yet (e.g. before the first
+  // backfill run), loadCache() returns {} and every restaurant simply
+  // falls back to its DOHMH coordinate with location_status "pending".
+  const geocodeCache = await loadCache(GEOCODE_CACHE_PATH);
+
   let latestGeoJSON, history, violationCodes;
   try {
     const grouped = groupByCamis(rows);
@@ -757,6 +888,7 @@ async function main() {
     latestGeoJSON = buildLatestInspectionsGeoJSON(
       eventsByRestaurant,
       generatedAt,
+      geocodeCache,
     );
     history = buildInspectionHistory(eventsByRestaurant, generatedAt);
     // Built directly from the raw rows rather than the grouped events, since

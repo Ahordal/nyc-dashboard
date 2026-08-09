@@ -1,0 +1,14 @@
+[
+  {
+    "camis": "K79",
+    "dba": "Kitchen 79",
+    "address": "37-70 79 Street, Queens 11372",
+    "dohmhLat": 40.749079,
+    "dohmhLon": -73.887042,
+    "resolvedLat": 40.747562,
+    "resolvedLon": -73.886898,
+    "distanceMeters": 169.1183115745435,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
+  }
+]

@@ -1,0 +1,70 @@
+{
+  "K79": {
+    "camis": "K79",
+    "dohmh": {
+      "building": "37-70",
+      "street": "79 Street",
+      "boro": "Queens",
+      "zip": "11372",
+      "lat": 40.749079,
+      "lon": -73.887042
+    },
+    "resolved": {
+      "lat": 40.747562,
+      "lon": -73.886898,
+      "neighbourhood": "Jackson Heights"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 169.1183115745435,
+    "reason": null,
+    "resolvedAt": "2026-08-08T10:59:41.590Z",
+    "addressHash": "K79|3770|79 street|queens|11372",
+    "resolverVersion": 1
+  },
+  "BWW": {
+    "camis": "BWW",
+    "dohmh": {
+      "building": "79-23",
+      "street": "Main Street",
+      "boro": "Queens",
+      "zip": "11367",
+      "lat": 40.7183086,
+      "lon": -73.8167019
+    },
+    "resolved": null,
+    "status": "unverified",
+    "matchType": null,
+    "resolvedVia": null,
+    "distanceFromDohmh": null,
+    "reason": "no_acceptable_match",
+    "resolvedAt": "2026-08-08T10:59:44.040Z",
+    "addressHash": "BWW|7923|main street|queens|11367",
+    "resolverVersion": 1
+  },
+  "XX88": {
+    "camis": "XX88",
+    "dohmh": {
+      "building": "188-13",
+      "street": "Jamaica Avenue",
+      "boro": "Queens",
+      "zip": "11423",
+      "lat": 40.7112702,
+      "lon": -73.7705501
+    },
+    "resolved": {
+      "lat": 40.711196,
+      "lon": -73.770485,
+      "neighbourhood": "Hollis"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 9.908640730912747,
+    "reason": null,
+    "resolvedAt": "2026-08-08T10:59:46.582Z",
+    "addressHash": "XX88|18813|jamaica avenue|queens|11423",
+    "resolverVersion": 1
+  }
+}
