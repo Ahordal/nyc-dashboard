@@ -109,6 +109,19 @@ export async function runGeocodeBackfill(restaurants, opts) {
       console.log(`  ...progress saved (${quota.used()} requests used so far)`);
       processedSinceLastSave = 0;
     }
+
+    if (resolution.rateLimited) {
+      // The account itself is rate-limited (HTTP 429) -- every remaining
+      // restaurant in this run would fail identically. Stop immediately
+      // rather than burning the rest of the run's time grinding through
+      // guaranteed failures and adding more rejected requests to the
+      // day's usage stats for no benefit. This restaurant is already
+      // saved as "pending" above, so it (and everything after it) will
+      // simply be retried on the next scheduled run.
+      console.log('LocationIQ rate limit hit — stopping this run early. Remainder picks up next run.');
+      await saveCacheAtomic(cachePath, cache);
+      break;
+    }
   }
 
   await saveCacheAtomic(cachePath, cache);

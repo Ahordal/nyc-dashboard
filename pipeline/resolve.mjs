@@ -6,7 +6,7 @@
 // A restaurant object must have: dba, building, street, boro, zip,
 // dohmhLat, dohmhLon.
 
-import { buildQueries, fetchGeocode, rateLimitDelay } from './geocode.mjs';
+import { buildQueries, fetchGeocode, rateLimitDelay, RateLimitedError } from './geocode.mjs';
 import { selectBestMatch } from './scoring.mjs';
 
 // quota: { remaining: () => number, use: () => void }
@@ -35,6 +35,24 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
       quota.use(); // count the call regardless of whether it returned results
     } catch (err) {
       quota.use(); // the request was still sent — counts against quota either way
+
+      if (err instanceof RateLimitedError) {
+        // The ACCOUNT is rate-limited, not just this one restaurant.
+        // Flagged separately (rateLimited: true) so the caller's loop can
+        // stop the entire run immediately rather than grinding through
+        // every remaining restaurant with the same guaranteed failure —
+        // wasting the run's time budget and adding more rejected requests
+        // to the day's usage stats for no benefit.
+        return {
+          status: 'pending',
+          reason: 'rate_limited',
+          error: err.message,
+          matchType: null,
+          resolvedVia: null,
+          rateLimited: true,
+        };
+      }
+
       // Network/API error — this is NOT the same as "geocoder ran and found
       // nothing". Pending, retried next run.
       return {

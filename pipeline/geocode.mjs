@@ -17,6 +17,17 @@ export function buildQueries(restaurant) {
   ];
 }
 
+// Thrown specifically for HTTP 429 (rate limited) responses, distinct from
+// other errors -- callers use this to distinguish "the account is
+// rate-limited, stop trying entirely" from an ordinary transient failure
+// that's fine to retry on a future run.
+export class RateLimitedError extends Error {
+  constructor(message) {
+    super(message);
+    this.name = 'RateLimitedError';
+  }
+}
+
 // Makes a single LocationIQ search request. Throws on network/HTTP errors —
 // caller is responsible for catching and translating into a "pending" state.
 export async function fetchGeocode(query, apiKey) {
@@ -32,6 +43,9 @@ export async function fetchGeocode(query, apiKey) {
   if (res.status === 404) {
     // LocationIQ returns 404 for "no results found" — not an error, just empty.
     return [];
+  }
+  if (res.status === 429) {
+    throw new RateLimitedError(`LocationIQ rate limit hit (429): ${await res.text()}`);
   }
   if (!res.ok) {
     throw new Error(`LocationIQ error ${res.status}: ${await res.text()}`);
