@@ -23,6 +23,8 @@ export type ViolationCodeLookup = Record<string, string>;
 
 // Restaurant data
 
+export type LocationStatus = "verified" | "unverified" | "pending";
+
 export type RestaurantProperties = {
   id: string;
   camis: string;
@@ -33,9 +35,36 @@ export type RestaurantProperties = {
   boro: string;
   building: string;
   street: string;
+  // Just the street name, formatted for display (ordinal suffixes,
+  // expanded abbreviations -- e.g. "5 STREET" -> "5th Street"). No
+  // neighbourhood included; compose with `boro` or `neighbourhood`
+  // separately as needed. See normalize.mjs's formatDisplayStreet().
+  display_street: string;
+  // Full display address: building + display_street, with neighbourhood
+  // appended only when a verified geocoder resolution provided one (see
+  // location_status below). E.g. "37-70 79th Street, Jackson Heights".
+  display_address: string;
   zipcode: string;
   phone: string;
   cuisine: string;
+  // The DOHMH-supplied coordinate, preserved separately and untouched by
+  // geocoding. Null when DOHMH's own data was unusable (missing or
+  // outside the NYC bounding box) -- this can happen even when
+  // latitude/longitude above ARE present, if a verified geocoder
+  // resolution is what's actually being displayed instead.
+  dohmh_latitude: number | null;
+  dohmh_longitude: number | null;
+  // "verified"   -- an independent geocoder confirmed this location;
+  //                 latitude/longitude above come from that resolution.
+  // "unverified" -- geocoding ran and found no acceptable match;
+  //                 latitude/longitude fall back to DOHMH's own.
+  // "pending"    -- not yet attempted, or a prior attempt hit a
+  //                 transient error and will be retried on a future run.
+  location_status: LocationStatus;
+  // Only populated when location_status is "verified" -- the geocoder's
+  // reported neighbourhood (e.g. "Jackson Heights"). Enrichment only, not
+  // authoritative DOHMH data -- geocoder neighbourhood labels can be fuzzy.
+  neighbourhood: string | null;
   grade: string | null;
   grade_date: string | null;
   score: number;

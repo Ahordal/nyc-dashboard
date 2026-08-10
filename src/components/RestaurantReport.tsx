@@ -8,9 +8,7 @@
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
-import {
-  GradeRangeInfo,
-} from "./InfoPopupSharedContent";
+import { GradeRangeInfo } from "./InfoPopupSharedContent";
 
 import RestaurantHeroHeader from "./RestaurantHeroHeader";
 import ViolationList from "./ViolationList";
@@ -22,49 +20,32 @@ import type {
   ViolationCodeLookup,
 } from "../types/restaurant";
 
-import {
-  isClosedInspection,
-} from "../utils/gradeCategory";
+import { isClosedInspection } from "../utils/gradeCategory";
 
-function parseViolations(
-  raw: string,
-): Violation[] {
+function parseViolations(raw: string): Violation[] {
   try {
-    const parsed =
-      JSON.parse(raw);
+    const parsed = JSON.parse(raw);
 
-    return Array.isArray(parsed)
-      ? parsed
-      : [];
+    return Array.isArray(parsed) ? parsed : [];
   } catch {
     return [];
   }
 }
 
-function formatDate(
-  raw: string | null,
-): string {
+function formatDate(raw: string | null): string {
   if (!raw) {
     return "—";
   }
 
-  const date =
-    new Date(raw);
+  const date = new Date(raw);
 
-  if (
-    Number.isNaN(
-      date.getTime(),
-    )
-  ) {
+  if (Number.isNaN(date.getTime())) {
     return "—";
   }
 
-  return date.toLocaleDateString(
-    "en-US",
-    {
-      timeZone: "UTC",
-    },
-  );
+  return date.toLocaleDateString("en-US", {
+    timeZone: "UTC",
+  });
 }
 
 const REPORT_INFO_CONTENT = (
@@ -92,25 +73,21 @@ const REPORT_INFO_CONTENT = (
         </li>
       </ul>
     }
-    grades={
-      <GradeRangeInfo />
-    }
+    grades={<GradeRangeInfo />}
     statuses={
       <ul>
         <li>
-          <span className="violation-tag status-closed">
-            Closed by DOHMH
-          </span>{" "}
-          — The displayed inspection resulted in a closure.
+          <span className="violation-tag status-closed">Closed by DOHMH</span> —
+          The displayed inspection resulted in a closure.
         </li>
       </ul>
     }
     dataNotes={
       <ul>
         <li>
-          The grade, score, action, and violations shown belong to the
-          displayed inspection and may not reflect the restaurant&apos;s
-          current recorded status.
+          The grade, score, action, and violations shown belong to the displayed
+          inspection and may not reflect the restaurant&apos;s current recorded
+          status.
         </li>
       </ul>
     }
@@ -118,21 +95,15 @@ const REPORT_INFO_CONTENT = (
 );
 
 type RestaurantReportProps = {
-  restaurant:
-    RestaurantProperties | null;
+  restaurant: RestaurantProperties | null;
 
-  history:
-    InspectionEvent[];
+  history: InspectionEvent[];
 
-  selectedInspectionId:
-    string | null;
+  selectedInspectionId: string | null;
 
-  violationCodes:
-    ViolationCodeLookup;
+  violationCodes: ViolationCodeLookup;
 
-  onSelectInspection: (
-    inspectionId: string,
-  ) => void;
+  onSelectInspection: (inspectionId: string) => void;
 };
 
 export default function RestaurantReport({
@@ -147,19 +118,13 @@ export default function RestaurantReport({
       <section className="panel restaurant-report-panel">
         <PanelHeader
           title="Inspection Report"
-          infoContent={
-            REPORT_INFO_CONTENT
-          }
+          infoContent={REPORT_INFO_CONTENT}
         />
 
         <div className="panel-scroll-content">
           <p className="details-empty">
-            Select a restaurant on
-            the map or restaurant
-            list, then click an
-            inspection on the
-            Restaurant Details tab
-            to view its report here.
+            Select a restaurant on the map or restaurant list, then click an
+            inspection on the Restaurant Details tab to view its report here.
           </p>
         </div>
       </section>
@@ -167,100 +132,56 @@ export default function RestaurantReport({
   }
 
   const selectedEvent =
-    history.find(
-      (event) =>
-        event.id ===
-        selectedInspectionId,
-    ) ?? null;
+    history.find((event) => event.id === selectedInspectionId) ?? null;
 
-  const displayed =
-    selectedEvent
-      ? {
-          grade:
-            selectedEvent.grade,
+  const displayed = selectedEvent
+    ? {
+        grade: selectedEvent.grade,
 
-          score:
-            selectedEvent.score,
+        score: selectedEvent.score,
 
-          date:
-            selectedEvent.date,
+        date: selectedEvent.date,
 
-          inspection_type:
-            selectedEvent.inspection_type,
+        inspection_type: selectedEvent.inspection_type,
 
-          action:
-            selectedEvent.action,
+        action: selectedEvent.action,
 
-          violations:
-            selectedEvent.violations,
-        }
-      : {
-          grade:
-            restaurant.grade,
+        violations: selectedEvent.violations,
+      }
+    : {
+        grade: restaurant.grade,
 
-          score:
-            restaurant.score,
+        score: restaurant.score,
 
-          date:
-            restaurant.inspection_date,
+        date: restaurant.inspection_date,
 
-          inspection_type:
-            restaurant.inspection_type,
+        inspection_type: restaurant.inspection_type,
 
-          action:
-            restaurant.action,
+        action: restaurant.action,
 
-          violations:
-            parseViolations(
-              restaurant.violations,
-            ),
-        };
+        violations: parseViolations(restaurant.violations),
+      };
 
-  const panelTitle =
-    `Inspection Report - ${formatDate(
-      displayed.date,
-    )}`;
+  const panelTitle = `Inspection Report - ${formatDate(displayed.date)}`;
 
-  const currentIndex =
-    selectedEvent
-      ? history.findIndex(
-          (event) =>
-            event.id ===
-            selectedEvent.id,
-        )
-      : history.length - 1;
+  const currentIndex = selectedEvent
+    ? history.findIndex((event) => event.id === selectedEvent.id)
+    : history.length - 1;
 
   const newerEvent =
-    currentIndex >= 0 &&
-    currentIndex <
-      history.length - 1
-      ? history[
-          currentIndex + 1
-        ]
+    currentIndex >= 0 && currentIndex < history.length - 1
+      ? history[currentIndex + 1]
       : null;
 
-  const olderEvent =
-    currentIndex > 0
-      ? history[
-          currentIndex - 1
-        ]
-      : null;
+  const olderEvent = currentIndex > 0 ? history[currentIndex - 1] : null;
 
   // This reflects the displayed historical inspection, not the restaurant's
   // present-day status.
-  const isClosure =
-    isClosedInspection(
-      displayed.action ?? "",
-    );
+  const isClosure = isClosedInspection(displayed.action ?? "");
 
   return (
     <section className="panel restaurant-report-panel">
-      <PanelHeader
-        title={panelTitle}
-        infoContent={
-          REPORT_INFO_CONTENT
-        }
-      />
+      <PanelHeader title={panelTitle} infoContent={REPORT_INFO_CONTENT} />
 
       <div className="panel-scroll-content">
         <RestaurantHeroHeader
@@ -272,91 +193,64 @@ export default function RestaurantReport({
 
         {history.length > 1 && (
           <div className="report-nav">
+            {olderEvent ? (
+              <button
+                type="button"
+                className="report-nav-btn"
+                onClick={() => {
+                  onSelectInspection(olderEvent.id);
+                }}>
+                ← Older: {formatDate(olderEvent.date)}
+              </button>
+            ) : (
+              <span className="report-nav-placeholder">Earliest Report</span>
+            )}
+
             {newerEvent ? (
               <button
                 type="button"
                 className="report-nav-btn"
                 onClick={() => {
-                  onSelectInspection(
-                    newerEvent.id,
-                  );
-                }}
-              >
-                ←{" "}
-                {formatDate(
-                  newerEvent.date,
-                )}
+                  onSelectInspection(newerEvent.id);
+                }}>
+                Newer: {formatDate(newerEvent.date)} →
               </button>
             ) : (
               <span className="report-nav-placeholder">
                 Most Current Report
               </span>
             )}
-
-            {olderEvent ? (
-              <button
-                type="button"
-                className="report-nav-btn"
-                onClick={() => {
-                  onSelectInspection(
-                    olderEvent.id,
-                  );
-                }}
-              >
-                {formatDate(
-                  olderEvent.date,
-                )}{" "}
-                →
-              </button>
-            ) : (
-              <span className="report-nav-placeholder">
-                Earliest Report
-              </span>
-            )}
           </div>
         )}
 
-        <h4 className="section-header">
-          Inspection Information
-        </h4>
+        <h4 className="section-header">Inspection Information</h4>
 
         <table className="details-table">
           <tbody>
             <tr>
-              <td>
-                Inspection Type
-              </td>
+              <td>Inspection Type</td>
 
-              <td>
-                {displayed.inspection_type ||
-                  "—"}
-              </td>
+              <td>{displayed.inspection_type || "—"}</td>
             </tr>
 
             <tr>
               <td>Action</td>
 
               <td>
-                {displayed.action ||
-                  "—"}
+                {displayed.action || "—"}
 
                 {isClosure && (
                   <>
                     {" "}
-
                     <span
                       className="violation-tag status-flag status-closed"
                       style={{
-                        marginLeft:
-                          "8px",
+                        marginLeft: "8px",
 
-                        verticalAlign:
-                          "middle",
+                        verticalAlign: "middle",
 
-                        whiteSpace:
-                          "nowrap",
-                      }}
-                    >
+                        whiteSpace: "nowrap",
+                      }}>
                       Closed by DOHMH
                     </span>
                   </>
@@ -367,12 +261,8 @@ export default function RestaurantReport({
         </table>
 
         <ViolationList
-          violations={
-            displayed.violations
-          }
-          violationCodes={
-            violationCodes
-          }
+          violations={displayed.violations}
+          violationCodes={violationCodes}
         />
       </div>
     </section>

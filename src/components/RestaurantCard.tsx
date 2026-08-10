@@ -21,10 +21,27 @@ function formatDate(raw: string | null): string {
 }
 
 function formatAddress(restaurant: RestaurantProperties): string {
-  const parts = [restaurant.building, restaurant.street]
-    .map((p) => p?.trim())
-    .filter(Boolean);
-  return parts.length > 0 ? toTitleCase(parts.join(" ")) : "";
+  // Uses the pipeline's pre-formatted display_street (ordinal suffixes,
+  // e.g. "5th Street" instead of "5 Street") rather than reconstructing
+  // that logic here -- keeps street-number formatting correct in exactly
+  // one place. Falls back to the raw street name (title-cased) only if
+  // display_street is somehow missing, e.g. stale cached data from
+  // before this field existed.
+  const formattedStreet =
+    restaurant.display_street?.trim() ||
+    (restaurant.street ? toTitleCase(restaurant.street.trim()) : "");
+
+  const streetParts = [restaurant.building?.trim(), formattedStreet].filter(
+    Boolean,
+  );
+  const street = streetParts.join(" ");
+
+  // boro is already correctly cased by the pipeline (normalizeBoro()) --
+  // "Queens", "Staten Island", etc. -- so it's used as-is, not re-title-cased.
+  const boro = restaurant.boro?.trim();
+
+  if (street && boro) return `${street}, ${boro}`;
+  return street || boro || "";
 }
 
 export default function RestaurantCard({

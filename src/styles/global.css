@@ -1,5 +1,7 @@
 /*///////////////////////////////////////////// RESET & FOUNDATION //////////////////////////////////////////////*/
 
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+
 *,
 *::before,
 *::after {
@@ -36,7 +38,9 @@ p, ul, ol, figure {
   --space-l: 4rem;
 
   /* TYPOGRAPHY */
-  --font-body: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: 'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Archivo', var(--font-body);
+
 
   /* LINKS & BUTTON STATES */
   --link-hover: #ffffff;
@@ -75,7 +79,57 @@ body {
   width: 100%;
   height: 100%;
 }
+/*///////////////////////////////////////////// DASHBOARD TITLE //////////////////////////////////////////////*/
 
+.dashboard-title-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: var(--space-s);
+}
+
+.title-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.4rem; 
+  width: 100%;
+}
+
+.title-wrapper h1 {
+  text-transform: uppercase;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.h1-large { 
+  font-family: var(--font-display);
+  font-size: 10rem; 
+  font-weight: bold;
+  color:#505050; 
+  line-height: 1;
+  letter-spacing: -0.05em;   
+  margin-bottom: 0.1rem; 
+  margin-left: -0.06em; 
+  text-shadow: -3px 4px 0px #252525;
+}
+
+.h1-med {
+  font-family: var(--font-body);
+  font-size: 1.62rem;
+  font-weight: 700;
+  color: var(--text-body);
+  letter-spacing: 0.02em;
+}
+
+.h1-small {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-body);
+  letter-spacing: 0.05em;
+}
 /*///////////////////////////////////////////// APP LAYOUT //////////////////////////////////////////////*/
 
 .dashboard-container {
@@ -152,9 +206,7 @@ body {
 
 .map-top {
   grid-row: 1;
-  display: grid;
-
-  /* Filters keep their natural height; Stats fills the rest of Search's row. */
+  display: grid;  
   grid-template-rows:
     auto
     minmax(0, 1fr);
@@ -194,8 +246,15 @@ body {
   display: grid;
   grid-template-columns:
     max-content
-    minmax(0, 1fr);
+    max-content;
+  justify-content: center;
+
+  width: 100%;
   min-width: 0;
+
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  overflow: hidden;
 }
 
 .dashboard-grade-filters,
@@ -203,15 +262,21 @@ body {
   min-width: 0;
 }
 
-.dashboard-filters .panel {
+.dashboard-grade-filters .panel,
+.dashboard-borough-filters .panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
   height: 100%;
   padding: var(--space-xs) var(--space-s);
+  background: transparent;
+  border: none;
 }
 
 .dashboard-grade-filters .panel {
-  border-right: none;
+  border-right: 1px solid var(--border-panel);
 }
-
 .map-stats {
   min-width: 0;
   min-height: 0;
@@ -249,7 +314,7 @@ body {
   border-bottom: 2px solid transparent;
   color: var(--text-muted);
   padding: 0.5rem var(--space-s);
-  font: inherit;
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -400,6 +465,7 @@ body {
 .panel h2 {
   color: var(--text-heading);
   font-size: 1.25rem;
+  font-family: var(--font-display);
 }
 
 /*///////////////////////////////////////////// PANEL HEADER //////////////////////////////////////////////*/
@@ -414,12 +480,12 @@ body {
   padding-top: 0.25rem;
   padding-bottom: 0.25rem;
 }
-
 .panel-header-title {
   color: var(--text-muted);
   font-size: 0.8rem;
   text-transform: uppercase;
   font-weight: 700;
+  font-family: var(--font-display);
   padding-left: 0.4rem;
 }
 
@@ -501,6 +567,7 @@ body {
   padding: 0.55rem 0.65rem;
   background-color: var(--bg-alt);
   color: var(--text-muted);
+  font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 700;
   letter-spacing: 0.05em;
@@ -573,6 +640,7 @@ body {
   display: flex;
   align-items: center;
   margin-right: var(--space-xs);
+  font-family: var(--font-display);
   font-size: 0.875rem;
   font-weight: 600;
   color: var(--text-muted);
@@ -593,7 +661,8 @@ body {
   color: var(--text-muted);
   border: 1px solid var(--border-panel);
   padding: 0.5rem 0.6rem;  
-  font-weight:600;
+  font-family: var(--font-display);
+  font-weight:700;
   text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
@@ -602,7 +671,7 @@ body {
 .filter-button:hover {
   color:var(--link-hover);
   background-color:var(--link-background-hover);
-  font-weight:bold;
+  font-weight:700;
 }
 .filter-button.active {
   background-color: var(--bg-alt);
@@ -658,6 +727,7 @@ a:focus-visible {
 }
 
 .details-hero-title {
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 1.15rem;
   white-space: nowrap;
@@ -742,6 +812,7 @@ a:focus-visible {
   background-color: var(--bg-alt);
   padding: 0.4rem 0 0.4rem 0.4rem;
   margin-bottom: 0.4rem;
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.75rem;
   text-transform: uppercase;
@@ -840,15 +911,18 @@ a:focus-visible {
 }
 
 .inspection-row-grade {
+  font-family: var(--font-mono);
   font-weight: 700;
   width: 2rem;
   text-align: center;
 }
 
 .inspection-row-score {
+  font-family: var(--font-mono);
   width: 2rem;
   text-align: right;
   color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
 }
 
 /*///////////////////////////////////////////// RESTAURANT LIST //////////////////////////////////////////////*/
@@ -1081,6 +1155,7 @@ background-color:#252525
 }
 
 .card-title {
+  font-family: var(--font-display);
   font-weight: 700;
   font-size: 0.95rem;
   white-space: nowrap;
@@ -1129,9 +1204,11 @@ background-color:#252525
 }
 
 .badge-val {
+  font-family: var(--font-mono);
   font-weight: 700;
   font-size: 0.95rem;
   line-height: 1;
+  font-variant-numeric: tabular-nums;
 }
 
 
@@ -1205,8 +1282,10 @@ background-color:#252525
 
 .filter-notice-text {
   color: var(--text-heading);
-  font-size: 1rem;
-  font-weight: 600;
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  color: var(--font-body);
 }
 
 @keyframes filterNoticeFade {
@@ -1260,6 +1339,7 @@ background-color:#252525
 }
 
 .performance-tooltip-score span {
+  font-family: var(--font-mono);
   font-weight: 600;
   color: var(--text-heading, #ffffff);
 }
@@ -1271,4 +1351,118 @@ background-color:#252525
   transition: all 0.2s ease-in-out;
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
   z-index: 10;
+}
+/*///////////////////////////////////////////// STATS PANEL //////////////////////////////////////////////*/
+
+.stats-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+}
+
+.stats-panel-line {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Centers the whole block nicely inside the div */
+  gap: var(--space-m); /* Creates balanced space between the title/total section and the breakdown */
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 var(--space-s);
+}
+
+/* Left side: Label + Total count + Icon */
+.stats-total {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.stats-total-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: 1rem;
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.stats-total-label {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 700;
+}
+
+.stats-total-count {
+  color: var(--text-heading);
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Right side: A / B / C / Pending / Closed breakdown */
+.stats-breakdown {
+  display: flex;
+  align-items: center;
+  height: 75%;
+  min-width: 0;
+  
+  
+}
+
+.stats-breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.75rem;
+  height: 100%;
+  border-left: 1px solid var(--border-panel);
+  white-space: nowrap;
+}
+
+.stats-breakdown-item:first-child {
+  border-left: none;
+}
+
+.stats-breakdown-value {
+  font-family: var(--font-display);
+  font-size: 0.9rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+  color: var(--text-heading);
+}
+
+.stats-breakdown-label {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  
+  text-transform: uppercase;
+}
+
+/* Status accent colors */
+.stats-breakdown-item:nth-child(1) .stats-breakdown-value { color: #3cb44b; } /* Grade A */
+.stats-breakdown-item:nth-child(2) .stats-breakdown-value { color: #4dabf7; } /* Grade B */
+.stats-breakdown-item:nth-child(3) .stats-breakdown-value { color: #ffa94d; } /* Grade C */
+.stats-breakdown-item:nth-child(4) .stats-breakdown-value { color: #da77f2; } /* Pending */
+.stats-breakdown-item:nth-child(5) .stats-breakdown-value { color: #ff6b6b; } /* Closed */
+
+/* Responsive adjustments */
+@media (max-width: 1100px) {
+  .stats-panel-line {
+    gap: var(--space-s);
+  }
+  .stats-breakdown-item {
+    padding: 0 0.4rem;
+  }
 }

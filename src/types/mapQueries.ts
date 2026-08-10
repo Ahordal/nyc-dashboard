@@ -56,8 +56,21 @@ function normalizeSearchQuery(raw: string): string {
 // index itself; this just needs to normalize the query the same way.
 // Returns null for an empty/whitespace-only query (no clause to add).
 export function buildSearchClause(searchQuery: string): string | null {
+  // Nothing typed at all -- no filter, show everything. Distinct from the
+  // case below: an untouched search box should never restrict results.
+  if (!searchQuery.trim()) return null;
+
   const normalized = normalizeSearchQuery(searchQuery);
-  if (!normalized) return null;
+
+  // Something WAS typed, but it normalized away to nothing (e.g. only
+  // punctuation like "#" or "!~" -- there's no letter/digit content for
+  // search_index to have ever indexed). Falling back to `null` here would
+  // silently behave as "no search," showing the full unfiltered set while
+  // the UI still displays "Search: '#' -- 22,527 restaurants," which reads
+  // as a real match count for a query that was never actually evaluated.
+  // Match nothing instead, so a search with no searchable characters
+  // correctly returns zero results rather than everything.
+  if (!normalized) return "1=0";
 
   const words = normalized.split(" ").filter(Boolean);
   if (words.length === 0) return null;

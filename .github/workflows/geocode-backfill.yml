@@ -15,8 +15,8 @@ name: Geocode Backfill
 
 on:
   schedule:
-    # 11:00 UTC daily (8:00 AM ADT)
-    - cron: '0 11 * * *'
+    # 8:00 UTC daily (8:00 AM ADT)
+    - cron: '0 8 * * *'
   workflow_dispatch: {} # allows manually triggering a run from the Actions tab
 
 # The default GITHUB_TOKEN is read-only unless explicitly granted write
