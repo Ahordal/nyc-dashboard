@@ -55,7 +55,7 @@ import { writeFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { loadCache } from "./cache.mjs";
-import { formatDisplayAddress } from "./normalize.mjs";
+import { formatDisplayAddress, formatDisplayStreet } from "./normalize.mjs";
 
 // Path to the geocode cache committed to the repo by the scheduled
 // GitHub Action (see run-geocode-backfill.mjs). This file is READ ONLY
@@ -699,6 +699,14 @@ export function buildLatestInspectionsGeoJSON(
         boro: normalizeBoro(primary.boro),
         building: primary.building ?? "",
         street: primary.street ?? "",
+        // Just the street name, formatted (ordinal suffixes, expanded
+        // abbreviations, proper casing -- e.g. "79 STREET" -> "79th
+        // Street"), with NO neighbourhood appended. Exists separately from
+        // display_address below for consumers (like the restaurant card)
+        // that want to compose their own address line -- e.g. combining
+        // with borough instead of neighbourhood -- without re-implementing
+        // the ordinal-suffix logic client-side.
+        display_street: formatDisplayStreet(primary.street ?? ""),
         // Formatted for human display (ordinal suffixes, proper casing,
         // e.g. "37-70 79th Street"), independent of geocoding status --
         // this is pure text formatting via normalize.mjs, not something

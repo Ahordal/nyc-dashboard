@@ -87,3 +87,72 @@ export function needsResolution(cache, camis, currentAddressHash) {
 export function upsertCacheEntry(cache, entry) {
   return { ...cache, [entry.camis]: entry };
 }
+
+// --- Merging (for reconciling concurrent/overlapping runs) -----------------
+
+// Ranks an entry's "authoritativeness" for merge purposes: a real result
+// (verified or unverified) always outranks a pending one, since pending
+// means "this run didn't actually finish resolving it." Used to decide
+// which side wins when the SAME camis was touched by two different runs.
+function isFinal(entry) {
+  return entry != null && entry.status !== 'pending';
+}
+
+// Merges two cache objects into one, entry-by-entry by CAMIS. Used when a
+// run's own local results need to be reconciled against whatever's already
+// on the remote (e.g. from an overlapping run, or any other commit that
+// landed on main since this run's checkout) — rather than blindly
+// overwriting one with the other and risking silently losing real
+// geocoding work from either side.
+//
+// Per-key resolution rules, in order:
+//   1. Only one side has this camis at all -> keep that side's entry.
+//   2. One side is 'pending' and the other is final (verified/unverified)
+//      -> the final result always wins, regardless of which side it's on.
+//      A pending entry represents unfinished work and should never
+//      overwrite a real result.
+//   3. Both sides are final -> prefer whichever has the more recent
+//      resolvedAt timestamp (the newer resolution is more likely to
+//      reflect the current address/resolver version).
+//   4. Both sides are pending -> keep either (arbitrarily `local`) since
+//      neither represents finished work; a future run will retry it.
+export function mergeCaches(local, remote) {
+  const merged = { ...remote };
+
+  for (const [camis, localEntry] of Object.entries(local)) {
+    const remoteEntry = remote[camis];
+
+    if (!remoteEntry) {
+      merged[camis] = localEntry;
+      continue;
+    }
+
+    const localFinal = isFinal(localEntry);
+    const remoteFinal = isFinal(remoteEntry);
+
+    if (localFinal && !remoteFinal) {
+      merged[camis] = localEntry;
+    } else if (!localFinal && remoteFinal) {
+      merged[camis] = remoteEntry; // keep remote's real result, discard local's pending
+    } else if (localFinal && remoteFinal) {
+      const localTime = localEntry.resolvedAt ? Date.parse(localEntry.resolvedAt) : 0;
+      const remoteTime = remoteEntry.resolvedAt ? Date.parse(remoteEntry.resolvedAt) : 0;
+      merged[camis] = localTime >= remoteTime ? localEntry : remoteEntry;
+    } else {
+      merged[camis] = localEntry; // both pending, doesn't matter which
+    }
+  }
+
+  return merged;
+}
+
+// Merges two suspicious-shift log arrays, deduping by CAMIS (a restaurant
+// only needs to appear once in the log even if flagged by both sides of a
+// merge). Local entries win on a duplicate, since they represent this run's
+// most recent resolution.
+export function mergeSuspiciousShifts(local, remote) {
+  const byCamis = new Map();
+  for (const entry of remote) byCamis.set(entry.camis, entry);
+  for (const entry of local) byCamis.set(entry.camis, entry); // local overwrites on conflict
+  return [...byCamis.values()];
+}
