@@ -105,14 +105,7 @@ export default function Dashboard() {
     selectedInspectionId !== null &&
     history.some((event) => event.id === selectedInspectionId)
       ? selectedInspectionId
-      : history[history.length - 1]?.id ?? null;
-
-  // Only pin the matching chart point while the Inspection Reports tab is
-  // actually open. Other tabs leave the chart unpinned.
-  const pinnedInspectionId =
-    activeExplorerTab === "report"
-      ? reportInspectionId
-      : null;
+      : (history[history.length - 1]?.id ?? null);
 
   useEffect(() => {
     if (isFirstFilterRender.current) {
@@ -269,7 +262,11 @@ export default function Dashboard() {
           </div>
 
           <div className="grade-chart">
-            <GradeChart />
+            <GradeChart
+              restaurants={visibleRestaurants}
+              filters={filters}
+              setFilters={setFilters}
+            />
           </div>
         </div>
 
@@ -277,17 +274,11 @@ export default function Dashboard() {
           <div className="map-top">
             <div className="dashboard-filters">
               <div className="dashboard-grade-filters">
-                <GradeFilters
-                  filters={filters}
-                  setFilters={setFilters}
-                />
+                <GradeFilters filters={filters} setFilters={setFilters} />
               </div>
 
               <div className="dashboard-borough-filters">
-                <BoroughFilters
-                  filters={filters}
-                  setFilters={setFilters}
-                />
+                <BoroughFilters filters={filters} setFilters={setFilters} />
               </div>
             </div>
 
@@ -322,8 +313,7 @@ export default function Dashboard() {
               }
               onClick={() => {
                 handleExplorerTabChange("list");
-              }}
-            >
+              }}>
               Restaurant List
             </button>
 
@@ -336,8 +326,7 @@ export default function Dashboard() {
               }
               onClick={() => {
                 handleExplorerTabChange("details");
-              }}
-            >
+              }}>
               Restaurant Details
             </button>
 
@@ -350,8 +339,7 @@ export default function Dashboard() {
               }
               onClick={() => {
                 handleExplorerTabChange("report");
-              }}
-            >
+              }}>
               Inspection Reports
             </button>
           </div>
@@ -359,11 +347,8 @@ export default function Dashboard() {
           <div className="explorer-content">
             <div
               className={`restaurant-list ${
-                activeExplorerTab === "list"
-                  ? ""
-                  : "explorer-pane-hidden"
-              }`}
-            >
+                activeExplorerTab === "list" ? "" : "explorer-pane-hidden"
+              }`}>
               <RestaurantList
                 restaurants={visibleRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
@@ -374,16 +359,13 @@ export default function Dashboard() {
 
             <div
               className={`restaurant-details ${
-                activeExplorerTab === "details"
-                  ? ""
-                  : "explorer-pane-hidden"
-              }`}
-            >
+                activeExplorerTab === "details" ? "" : "explorer-pane-hidden"
+              }`}>
               <RestaurantDetails
                 restaurant={selectedRestaurant}
                 history={history}
                 isLoadingHistory={isLoadingHistory}
-                selectedInspectionId={selectedInspectionId}
+                selectedInspectionId={reportInspectionId}
                 onSelectInspection={handleSelectInspection}
                 onHoverInspection={handleHoverInspection}
               />
@@ -391,11 +373,8 @@ export default function Dashboard() {
 
             <div
               className={`restaurant-report ${
-                activeExplorerTab === "report"
-                  ? ""
-                  : "explorer-pane-hidden"
-              }`}
-            >
+                activeExplorerTab === "report" ? "" : "explorer-pane-hidden"
+              }`}>
               <RestaurantReport
                 restaurant={selectedRestaurant}
                 history={history}
@@ -408,8 +387,7 @@ export default function Dashboard() {
             {showFilterNotice && (
               <div
                 key={`${gradesKey}-${boroughsKey}-${searchQuery}`}
-                className="filter-notice-overlay"
-              >
+                className="filter-notice-overlay">
                 <div className="filter-notice-text">
                   {filters.grades.length > 0 && (
                     <span className="filter-notice-group">
@@ -419,8 +397,7 @@ export default function Dashboard() {
                           <span
                             style={{
                               color: GRADE_FILTER_COLORS[grade],
-                            }}
-                          >
+                            }}>
                             {grade}
                           </span>
 
@@ -430,13 +407,9 @@ export default function Dashboard() {
                     </span>
                   )}
 
-                  {filters.grades.length > 0 &&
-                    filters.boroughs.length > 0 && (
-                      <span className="filter-notice-separator">
-                        {" "}
-                        ·{" "}
-                      </span>
-                    )}
+                  {filters.grades.length > 0 && filters.boroughs.length > 0 && (
+                    <span className="filter-notice-separator"> · </span>
+                  )}
 
                   {filters.boroughs.length > 0 && (
                     <span className="filter-notice-group">
@@ -444,13 +417,9 @@ export default function Dashboard() {
                     </span>
                   )}
 
-                  {(filters.grades.length > 0 ||
-                    filters.boroughs.length > 0) &&
+                  {(filters.grades.length > 0 || filters.boroughs.length > 0) &&
                     searchQuery && (
-                      <span className="filter-notice-separator">
-                        {" "}
-                        ·{" "}
-                      </span>
+                      <span className="filter-notice-separator"> · </span>
                     )}
 
                   {searchQuery && (
@@ -469,10 +438,7 @@ export default function Dashboard() {
                       </span>
                     )}
 
-                  <span className="filter-notice-separator">
-                    {" "}
-                    —{" "}
-                  </span>
+                  <span className="filter-notice-separator"> — </span>
 
                   <span className="filter-notice-group">
                     {restaurantCount.toLocaleString()} restaurants
@@ -490,7 +456,7 @@ export default function Dashboard() {
             isLoadingHistory={isLoadingHistory}
             onSelectInspection={handleSelectInspection}
             hoveredInspectionId={hoveredInspectionId}
-            selectedInspectionId={pinnedInspectionId}
+            selectedInspectionId={reportInspectionId}
           />
         </div>
       </main>

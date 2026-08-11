@@ -359,6 +359,14 @@ export default function RestaurantDetails({
                 <li
                   key={event.id}
                   className={isSelected ? "inspection-row-selected" : ""}
+                  
+                  
+                  style={
+                    isSelected 
+                      ? { outlineColor: CATEGORY_COLORS[eventCategory] } 
+                      : undefined
+                  }
+                  
                   role="button"
                   tabIndex={0}
                   aria-current={isSelected ? "true" : undefined}

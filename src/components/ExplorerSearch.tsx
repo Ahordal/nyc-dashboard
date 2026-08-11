@@ -8,6 +8,7 @@
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import PanelHeader from "./PanelHeader";
 
 const DEBOUNCE_MS = 350;
 
@@ -35,9 +36,7 @@ export default function ExplorerSearch({
 
   return (
     <section className="panel">
-      <div className="panel-header">
-        <span className="panel-header-title">Search</span>
-      </div>
+      <PanelHeader title="Search" />
 
       <div className="search-panel-body">
         <div className="search-input-wrapper">

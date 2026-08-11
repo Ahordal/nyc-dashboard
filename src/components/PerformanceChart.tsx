@@ -568,13 +568,23 @@ export default function PerformanceChart({
 
   // Synchronize the pinned report point.
   useEffect(() => {
-    const nextSelectedPoint = getRenderedTooltipPoint(selectedChartPoint);
+    const syncPoint = () => {
+      const nextSelectedPoint = getRenderedTooltipPoint(selectedChartPoint);
 
-    setSelectedPoint((currentPoint) =>
-      tooltipPointsMatch(currentPoint, nextSelectedPoint)
-        ? currentPoint
-        : nextSelectedPoint,
-    );
+      setSelectedPoint((currentPoint) =>
+        tooltipPointsMatch(currentPoint, nextSelectedPoint)
+          ? currentPoint
+          : nextSelectedPoint,
+      );
+    };
+
+    // 1. Try to sync immediately
+    syncPoint();
+
+    // 2. Try again slightly later to ensure Recharts has finished its layout paint
+    const timeoutId = setTimeout(syncPoint, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [
     selectedChartPoint,
     getRenderedTooltipPoint,
@@ -931,6 +941,7 @@ export default function PerformanceChart({
               stroke="var(--text-heading)"
               strokeWidth={1.5}
               activeDot={false}
+              isAnimationActive={false}
               dot={(props: RechartsDotProps) => (
                 <PerformanceDot
                   {...props}

@@ -1,8 +1,11 @@
 // DashboardTitle.tsx
 
+import PanelHeader from "./PanelHeader";
+
 export default function DashboardTitle() {
   return (
     <section className="panel dashboard-title-panel">
+      <PanelHeader />
       <div className="title-wrapper">
         <span className="h1-large" aria-hidden="true">
           NYC

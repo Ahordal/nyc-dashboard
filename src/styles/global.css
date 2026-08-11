@@ -87,6 +87,9 @@ body {
   justify-content: flex-start;
   padding: var(--space-s);
 }
+.dashboard-title-panel .panel-header {
+  margin-bottom: 0;
+}
 
 .title-wrapper {
   display: flex;
@@ -117,7 +120,7 @@ body {
 
 .h1-med {
   font-family: var(--font-body);
-  font-size: 1.62rem;
+  font-size: 1.4rem;
   font-weight: 700;
   color: var(--text-body);
   letter-spacing: 0.02em;
@@ -125,7 +128,7 @@ body {
 
 .h1-small {
   font-family: var(--font-body);
-  font-size: 1rem;
+  font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-body);
   letter-spacing: 0.05em;
@@ -148,10 +151,11 @@ body {
   min-width: 0;
   min-height: 0;
 
+  /* Left and right columns both increased by 100px from their originals */
   grid-template-columns:
-    minmax(0, 20fr)
-    minmax(0, 60fr)
-    minmax(0, 20fr);
+    clamp(350px, 25vw, 450px)
+    minmax(0, 1fr)
+    clamp(400px, 28vw, 550px);
 
   grid-template-rows:
     auto
@@ -165,16 +169,12 @@ body {
 
   gap: var(--space-xs);
 }
-
 /*///////////////////////////////////////////// PRIMARY GRID AREAS //////////////////////////////////////////////*/
 
 .left-sidebar {
   grid-area: sidebar;
-  display: grid;
-  grid-template-rows:
-    minmax(0, 0.75fr)
-    minmax(0, 1.25fr)
-    280px;
+  display: flex;
+  flex-direction: column;
   gap: var(--space-xs);
   min-width: 0;
   min-height: 0;
@@ -269,7 +269,7 @@ body {
   justify-content: center;
   width: auto;
   height: 100%;
-  padding: var(--space-xs) var(--space-s);
+  padding: 1rem;
   background: transparent;
   border: none;
 }
@@ -287,7 +287,7 @@ body {
   padding: var(--space-xs) var(--space-s);
 }
 
-/*///////////////////////////////////////////// EXPLORER (LIST + DETAILS) //////////////////////////////////////////////*/
+/*///////////////////////////////////////////// EXPLORER (LIST DETAILS) //////////////////////////////////////////////*/
 
 .explorer {
   grid-area: explorer;
@@ -313,7 +313,7 @@ body {
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--text-muted);
-  padding: 0.5rem var(--space-s);
+  padding: 1rem var(--space-s);
   font-family: var(--font-display);
   font-size: 0.75rem;
   font-weight: 700;
@@ -537,6 +537,7 @@ body {
   display: flex;
   flex-direction: column;
   min-height: 0;
+  flex: 0 0 auto;
 }
 
 .dashboard-guide-panel > .panel-header {
@@ -896,7 +897,8 @@ a:focus-visible {
 }
 
 .inspection-row-selected {
-  outline: 1px solid var(--accent-blue);
+  outline: 1px solid; 
+  outline-offset: -1px; 
 }
 
 .inspection-row-dot {
@@ -1331,6 +1333,7 @@ background-color:#252525
   margin-bottom: 4px;
   color: var(--text-muted, #aaaaaa);
   font-size: 0.85rem;
+  font-weight:700;
 }
 
 .performance-tooltip-score {
@@ -1365,8 +1368,8 @@ background-color:#252525
 .stats-panel-line {
   display: flex;
   align-items: center;
-  justify-content: center; /* Centers the whole block nicely inside the div */
-  gap: var(--space-m); /* Creates balanced space between the title/total section and the breakdown */
+  justify-content: center; 
+  gap: var(--space-m); 
   width: 100%;
   height: 100%;
   min-width: 0;
@@ -1387,7 +1390,7 @@ background-color:#252525
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 1rem;
+  font-size: 1.25rem;
   background: transparent;
   border: none;
   padding: 0;
@@ -1395,16 +1398,15 @@ background-color:#252525
 
 .stats-total-label {
   color: var(--text-muted);
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+  text-transform: uppercase;  
   font-weight: 700;
 }
 
 .stats-total-count {
   color: var(--text-heading);
   font-family: var(--font-display);
-  font-size: 1.15rem;
+  font-size: 0.8rem;
   font-weight: 700;
   line-height: 1;
   font-variant-numeric: tabular-nums;
@@ -1419,7 +1421,6 @@ background-color:#252525
   
   
 }
-
 .stats-breakdown-item {
   display: flex;
   align-items: center;
@@ -1436,7 +1437,7 @@ background-color:#252525
 
 .stats-breakdown-value {
   font-family: var(--font-display);
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 700;
   font-variant-numeric: tabular-nums;
   color: var(--text-heading);
@@ -1456,6 +1457,26 @@ background-color:#252525
 .stats-breakdown-item:nth-child(3) .stats-breakdown-value { color: #ffa94d; } /* Grade C */
 .stats-breakdown-item:nth-child(4) .stats-breakdown-value { color: #da77f2; } /* Pending */
 .stats-breakdown-item:nth-child(5) .stats-breakdown-value { color: #ff6b6b; } /* Closed */
+
+
+/*///////////////////////////////////////////// GRADE CHART //////////////////////////////////////////////*/
+
+
+.grade-chart {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  min-width: 0;
+}
+
+.grade-chart .panel {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+
 
 /* Responsive adjustments */
 @media (max-width: 1100px) {

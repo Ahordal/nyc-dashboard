@@ -29,13 +29,13 @@ type InfoPlacement = "up" | "down" | "auto";
 type ResolvedPlacement = "up" | "down";
 
 type PanelHeaderProps = {
-  title: string;
-  infoContent: ReactNode;
+  title?: string;
+  infoContent?: ReactNode;
   infoPlacement?: InfoPlacement;
 };
 
 // Consistent width shared by every information popup.
-const POPUP_MAX_WIDTH = 480;
+const POPUP_MAX_WIDTH = 450;
 
 // Space between the information button/header and the popup.
 const POPUP_GAP = 8;
@@ -323,7 +323,7 @@ export default function PanelHeader({
             ].join(" ")}
             data-placement={resolvedPlacement}
             role="region"
-            aria-label={`About ${title}`}
+            aria-label={`About ${title ?? "panel"}`}
             style={popupStyle}
           >
             {infoContent}
@@ -339,37 +339,39 @@ export default function PanelHeader({
         className="panel-header"
       >
         <span className="panel-header-title">
-          {title}
+          {title || "\u00A0"}
         </span>
 
-        <button
-          ref={buttonRef}
-          type="button"
-          className="panel-header-info-button"
-          onClick={() => {
-            if (!showInfo) {
-              setPopupStyle(
-                HIDDEN_POPUP_STYLE,
-              );
-            }
+        {infoContent && (
+          <button
+            ref={buttonRef}
+            type="button"
+            className="panel-header-info-button"
+            onClick={() => {
+              if (!showInfo) {
+                setPopupStyle(
+                  HIDDEN_POPUP_STYLE,
+                );
+              }
 
-            setShowInfo(
-              (currentValue) =>
-                !currentValue,
-            );
-          }}
-          aria-label={`About ${title}`}
-          aria-expanded={showInfo}
-          aria-controls={
-            showInfo
-              ? popupId
-              : undefined
-          }
-        >
-          <FontAwesomeIcon
-            icon={faCircleInfo}
-          />
-        </button>
+              setShowInfo(
+                (currentValue) =>
+                  !currentValue,
+              );
+            }}
+            aria-label={`About ${title ?? "panel"}`}
+            aria-expanded={showInfo}
+            aria-controls={
+              showInfo
+                ? popupId
+                : undefined
+            }
+          >
+            <FontAwesomeIcon
+              icon={faCircleInfo}
+            />
+          </button>
+        )}
       </div>
 
       {popup}
