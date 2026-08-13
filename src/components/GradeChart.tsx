@@ -85,7 +85,7 @@ const renderCustomizedShape = (props: any) => {
   const isHovered = payload?.isHovered;
   const isSelected = payload?.isSelected;
   const fill = payload?.color;
-  
+
   const isActive = isHovered || isSelected;
   const currentOuterRadius = isActive ? outerRadius + 6 : outerRadius;
 
@@ -180,7 +180,14 @@ export default function GradeChart({
   }, [restaurants, filters.grades, hoveredIndex]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const handleClick = (entry: any) => {
+  const handleClick = (entry: any, _index: number, event: any) => {
+    // Recharts bubbles the underlying DOM click up through the SVG --
+    // without stopping it here, clicking a slice would ALSO trigger the
+    // background click handler below (meant for clicking off a slice to
+    // clear the filter), immediately undoing the selection this click
+    // just made.
+    event?.stopPropagation?.();
+
     const clickedGrade = entry.label;
 
     const isAlreadySelected =
@@ -192,8 +199,30 @@ export default function GradeChart({
     });
   };
 
+  // Clicking anywhere in the chart that ISN'T a slice (the donut hole,
+  // the space around the ring, etc.) clears the grade filter -- same
+  // idea as clicking outside an open dropdown to close it. Slice clicks
+  // stop propagation (see handleClick above) before they ever reach this.
+  const handleBackgroundClick = () => {
+    if (filters.grades.length > 0) {
+      setFilters({ ...filters, grades: [] });
+    }
+  };
+
   return (
     <section className="panel grade-chart-panel">
+      {/* Recharts makes Pie/Sector elements focusable for keyboard/screen-reader
+          access, which is good -- but it also means clicking a slice leaves a
+          visible browser focus outline around the SVG. This suppresses that
+          outline visually only; focusability itself is untouched, so tabbing
+          through the chart still works the same as before. */}
+      <style>{`
+        .grade-chart-svg-wrap svg:focus,
+        .grade-chart-svg-wrap svg *:focus {
+          outline: none;
+        }
+      `}</style>
+
       <PanelHeader
         title="Grade Breakdown"
         infoContent={GRADE_CHART_INFO_CONTENT}
@@ -213,7 +242,11 @@ export default function GradeChart({
           boxSizing: "border-box",
         }}
       >
-        <div style={{ flex: 1, minHeight: 0, width: "100%", height: "100%", position: "relative" }}>
+        <div
+          className="grade-chart-svg-wrap"
+          onClick={handleBackgroundClick}
+          style={{ flex: 1, minHeight: 0, width: "100%", height: "100%", position: "relative" }}
+        >
           {data.length === 0 ? (
             <div
               className="details-empty"
@@ -237,7 +270,9 @@ export default function GradeChart({
                     onMouseLeave={() => setHoveredIndex(null)}
                     shape={renderCustomizedShape}
                     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                    onClick={(entry: any) => handleClick(entry)}
+                    onClick={(entry: any, index: any, event: any) =>
+                      handleClick(entry, index, event)
+                    }
                     style={{ cursor: "pointer" }}
                   />
                 </PieChart>
@@ -260,80 +295,80 @@ export default function GradeChart({
                   maxWidth: "180px",
                 }}
               >
+                {/* Legend row - stays visible at all times; dims non-active entries
+                    when something is hovered or selected, rather than disappearing. */}
+                <div
+                  style={{
+                    fontSize: "0.8rem",
+                    fontWeight: 700,
+                    textTransform: "uppercase",
+                    letterSpacing: "0.02em",
+                    lineHeight: 1.35,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                    gap: "0rem 0.25rem",
+                  }}
+                >
+                  {SLICE_CONFIG.map(({ key, label, color }, index) => {
+                    const isActive = activeItem?.label === label;
+                    const isDimmed = activeItem !== null && !isActive;
+                    const isLast = index === SLICE_CONFIG.length - 1;
+
+                    return (
+                      <span key={key}>
+                        <span
+                          style={{
+                            color: isDimmed ? "var(--text-muted)" : color,
+                            opacity: isDimmed ? 0.45 : 1,
+                            transition: "opacity 0.15s ease, color 0.15s ease",
+                          }}
+                        >
+                          {label}
+                        </span>
+                        {!isLast && (
+                          <span
+                            style={{
+                              color: "var(--text-muted)",
+                              opacity: isDimmed ? 0.45 : 1,
+                            }}
+                          >
+                            ,
+                          </span>
+                        )}
+                      </span>
+                    );
+                  })}
+                </div>
+
+                {/* Second line - active grade + its count, or the running total */}
                 {activeItem ? (
-                  <>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-display)",
-                        fontSize: "0.8rem",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        color: activeItem.color,
-                        lineHeight: 1.1,
-                      }}
-                    >
-                      {activeItem.label}
-                    </span>
-                    <span
-                      style={{
-                        fontFamily: "var(--font-mono)",
-                        fontSize: "0.8rem",
-                        fontWeight: 700,
-                        color: "var(--text-heading)",
-                        marginTop: "0.2rem",
-                        lineHeight: 1,
-                      }}
-                    >
-                      {activeItem.value.toLocaleString()}
-                    </span>
-                  </>
+                  <span
+                    style={{
+                      fontFamily: "var(--font-mono)",
+                      fontSize: "0.8rem",
+                      fontWeight: 700,
+                      color: activeItem.color,
+                      marginTop: "0.25rem",
+                      lineHeight: 1,
+                    }}
+                  >
+                    {activeItem.value.toLocaleString()}
+                  </span>
                 ) : (
-                  <>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.02em",
-                        lineHeight: 1.35,
-                        display: "flex",
-                        flexWrap: "wrap",
-                        justifyContent: "center",
-                        gap: "0rem 0.25rem",
-                      }}
-                    >
-                      <span>
-                        <span style={{ color: CATEGORY_COLORS.A }}>A</span>
-                        <span style={{ color: "var(--text-muted)" }}>,</span>
-                      </span>
-                      <span>
-                        <span style={{ color: CATEGORY_COLORS.B }}>B</span>
-                        <span style={{ color: "var(--text-muted)" }}>,</span>
-                      </span>
-                      <span>
-                        <span style={{ color: CATEGORY_COLORS.C }}>C</span>
-                        <span style={{ color: "var(--text-muted)" }}>,</span>
-                      </span>
-                      <span>
-                        <span style={{ color: CATEGORY_COLORS.pending }}>Pending</span>
-                        <span style={{ color: "var(--text-muted)" }}>,</span>
-                      </span>
-                      <span style={{ color: CATEGORY_COLORS.closed }}>Closed</span>
-                    </div>
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        color: "var(--text-muted)",
-                        marginTop: "0.25rem",
-                        lineHeight: 1.1,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.02em",
-                      }}
-                    >
-                      {totalCount.toLocaleString()} Restaurants
-                    </div>
-                  </>
+                  <div
+                    style={{
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      color: "var(--text-muted)",
+                      marginTop: "0.25rem",
+                      lineHeight: 1.1,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.02em",
+                    }}
+                  >
+                    {totalCount.toLocaleString()} Restaurants
+                  </div>
                 )}
               </div>
             </>

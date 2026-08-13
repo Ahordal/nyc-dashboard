@@ -26,6 +26,7 @@ import type { RestaurantProperties } from "../types/restaurant";
 import { CATEGORY_COLORS } from "../utils/gradeColours";
 import {
   buildDefinitionExpression,
+  buildGradeWhereClause,
   queryVisibleRestaurants,
   checkSelectionAgainstFilters,
   queryFilterExtent,
@@ -387,6 +388,32 @@ export default function InspectionMapView({
     );
     layer.definitionExpression = newDefinitionExpression;
 
+    // Grade is applied as a display-only filter on the LayerView, not on
+    // the layer's definitionExpression above -- this hides non-matching
+    // markers on the map without restricting what queryFeatures() can
+    // see, so a selected grade still fully explodes/highlights in the
+    // Grade Breakdown chart while the ring itself keeps showing the true,
+    // ungraded breakdown for the current extent/borough/search. This is
+    // independent of the selection-highlight FeatureEffect set up in
+    // applyHighlightForId -- LayerView.filter and LayerView.featureEffect
+    // are separate properties and apply together.
+    const gradeWhereClause = buildGradeWhereClause(filters.grades);
+    if (view) {
+      view
+        .whenLayerView(layer)
+        .then((layerView) => {
+          layerView.filter = gradeWhereClause
+            ? new FeatureFilter({ where: gradeWhereClause })
+            : null;
+        })
+        .catch((err) => {
+          console.error(
+            "MapView: failed to apply grade filter to layer view",
+            err,
+          );
+        });
+    }
+
     // Detect whether BOROUGHS or SEARCH specifically changed, as opposed
     // to only GRADE changing -- only a borough or search change should
     // ever move the camera.
@@ -408,6 +435,15 @@ export default function InspectionMapView({
       let objectId: number | string | null = null;
 
       if (currentId) {
+        // Grade no longer lives in newDefinitionExpression (see above),
+        // but a selection SHOULD still be cleared if it no longer
+        // matches the active grade filter -- so grade is folded back in
+        // here, just for this one "does the selection still match"
+        // check, without touching the layer's actual definitionExpression.
+        const selectionCheckExpression = [newDefinitionExpression, gradeWhereClause]
+          .filter(Boolean)
+          .join(" AND ");
+
         // ONE combined query serves both "does the selection still
         // match the new filters" AND "what's its objectId for
         // highlighting" -- previously these were two separate round
@@ -416,7 +452,7 @@ export default function InspectionMapView({
           const checkResult = await checkSelectionAgainstFilters(
             layer,
             currentId,
-            newDefinitionExpression,
+            selectionCheckExpression,
           );
           stillMatches = checkResult.stillMatches;
           objectId = checkResult.objectId;

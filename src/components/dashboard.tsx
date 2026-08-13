@@ -28,6 +28,8 @@ import type {
   ViolationCodeLookup,
 } from "../types/restaurant";
 
+import type { DashboardMeta } from "../types/dashboardMeta";
+
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 type ExplorerTab = "list" | "details" | "report";
@@ -84,6 +86,12 @@ export default function Dashboard() {
 
   // Violation code descriptions are fetched once and shared by the report.
   const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>({});
+
+  // Dataset freshness/size, fetched once and shared by the Dashboard
+  // Information modal.
+  const [dashboardMeta, setDashboardMeta] = useState<DashboardMeta | null>(
+    null,
+  );
 
   // Transient overlay shown when filters or search terms change.
   const [showFilterNotice, setShowFilterNotice] = useState(false);
@@ -154,6 +162,27 @@ export default function Dashboard() {
       .catch((error) => {
         if (error.name !== "AbortError") {
           setViolationCodes({});
+        }
+      });
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    fetch("/data/dashboard-meta.json", {
+      signal: controller.signal,
+    })
+      .then((response) => (response.ok ? response.json() : null))
+      .then((data: DashboardMeta | null) => {
+        setDashboardMeta(data);
+      })
+      .catch((error) => {
+        if (error.name !== "AbortError") {
+          setDashboardMeta(null);
         }
       });
 
@@ -258,7 +287,7 @@ export default function Dashboard() {
           </div>
 
           <div className="dashboard-guide">
-            <DashboardGuide />
+            <DashboardGuide meta={dashboardMeta} />
           </div>
 
           <div className="grade-chart">

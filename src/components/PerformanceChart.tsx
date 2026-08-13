@@ -858,7 +858,7 @@ export default function PerformanceChart({
 
             <CartesianGrid
               strokeDasharray="3 3"
-              stroke="rgba(255, 255, 255, 0.8)"
+              stroke="rgba(255, 255, 255, 1)"
               vertical={true}
               horizontal={false}
             />

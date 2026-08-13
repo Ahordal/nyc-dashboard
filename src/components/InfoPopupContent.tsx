@@ -9,8 +9,10 @@ import type { ReactNode } from "react";
 
 type InfoPopupContentProps = {
   overview?: ReactNode;
+  dataSource?: ReactNode;
   howToUse?: ReactNode;
   grades?: ReactNode;
+  violations?: ReactNode;
   statuses?: ReactNode;
   dataNotes?: ReactNode;
   resources?: ReactNode;
@@ -38,8 +40,10 @@ function InfoPopupSection({
 
 export default function InfoPopupContent({
   overview,
+  dataSource,
   howToUse,
   grades,
+  violations,
   statuses,
   dataNotes,
   resources,
@@ -49,6 +53,12 @@ export default function InfoPopupContent({
       {overview && (
         <InfoPopupSection title="Overview">
           {overview}
+        </InfoPopupSection>
+      )}
+
+      {dataSource && (
+        <InfoPopupSection title="Data Source & Freshness">
+          {dataSource}
         </InfoPopupSection>
       )}
 
@@ -67,6 +77,12 @@ export default function InfoPopupContent({
       {statuses && (
         <InfoPopupSection title="Status Indicators">
           {statuses}
+        </InfoPopupSection>
+      )}
+
+      {violations && (
+        <InfoPopupSection title="Violations">
+          {violations}
         </InfoPopupSection>
       )}
 

@@ -112,18 +112,18 @@ body {
   font-weight: bold;
   color:#505050; 
   line-height: 1;
-  letter-spacing: -0.05em;   
-  margin-bottom: 0.1rem; 
+  letter-spacing: -0.05em; 
   margin-left: -0.06em; 
   text-shadow: -3px 4px 0px #252525;
 }
 
 .h1-med {
   font-family: var(--font-body);
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   font-weight: 700;
   color: var(--text-body);
   letter-spacing: 0.02em;
+
 }
 
 .h1-small {
@@ -240,7 +240,7 @@ body {
   outline: none;
 }
 
-/*///////////////////////////////////////////// MAP TOOLBAR //////////////////////////////////////////////*/
+/*///////////////////////////////////////////// DASHBOARD FILTERS //////////////////////////////////////////////*/
 
 .dashboard-filters {
   display: grid;
@@ -482,7 +482,7 @@ body {
 }
 .panel-header-title {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: 0.85rem;
   text-transform: uppercase;
   font-weight: 700;
   font-family: var(--font-display);
@@ -517,7 +517,8 @@ body {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.panel-header-popup ul {
+.panel-header-popup ul,
+.info-modal-content ul {
   margin: 0.5rem 0;
   padding-left: 1.2rem;
 }
@@ -536,8 +537,8 @@ body {
 .dashboard-guide-panel {
   display: flex;
   flex-direction: column;
-  min-height: 0;
-  flex: 0 0 auto;
+  min-height: 0; 
+  overflow-y: auto;
 }
 
 .dashboard-guide-panel > .panel-header {
@@ -608,10 +609,12 @@ body {
 .dashboard-guide-section-content ul {
   margin: 0;
   padding-left: 1.15rem;
+  
 }
 
 .dashboard-guide-section-content li + li {
   margin-top: 0.35rem;
+
 }
 
 .dashboard-guide-note {
@@ -781,6 +784,13 @@ a:focus-visible {
   width: 40%;
 }
 
+
+.restaurant-details-panel .details-table td:first-child {
+  text-transform: uppercase;
+  font-size:0.8rem;
+  font-weight:600;
+}
+
 .details-table td:last-child {
   color: var(--text-body);
 }
@@ -842,14 +852,9 @@ a:focus-visible {
   color: var(--text-muted);
 }
 
-.violation-tag {
-  display: inline-block;
-  padding: 0.05rem 0.3rem;
-  font-size: 0.7rem;
-  font-weight: 700;
-  border-radius: 2px;
-}
-
+/* Base .violation-tag and its variants (severity-tag, violation-code-tag,
+   category-tag) are defined once, in the STATUS FLAGS & BADGES (UPDATED)
+   section near the bottom of this file, so all three stay in sync. */
 /*///////////////////////////////////////////// RESTAURANT VIOLATIONS //////////////////////////////////////////////*/
 
 .violations-list {
@@ -1363,6 +1368,7 @@ background-color:#252525
   min-width: 0;
   height: 100%;
   width: 100%;
+  font-family: var(--font-display);
 }
 
 .stats-panel-line {
@@ -1383,8 +1389,9 @@ background-color:#252525
   gap: 0.6rem;
   min-width: 0;
   white-space: nowrap;
+  
 }
-
+/* Knife and Fork Icon */
 .stats-total-icon {
   display: flex;
   align-items: center;
@@ -1401,15 +1408,15 @@ background-color:#252525
   font-size: 0.8rem;
   text-transform: uppercase;  
   font-weight: 700;
+ 
 }
-
+/* Total restaurant count */
 .stats-total-count {
-  color: var(--text-heading);
-  font-family: var(--font-display);
-  font-size: 0.8rem;
+  color: var(--text-body);  
+  font-size: 0.80rem;
   font-weight: 700;
   line-height: 1;
-  font-variant-numeric: tabular-nums;
+   font-family: var(--font-body);
 }
 
 /* Right side: A / B / C / Pending / Closed breakdown */
@@ -1417,9 +1424,7 @@ background-color:#252525
   display: flex;
   align-items: center;
   height: 75%;
-  min-width: 0;
-  
-  
+  min-width: 0;  
 }
 .stats-breakdown-item {
   display: flex;
@@ -1435,28 +1440,22 @@ background-color:#252525
   border-left: none;
 }
 
-.stats-breakdown-value {
-  font-family: var(--font-display);
-  font-size: 0.8rem;
+.stats-breakdown-value {  
+  color:var(--text-body);
+  font-size: 0.80rem;
   font-weight: 700;
-  font-variant-numeric: tabular-nums;
-  color: var(--text-heading);
+  font-variant-numeric: tabular-nums;  
+   font-family: var(--font-body);
 }
 
 .stats-breakdown-label {
-  color: var(--text-muted);
-  font-size: 0.8rem;
-  font-weight: 700;
   
+  font-size: 0.80rem;
+  font-weight: 700;  
   text-transform: uppercase;
 }
 
-/* Status accent colors */
-.stats-breakdown-item:nth-child(1) .stats-breakdown-value { color: #3cb44b; } /* Grade A */
-.stats-breakdown-item:nth-child(2) .stats-breakdown-value { color: #4dabf7; } /* Grade B */
-.stats-breakdown-item:nth-child(3) .stats-breakdown-value { color: #ffa94d; } /* Grade C */
-.stats-breakdown-item:nth-child(4) .stats-breakdown-value { color: #da77f2; } /* Pending */
-.stats-breakdown-item:nth-child(5) .stats-breakdown-value { color: #ff6b6b; } /* Closed */
+
 
 
 /*///////////////////////////////////////////// GRADE CHART //////////////////////////////////////////////*/
@@ -1475,6 +1474,87 @@ background-color:#252525
   flex-direction: column;
   height: 100%;
 }
+/*///////////////////////////////////////////// INFO MODAL //////////////////////////////////////////////*/
+.info-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+}
+
+.info-modal {
+  width: min(700px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  background: var(--bg-panel);
+  font-family: var(--font-body);
+  box-sizing: border-box;
+  font-size: 0.9rem;
+  color:var(--text-body);
+}
+
+.info-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  background: inherit;
+}
+
+.info-modal-title {
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.info-modal-close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color:var(--text-muted);
+}
+.info-modal-close-button:hover {
+color: var(--link-hover);
+}
+.info-modal-content {
+  padding: 0 16px 16px;
+}
+
+.dashboard-guide-meta {
+  display: flex;
+  gap: 20px;
+  padding: 1rem;
+  border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  flex-wrap: wrap;
+}
+/*///////////////////////////////////////////// DASHBOARD INFORMATION //////////////////////////////////////////////*/
+
+.dashboard-guide-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 120px;
+}
+.dashboard-guide-meta-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+}
+.dashboard-guide-meta-value {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-body);
+}
+
+
+
 
 
 
@@ -1486,4 +1566,65 @@ background-color:#252525
   .stats-breakdown-item {
     padding: 0 0.4rem;
   }
+}
+
+
+/*///////////////////////////////////////////// RESTAURANT VIOLATIONS (UPDATED) //////////////////////////////////////////////*/
+
+.violations-list li.violation-item {
+  background-color: #292929;
+  border-left: 3px solid var(--border-panel);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.violation-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px; 
+  flex-wrap: wrap;
+}
+
+/* Base violation tag overrides for uniform height, padding, and border radius */
+.violation-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-family: var(--font-display);
+  line-height: 1.2;
+}
+
+/* Severity Tag Styling */
+.violation-tag.severity-tag {
+  border: 0.5px solid rgba(255, 255, 255, 0.2);
+}
+
+/* Violation Code Tag Styling */
+.violation-tag.violation-code-tag {
+  background-color: var(--bg-alt);
+  color: var(--text-body);
+  letter-spacing: 0.05em;
+  border: 0.5px solid var(--border-panel);
+  font-family: var(--font-display);
+}
+
+/* Category Tag Styling */
+.violation-tag.category-tag {
+  background-color: var(--bg-alt);
+  color: var(--text-body);
+  border: 0.5px solid var(--border-panel);
+}
+
+/* Justified violation description text */
+.violation-description {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.45;
+  text-align: justify;
 }

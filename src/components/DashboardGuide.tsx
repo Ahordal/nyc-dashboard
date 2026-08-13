@@ -2,155 +2,198 @@
 //
 // Dashboard-wide reference for concepts shared across multiple panels.
 //
-// Uses an accordion so grade definitions, status meanings, filtering rules,
-// data notes, and official resources are documented once without taking over
-// the dashboard layout.
+// The panel itself shows just a header (with an information button) and
+// a compact row of dataset stats -- last updated, restaurant count, and
+// inspection count. The information button opens a centered modal with
+// the full dashboard guide (grades, statuses, filters, data notes,
+// resources), since that content is too long to live in the panel body.
 
-import type {
-  ReactNode,
-} from "react";
+import { useState } from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faCircleInfo, faXmark } from "@fortawesome/free-solid-svg-icons";
 
-import {
-  faChevronRight,
-} from "@fortawesome/free-solid-svg-icons";
+import PanelInfoModal from "./PanelInfoModal";
+import InfoPopupContent from "./InfoPopupContent";
 
 import {
   GradeRangeInfo,
   NYCHealthResources,
 } from "./InfoPopupSharedContent";
 
-type DashboardGuideSectionProps = {
-  title: string;
-  children: ReactNode;
-  defaultOpen?: boolean;
+import type { DashboardMeta } from "../types/dashboardMeta";
+
+type DashboardGuideProps = {
+  meta: DashboardMeta | null;
 };
 
-function DashboardGuideSection({
-  title,
-  children,
-  defaultOpen = false,
-}: DashboardGuideSectionProps) {
-  return (
-    <details
-      className="dashboard-guide-section"
-      open={defaultOpen}
-    >
-      <summary>
-        <FontAwesomeIcon
-          icon={faChevronRight}
-          className="dashboard-guide-chevron"
-          aria-hidden="true"
-        />
+// Shown in place of a value that hasn't loaded yet (or failed to load),
+// so the stat row is always present rather than appearing only once
+// dashboard-meta.json is available.
+const PLACEHOLDER = "—";
 
-        <span>{title}</span>
-      </summary>
+function formatLastUpdated(lastUpdated: string | null | undefined): string {
+  if (!lastUpdated) {
+    return PLACEHOLDER;
+  }
 
-      <div className="dashboard-guide-section-content">
-        {children}
-      </div>
-    </details>
-  );
+  const parsed = new Date(lastUpdated);
+
+  if (Number.isNaN(parsed.getTime())) {
+    return PLACEHOLDER;
+  }
+
+  return parsed.toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
 }
 
-export default function DashboardGuide() {
+function formatCount(count: number | null | undefined): string {
+  if (count == null) {
+    return PLACEHOLDER;
+  }
+
+  return count.toLocaleString();
+}
+
+export default function DashboardGuide({ meta }: DashboardGuideProps) {
+  const [showInfoModal, setShowInfoModal] = useState(false);
+
   return (
     <section className="panel dashboard-guide-panel">
       <div className="panel-header">
         <span className="panel-header-title">
-          Dashboard Guide
+          Dashboard Information
         </span>
-      </div>
 
-      <div className="dashboard-guide-content">
-        <DashboardGuideSection
-          title="Dashboard Overview"
-          defaultOpen
+        <button
+          type="button"
+          className="panel-header-info-button"
+          onClick={() => {
+            setShowInfoModal(true);
+          }}
+          aria-label="About Dashboard Information"
         >
-          <p>
-            Explores NYC restaurant inspection records through the map,
-            summary panels, restaurant details, inspection reports, and
-            performance chart.
-          </p>
-        </DashboardGuideSection>
-
-        <DashboardGuideSection title="Grades & Score Ranges">
-          <GradeRangeInfo />
-        </DashboardGuideSection>
-
-        <DashboardGuideSection title="Status Indicators">
-          <ul>
-            <li>
-              <span className="violation-tag status-open">
-                Open
-              </span>{" "}
-              — Most recent inspection wasn&apos;t a closure.
-            </li>
-
-            <li>
-              <span className="violation-tag status-unknown">
-                Unknown
-              </span>{" "}
-              — No reliable status was recorded.
-            </li>
-
-            <li>
-              <span className="violation-tag status-closed">
-                Closed by DOHMH
-              </span>{" "}
-              — Most recent inspection resulted in a closure.
-            </li>
-          </ul>
-
-          <p className="dashboard-guide-note">
-            Statuses reflect the latest available dataset record, not live
-            business operations.
-          </p>
-        </DashboardGuideSection>
-
-        <DashboardGuideSection title="Filters & Search">
-          <ul>
-            <li>
-              Grade and Borough controls can be combined to narrow the
-              restaurants shown.
-            </li>
-
-            <li>
-              Search further narrows the current results by restaurant name
-              or cuisine.
-            </li>
-
-            <li>
-              Restaurant lists and dashboard summaries update with the
-              current map view, filters, and search.
-            </li>
-          </ul>
-        </DashboardGuideSection>
-
-        <DashboardGuideSection title="Data Notes">
-          <ul>
-            <li>
-              Historical inspection reports may differ from a
-              restaurant&apos;s latest grade, score, or recorded status.
-            </li>
-
-            <li>
-              Inspections without numerical scores may be excluded from
-              score-based charts and summaries.
-            </li>
-
-            <li>
-              Google Street View imagery is provided by Google Maps and may
-              not reflect the current storefront or business operations.
-            </li>
-          </ul>
-        </DashboardGuideSection>
-
-        <DashboardGuideSection title="NYC Health Resources">
-          <NYCHealthResources />
-        </DashboardGuideSection>
+          <FontAwesomeIcon icon={faCircleInfo} />
+        </button>
       </div>
+
+      <div className="dashboard-guide-meta">
+        <div className="dashboard-guide-meta-item">
+          <span className="dashboard-guide-meta-label">
+            Data Last Updated: &nbsp; 
+          </span>
+
+          <span className="dashboard-guide-meta-value">
+            {formatLastUpdated(meta?.lastUpdated)}
+          </span>
+        </div>
+
+        <div className="dashboard-guide-meta-item">
+          <span className="dashboard-guide-meta-label">
+            Total Restaurant Count: &nbsp; 
+          </span>
+
+          <span className="dashboard-guide-meta-value">
+            {formatCount(meta?.restaurantCount)}
+          </span>
+        </div>
+
+        <div className="dashboard-guide-meta-item">
+          <span className="dashboard-guide-meta-label">
+            Total Inspection Records: &nbsp; 
+          </span>
+
+          <span className="dashboard-guide-meta-value">
+            {formatCount(meta?.inspectionCount)}
+          </span>
+        </div>
+      </div>
+
+      <PanelInfoModal
+        isOpen={showInfoModal}
+        onClose={() => {
+          setShowInfoModal(false);
+        }}
+      >
+        <div className="panel-header" style={{ marginBottom: "1.5rem", borderRadius: "4px" }}>
+          <span className="panel-header-title">
+            Dashboard Information
+          </span>
+          
+          <button
+            type="button"
+            className="panel-header-info-button"
+            onClick={() => setShowInfoModal(false)}
+            aria-label="Close"
+          >
+            <FontAwesomeIcon icon={faXmark} />
+          </button>
+        </div>
+
+        <InfoPopupContent
+          overview={
+            <p>
+              Explores NYC restaurant inspection records through the map,
+              summary panels, restaurant details, inspection reports, and
+              performance chart.
+            </p>
+          }
+          howToUse={
+            <ul>
+              <li>
+                Grade and Borough controls can be combined to narrow the
+                restaurants shown.
+              </li>
+
+              <li>
+                Search further narrows the current results by restaurant
+                name or cuisine.
+              </li>
+
+              <li>
+                Restaurant lists and dashboard summaries update with the
+                current map view, filters, and search.
+              </li>
+            </ul>
+          }
+          grades={<GradeRangeInfo />}
+          dataNotes={
+            <ul>
+              <li>
+                Historical inspection reports may differ from a
+                restaurant&apos;s latest grade, score, or recorded status.
+              </li>
+
+              <li>
+                Inspections without numerical scores may be excluded from
+                score-based charts and summaries.
+              </li>
+
+              <li>
+                Restaurant locations are geocoded; some could not be
+                automatically confirmed and are flagged on the map as
+                &quot;Location Unverified&quot; rather than assumed correct.
+              </li>
+
+              <li>
+                Displayed addresses are reformatted from the source dataset
+                (ordinal suffixes, casing) and may differ slightly from
+                official listings.
+              </li>
+
+              <li>
+                Google Street View imagery is provided by Google Maps and
+                may not reflect the current storefront or business
+                operations.
+              </li>
+            </ul>
+          }
+          resources={<NYCHealthResources />}
+        />
+      </PanelInfoModal>
     </section>
   );
 }

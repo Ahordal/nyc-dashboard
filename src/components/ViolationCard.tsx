@@ -4,7 +4,6 @@
 // code, and category badges, plus the violation's description text.
 
 import type { Violation, ViolationCodeLookup } from "../types/restaurant";
-import { getViolationDescription } from "../utils/getViolationDescription";
 
 import Badge, { SEVERITY_STYLES } from "./Badge";
 
@@ -27,7 +26,9 @@ export default function ViolationCard({
 
   const lookupData = violationCodes[violation.code];
 
-  const description = getViolationDescription(lookupData);
+  const description = typeof lookupData === "string"
+    ? lookupData
+    : lookupData?.description ?? "Description unavailable";
 
   const category = typeof lookupData === "object" && lookupData !== null
     ? lookupData.category

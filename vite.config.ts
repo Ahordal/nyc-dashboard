@@ -3,9 +3,9 @@ import react from "@vitejs/plugin-react";
 
 export default defineConfig({
   plugins: [react()],
-  // Astro exposes client-side env vars prefixed with PUBLIC_; Vite's
-  // default is VITE_. Adding PUBLIC_ here keeps PUBLIC_ARCGIS_API_KEY
-  // (read in MapView.tsx) working without renaming the env var or
-  // touching that file.
+  // Vite only exposes client-side env vars to import.meta.env when
+  // prefixed VITE_ by default. PUBLIC_ARCGIS_API_KEY (read in
+  // MapView.tsx) uses a PUBLIC_ prefix instead, so it's added here
+  // explicitly to keep it exposed.
   envPrefix: ["VITE_", "PUBLIC_"],
 });

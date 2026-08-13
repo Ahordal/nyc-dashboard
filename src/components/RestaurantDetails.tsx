@@ -8,8 +8,8 @@
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
-
-import { GradeRangeInfo, NYCHealthResources } from "./InfoPopupSharedContent";
+import Badge from "./Badge";
+import type { BadgeVariant } from "./Badge";
 
 import type {
   RestaurantProperties,
@@ -17,13 +17,9 @@ import type {
 } from "../types/restaurant";
 
 import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";
-
 import { formatPhoneNumber } from "../utils/formatPhoneNumber";
-
 import { toTitleCase } from "../utils/toTitleCase";
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 
 function formatDate(raw: string | null): string {
@@ -48,6 +44,16 @@ function yearsSince(dateString: string): number {
   const now = Date.now();
 
   return (now - then) / (1000 * 60 * 60 * 24 * 365.25);
+}
+
+// Maps a restaurant's current_status_code to the matching Badge variant,
+// falling back to "status-unknown" for any unrecognized code.
+function statusVariant(code: string): BadgeVariant {
+  if (code === "open" || code === "closed" || code === "unknown") {
+    return `status-${code}` as BadgeVariant;
+  }
+
+  return "status-unknown";
 }
 
 const STATUS_LABELS: Record<string, string> = {
@@ -92,11 +98,10 @@ const RESTAURANT_INFO_CONTENT = (
         </li>
       </ul>
     }
-    grades={<GradeRangeInfo />}
     statuses={
       <ul>
         <li>
-          <span className="violation-tag status-open">Open</span> — Most recent
+          <Badge variant="status-open">Open</Badge> — Most recent
           inspection wasn&apos;t a closure.{" "}
           <strong>
             Reflects dataset status, not live business operations.
@@ -104,12 +109,12 @@ const RESTAURANT_INFO_CONTENT = (
         </li>
 
         <li>
-          <span className="violation-tag status-unknown">Unknown</span> — No
+          <Badge variant="status-unknown">Unknown</Badge> — No
           reliable status recorded
         </li>
 
         <li>
-          <span className="violation-tag status-closed">Closed by DOHMH</span> —
+          <Badge variant="status-closed">Closed by DOHMH</Badge> —
           Most recent inspection resulted in a closure
         </li>
       </ul>
@@ -124,7 +129,6 @@ const RESTAURANT_INFO_CONTENT = (
         </li>
       </ul>
     }
-    resources={<NYCHealthResources />}
   />
 );
 
@@ -250,11 +254,10 @@ export default function RestaurantDetails({
               <td>Status</td>
 
               <td>
-                <span
-                  className={`violation-tag status-flag status-${restaurant.current_status_code}`}>
+                <Badge variant={statusVariant(restaurant.current_status_code)}>
                   {STATUS_LABELS[restaurant.current_status_code] ??
                     restaurant.current_status_label}
-                </span>
+                </Badge>
 
                 {isStale && (
                   <span className="details-stale-note">
@@ -315,8 +318,8 @@ export default function RestaurantDetails({
 
               <td>
                 {restaurant.latitude && restaurant.longitude ? (
-                  <a
-                    href={`https://www.google.com/maps?layer=c&cbll=${restaurant.latitude},${restaurant.longitude}`}
+                  
+                    <a href={`https://www.google.com/maps?layer=c&cbll=${restaurant.latitude},${restaurant.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer">
                     View Street View{" "}

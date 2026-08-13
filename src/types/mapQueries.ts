@@ -83,23 +83,22 @@ export function buildSearchClause(searchQuery: string): string | null {
   return `(${wordClauses.join(" AND ")})`;
 }
 
-// Builds the combined definitionExpression from grade + borough filters
-// and a search query. Returns an empty string when nothing is active
-// (meaning "no filter" -- matches everything).
+// Builds the combined definitionExpression from borough filters and a
+// search query. Returns an empty string when nothing is active (meaning
+// "no filter" -- matches everything).
+//
+// Deliberately excludes grade. definitionExpression restricts BOTH what
+// renders on the map AND what queryFeatures() can ever see -- if grade
+// were included here, anything that queries this layer (e.g. the Grade
+// Breakdown chart's tally) would only ever see the currently-selected
+// grade, making it impossible to show the full breakdown while a grade
+// is selected. Grade is applied separately, as a display-only
+// LayerView.filter (see buildGradeWhereClause) -- see MapView.tsx.
 export function buildDefinitionExpression(
   filters: Filters,
   searchQuery: string,
 ): string {
   const clauses: string[] = [];
-
-  if (filters.grades.length > 0) {
-    const gradeClause = filters.grades
-      .map((g) => CATEGORY_CLAUSES[g])
-      .filter(Boolean)
-      .map((c) => `(${c})`)
-      .join(" OR ");
-    if (gradeClause) clauses.push(`(${gradeClause})`);
-  }
 
   if (filters.boroughs.length > 0) {
     const boroList = filters.boroughs.map((b) => `'${b}'`).join(",");
@@ -110,6 +109,22 @@ export function buildDefinitionExpression(
   if (searchClause) clauses.push(searchClause);
 
   return clauses.length > 0 ? clauses.join(" AND ") : "";
+}
+
+// Builds a where clause for the active grade filters, for use ONLY as a
+// LayerView.filter (display-only -- hides non-matching markers without
+// affecting queryFeatures() results). Returns null when no grades are
+// selected (meaning "no filter" -- show every grade).
+export function buildGradeWhereClause(grades: string[]): string | null {
+  if (grades.length === 0) return null;
+
+  const gradeClause = grades
+    .map((g) => CATEGORY_CLAUSES[g])
+    .filter(Boolean)
+    .map((c) => `(${c})`)
+    .join(" OR ");
+
+  return gradeClause ? `(${gradeClause})` : null;
 }
 
 // Queries ALL restaurants intersecting the current map extent, not just
