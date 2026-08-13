@@ -28,5 +28,8 @@ pnpm-debug.log*
 .idea/
 
 # Dashboard TO-DOs
-NYC_Dashboard_TO-DOs.txtpipeline/geocode-cache.json
+NYC_Dashboard_TO-DOs.txt
+
+#Pipeline data not in the main branch
+pipeline/geocode-cache.json
 pipeline/suspicious-shifts.json
