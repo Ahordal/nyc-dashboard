@@ -28,4 +28,5 @@ pnpm-debug.log*
 .idea/
 
 # Dashboard TO-DOs
-NYC_Dashboard_TO-DOs.txt
+NYC_Dashboard_TO-DOs.txtpipeline/geocode-cache.json
+pipeline/suspicious-shifts.json
