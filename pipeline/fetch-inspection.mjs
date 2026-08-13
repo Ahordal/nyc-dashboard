@@ -404,14 +404,44 @@ const SELECT_FIELDS = [
 ].join(",");
 
 /**
+ * Fetches the dataset's authoritative row count via Socrata's count()
+ * aggregate. Used by fetchAllRows() to verify the paginated fetch below
+ * actually retrieved everything, rather than trusting page-length alone.
+ */
+async function fetchExpectedRowCount() {
+  const url = `${DATASET_URL}?$select=count(*) as count`;
+  const response = await fetchWithRetry(url);
+  const [{ count }] = await response.json();
+  return Number(count);
+}
+
+/**
  * Fetches every row from the dataset using paginated SODA API requests.
+ *
+ * $order includes `:id` -- Socrata's internal, guaranteed-unique row
+ * identifier -- as a final tiebreaker after camis/inspection_date.
+ * Without it, rows sharing the same camis+inspection_date (very common --
+ * one row per violation code cited that day) have no stable order across
+ * separate paginated requests. Socrata is free to break that tie
+ * differently on each request, so the boundary between two pages can land
+ * inside a tied group and silently drop rows that fall on the "wrong"
+ * side of it that particular run -- a bug that shows up as a small,
+ * inconsistent under-count from run to run rather than a hard failure.
+ *
+ * As a second line of defense, the total fetched row count is checked
+ * against Socrata's own count(*) for the dataset. A mismatch throws
+ * rather than writing a possibly-incomplete dataset -- an incomplete
+ * fetch should fail the build loudly, not ship quietly as a slightly
+ * smaller "successful" run.
  */
 export async function fetchAllRows() {
+  const expectedCount = await fetchExpectedRowCount();
+
   const rows = [];
   let offset = 0;
 
   while (true) {
-    const url = `${DATASET_URL}?$select=${SELECT_FIELDS}&$limit=${PAGE_SIZE}&$offset=${offset}&$order=camis,inspection_date`;
+    const url = `${DATASET_URL}?$select=${SELECT_FIELDS}&$limit=${PAGE_SIZE}&$offset=${offset}&$order=camis,inspection_date,:id`;
     console.log(`Fetching offset ${offset}...`);
 
     const response = await fetchWithRetry(url);
@@ -422,7 +452,16 @@ export async function fetchAllRows() {
     offset += PAGE_SIZE;
   }
 
-  console.log(`Fetched ${rows.length} total rows.`);
+  console.log(`Fetched ${rows.length} total rows (expected ${expectedCount}).`);
+
+  if (rows.length !== expectedCount) {
+    throw new Error(
+      `Row count mismatch: fetched ${rows.length} rows but Socrata reports ` +
+        `${expectedCount} total for the dataset. Aborting rather than writing ` +
+        `a possibly-incomplete dataset.`,
+    );
+  }
+
   return rows;
 }
 

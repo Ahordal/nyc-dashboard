@@ -66,16 +66,19 @@ jobs:
 
           # Stop here if the backfill didn't actually change anything --
           # avoids empty "no-op" commits on days where nothing new
-          # needed resolving.
-          git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json
-          git diff --cached --quiet && echo "No cache changes, skipping." && exit 0
+          # needed resolving. counts-snapshot.json is regenerated every
+          # run regardless (it's cheap to recompute), so its presence
+          # alone doesn't count as a "real" change here.
+          git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json pipeline/counts-snapshot.json
+          git diff --cached -- pipeline/geocode-cache.json pipeline/suspicious-shifts.json --quiet && echo "No cache changes, skipping." && exit 0
 
-          # Build a fresh orphan branch containing just the two cache
-          # files (not the whole dashboard tree) and force-push it as
-          # `data`. This branch is bot-owned and fully replaced every
-          # run -- nobody should build on it or expect stable history.
+          # Build a fresh orphan branch containing just the three cache/
+          # snapshot files (not the whole dashboard tree) and force-push
+          # it as `data`. This branch is bot-owned and fully replaced
+          # every run -- nobody should build on it or expect stable
+          # history.
           git checkout --orphan data-snapshot
           git rm -rf --cached . > /dev/null
-          git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json
-          git commit -m "chore: update geocode cache [automated]"
+          git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json pipeline/counts-snapshot.json
+          git commit -m "chore: update geocode cache and counts snapshot [automated]"
           git push origin data-snapshot:data --force
