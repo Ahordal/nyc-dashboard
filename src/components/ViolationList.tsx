@@ -2,6 +2,7 @@
 // Renders a sorted list of violations for a given inspection, complete with colored severity tags.
 
 import type { Violation, ViolationCodeLookup } from "../types/restaurant";
+import { getViolationDescription } from "../utils/getViolationDescription";
 
 const VIOLATION_FLAG_STYLES: Record<
   string,
@@ -51,7 +52,7 @@ export default function ViolationList({
               }>
               <span className="violation-code">{v.code}</span>
               <span className="violation-description">
-                {violationCodes[v.code] ?? "Description unavailable"}
+                {getViolationDescription(violationCodes[v.code])}
               </span>{" "}
               &nbsp;
               {flagStyle && (

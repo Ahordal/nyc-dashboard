@@ -16,10 +16,16 @@ export type Violation = {
   critical_flag: string;
 };
 
-// Maps each violation code to its full description. Stored separately
-// from individual inspection records because the same ~115 codes are
-// reused across tens of thousands of violations. See pipeline notes.
-export type ViolationCodeLookup = Record<string, string>;
+// Maps each violation code to either its full description (a plain
+// string), or an object carrying both description and DOHMH category.
+// Stored separately from individual inspection records because the
+// same ~115 codes are reused across tens of thousands of violations.
+// See pipeline notes.
+export type ViolationCodeEntry =
+  | string
+  | { description: string; category: string };
+
+export type ViolationCodeLookup = Record<string, ViolationCodeEntry>;
 
 // Restaurant data
 
