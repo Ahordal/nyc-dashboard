@@ -1,7 +1,7 @@
 // fetch-inspections.mjs
 //
 // Fetches the full NYC DOHMH Restaurant Inspection Results dataset from the
-// Socrata (SODA) API, then produces three output files:
+// Socrata (SODA) API, then produces four output files:
 //
 //   1. public/data/latest-inspections.geojson
 //      One point feature per restaurant (CAMIS), representing that
@@ -37,21 +37,30 @@
 //
 //   3. public/data/violation-codes.json
 //      A single small lookup object mapping each violation `code` (e.g.
-//      "06B") to its full description text. There are only ~115 distinct
-//      codes across the whole dataset, but tens of thousands of
-//      inspection events cite them -- embedding the full description on
-//      every single violation entry in the two files above means the
-//      same ~115 strings get duplicated thousands of times over. Instead,
+//      "06B") to its description and official DOHMH category. There are
+//      only ~115 distinct codes actively cited across the dataset, but tens
+//      of thousands of inspection events cite them -- embedding the full text
+//      on every single violation entry in the two files above means the
+//      same strings get duplicated thousands of times over. Instead,
 //      violations in both other output files carry only `code` and
-//      `critical_flag`; consumers look up the description here by code.
+//      `critical_flag`; consumers look up details here by code.
 //      Cuts the combined output size roughly in half.
+//
+//   4. public/data/dashboard-meta.json
+//      A small summary object -- { lastUpdated, restaurantCount,
+//      inspectionCount } -- describing this run's freshness and the
+//      overall size of the dataset. restaurantCount mirrors
+//      latest-inspections.geojson's feature count; inspectionCount sums
+//      every scored inspection event across all restaurants in the
+//      history output. Powers the "Dashboard Information" modal's
+//      Data Source & Freshness section.
 //
 // public/data/ is regenerated from scratch on every run and is NOT meant
 // to be committed to Git -- see the project README for how this fits into
 // the Vercel build step vs. the scheduled GitHub Action that pings a
 // Vercel Deploy Hook to keep data fresh without any code changes.
 
-import { writeFile, mkdir, rm } from "node:fs/promises";
+import { writeFile, readFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { loadCache } from "./cache.mjs";
@@ -65,18 +74,21 @@ import { formatDisplayAddress, formatDisplayStreet } from "./normalize.mjs";
 // DOHMH coordinate with location_status "pending".
 const GEOCODE_CACHE_PATH = path.join(import.meta.dirname, "geocode-cache.json");
 
+// Path to the locally committed violation categories CSV mapping file.
+const CATEGORY_CSV_PATH = path.join(import.meta.dirname, "violation-categories.csv");
+
 const DATASET_URL = "https://data.cityofnewyork.us/resource/43nn-pn8j.json";
 const PAGE_SIZE = 50000; // Socrata's max recommended page size
+
 // Anchored to this script's own location, not the caller's working
 // directory -- so this always resolves to <repo root>/public/data,
 // whether the script is run from the repo root, from inside pipeline/,
 // or (as in the GitHub Action) with pipeline/ set as the working directory.
-
 const OUTPUT_DIR = path.resolve(import.meta.dirname, "../public/data");
+
 // Per-restaurant history files live here (one small file per CAMIS)
 // instead of one giant inspection-history.json, so a visitor only ever
 // downloads the one restaurant's history they actually click into.
-
 export const HISTORY_DIR = path.join(OUTPUT_DIR, "history");
 
 const REQUEST_HEADERS = process.env.SOCRATA_APP_TOKEN
@@ -222,10 +234,10 @@ const ABBREVIATION_EXPANSIONS = {
  * combine tokens from multiple source fields before deduping/joining
  * once at the end.
  */
-// Strips diacritics (á -> a, é -> e, ñ -> n, etc.) 
 function stripDiacritics(text) {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
+
 function normalizeToTokens(raw) {
   if (!raw) return [];
 
@@ -251,43 +263,15 @@ function normalizeToTokens(raw) {
 /**
  * Builds the single normalized `search_index` string stored on each
  * restaurant feature, combining name, cuisine, street, and building into
- * one searchable field. This is where several categories of search
- * discrepancy get resolved ONCE at build time rather than via live query
- * variants:
- *
- *   - Apostrophe omissions ("mcdonalds" / "McDonald's") -- apostrophes
- *     stripped from both sides before matching
- *   - Casing anomalies -- everything uppercased
- *   - Conjunction variations (& vs AND) -- & expanded to AND as an extra
- *     token, original & also preserved via the raw join below
- *   - Corporate suffixes (INC/LLC/CORP) -- dropped as noise
- *   - Street/word abbreviations (St/Saint, Ave/Avenue, Bldg/Building,
- *     Int'l/International, etc.) -- both forms indexed via
- *     ABBREVIATION_EXPANSIONS
- *   - Leading "THE " -- NOT stripped from name itself (needed to
- *     preserve the restaurant's real name for display), but a
- *     "THE "-stripped variant of the name is ALSO added as an extra
- *     token so "Bitter End" matches "The Bitter End"
- *   - Parenthetical location/sub-venue tags (e.g. "The Pecking Order
- *     (The Bronx Zoo)") -- parenthetical content extracted and indexed
- *     as its own additional tokens, so searching "Bronx Zoo" surfaces
- *     this record even though it's not part of the primary name
- *   - Slash-joined multi-concept spaces ("2A / Berlin / Old Flings") --
- *     each segment split out and indexed separately, so searching
- *     "Berlin" alone matches
- 
+ * one searchable field.
  */
 export function buildSearchIndex({ name, cuisine, street, building }) {
   const tokenSets = [];
 
   if (name) {
-    // Parenthetical content (e.g. "(The Bronx Zoo)") extracted and
-    // indexed separately from the main name.
     const parenMatches = [...name.matchAll(/\(([^)]+)\)/g)].map((m) => m[1]);
     const nameWithoutParens = name.replace(/\([^)]*\)/g, " ");
 
-    // Slash-joined multi-concept names ("2A / Berlin / Old Flings") --
-    // split into individual segments, each indexed on its own.
     const slashSegments = nameWithoutParens
       .split("/")
       .map((s) => s.trim())
@@ -300,9 +284,6 @@ export function buildSearchIndex({ name, cuisine, street, building }) {
       tokenSets.push(...normalizeToTokens(paren));
     }
 
-    // "THE "-stripped variant, so "Bitter End" matches "The Bitter End"
-    // -- only adds the stripped tokens if the name actually starts with
-    // "The ", rather than unconditionally re-tokenizing.
     if (/^THE\s+/i.test(name.trim())) {
       tokenSets.push(
         ...normalizeToTokens(name.trim().replace(/^THE\s+/i, "")),
@@ -314,9 +295,6 @@ export function buildSearchIndex({ name, cuisine, street, building }) {
     tokenSets.push(...normalizeToTokens(field));
   }
 
-  // Dedupe while preserving a stable order, then join into one
-  // space-separated string -- this is what gets stored on the feature
-  // and matched against with a single LIKE '%QUERY%' at query time.
   return [...new Set(tokenSets)].join(" ");
 }
 
@@ -326,8 +304,6 @@ function sleep(ms) {
 
 /**
  * Fetches a URL with retry and exponential backoff.
- * Retries transient network failures and retryable HTTP responses,
- * throwing immediately on non-retryable errors.
  */
 async function fetchWithRetry(url, attempt = 1) {
   let response;
@@ -335,8 +311,6 @@ async function fetchWithRetry(url, attempt = 1) {
   try {
     response = await fetch(url, { headers: REQUEST_HEADERS });
   } catch (networkErr) {
-    // Network-level failure (DNS, connection reset, etc) -- also retryable.
-
     if (attempt > MAX_RETRIES) throw networkErr;
     const delay = BASE_RETRY_DELAY_MS * 2 ** (attempt - 1);
     console.warn(
@@ -363,10 +337,47 @@ async function fetchWithRetry(url, attempt = 1) {
   return fetchWithRetry(url, attempt + 1);
 }
 
-// Request only the fields this pipeline actually uses. Using Socrata's
-// $select clause trims unused columns (such as @computed_region_* and
-// the redundant `location` object) server-side, reducing the amount of
-// data downloaded on each request.
+/**
+ * Loads and parses the local DOHMH Violation Code mapping CSV file offline.
+ * Returns a dictionary mapping violation codes to their categories.
+ */
+async function loadLocalViolationCategories() {
+  console.log("Loading local violation categories from file...");
+  
+  try {
+    const csvText = await readFile(CATEGORY_CSV_PATH, "utf-8");
+    
+    const lines = csvText.split(/\r?\n/).filter(line => line.trim() !== "");
+    if (lines.length < 2) return {};
+
+    const headers = lines[0].split(',').map(h => h.trim().replace(/^"|"$/g, ''));
+    const codeIdx = headers.findIndex(h => h === "Violation_Code");
+    const categoryIdx = headers.findIndex(h => h === "Category_Description");
+
+    const mapping = {};
+    
+    if (codeIdx === -1 || categoryIdx === -1) {
+      console.warn("Could not find 'Violation Code' or 'Violation Category' columns in CSV.");
+      return mapping;
+    }
+
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(c => c.trim().replace(/^"|"$/g, ''));
+      const code = cols[codeIdx];
+      const category = cols[categoryIdx];
+      
+      if (code && category) {
+        mapping[code] = category;
+      }
+    }
+    
+    return mapping;
+  } catch (err) {
+    console.warn(`Failed to load local violation categories: ${err.message}. Defaulting to uncategorized.`);
+    return {};
+  }
+}
+
 const SELECT_FIELDS = [
   "camis",
   "dba",
@@ -394,12 +405,6 @@ const SELECT_FIELDS = [
 
 /**
  * Fetches every row from the dataset using paginated SODA API requests.
- *
- * Pagination ends when Socrata returns fewer than PAGE_SIZE rows. Results
- * are requested in camis, inspection_date order, so each restaurant's
- * records arrive chronologically. Because the dataset contains one row per
- * violation, multiple rows may legitimately share the same restaurant and
- * inspection date.
  */
 export async function fetchAllRows() {
   const rows = [];
@@ -422,28 +427,22 @@ export async function fetchAllRows() {
 }
 
 /**
- * Builds the code-to-description lookup written to
- * violation-codes.json.
- *
- * The first description encountered for each violation code is retained.
- * In practice, violation descriptions are consistent across the dataset,
- * so each code maps to a single description.
+ * Builds the code-to-details lookup written to violation-codes.json,
+ * combining description and official category.
  */
-export function buildViolationCodeLookup(rows) {
+export function buildViolationCodeLookup(rows, categoryMapping) {
   const lookup = {};
   for (const row of rows) {
     if (row.violation_code && !(row.violation_code in lookup)) {
-      lookup[row.violation_code] = row.violation_description ?? "";
+      lookup[row.violation_code] = {
+        description: row.violation_description ?? "",
+        category: categoryMapping[row.violation_code] ?? "Uncategorized"
+      };
     }
   }
   return lookup;
 }
 
-/**
- * Groups raw inspection rows by restaurant (CAMIS). Because rows were
- * fetched in camis, inspection_date order, each group's records are
- * already sorted oldest -> newest.
- */
 export function groupByCamis(rows) {
   const grouped = new Map();
 
@@ -458,16 +457,6 @@ export function groupByCamis(rows) {
   return grouped;
 }
 
-/**
- * Groups one restaurant's raw inspection rows into inspection events.
- *
- * Each event represents a unique inspection date, combining all
- * violation rows from that inspection into a single `violations` array.
- * Returns the events in chronological order (oldest first).
- *
- * This grouping is shared by both buildLatestInspectionsGeoJSON() and
- * buildInspectionHistory() to avoid duplicating the same logic.
- */
 export function groupRowsByInspectionDate(camis, records) {
   const inspected = records.filter(
     (r) => r.inspection_date && r.inspection_date !== NOT_YET_INSPECTED_DATE,
@@ -483,25 +472,9 @@ export function groupRowsByInspectionDate(camis, records) {
   const events = [];
   for (const [date, rowsForDate] of byDate) {
     events.push({
-      // Stable inspection identifier used throughout the application.
-      // CAMIS never changes, and past inspection dates are immutable, so this
-      // remains consistent across pipeline runs and is suitable for selection
-      // state and future deep-linking.
       id: `${camis}-${date.slice(0, 10)}`,
       date,
-
-      // Fields such as name, address, grade, and score should be identical
-      // across every row for a given inspection. However, the dataset's
-      // documentation warns of occasional data-quality issues. Prefer a row
-      // that actually has a score rather than blindly taking the first one.
-      // This avoids treating a graded inspection as "no grade data" simply
-      // because the first sibling row happened to contain a null score.
       primary: rowsForDate.find((r) => r.score != null) ?? rowsForDate[0],
-
-      // No `description` field here -- the same ~115 violation codes repeat
-      // across tens of thousands of events, so the full text lives once in
-      // violation-codes.json instead of being duplicated on every violation.
-      // Consumers look up the description by code.
       violations: rowsForDate
         .filter((r) => r.violation_code)
         .map((r) => ({
@@ -511,21 +484,11 @@ export function groupRowsByInspectionDate(camis, records) {
     });
   }
 
-  // Map iteration preserves insertion order, which currently reflects the
-  // pre-sorted input. Sort explicitly by date anyway so this helper doesn't
-  // silently depend on fetchAllRows() continuing to return ordered records.
   events.sort((a, b) => (a.date > b.date ? 1 : a.date < b.date ? -1 : 0));
 
   return events;
 }
 
-/**
- * Precomputes each restaurant's grouped inspection events so both
- * buildLatestInspectionsGeoJSON() and buildInspectionHistory() can reuse
- * the same result instead of deriving it independently.
- *
- * Returns a Map<camis, events[]>.
- */
 export function buildEventsByRestaurant(grouped) {
   const eventsByRestaurant = new Map();
   for (const [camis, records] of grouped) {
@@ -534,27 +497,6 @@ export function buildEventsByRestaurant(grouped) {
   return eventsByRestaurant;
 }
 
-/**
- * Builds the restaurant list consumed by the geocode backfill
- * (run-geocode-backfill.mjs / backfill-core.mjs).
- *
- * Deliberately includes EVERY restaurant with at least one inspection
- * event, regardless of whether that event is scored -- unlike
- * buildLatestInspectionsGeoJSON(), which only includes scored,
- * coordinate-valid restaurants. Geocoding needs a restaurant's ADDRESS,
- * not its inspection outcome, so a restaurant with no scored inspection
- * (or with bad/missing DOHMH coordinates -- exactly the ones most worth
- * geocoding) is still included here.
- *
- * Uses the most recent event overall (not the most recent SCORED one)
- * for building/street/boro/zip, since address details are independent
- * of scoring and the latest record on file is most likely to be current.
- *
- * dohmhLat/dohmhLon are parsed to numbers where possible, or null when
- * missing/unparseable -- resolveRestaurant() and scoreCandidate() both
- * treat a null DOHMH coordinate as "skip the distance sanity check"
- * rather than failing, so this is safe.
- */
 export function buildGeocodeInputList(eventsByRestaurant) {
   const restaurants = [];
 
@@ -580,22 +522,6 @@ export function buildGeocodeInputList(eventsByRestaurant) {
   return restaurants;
 }
 
-/**
- * Builds the most-recent-per-restaurant GeoJSON FeatureCollection.
- *
- * "Most recent" means the most recent inspection event with a score, not
- * simply the chronologically latest event. Administrative visits and
- * other non-substantive inspections may not produce a grade or score, so
- * the most recent scored inspection is used instead.
- *
- * Restaurants with no scored inspection anywhere in their history
- * (including those represented only by NOT_YET_INSPECTED_DATE) are
- * omitted from the output rather than emitted as placeholder features.
- *
- * Because the dataset contains one row per violation, each inspection is
- * first grouped by inspection_date so all violations from that inspection
- * are rolled into a single `violations` array on the resulting feature.
- */
 export function buildLatestInspectionsGeoJSON(
   eventsByRestaurant,
   generatedAt,
@@ -604,10 +530,6 @@ export function buildLatestInspectionsGeoJSON(
   const features = [];
 
   for (const [camis, events] of eventsByRestaurant) {
-    // A placeholder-dated (1900) event should never count as a real
-    // inspection, even if a data glitch left a non-null score on that row.
-    // `score != null` alone isn't sufficient evidence that an inspection
-    // actually occurred.
     const scoredEvents = events.filter(
       (event) =>
         event.primary.score != null && event.date !== NOT_YET_INSPECTED_DATE,
@@ -620,34 +542,17 @@ export function buildLatestInspectionsGeoJSON(
     const dohmhLatRaw = parseFloat(primary.latitude);
     const dohmhLonRaw = parseFloat(primary.longitude);
 
-    // Beyond rejecting NaN values, also reject anything outside a loose NYC
-    // bounding box (e.g. (0, 0) or swapped latitude/longitude) so bad data
-    // doesn't silently produce plausible-looking points in the wrong place.
     const dohmhValid =
       !Number.isNaN(dohmhLatRaw) &&
       !Number.isNaN(dohmhLonRaw) &&
       isWithinNYC(dohmhLatRaw, dohmhLonRaw);
 
-    // geocodeCache is a plain object keyed by CAMIS (see cache.mjs), read
-    // once per pipeline run -- no network calls happen here, this is purely
-    // merging in whatever the scheduled backfill Action already resolved
-    // and committed to the repo.
     const cacheEntry = geocodeCache[camis];
     const hasVerifiedResolution =
       cacheEntry?.status === "verified" && cacheEntry.resolved;
 
-    // A restaurant needs EITHER a valid DOHMH coordinate OR a verified
-    // geocoder resolution to be placeable on the map. This is a deliberate
-    // improvement over the previous "skip if DOHMH coords are bad" rule --
-    // some restaurants that used to be silently excluded (unusable DOHMH
-    // coordinates) now appear on the map once geocoding resolves them.
     if (!dohmhValid && !hasVerifiedResolution) continue;
 
-    // display_* coordinates are what the map actually renders. They ONLY
-    // move away from the DOHMH point on an accepted "verified" resolution --
-    // never on "pending" or "unverified", and never on an ambiguous/rejected
-    // candidate. dohmh_* coordinates are preserved separately, untouched,
-    // regardless of geocoding outcome.
     const displayLat = hasVerifiedResolution ? cacheEntry.resolved.lat : dohmhLatRaw;
     const displayLon = hasVerifiedResolution ? cacheEntry.resolved.lon : dohmhLonRaw;
 
@@ -655,14 +560,10 @@ export function buildLatestInspectionsGeoJSON(
       ? "verified"
       : cacheEntry?.status === "unverified"
         ? "unverified"
-        // No cache entry yet, or the cached entry is itself still "pending"
-        // (a prior run's API error/timeout/quota cutoff) -- either way,
-        // this restaurant hasn't been successfully checked yet.
         : "pending";
 
     const status = deriveCurrentStatus(primary.action);
 
-    // Rounded coordinates to 6 decimal places (~11 cm precision)
     const roundedLat = Math.round(displayLat * 1e6) / 1e6;
     const roundedLon = Math.round(displayLon * 1e6) / 1e6;
     const roundedDohmhLat = dohmhValid ? Math.round(dohmhLatRaw * 1e6) / 1e6 : null;
@@ -683,13 +584,6 @@ export function buildLatestInspectionsGeoJSON(
         name: primary.dba ?? "",
         latitude: roundedLat,
         longitude: roundedLon,
-        // Precomputed, normalized search field -- see buildSearchIndex()
-        // for the full list of what this resolves (apostrophes, casing,
-        // &/AND, corporate suffixes, street abbreviations, parenthetical
-        // sub-venue tags, slash-joined multi-concept names, leading
-        // "THE "). Search should query this field with a single
-        // UPPER(search_index) LIKE '%QUERY%' rather than separately
-        // matching name/cuisine/street/building.
         search_index: buildSearchIndex({
           name: primary.dba ?? "",
           cuisine: primary.cuisine_description ?? "",
@@ -699,19 +593,7 @@ export function buildLatestInspectionsGeoJSON(
         boro: normalizeBoro(primary.boro),
         building: primary.building ?? "",
         street: primary.street ?? "",
-        // Just the street name, formatted (ordinal suffixes, expanded
-        // abbreviations, proper casing -- e.g. "79 STREET" -> "79th
-        // Street"), with NO neighbourhood appended. Exists separately from
-        // display_address below for consumers (like the restaurant card)
-        // that want to compose their own address line -- e.g. combining
-        // with borough instead of neighbourhood -- without re-implementing
-        // the ordinal-suffix logic client-side.
         display_street: formatDisplayStreet(primary.street ?? ""),
-        // Formatted for human display (ordinal suffixes, proper casing,
-        // e.g. "37-70 79th Street"), independent of geocoding status --
-        // this is pure text formatting via normalize.mjs, not something
-        // the geocoder needs to have resolved. Includes neighbourhood only
-        // when a verified resolution provided one.
         display_address: formatDisplayAddress({
           building: primary.building ?? "",
           street: primary.street ?? "",
@@ -720,52 +602,17 @@ export function buildLatestInspectionsGeoJSON(
         zipcode: primary.zipcode ?? "",
         phone: primary.phone ?? "",
         cuisine: primary.cuisine_description ?? "",
-        // The DOHMH-supplied coordinate, always preserved as originally
-        // provided -- never overwritten by geocoding. null when DOHMH's
-        // own data was unusable (NaN or outside the NYC bounding box).
         dohmh_latitude: roundedDohmhLat,
         dohmh_longitude: roundedDohmhLon,
-        // "verified"   -- an independent geocoder confirmed this location
-        //                 (house number + street match); displayed
-        //                 latitude/longitude come from that resolution.
-        // "unverified" -- geocoding ran and found no acceptable match;
-        //                 displayed coordinates fall back to DOHMH's own.
-        // "pending"    -- not yet attempted, or a prior attempt hit a
-        //                 transient error/timeout/quota cutoff and will be
-        //                 retried by a future scheduled run.
         location_status: locationStatus,
         neighbourhood,
-        // Leave missing grades as null rather than defaulting to "N". The raw
-        // dataset already uses "N" (Not Yet Graded) as an official grade, which
-        // is distinct from a genuinely missing grade on an inspection.
-        // Downstream UI should treat grade == null as its own "no grade data"
-        // state rather than collapsing it into "N".
-
-        // Use || rather than ?? deliberately. Socrata documents that null fields
-        // are omitted from the response (yielding undefined), but || also
-        // normalizes the defensive edge case of an empty string ("grade": "") to
-        // null. Since no valid grade is falsy, this is a safe normalization.
-
         grade: primary.grade || null,
         grade_date: primary.grade_date ?? null,
-        // Guaranteed non-null here. Every feature reaching this point came from
-        // scoredEvents, which already filtered on score != null.
         score: Number(primary.score),
         inspection_date: latest.date,
         inspection_type: primary.inspection_type ?? "",
         action: primary.action ?? "",
-        // JSON-stringified rather than stored as a raw array. ArcGIS's
-        // GeoJSONLayer doesn't support Object/Array attribute values, so a plain
-        // array wouldn't load as a usable feature attribute. Consumers should
-        // JSON.parse() this back into an array when rendering.
         violations: JSON.stringify(violations),
-        // Whether DOHMH currently considers the restaurant open, based on the
-        // ACTION text of its most recent scored inspection (see
-        // deriveCurrentStatus()).
-        //
-        // Consumers should match on current_status_code, not
-        // current_status_label. The label is display text and may change without
-        // affecting the underlying status.
         current_status_code: status.code,
         current_status_label: status.label,
         record_date: primary.record_date ?? null,
@@ -782,24 +629,12 @@ export function buildLatestInspectionsGeoJSON(
   };
 }
 
-/**
- * Builds the per-restaurant inspection history used by the
- * "Score Over Time" chart.
- *
- * Each history entry represents a complete inspection event rather than
- * just a (date, score) pair. Along with the score, it includes the
- * inspection's grade and rolled-up violations so selecting a point on
- * the chart can display that inspection's full details.
- *
- * Returns { generated_at, restaurants }, mirroring the GeoJSON output so
- * both files carry the same freshness metadata.
- */
 export function buildInspectionHistory(eventsByRestaurant, generatedAt) {
   const restaurants = {};
 
   for (const [camis, events] of eventsByRestaurant) {
     const points = events
-      .filter((event) => event.primary.score != null) // needs a score to plot
+      .filter((event) => event.primary.score != null)
       .map((event) => ({
         id: event.id,
         date: event.date,
@@ -821,15 +656,19 @@ export function buildInspectionHistory(eventsByRestaurant, generatedAt) {
   };
 }
 
-/**
- * Runs an async operation over `items` in fixed-size batches, awaiting
- * each batch before starting the next rather than launching every
- * operation in a single Promise.all().
- *
- * This avoids exceeding the operating system's concurrent open-file
- * limit when writing thousands of files, which would otherwise result
- * in an EMFILE error.
- */
+export function buildDashboardMeta(generatedAt, restaurantCount, historyRestaurants) {
+  const inspectionCount = Object.values(historyRestaurants).reduce(
+    (total, points) => total + points.length,
+    0,
+  );
+
+  return {
+    lastUpdated: generatedAt,
+    restaurantCount,
+    inspectionCount,
+  };
+}
+
 async function runInBatches(items, batchSize, fn) {
   for (let i = 0; i < items.length; i += batchSize) {
     const batch = items.slice(i, i + batchSize);
@@ -837,21 +676,6 @@ async function runInBatches(items, batchSize, fn) {
   }
 }
 
-/**
- * Writes one small JSON file per restaurant (history/{camis}.json)
- * instead of one large combined file, so visitors only download the
- * history for the restaurant they actually select.
- *
- * The output directory is wiped and regenerated on every run rather than
- * incrementally updated. This ensures restaurants that disappear from
- * the dataset (closures, CAMIS changes, etc.) don't leave orphaned files
- * behind, and keeps the directory exactly in sync with the current
- * dataset.
- *
- * Files are written in batches (see runInBatches()) rather than one
- * large Promise.all() to avoid exceeding the operating system's
- * concurrent open-file limit (EMFILE).
- */
 export async function writeHistoryFiles(restaurants) {
   await rm(HISTORY_DIR, { recursive: true, force: true });
   await mkdir(HISTORY_DIR, { recursive: true });
@@ -879,30 +703,29 @@ async function main() {
     });
   }
 
-  // Read-only merge of whatever the scheduled geocode backfill Action has
-  // already resolved and committed to the repo. NO network calls happen
-  // here, and no LocationIQ API key is needed at build time -- geocoding
-  // itself runs entirely separately, via run-geocode-backfill.mjs on its
-  // own schedule. If this file doesn't exist yet (e.g. before the first
-  // backfill run), loadCache() returns {} and every restaurant simply
-  // falls back to its DOHMH coordinate with location_status "pending".
   const geocodeCache = await loadCache(GEOCODE_CACHE_PATH);
 
-  let latestGeoJSON, history, violationCodes;
+  let latestGeoJSON, history, violationCodes, dashboardMeta;
   try {
     const grouped = groupByCamis(rows);
     const eventsByRestaurant = buildEventsByRestaurant(grouped);
     const generatedAt = new Date().toISOString();
+    
+    // Load official violation categories from the local repository asset
+    const categoryMapping = await loadLocalViolationCategories();
+    
     latestGeoJSON = buildLatestInspectionsGeoJSON(
       eventsByRestaurant,
       generatedAt,
       geocodeCache,
     );
     history = buildInspectionHistory(eventsByRestaurant, generatedAt);
-    // Built directly from the raw rows rather than the grouped events, since
-    // every violation code needs to be captured once regardless of which
-    // restaurants or inspections survive the scored/coordinate filtering.
-    violationCodes = buildViolationCodeLookup(rows);
+    violationCodes = buildViolationCodeLookup(rows, categoryMapping);
+    dashboardMeta = buildDashboardMeta(
+      generatedAt,
+      latestGeoJSON.features.length,
+      history.restaurants,
+    );
   } catch (err) {
     throw new Error(`Failed while building output data: ${err.message}`, {
       cause: err,
@@ -923,6 +746,11 @@ async function main() {
         JSON.stringify(violationCodes),
         "utf-8",
       ),
+      writeFile(
+        path.join(OUTPUT_DIR, "dashboard-meta.json"),
+        JSON.stringify(dashboardMeta),
+        "utf-8",
+      ),
       writeHistoryFiles(history.restaurants),
     ]);
   } catch (err) {
@@ -940,16 +768,11 @@ async function main() {
   console.log(
     `Wrote ${Object.keys(history.restaurants).length} individual history files to ${HISTORY_DIR}`,
   );
+  console.log(
+    `Wrote dashboard-meta.json (${dashboardMeta.restaurantCount} restaurants, ${dashboardMeta.inspectionCount} inspections, generated_at ${dashboardMeta.lastUpdated})`,
+  );
 }
 
-// Only run automatically when this file is executed directly
-// (`node fetch-inspections.mjs`), not when its functions are imported.
-// This avoids triggering a live network fetch as an import side effect.
-
-// Use pathToFileURL() because process.argv[1] is a filesystem path,
-// whereas import.meta.url is a file:// URL. pathToFileURL() converts the
-// path into the same URL format so the comparison works correctly across
-// operating systems, including Windows.
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((err) => {
     console.error(err.message);
