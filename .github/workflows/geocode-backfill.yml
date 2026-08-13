@@ -1,9 +1,11 @@
 name: Geocode Backfill
 
 # Runs the geocoding backfill against live DOHMH data and commits the
-# updated cache back to the repo. Decoupled from the Vercel build entirely --
-# this is the ONLY workflow that calls LocationIQ. fetch-inspection.mjs
-# (run during the Vercel build) only ever reads whatever this commits.
+# updated cache to the `data` branch -- never to `main`, so scheduled
+# cache updates never conflict with in-progress dashboard work.
+# Decoupled from the Vercel build entirely -- this is the ONLY workflow
+# that calls LocationIQ. fetch-inspection.mjs (run during the Vercel
+# build) only ever reads whatever this commits.
 #
 # Runs once daily. Each run resolves up to ~4,900 new/changed restaurants
 # (LocationIQ's free tier is 5,000/day; kept a small buffer). Restaurants
@@ -56,13 +58,24 @@ jobs:
           SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
         run: node run-geocode-backfill.mjs
 
-      - name: Commit updated cache
+      - name: Commit updated cache to data branch
         if: always()
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          # Stop here if the backfill didn't actually change anything --
+          # avoids empty "no-op" commits on days where nothing new
+          # needed resolving.
           git add pipeline/geocode-cache.json pipeline/suspicious-shifts.json
-          # Only commit if something actually changed -- avoids empty
-          # "no-op" commits on days where nothing new needed resolving.
-          git diff --cached --quiet || git commit -m "chore: update geocode cache [automated]"
-          git push
+          git diff --cached --quiet && echo "No cache changes, skipping." && exit 0
+
+          # Build a fresh orphan branch containing just the two cache
+          # files (not the whole dashboard tree) and force-push it as
+          # `data`. This branch is bot-owned and fully replaced every
+          # run -- nobody should build on it or expect stable history.
+          git checkout --orphan data-snapshot
+          git rm -rf --cached . > /dev/null
+          git add pipeline/geocode-cache.json pipeline/suspicious-shifts.json
+          git commit -m "chore: update geocode cache [automated]"
+          git push origin data-snapshot:data --force
