@@ -67,7 +67,7 @@ jobs:
           # Stop here if the backfill didn't actually change anything --
           # avoids empty "no-op" commits on days where nothing new
           # needed resolving.
-          git add pipeline/geocode-cache.json pipeline/suspicious-shifts.json
+          git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json
           git diff --cached --quiet && echo "No cache changes, skipping." && exit 0
 
           # Build a fresh orphan branch containing just the two cache
@@ -76,6 +76,6 @@ jobs:
           # run -- nobody should build on it or expect stable history.
           git checkout --orphan data-snapshot
           git rm -rf --cached . > /dev/null
-          git add pipeline/geocode-cache.json pipeline/suspicious-shifts.json
+          git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json
           git commit -m "chore: update geocode cache [automated]"
           git push origin data-snapshot:data --force
