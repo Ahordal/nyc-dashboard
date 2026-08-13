@@ -7,6 +7,7 @@
   },
   "scripts": {
     "dev": "vite",
+    "prebuild": "curl -fsSL https://raw.githubusercontent.com/Ahordal/nyc-dashboard/data/pipeline/geocode-cache.json -o pipeline/geocode-cache.json || rm -f pipeline/geocode-cache.json",
     "build": "node pipeline/fetch-inspection.mjs && vite build",
     "preview": "vite preview"
   },
