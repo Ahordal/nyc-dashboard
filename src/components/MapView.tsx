@@ -228,7 +228,34 @@ export default function InspectionMapView({
       try {
         const restaurants = await queryVisibleRestaurants(view, layer);
         if (requestId !== queryRequestIdRef.current) return;
-        onVisibleRestaurantsChange(restaurants);
+
+        const activeGrades = filters.grades;
+        const filteredRestaurants = restaurants.filter((r) => {
+          if (activeGrades.length === 0) return true;
+          
+          const status = r.current_status_code;
+          const grade = r.grade;
+          const score = r.score;
+
+          let category = "C";
+          if (status === "closed") {
+            category = "closed";
+          } else if (grade === "Z" || grade === "P" || grade === "N") {
+            category = "pending";
+          } else if (score <= 13) {
+            category = "A";
+          } else if (score <= 27) {
+            category = "B";
+          }
+
+          if (activeGrades.includes("Closed") && category === "closed") return true;
+          if (activeGrades.includes("Pending") && category === "pending") return true;
+          if (grade && activeGrades.includes(grade)) return true;
+
+          return false;
+        });
+
+        onVisibleRestaurantsChange(filteredRestaurants);
       } catch (err) {
         console.error("MapView: failed to query visible restaurants", err);
       }
@@ -513,7 +540,34 @@ export default function InspectionMapView({
       queryVisibleRestaurants(view, layer)
         .then((restaurants) => {
           if (requestId !== queryRequestIdRef.current) return;
-          onVisibleRestaurantsChange(restaurants);
+
+          const activeGrades = filters.grades;
+          const filteredRestaurants = restaurants.filter((r) => {
+            if (activeGrades.length === 0) return true;
+            
+            const status = r.current_status_code;
+            const grade = r.grade;
+            const score = r.score;
+
+            let category = "C";
+            if (status === "closed") {
+              category = "closed";
+            } else if (grade === "Z" || grade === "P" || grade === "N") {
+              category = "pending";
+            } else if (score <= 13) {
+              category = "A";
+            } else if (score <= 27) {
+              category = "B";
+            }
+
+            if (activeGrades.includes("Closed") && category === "closed") return true;
+            if (activeGrades.includes("Pending") && category === "pending") return true;
+            if (grade && activeGrades.includes(grade)) return true;
+
+            return false;
+          });
+
+          onVisibleRestaurantsChange(filteredRestaurants);
         })
         .catch((err) =>
           console.error(
