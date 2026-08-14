@@ -9,12 +9,20 @@ const RATE_LIMIT_DELAY_MS = 1000; // stay well under LocationIQ's per-second lim
 export function buildQueries(restaurant) {
   const { dba, building, street, boro, zip } = restaurant;
   const hyphenated = `${dba}, ${building} ${street}, ${boro}, NY ${zip}`;
+  const queries = [{ label: 'hyphenated', query: hyphenated }];
+
+  // Only add the no-hyphen variant when there's actually a hyphen to strip --
+  // otherwise `squished` is identical to `building` and this fired a second,
+  // redundant LocationIQ request (with its own quota hit and rate-limit
+  // delay) for every restaurant whose address never had a hyphen to begin
+  // with, which is most of them outside Queens-style building numbers.
   const squished = building.replace(/-/g, '');
-  const noHyphen = `${dba}, ${squished} ${street}, ${boro}, NY ${zip}`;
-  return [
-    { label: 'hyphenated', query: hyphenated },
-    { label: 'no-hyphen', query: noHyphen },
-  ];
+  if (squished !== building) {
+    const noHyphen = `${dba}, ${squished} ${street}, ${boro}, NY ${zip}`;
+    queries.push({ label: 'no-hyphen', query: noHyphen });
+  }
+
+  return queries;
 }
 
 // Thrown specifically for HTTP 429 (rate limited) responses, distinct from

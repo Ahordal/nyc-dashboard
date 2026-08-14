@@ -54,6 +54,20 @@ jobs:
       - name: Install dependencies
         run: npm install
 
+      # Without this, run-geocode-backfill.mjs's loadCache() always starts
+      # from an empty object -- geocode-cache.json is gitignored on main,
+      # and nothing else pulled forward what's already committed on `data`.
+      # That meant needsResolution() saw every restaurant as unresolved on
+      # every run, so the backfill kept re-resolving the same early slice
+      # instead of ever advancing into the rest of the dataset. Seeding
+      # these two files from `data` here is what makes the "resumable
+      # across days" behavior in the header comment actually true.
+      - name: Seed cache from data branch
+        run: |
+          git fetch origin data
+          git show origin/data:pipeline/geocode-cache.json > pipeline/geocode-cache.json 2>/dev/null || echo '{}' > pipeline/geocode-cache.json
+          git show origin/data:pipeline/suspicious-shifts.json > pipeline/suspicious-shifts.json 2>/dev/null || echo '[]' > pipeline/suspicious-shifts.json
+
       - name: Run geocode backfill
         working-directory: pipeline
         env:
@@ -61,30 +75,28 @@ jobs:
           SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
         run: node run-geocode-backfill.mjs
 
+      # Merges this run's results against whatever's currently on `data`
+      # (data-level merge, not a raw git merge) and pushes -- see
+      # merge-and-commit-cache.mjs for the full sequence. This replaces
+      # the old orphan-branch force-push, which always fully overwrote
+      # `data` with only this run's local results and could never build
+      # on a previous day's progress.
+      #
+      # CAUTION FOR FUTURE STEPS: merge-and-commit-cache.mjs does
+      # `git reset --hard origin/data` partway through, which resets the
+      # ENTIRE working tree (not just pipeline/) to data's orphan history --
+      # package.json, src/, everything from `main` disappears from the
+      # runner's disk after this step runs. Harmless today since nothing
+      # after this needs repo files, but any future step added AFTER this
+      # one that expects the checked-out `main` tree will break. Add it
+      # before this step, not after.
       - name: Commit updated cache to data branch
         if: always()
+        working-directory: pipeline
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-
-          # Stop here if the backfill didn't actually change anything --
-          # avoids empty "no-op" commits on days where nothing new
-          # needed resolving. counts-snapshot.json is regenerated every
-          # run regardless (it's cheap to recompute), so its presence
-          # alone doesn't count as a "real" change here.
-          git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json pipeline/counts-snapshot.json
-          git diff --cached -- pipeline/geocode-cache.json pipeline/suspicious-shifts.json --quiet && echo "No cache changes, skipping." && exit 0
-
-          # Build a fresh orphan branch containing just the three cache/
-          # snapshot files (not the whole dashboard tree) and force-push
-          # it as `data`. This branch is bot-owned and fully replaced
-          # every run -- nobody should build on it or expect stable
-          # history.
-          git checkout --orphan data-snapshot
-          git rm -rf --cached . > /dev/null
-          git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json pipeline/counts-snapshot.json
-          git commit -m "chore: update geocode cache and counts snapshot [automated]"
-          git push origin data-snapshot:data --force
+          node merge-and-commit-cache.mjs
 
       # Runs regardless of whether the backfill or commit steps above
       # succeeded, failed, or found nothing new to commit -- the site

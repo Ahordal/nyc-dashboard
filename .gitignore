@@ -33,3 +33,4 @@ NYC_Dashboard_TO-DOs.txt
 #Pipeline data not in the main branch
 pipeline/geocode-cache.json
 pipeline/suspicious-shifts.json
+pipeline/counts-snapshot.json

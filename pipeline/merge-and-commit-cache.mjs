@@ -5,6 +5,13 @@
 // unrelated frontend changes, anything) -- the exact failure mode that lost
 // run #4's results on 2026-08-10.
 //
+// Targets the `data` branch (the cache/snapshot files live there now, not
+// on `main` -- this script predates that split and was never repointed).
+// Because this now pushes a normal incremental commit onto `data` instead
+// of force-replacing an orphan branch, `data` gains real history -- that's
+// intentional and required for the merge step below to have anything to
+// reconcile against.
+//
 // Sequence:
 //   1. Read THIS run's local cache/log files into memory (already on disk,
 //      written by backfill-core.mjs before this script runs).
@@ -15,14 +22,17 @@
 //   4. Merge local + remote at the DATA level (cache.mjs's mergeCaches /
 //      mergeSuspiciousShifts) -- never a raw git text merge, which risks
 //      corrupting the JSON or silently picking one side's version wholesale.
-//   5. Write the merged result, commit, push. Because the commit's parent
-//      is now exactly origin/<branch>, the push is guaranteed to succeed
-//      (nothing else can have moved origin between step 2 and step 5,
-//      since this script does not await anything network-bound in between).
+//   5. Write the merged result, add counts-snapshot.json (carried through
+//      as-is -- it's a fresh per-run snapshot, not something to merge),
+//      commit, push. Because the commit's parent is now exactly
+//      origin/<branch>, the push is guaranteed to succeed (nothing else
+//      can have moved origin between step 2 and step 5, since this script
+//      does not await anything network-bound in between).
 //
 // Usage: node merge-and-commit-cache.mjs
 // Run from within pipeline/, after run-geocode-backfill.mjs has already
-// written geocode-cache.json / suspicious-shifts.json locally.
+// written geocode-cache.json / suspicious-shifts.json / counts-snapshot.json
+// locally.
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
@@ -30,7 +40,8 @@ import { mergeCaches, mergeSuspiciousShifts } from './cache.mjs';
 
 const CACHE_PATH = './geocode-cache.json';
 const LOG_PATH = './suspicious-shifts.json';
-const BRANCH = 'main';
+const COUNTS_SNAPSHOT_PATH = './counts-snapshot.json';
+const BRANCH = 'data';
 
 function run(cmd) {
   return execSync(cmd, { encoding: 'utf-8' });
@@ -69,15 +80,28 @@ async function main() {
 
   console.log(`Merged: ${Object.keys(mergedCache).length} cache entries, ${mergedShifts.length} suspicious shifts.`);
 
-  // Step 5: write, commit, push.
+  // Step 5: write the merged cache/shifts, then add whichever of the three
+  // files exist (counts-snapshot.json isn't merged -- it's this run's own
+  // fresh snapshot, written earlier by run-geocode-backfill.mjs and left
+  // untouched by the reset above since it's untracked on `main`). A missing
+  // file here means an earlier step failed partway through; that shouldn't
+  // block committing whatever did make it.
   await writeFile(CACHE_PATH, JSON.stringify(mergedCache, null, 2), 'utf-8');
   await writeFile(LOG_PATH, JSON.stringify(mergedShifts, null, 2), 'utf-8');
 
-  run(`git add ${CACHE_PATH} ${LOG_PATH}`);
+  for (const path of [CACHE_PATH, LOG_PATH, COUNTS_SNAPSHOT_PATH]) {
+    try {
+      await readFile(path);
+      run(`git add ${path}`);
+    } catch {
+      console.warn(`Skipping ${path} -- not found on disk.`);
+    }
+  }
 
-  // Only commit if the merge actually produced a real change (e.g. this
-  // run resolved nothing new AND remote already had everything local had --
-  // avoids empty no-op commits).
+  // counts-snapshot.json carries a fresh generatedAt timestamp every run,
+  // so this is almost always non-empty by design -- it's kept as a safety
+  // net rather than a real gate, since diff --quiet across all three still
+  // correctly no-ops the rare case where literally nothing changed.
   let hasChanges = false;
   try {
     run('git diff --cached --quiet');
@@ -90,8 +114,8 @@ async function main() {
     return;
   }
 
-  run(`git commit -m "chore: update geocode cache [automated]"`);
-  run(`git push origin ${BRANCH}`);
+  run(`git commit -m "chore: update geocode cache and counts snapshot [automated]"`);
+  run(`git push origin HEAD:${BRANCH}`);
   console.log('Pushed merged cache successfully.');
 }
 
