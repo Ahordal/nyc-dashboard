@@ -1,29 +1,33 @@
 // cache.mjs
-// CAMIS-keyed cache for geocoding results. Handles atomic writes (temp file
-// + rename, so a crash mid-write can't corrupt the cache), address-hash-based
-// invalidation (so an address change forces re-resolution even if the CAMIS
-// was already cached), and resolver versioning (so improving the matching
-// logic later can deliberately invalidate old results).
+// This file manages a local cache for restaurant geocoding results, keyed by their 
+// unique CAMIS ID. It ensures safe data loading, prevents file corruption during crashes 
+// using atomic writes, automatically forces updates if a restaurant's address changes 
+// or the mapping rules are updated, and provides tools to merge overlapping data runs.
 
 import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-// Bump this whenever scoring.mjs / normalize.mjs matching logic changes in a
-// way that should force re-resolution of previously-cached entries.
+// Bumping this version forces the app to re-geocode everything if the address 
+// matching rules change in the future.
 export const RESOLVER_VERSION = 1;
 
 // --- Loading ---------------------------------------------------------------
 
-// Loads the cache file. Returns an empty cache if the file doesn't exist yet,
-// or if it's corrupted (e.g. a previous crash left a partial write) — a
-// corrupted cache should never crash the pipeline, just mean more re-resolving.
+/**
+ * Loads the existing cache file from disk. If the file is missing or corrupted 
+ * from a previous crash, it safely ignores the error and returns an empty object 
+ * so the app can keep running without breaking.
+ * 
+ * @param {string} filePath - Path to the cache JSON file
+ * @returns {Promise<Object>} The loaded cache dictionary
+ */
 export async function loadCache(filePath) {
   try {
     const raw = await readFile(filePath, 'utf-8');
     return JSON.parse(raw);
   } catch (err) {
     if (err.code === 'ENOENT') {
-      return {}; // no cache yet — first run
+      return {}; // Returns empty cache on the very first run
     }
     console.warn(`Cache at ${filePath} could not be read (${err.message}) — starting fresh.`);
     return {};
@@ -32,10 +36,14 @@ export async function loadCache(filePath) {
 
 // --- Saving (atomic) ---------------------------------------------------------
 
-// Writes the cache atomically: write to a temp file, then rename over the
-// real path. Rename is atomic on POSIX and NTFS, so a crash mid-write leaves
-// either the old cache intact or the new one complete — never a half-written
-// JSON file.
+/**
+ * Saves the cache safely by writing it to a temporary file first, then instantly 
+ * renaming it over the real file. This prevents a half-written file if the script 
+ * crashes midway.
+ * 
+ * @param {string} filePath - Destination path for the cache
+ * @param {Object} cache - The current cache object to save
+ */
 export async function saveCacheAtomic(filePath, cache) {
   await mkdir(dirname(filePath), { recursive: true });
   const tempPath = `${filePath}.tmp-${process.pid}-${Date.now()}`;
@@ -45,21 +53,26 @@ export async function saveCacheAtomic(filePath, cache) {
 
 // --- Cache entry construction ------------------------------------------------
 
-// Builds a cache entry from a resolveRestaurant() result. `dohmh` is the
-// restaurant's original DOHMH data — always preserved untouched.
+/**
+ * Creates a standardized cache record from a restaurant's geocoding result, 
+ * keeping the original official data untouched.
+ * 
+ * @param {Object} params - Entry details (camis, dohmh, addressHash, resolution)
+ * @returns {Object} A structured cache record
+ */
 export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
   return {
     camis,
-    dohmh, // { building, street, boro, zip, lat, lon } — never modified after write
+    dohmh, // Original official health department data, never modified
     resolved:
       resolution.status === 'verified'
         ? { lat: resolution.lat, lon: resolution.lon, neighbourhood: resolution.neighbourhood }
         : null,
-    status: resolution.status, // 'verified' | 'unverified' | 'pending'
+    status: resolution.status, // Current status: 'verified', 'unverified', or 'pending'
     matchType: resolution.matchType,
     resolvedVia: resolution.resolvedVia,
     distanceFromDohmh: resolution.distanceFromDohmh ?? null,
-    reason: resolution.reason || null, // e.g. 'no_acceptable_match', 'api_error', 'quota_exhausted'
+    reason: resolution.reason || null,
     resolvedAt: resolution.status === 'pending' ? null : new Date().toISOString(),
     addressHash,
     resolverVersion: RESOLVER_VERSION,
@@ -68,54 +81,58 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
 
 // --- Invalidation logic -------------------------------------------------------
 
-// Decides whether a restaurant needs (re-)resolution. True if:
-//   - never resolved (no cache entry)
-//   - previously pending (errors/timeouts/quota cutoffs are always retried)
-//   - the address has changed since the cached result (hash mismatch)
-//   - the matching logic has since changed (resolver version mismatch)
+/**
+ * Checks whether a restaurant needs to be geocoded again. It returns true if 
+ * it's new, previously failed/pending, has a different address, or if the global 
+ * resolver version has been bumped.
+ * 
+ * @param {Object} cache - The current cache dictionary
+ * @param {string} camis - The restaurant's ID
+ * @param {string} currentAddressHash - The newly computed address hash
+ * @returns {boolean} True if a fresh geocode lookup is needed
+ */
 export function needsResolution(cache, camis, currentAddressHash) {
   const entry = cache[camis];
   if (!entry) return true;
   if (entry.status === 'pending') return true;
   if (entry.addressHash !== currentAddressHash) return true;
   if (entry.resolverVersion !== RESOLVER_VERSION) return true;
-  return false; // verified or unverified, address unchanged, current resolver version
+  return false;
 }
 
-// Inserts/overwrites one entry. Returns a NEW cache object (does not mutate
-// the input) so callers can reason about state changes explicitly.
+/**
+ * Adds or updates a single restaurant entry, returning a brand new cache object 
+ * instead of modifying the old one directly.
+ * 
+ * @param {Object} cache - Existing cache object
+ * @param {Object} entry - The cache entry to insert or update
+ * @returns {Object} A new updated cache object
+ */
 export function upsertCacheEntry(cache, entry) {
   return { ...cache, [entry.camis]: entry };
 }
 
 // --- Merging (for reconciling concurrent/overlapping runs) -----------------
 
-// Ranks an entry's "authoritativeness" for merge purposes: a real result
-// (verified or unverified) always outranks a pending one, since pending
-// means "this run didn't actually finish resolving it." Used to decide
-// which side wins when the SAME camis was touched by two different runs.
+/**
+ * Helper function to check if a cache entry is finished and final (not pending).
+ * 
+ * @param {Object} entry - Cache entry to check
+ * @returns {boolean} True if the status is final
+ */
 function isFinal(entry) {
   return entry != null && entry.status !== 'pending';
 }
 
-// Merges two cache objects into one, entry-by-entry by CAMIS. Used when a
-// run's own local results need to be reconciled against whatever's already
-// on the remote (e.g. from an overlapping run, or any other commit that
-// landed on main since this run's checkout) — rather than blindly
-// overwriting one with the other and risking silently losing real
-// geocoding work from either side.
-//
-// Per-key resolution rules, in order:
-//   1. Only one side has this camis at all -> keep that side's entry.
-//   2. One side is 'pending' and the other is final (verified/unverified)
-//      -> the final result always wins, regardless of which side it's on.
-//      A pending entry represents unfinished work and should never
-//      overwrite a real result.
-//   3. Both sides are final -> prefer whichever has the more recent
-//      resolvedAt timestamp (the newer resolution is more likely to
-//      reflect the current address/resolver version).
-//   4. Both sides are pending -> keep either (arbitrarily `local`) since
-//      neither represents finished work; a future run will retry it.
+/**
+ * Combines two cache objects together entry-by-entry. Finished results always beat 
+ * pending ones, and newer timestamps win if both are finished, ensuring no good 
+ * geocoding work is accidentally lost.
+ * 
+ * @param {Object} local - Local cache dataset
+ * @param {Object} remote - Remote cache dataset
+ * @returns {Object} The merged cache dictionary
+ */
 export function mergeCaches(local, remote) {
   const merged = { ...remote };
 
@@ -133,26 +150,30 @@ export function mergeCaches(local, remote) {
     if (localFinal && !remoteFinal) {
       merged[camis] = localEntry;
     } else if (!localFinal && remoteFinal) {
-      merged[camis] = remoteEntry; // keep remote's real result, discard local's pending
+      merged[camis] = remoteEntry;
     } else if (localFinal && remoteFinal) {
       const localTime = localEntry.resolvedAt ? Date.parse(localEntry.resolvedAt) : 0;
       const remoteTime = remoteEntry.resolvedAt ? Date.parse(remoteEntry.resolvedAt) : 0;
       merged[camis] = localTime >= remoteTime ? localEntry : remoteEntry;
     } else {
-      merged[camis] = localEntry; // both pending, doesn't matter which
+      merged[camis] = localEntry;
     }
   }
 
   return merged;
 }
 
-// Merges two suspicious-shift log arrays, deduping by CAMIS (a restaurant
-// only needs to appear once in the log even if flagged by both sides of a
-// merge). Local entries win on a duplicate, since they represent this run's
-// most recent resolution.
+/**
+ * Combines two suspicious coordinate shift logs into one, removing duplicates 
+ * by CAMIS ID and letting local entries take priority.
+ * 
+ * @param {Array} local - Local shift logs
+ * @param {Array} remote - Remote shift logs
+ * @returns {Array} Cleaned, combined array of shift logs
+ */
 export function mergeSuspiciousShifts(local, remote) {
   const byCamis = new Map();
   for (const entry of remote) byCamis.set(entry.camis, entry);
-  for (const entry of local) byCamis.set(entry.camis, entry); // local overwrites on conflict
+  for (const entry of local) byCamis.set(entry.camis, entry);
   return [...byCamis.values()];
 }

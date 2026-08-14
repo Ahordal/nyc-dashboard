@@ -1,9 +1,7 @@
 // backfill-core.mjs
-// The actual resolve-everyone loop, extracted so it can be driven by either
-// a static test JSON file (backfill.mjs, for local regression testing) or
-// the real live DOHMH dataset (run-geocode-backfill.mjs, the production
-// entry point used by the scheduled GitHub Action). Both entry points share
-// this exact logic — no duplicated loop to keep in sync.
+// This file runs the main geocoding loop across a list of restaurants. It checks 
+// the cache to avoid unnecessary work, tracks daily API quotas, saves progress 
+// incrementally, and flags any unusual coordinate jumps for review.
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { addressHash } from './normalize.mjs';
@@ -15,18 +13,12 @@ const DEFAULT_SAVE_EVERY_N = 25;
 const DEFAULT_SUSPICIOUS_THRESHOLD_METERS = 100;
 
 /**
- * Runs the full resolve loop over a list of restaurants, respecting the
- * daily quota and saving progressively (not just at the end).
- *
- * @param {Array} restaurants - [{ camis, dba, building, street, boro, zip, dohmhLat, dohmhLon }]
- * @param {Object} opts
- * @param {string} opts.apiKey - LocationIQ API key
- * @param {string} opts.cachePath - path to the CAMIS-keyed cache JSON file
- * @param {string} opts.logPath - path to the suspicious-shifts log JSON file
- * @param {number} [opts.dailyLimit]
- * @param {number} [opts.saveEveryN]
- * @param {number} [opts.suspiciousThresholdMeters]
- * @returns {Promise<{ skippedCount, resolvedCount, requestsUsed, suspiciousShiftsLogged, cacheSize }>}
+ * Loops through a list of restaurants to geocode their locations, managing API quotas 
+ * and saving progress along the way.
+ * 
+ * @param {Array} restaurants - List of restaurant objects to process
+ * @param {Object} opts - Configuration options like API keys, paths, and limits
+ * @returns {Promise<{ skippedCount, resolvedCount, requestsUsed, suspiciousShiftsLogged, cacheSize }>} Summary metrics of the run
  */
 export async function runGeocodeBackfill(restaurants, opts) {
   const {
@@ -65,23 +57,24 @@ export async function runGeocodeBackfill(restaurants, opts) {
       zip: restaurant.zip,
     });
 
+    // Skip this restaurant if its data is already safely cached and hasn't changed.
     if (!needsResolution(cache, restaurant.camis, hash)) {
       skippedCount += 1;
       continue;
     }
 
+    // Stop processing if we've hit our daily request limit.
     if (quota.remaining() <= 0) {
       console.log(`Daily quota reached (${quota.used()} requests). Stopping — remainder picks up next run.`);
       break;
     }
 
-    // Restaurants with no usable DOHMH coordinate at all (NaN/missing) can
-    // still be geocoded — scoreCandidate() treats a null dohmhLat/dohmhLon
-    // as "skip the distance check" rather than failing, so this is safe.
+    // Look up the restaurant's location using the external geocoding API.
     const resolution = await resolveRestaurant(restaurant, { apiKey, quota });
     const entry = buildCacheEntry({ camis: restaurant.camis, dohmh, addressHash: hash, resolution });
     cache = upsertCacheEntry(cache, entry);
 
+    // If the match is verified, check if it moved unusually far from the official health department coordinates.
     if (resolution.status === 'verified') {
       resolvedCount += 1;
       if (
@@ -110,28 +103,24 @@ export async function runGeocodeBackfill(restaurants, opts) {
       processedSinceLastSave = 0;
     }
 
+    // Stop immediately if we get rate-limited so we don't waste the rest of the run on guaranteed errors.
     if (resolution.rateLimited) {
-      // The account itself is rate-limited (HTTP 429) -- every remaining
-      // restaurant in this run would fail identically. Stop immediately
-      // rather than burning the rest of the run's time grinding through
-      // guaranteed failures and adding more rejected requests to the
-      // day's usage stats for no benefit. This restaurant is already
-      // saved as "pending" above, so it (and everything after it) will
-      // simply be retried on the next scheduled run.
       console.log('LocationIQ rate limit hit — stopping this run early. Remainder picks up next run.');
       await saveCacheAtomic(cachePath, cache);
       break;
     }
   }
 
+  // Save the final state of the cache to disk.
   await saveCacheAtomic(cachePath, cache);
 
+  // Append any flagged coordinate shifts to the log file for review.
   if (suspiciousShifts.length > 0) {
     let existing = [];
     try {
       existing = JSON.parse(await readFile(logPath, 'utf-8'));
     } catch {
-      // no existing log yet
+      // Ignore if the log file doesn't exist yet
     }
     await writeFile(logPath, JSON.stringify([...existing, ...suspiciousShifts], null, 2), 'utf-8');
   }

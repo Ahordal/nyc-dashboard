@@ -31,6 +31,10 @@ p, ul, ol, figure {
   /* BORDER COLOURS */
   --border-panel: #424242;
 
+  /* STATUS COLOURS */
+  --status-positive: #66bb6a;
+  --status-negative: #ef5350;
+
   /* SPACING */
   --space-xs: 0.5rem;
   --space-s: 1rem;
@@ -1551,6 +1555,24 @@ color: var(--link-hover);
   font-size: 0.9rem;
   font-weight: 700;
   color: var(--text-body);
+}
+
+.dashboard-guide-meta-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-guide-meta-delta-positive {
+  color: var(--status-positive);
+}
+
+.dashboard-guide-meta-delta-negative {
+  color: var(--status-negative);
 }
 
 

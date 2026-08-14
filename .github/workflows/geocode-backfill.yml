@@ -1,11 +1,14 @@
 name: Geocode Backfill
 
-# Runs the geocoding backfill against live DOHMH data and commits the
+# Runs the geocoding backfill against live DOHMH data, commits the
 # updated cache to the `data` branch -- never to `main`, so scheduled
-# cache updates never conflict with in-progress dashboard work.
-# Decoupled from the Vercel build entirely -- this is the ONLY workflow
-# that calls LocationIQ. fetch-inspection.mjs (run during the Vercel
-# build) only ever reads whatever this commits.
+# cache updates never conflict with in-progress dashboard work -- and
+# then triggers a Vercel rebuild so the site picks up what was just
+# committed. This is the ONLY workflow that calls LocationIQ, and the
+# ONLY thing that pings the Vercel Deploy Hook -- keeping both in one
+# workflow guarantees the rebuild always happens right after fresh data
+# lands, in that order, every time. fetch-inspection.mjs (run during
+# the Vercel build) only ever reads whatever this commits.
 #
 # Runs once daily. Each run resolves up to ~4,900 new/changed restaurants
 # (LocationIQ's free tier is 5,000/day; kept a small buffer). Restaurants
@@ -17,7 +20,7 @@ name: Geocode Backfill
 
 on:
   schedule:
-    # 8:00 UTC daily (8:00 AM ADT)
+    # 8:00 UTC daily (5:00 AM ADT)
     - cron: '0 8 * * *'
   workflow_dispatch: {} # allows manually triggering a run from the Actions tab
 
@@ -82,3 +85,14 @@ jobs:
           git add -f pipeline/geocode-cache.json pipeline/suspicious-shifts.json pipeline/counts-snapshot.json
           git commit -m "chore: update geocode cache and counts snapshot [automated]"
           git push origin data-snapshot:data --force
+
+      # Runs regardless of whether the backfill or commit steps above
+      # succeeded, failed, or found nothing new to commit -- the site
+      # should still refresh daily against the latest live DOHMH data
+      # even on a day where geocoding didn't produce any cache changes,
+      # or hit an error. Vercel's own build re-fetches inspection data
+      # independently, so a rebuild is still worthwhile even when this
+      # job's own fetch had trouble.
+      - name: Trigger Vercel deploy
+        if: always()
+        run: curl -fsSL -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
