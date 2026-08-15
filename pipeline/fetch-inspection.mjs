@@ -48,12 +48,16 @@
 //
 //   4. public/data/dashboard-meta.json
 //      A small summary object -- { lastUpdated, restaurantCount,
-//      inspectionCount } -- describing this run's freshness and the
-//      overall size of the dataset. restaurantCount mirrors
-//      latest-inspections.geojson's feature count; inspectionCount sums
-//      every scored inspection event across all restaurants in the
-//      history output. Powers the "Dashboard Information" modal's
-//      Data Source & Freshness section.
+//      inspectionCount, restaurantDelta, inspectionDelta } -- describing
+//      this run's freshness and the overall size of the dataset.
+//      restaurantCount mirrors latest-inspections.geojson's feature count;
+//      inspectionCount sums every scored inspection event across all
+//      restaurants in the history output. The two deltas compare against
+//      counts-snapshot.json -- the baseline written once a day by the
+//      geocode-backfill workflow -- and are null (not 0) when no baseline
+//      is available yet, e.g. before the first backfill run has ever
+//      committed a snapshot. Powers the "Dashboard Information" panel's
+//      stat row, including the +/- change indicators next to each count.
 //
 // public/data/ is regenerated from scratch on every run and is NOT meant
 // to be committed to Git -- see the project README for how this fits into
@@ -73,6 +77,14 @@ import { formatDisplayAddress, formatDisplayStreet } from "./normalize.mjs";
 // loadCache() returns {} and every restaurant simply falls back to its
 // DOHMH coordinate with location_status "pending".
 const GEOCODE_CACHE_PATH = path.join(import.meta.dirname, "geocode-cache.json");
+
+// Path to the baseline snapshot committed once a day by the scheduled
+// geocode-backfill workflow (see run-geocode-backfill.mjs /
+// merge-and-commit-cache.mjs). Read-only here, same as the geocode cache --
+// this is what today's counts get diffed against to produce the +/- deltas.
+// If it doesn't exist yet, loadCountsSnapshot() returns null and the
+// deltas are simply omitted (null) rather than showing a false "+N".
+const COUNTS_SNAPSHOT_PATH = path.join(import.meta.dirname, "counts-snapshot.json");
 
 // Path to the locally committed violation categories CSV mapping file.
 const CATEGORY_CSV_PATH = path.join(import.meta.dirname, "violation-categories.csv");
@@ -695,17 +707,50 @@ export function buildInspectionHistory(eventsByRestaurant, generatedAt) {
   };
 }
 
-export function buildDashboardMeta(generatedAt, restaurantCount, historyRestaurants) {
+export function buildDashboardMeta(generatedAt, restaurantCount, historyRestaurants, baselineSnapshot) {
   const inspectionCount = Object.values(historyRestaurants).reduce(
     (total, points) => total + points.length,
     0,
   );
 
+  // null (not 0) when there's no baseline to compare against yet, so the
+  // UI can distinguish "no data" from an actual zero-change day.
+  const restaurantDelta =
+    baselineSnapshot?.restaurantCount != null
+      ? restaurantCount - baselineSnapshot.restaurantCount
+      : null;
+
+  const inspectionDelta =
+    baselineSnapshot?.inspectionCount != null
+      ? inspectionCount - baselineSnapshot.inspectionCount
+      : null;
+
   return {
     lastUpdated: generatedAt,
     restaurantCount,
     inspectionCount,
+    restaurantDelta,
+    inspectionDelta,
   };
+}
+
+// Loads the baseline counts-snapshot.json written by the geocode-backfill
+// workflow. Mirrors loadCache()'s tolerance for a missing/corrupt file --
+// returns null rather than throwing, since this file simply won't exist
+// yet before the first backfill run has ever committed one.
+async function loadCountsSnapshot(filePath) {
+  try {
+    const raw = await readFile(filePath, "utf-8");
+    return JSON.parse(raw);
+  } catch (err) {
+    if (err.code === "ENOENT") {
+      return null;
+    }
+    console.warn(
+      `Counts snapshot at ${filePath} could not be read (${err.message}) — omitting deltas.`,
+    );
+    return null;
+  }
 }
 
 async function runInBatches(items, batchSize, fn) {
@@ -743,6 +788,7 @@ async function main() {
   }
 
   const geocodeCache = await loadCache(GEOCODE_CACHE_PATH);
+  const baselineSnapshot = await loadCountsSnapshot(COUNTS_SNAPSHOT_PATH);
 
   let latestGeoJSON, history, violationCodes, dashboardMeta;
   try {
@@ -764,6 +810,7 @@ async function main() {
       generatedAt,
       latestGeoJSON.features.length,
       history.restaurants,
+      baselineSnapshot,
     );
   } catch (err) {
     throw new Error(`Failed while building output data: ${err.message}`, {
@@ -808,8 +855,14 @@ async function main() {
     `Wrote ${Object.keys(history.restaurants).length} individual history files to ${HISTORY_DIR}`,
   );
   console.log(
-    `Wrote dashboard-meta.json (${dashboardMeta.restaurantCount} restaurants, ${dashboardMeta.inspectionCount} inspections, generated_at ${dashboardMeta.lastUpdated})`,
+    `Wrote dashboard-meta.json (${dashboardMeta.restaurantCount} restaurants [${formatDeltaForLog(dashboardMeta.restaurantDelta)}], ` +
+      `${dashboardMeta.inspectionCount} inspections [${formatDeltaForLog(dashboardMeta.inspectionDelta)}], generated_at ${dashboardMeta.lastUpdated})`,
   );
+}
+
+function formatDeltaForLog(delta) {
+  if (delta == null) return "no baseline";
+  return delta >= 0 ? `+${delta}` : `${delta}`;
 }
 
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {

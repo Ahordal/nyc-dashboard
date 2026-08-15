@@ -96,7 +96,7 @@ const SORT_FIELD_OPTIONS: {
   },
 ];
 
-const SORT_NOTICE_DURATION_MS = 1200;
+const SORT_NOTICE_DURATION_MS = 900;
 
 const CARD_HEIGHT = 88;
 const MIN_PAGE_SIZE = 4;

@@ -58,6 +58,31 @@ function formatCount(count: number | null | undefined): string {
   return count.toLocaleString();
 }
 
+// Renders nothing for a missing baseline (null/undefined) or an actual
+// zero-change day -- only a real +/- change gets a badge. Reuses the
+// dashboard-guide-meta-delta CSS classes, which already existed in
+// global.css waiting for a caller.
+function formatDelta(delta: number | null | undefined) {
+  if (delta == null || delta === 0) {
+    return null;
+  }
+
+  const isPositive = delta > 0;
+
+  return (
+    <span
+      className={`dashboard-guide-meta-delta ${
+        isPositive
+          ? "dashboard-guide-meta-delta-positive"
+          : "dashboard-guide-meta-delta-negative"
+      }`}
+    >
+      {isPositive ? "+" : "\u2212"}
+      {Math.abs(delta).toLocaleString()}
+    </span>
+  );
+}
+
 export default function DashboardGuide({ meta }: DashboardGuideProps) {
   const [showInfoModal, setShowInfoModal] = useState(false);
 
@@ -98,6 +123,7 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
 
           <span className="dashboard-guide-meta-value">
             {formatCount(meta?.restaurantCount)}
+            {formatDelta(meta?.restaurantDelta)}
           </span>
         </div>
 
@@ -108,6 +134,7 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
 
           <span className="dashboard-guide-meta-value">
             {formatCount(meta?.inspectionCount)}
+            {formatDelta(meta?.inspectionDelta)}
           </span>
         </div>
       </div>

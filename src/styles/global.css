@@ -856,9 +856,22 @@ a:focus-visible {
   color: var(--text-muted);
 }
 
-/* Base .violation-tag and its variants (severity-tag, violation-code-tag,
-   category-tag) are defined once, in the STATUS FLAGS & BADGES (UPDATED)
-   section near the bottom of this file, so all three stay in sync. */
+.status-location-verified {
+  background-color: #3cb44b;
+  color: #ffffff;
+}
+
+.status-location-unverified {
+  background-color: #e6b800;
+  color: #1a1a1a;
+}
+
+.status-location-pending {
+  background-color: var(--border-panel);
+  color: var(--text-muted);
+}
+
+
 /*///////////////////////////////////////////// RESTAURANT VIOLATIONS //////////////////////////////////////////////*/
 
 .violations-list {

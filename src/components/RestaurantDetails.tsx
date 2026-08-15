@@ -62,6 +62,25 @@ const STATUS_LABELS: Record<string, string> = {
   unknown: "Unknown",
 };
 
+// Maps a restaurant's location_status to the matching Badge variant.
+function locationStatusVariant(status: string): BadgeVariant {
+  if (
+    status === "verified" ||
+    status === "unverified" ||
+    status === "pending"
+  ) {
+    return `location-${status}` as BadgeVariant;
+  }
+
+  return "location-pending";
+}
+
+const LOCATION_STATUS_LABELS: Record<string, string> = {
+  verified: "Verified",
+  unverified: "Unverified",
+  pending: "Pending",
+};
+
 const GRADE_PENDING_NOTES: Record<string, string> = {
   Z: "Grade pending official confirmation.",
   P: "Grade pending — reopened after a prior closure.",
@@ -117,6 +136,23 @@ const RESTAURANT_INFO_CONTENT = (
           <Badge variant="status-closed">Closed by DOHMH</Badge> —
           Most recent inspection resulted in a closure
         </li>
+
+        <li>
+          <Badge variant="location-verified">Verified</Badge> — An
+          independent geocoder confirmed this location.
+        </li>
+
+        <li>
+          <Badge variant="location-unverified">Unverified</Badge> —
+          Geocoding ran but couldn&apos;t confirm a match. The coordinate
+          shown falls back to DOHMH&apos;s on-file location.
+        </li>
+
+        <li>
+          <Badge variant="location-pending">Pending</Badge> — Not yet
+          checked by the geocoder. The coordinate shown is DOHMH&apos;s
+          on-file location for now.
+        </li>
       </ul>
     }
     dataNotes={
@@ -126,6 +162,13 @@ const RESTAURANT_INFO_CONTENT = (
           street-level imagery for the location. Photos are provided directly by
           Google Maps and may not reflect the restaurant&apos;s current
           storefront, facade, or business operations.
+        </li>
+
+        <li>
+          Restaurant locations are independently geocoded and checked against
+          DOHMH's on-file address where possible. See the Location badge
+          under Geographical Information — Verified, Unverified, or Pending
+          (described above).
         </li>
       </ul>
     }
@@ -308,6 +351,16 @@ export default function RestaurantDetails({
             </tr>
 
             <tr>
+              <td>Location</td>
+
+              <td>
+                <Badge variant={locationStatusVariant(restaurant.location_status)}>
+                  {LOCATION_STATUS_LABELS[restaurant.location_status]}
+                </Badge>
+              </td>
+            </tr>
+
+            <tr>
               <td>Phone</td>
 
               <td>{formatPhoneNumber(restaurant.phone)}</td>
@@ -319,7 +372,7 @@ export default function RestaurantDetails({
               <td>
                 {restaurant.latitude && restaurant.longitude ? (
                   
-                    <a href={`https://www.google.com/maps?layer=c&cbll=${restaurant.latitude},${restaurant.longitude}`}
+                    <a href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${restaurant.latitude},${restaurant.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer">
                     View Street View{" "}
@@ -362,14 +415,11 @@ export default function RestaurantDetails({
                 <li
                   key={event.id}
                   className={isSelected ? "inspection-row-selected" : ""}
-                  
-                  
                   style={
                     isSelected 
                       ? { outlineColor: CATEGORY_COLORS[eventCategory] } 
                       : undefined
                   }
-                  
                   role="button"
                   tabIndex={0}
                   aria-current={isSelected ? "true" : undefined}
