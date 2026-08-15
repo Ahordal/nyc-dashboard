@@ -69,7 +69,34 @@ type ChartDataItem = {
   isSelected: boolean;
 };
 
-// Custom shape renderer for maximized slice scaling and glowing shadows
+// Custom shape renderer, split into two layers:
+//
+//   1. A stable "hit" Sector, always rendered at its natural (unmoved,
+//      un-grown) geometry. This is what actually receives hover/click
+//      events. Its geometry NEVER changes based on active state --
+//      that's deliberate. Moving/growing the element that owns mouse
+//      events is what caused hover to feel "sticky": once the shape's
+//      geometry shifts, the pointer is no longer over it, but the
+//      browser only recomputes hover targets on the next mousemove --
+//      so leaving fires late or not at all until the cursor happens to
+//      move again. Keeping this layer's geometry fixed means hover
+//      detection is rock solid regardless of what's drawn on top.
+//      Invisible when active (opacity: 0) but still fully hoverable/
+//      clickable -- opacity doesn't affect SVG hit-testing under the
+//      default pointer-events: visiblePainted (only fill: none or
+//      visibility: hidden would).
+//
+//   2. A visual-only "display" Sector, rendered on top ONLY when active,
+//      with pointer-events: none so it never interferes with #1. This
+//      is what actually explodes -- by growing outerRadius rather than
+//      translating cx/cy. Radius growth pushes every point along the
+//      arc outward along ITS OWN angle, so it reads as "expanding" for
+//      a sliver slice and a 70%-of-the-ring slice alike. A single
+//      directional translate (the previous approach) only ever looks
+//      right for small slices -- a dominant slice just slides toward
+//      one side instead of visibly growing.
+const ACTIVE_RADIUS_GROWTH = 10; // px
+
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderCustomizedShape = (props: any) => {
   const {
@@ -87,7 +114,6 @@ const renderCustomizedShape = (props: any) => {
   const fill = payload?.color;
 
   const isActive = isHovered || isSelected;
-  const currentOuterRadius = isActive ? outerRadius + 6 : outerRadius;
 
   return (
     <g>
@@ -95,19 +121,35 @@ const renderCustomizedShape = (props: any) => {
         cx={cx}
         cy={cy}
         innerRadius={innerRadius}
-        outerRadius={currentOuterRadius}
+        outerRadius={outerRadius}
         startAngle={startAngle}
         endAngle={endAngle}
         fill={fill}
         stroke="var(--bg-panel)"
         strokeWidth={2}
         style={{
-          filter: isActive
-            ? "drop-shadow(0px 0px 8px var(--accent))"
-            : "none",
+          opacity: isActive ? 0 : 1,
           cursor: "pointer",
         }}
       />
+
+      {isActive && (
+        <Sector
+          cx={cx}
+          cy={cy}
+          innerRadius={innerRadius}
+          outerRadius={outerRadius + ACTIVE_RADIUS_GROWTH}
+          startAngle={startAngle}
+          endAngle={endAngle}
+          fill={fill}
+          stroke="var(--bg-panel)"
+          strokeWidth={2}
+          style={{
+            filter: "drop-shadow(0px 0px 8px var(--accent))",
+            pointerEvents: "none",
+          }}
+        />
+      )}
     </g>
   );
 };
@@ -263,7 +305,7 @@ export default function GradeChart({
                     cx="50%"
                     cy="50%"
                     innerRadius="65%"
-                    outerRadius="98%"
+                    outerRadius="90%"
                     dataKey="value"
                     isAnimationActive={false}
                     onMouseEnter={(_, index) => setHoveredIndex(index)}

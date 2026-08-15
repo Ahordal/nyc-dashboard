@@ -64,6 +64,15 @@ export default function Dashboard() {
     RestaurantProperties[]
   >([]);
 
+  // Same extent/borough/search filtering as visibleRestaurants, but never
+  // grade-filtered -- this is what GradeChart needs so a selected grade
+  // stays exploded/highlighted among all five slices instead of the ring
+  // collapsing to a single 100% slice. StatsPanel and RestaurantList
+  // intentionally keep using the grade-filtered visibleRestaurants above,
+  // since their counts describe what's actually rendered on the map.
+  const [visibleRestaurantsUngraded, setVisibleRestaurantsUngraded] =
+    useState<RestaurantProperties[]>([]);
+
   const [restaurantCount, setRestaurantCount] = useState(0);
 
   // Inspection history for the currently selected restaurant.
@@ -292,7 +301,7 @@ export default function Dashboard() {
 
           <div className="grade-chart">
             <GradeChart
-              restaurants={visibleRestaurants}
+              restaurants={visibleRestaurantsUngraded}
               filters={filters}
               setFilters={setFilters}
             />
@@ -323,6 +332,7 @@ export default function Dashboard() {
               selectedRestaurantId={selectedRestaurant?.id ?? null}
               onSelectRestaurant={handleSelectRestaurant}
               onVisibleRestaurantsChange={setVisibleRestaurants}
+              onUngradedVisibleRestaurantsChange={setVisibleRestaurantsUngraded}
             />
           </div>
         </div>

@@ -141,7 +141,18 @@ type MapViewProps = {
   searchQuery?: string;
   selectedRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties | null) => void;
+  // Grade-filtered -- reflects exactly what's rendered on the map right
+  // now (extent + borough + search + grade). StatsPanel's "in map view"
+  // count and RestaurantList both need this true, current-view set.
   onVisibleRestaurantsChange?: (restaurants: RestaurantProperties[]) => void;
+  // NOT grade-filtered -- extent + borough + search only, same set
+  // buildDefinitionExpression deliberately excludes grade from (see
+  // mapQueries.ts). This is what GradeChart needs so a selected grade
+  // stays exploded/highlighted among all five slices instead of
+  // collapsing the ring down to a single 100% slice.
+  onUngradedVisibleRestaurantsChange?: (
+    restaurants: RestaurantProperties[],
+  ) => void;
 };
 
 export default function InspectionMapView({
@@ -150,6 +161,7 @@ export default function InspectionMapView({
   selectedRestaurantId = null,
   onSelectRestaurant,
   onVisibleRestaurantsChange,
+  onUngradedVisibleRestaurantsChange,
 }: MapViewProps) {
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<GeoJSONLayer | null>(null);
@@ -223,11 +235,14 @@ export default function InspectionMapView({
     view.popupEnabled = false;
 
     const reportVisibleRestaurants = async () => {
-      if (!onVisibleRestaurantsChange) return;
+      if (!onVisibleRestaurantsChange && !onUngradedVisibleRestaurantsChange)
+        return;
       const requestId = ++queryRequestIdRef.current;
       try {
         const restaurants = await queryVisibleRestaurants(view, layer);
         if (requestId !== queryRequestIdRef.current) return;
+
+        onUngradedVisibleRestaurantsChange?.(restaurants);
 
         const activeGrades = filters.grades;
         const filteredRestaurants = restaurants.filter((r) => {
@@ -255,7 +270,7 @@ export default function InspectionMapView({
           return false;
         });
 
-        onVisibleRestaurantsChange(filteredRestaurants);
+        onVisibleRestaurantsChange?.(filteredRestaurants);
       } catch (err) {
         console.error("MapView: failed to query visible restaurants", err);
       }
@@ -535,11 +550,13 @@ export default function InspectionMapView({
 
     syncSelectionAndZoom();
 
-    if (view && onVisibleRestaurantsChange) {
+    if (view && (onVisibleRestaurantsChange || onUngradedVisibleRestaurantsChange)) {
       const requestId = ++queryRequestIdRef.current;
       queryVisibleRestaurants(view, layer)
         .then((restaurants) => {
           if (requestId !== queryRequestIdRef.current) return;
+
+          onUngradedVisibleRestaurantsChange?.(restaurants);
 
           const activeGrades = filters.grades;
           const filteredRestaurants = restaurants.filter((r) => {
@@ -567,7 +584,7 @@ export default function InspectionMapView({
             return false;
           });
 
-          onVisibleRestaurantsChange(filteredRestaurants);
+          onVisibleRestaurantsChange?.(filteredRestaurants);
         })
         .catch((err) =>
           console.error(
@@ -576,7 +593,7 @@ export default function InspectionMapView({
           ),
         );
     }
-  }, [filters, searchQuery, onVisibleRestaurantsChange]);
+  }, [filters, searchQuery, onVisibleRestaurantsChange, onUngradedVisibleRestaurantsChange]);
 
   return <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />;
 }
