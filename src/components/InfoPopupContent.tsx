@@ -14,6 +14,7 @@ type InfoPopupContentProps = {
   grades?: ReactNode;
   violations?: ReactNode;
   statuses?: ReactNode;
+  dataAttribution?: ReactNode;
   dataNotes?: ReactNode;
   resources?: ReactNode;
 };
@@ -45,6 +46,7 @@ export default function InfoPopupContent({
   grades,
   violations,
   statuses,
+  dataAttribution,
   dataNotes,
   resources,
 }: InfoPopupContentProps) {
@@ -83,6 +85,12 @@ export default function InfoPopupContent({
       {violations && (
         <InfoPopupSection title="Violations">
           {violations}
+        </InfoPopupSection>
+      )}
+
+      {dataAttribution && (
+        <InfoPopupSection title="Data Attribution">
+          {dataAttribution}
         </InfoPopupSection>
       )}
 

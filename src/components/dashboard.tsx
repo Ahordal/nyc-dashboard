@@ -19,6 +19,7 @@ import RestaurantDetails from "./RestaurantDetails";
 import RestaurantReport from "./RestaurantReport";
 import MapView from "./MapView";
 import PerformanceChart from "./PerformanceChart";
+import DashboardFooter from "./DashboardFooter";
 
 import type { Filters } from "../types/filters";
 
@@ -497,6 +498,10 @@ export default function Dashboard() {
             hoveredInspectionId={hoveredInspectionId}
             selectedInspectionId={reportInspectionId}
           />
+        </div>
+
+        <div className="dashboard-footer">
+          <DashboardFooter />
         </div>
       </main>
     </div>

@@ -9,12 +9,12 @@
     "dev": "vite",
     "prebuild": "curl -fsSL https://raw.githubusercontent.com/Ahordal/nyc-dashboard/data/pipeline/geocode-cache.json -o pipeline/geocode-cache.json || rm -f pipeline/geocode-cache.json; curl -fsSL https://raw.githubusercontent.com/Ahordal/nyc-dashboard/data/pipeline/counts-snapshot.json -o pipeline/counts-snapshot.json || rm -f pipeline/counts-snapshot.json",
     "build": "node pipeline/fetch-inspection.mjs && npx vite build",
-
     "preview": "vite preview"
   },
   "dependencies": {
     "@arcgis/core": "^5.1.0",
     "@fortawesome/fontawesome-svg-core": "^7.3.0",
+    "@fortawesome/free-brands-svg-icons": "^7.3.1",
     "@fortawesome/free-solid-svg-icons": "^7.3.0",
     "@fortawesome/react-fontawesome": "^3.3.1",
     "dotenv": "^17.4.2",

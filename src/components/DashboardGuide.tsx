@@ -11,7 +11,7 @@
 import { useState } from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleInfo, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faCircleInfo, faXmark, faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 
 import PanelInfoModal from "./PanelInfoModal";
 import InfoPopupContent from "./InfoPopupContent";
@@ -108,7 +108,7 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
       <div className="dashboard-guide-meta">
         <div className="dashboard-guide-meta-item">
           <span className="dashboard-guide-meta-label">
-            Data Last Updated: &nbsp; 
+            Last Updated: &nbsp; 
           </span>
 
           <span className="dashboard-guide-meta-value">
@@ -163,12 +163,10 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
         <InfoPopupContent
           overview={
             <p>
-              Explores NYC restaurant inspection records through the map,
-              summary panels, restaurant details, inspection reports, and
-              performance chart.
+              Explores NYC restaurant inspection records through the map, grade and borough filters, search, restaurant list, restaurant details, inspection reports, performance chart and the grade breakdown pie chart.
             </p>
           }
-          howToUse={
+             howToUse={
             <ul>
               <li>
                 Grade and Borough controls can be combined to narrow the
@@ -184,11 +182,53 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
                 Restaurant lists and dashboard summaries update with the
                 current map view, filters, and search.
               </li>
+
+              <li>
+                Click a restaurant on the map or in the list to view its
+                details, inspection history, and performance chart.
+              </li>
+
+              <li>
+                Panning or zooming the map changes which restaurants are
+                "in view". The list, stats panel, and grade
+                chart then dynamically update to match.
+              </li>
+
+              <li>
+                Use the list's sort and pagination controls to browse
+                restaurants currently in view.
+              </li>
             </ul>
           }
           grades={<GradeRangeInfo />}
+          dataAttribution={
+            <ul>
+              <li>
+                <a
+                  href="https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  DOHMH New York City Restaurant Inspection Results
+                </a>{" "}
+                <FontAwesomeIcon
+                  icon={
+                    faArrowUpRightFromSquare
+                  }
+                  className="external-link-icon"
+                  aria-hidden="true"
+                />
+              </li>
+            </ul>
+          }
           dataNotes={
             <ul>
+              <li>
+                The underlying dataset is refreshed daily; individual
+                restaurant records may lag behind their most recent
+                inspection by a few days.
+              </li>
+
               <li>
                 Historical inspection reports may differ from a
                 restaurant&apos;s latest grade, score, or recorded status.
