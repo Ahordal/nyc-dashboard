@@ -1,0 +1,78 @@
+name: Reset Out-of-Bounds Geocode Cache Entries
+
+# ONE-OFF cleanup workflow -- manual trigger only, no schedule.
+#
+# Scans the committed geocode-cache.json (on the `data` branch) for
+# entries marked "verified" whose resolved coordinate falls outside NYC
+# bounds -- accepted under the old scoring.mjs logic, which skipped the
+# distance-from-DOHMH sanity check entirely whenever DOHMH's own
+# coordinate was missing or invalid. Resets each one to "pending" so the
+# next scheduled geocode-backfill.yml run re-resolves just those specific
+# restaurants under the corrected scoring logic, without burning the
+# whole daily LocationIQ quota re-checking every already-good entry.
+#
+# Run this once after scoring.mjs / normalize.mjs / fetch-inspection.mjs
+# (the actual fix) have been merged to main -- this workflow checks out
+# main, so it needs those fixes already present, including
+# reset-out-of-bounds-cache-entries.mjs itself.
+
+on:
+  schedule:
+    # 21:15 UTC (6:15 PM ADT). This is a ONE-OFF cleanup -- remove this
+    # schedule block after its first successful run so it doesn't keep
+    # firing daily; workflow_dispatch below is enough for any future
+    # manual re-runs.
+    - cron: '15 21 * * *'
+  workflow_dispatch: {} # Actions tab -> this workflow -> Run workflow
+
+permissions:
+  contents: write
+
+concurrency:
+  group: geocode-backfill # shares a group with the daily backfill so the
+  cancel-in-progress: false # two never race to write geocode-cache.json
+
+jobs:
+  reset-out-of-bounds:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      # Same reasoning as geocode-backfill.yml's "Seed cache from data
+      # branch" step -- pipeline/geocode-cache.json isn't tracked on
+      # main, so this pulls the real committed cache in before the
+      # script runs against it.
+      - name: Seed cache from data branch
+        run: |
+          git fetch origin data
+          git show origin/data:pipeline/geocode-cache.json > pipeline/geocode-cache.json
+
+      - name: Run cache cleanup
+        working-directory: pipeline
+        run: node reset-out-of-bounds-cache-entries.mjs
+
+      # Same merge-and-push sequence as the daily backfill's commit step
+      # -- see that workflow's comments for the git reset --hard caveat
+      # if adding steps after this one.
+      - name: Commit reset entries to data branch
+        if: always()
+        working-directory: pipeline
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          node merge-and-commit-cache.mjs
+
+      - name: Trigger Vercel deploy
+        if: always()
+        run: curl -fsSL -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"
