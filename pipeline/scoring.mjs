@@ -4,7 +4,7 @@
 // it's an acceptable match. This is deliberately separate from the LocationIQ
 // API wrapper so it can be unit tested against fixture data.
 
-import { houseNumbersMatch, streetNamesMatch, normalizeHouseNumber } from './normalize.mjs';
+import { houseNumbersMatch, streetNamesMatch, normalizeHouseNumber, isWithinNYC } from './normalize.mjs';
 
 // Haversine distance in meters between two lat/lon points.
 export function distanceMeters(lat1, lon1, lat2, lon2) {
@@ -59,13 +59,22 @@ export function scoreCandidate(candidate, input) {
   // Required checks — both must pass to even be considered.
   const passesRequired = houseMatch && streetMatch;
 
+  // Unconditional geographic sanity check on the candidate itself -- unlike
+  // the distance-from-DOHMH cap below, this doesn't depend on DOHMH's own
+  // coordinate being present or valid. Without this, a restaurant with a
+  // missing/invalid DOHMH coordinate could have a house+street match
+  // anywhere in the country accepted as "verified" (e.g. a real "25 Madison
+  // Avenue" in Glen Cove, NY, well outside the five boroughs).
+  const withinNYC = isWithinNYC(candLat, candLon);
+  if (!withinNYC) reasons.push('outside_nyc_bounds');
+
   // Sanity cap — reject outright if too far, even if house+street matched
   // (e.g. a duplicate address in a different borough).
   const withinDistanceCap =
     distanceFromDohmh == null || distanceFromDohmh <= MAX_ACCEPTABLE_DISTANCE_METERS;
   if (!withinDistanceCap) reasons.push('exceeds_distance_cap');
 
-  const accepted = passesRequired && withinDistanceCap;
+  const accepted = passesRequired && withinNYC && withinDistanceCap;
 
   if (!accepted) {
     return { accepted: false, score: 0, matchType: null, distanceFromDohmh, reasons };

@@ -599,17 +599,33 @@ export function buildLatestInspectionsGeoJSON(
       isWithinNYC(dohmhLatRaw, dohmhLonRaw);
 
     const cacheEntry = geocodeCache[camis];
+
+    // A house-number match alone doesn't guarantee the result is actually
+    // in NYC -- e.g. a real "25 Madison Avenue" exists in Glen Cove, NY,
+    // well outside the five boroughs. Require the resolved coordinate to
+    // also fall within NYC bounds before trusting "verified".
     const hasVerifiedResolution =
-      cacheEntry?.status === "verified" && cacheEntry.resolved;
+      cacheEntry?.status === "verified" &&
+      cacheEntry.resolved &&
+      isWithinNYC(cacheEntry.resolved.lat, cacheEntry.resolved.lon);
 
     if (!dohmhValid && !hasVerifiedResolution) continue;
 
     const displayLat = hasVerifiedResolution ? cacheEntry.resolved.lat : dohmhLatRaw;
     const displayLon = hasVerifiedResolution ? cacheEntry.resolved.lon : dohmhLonRaw;
 
+    // A "verified" cache entry that failed the NYC bounds check was still
+    // genuinely attempted -- it just couldn't be trusted -- so it's flagged
+    // "unverified" rather than "pending", which would incorrectly imply
+    // geocoding hasn't run for this restaurant yet.
+    const failedBoundsCheck =
+      cacheEntry?.status === "verified" &&
+      cacheEntry.resolved &&
+      !isWithinNYC(cacheEntry.resolved.lat, cacheEntry.resolved.lon);
+
     const locationStatus = hasVerifiedResolution
       ? "verified"
-      : cacheEntry?.status === "unverified"
+      : cacheEntry?.status === "unverified" || failedBoundsCheck
         ? "unverified"
         : "pending";
 
