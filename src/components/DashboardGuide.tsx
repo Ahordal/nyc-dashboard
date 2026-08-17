@@ -253,19 +253,13 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
               <li>
                 Restaurant locations are geocoded; some could not be
                 automatically confirmed and are flagged on the map as
-                &quot;Unverified&quot; rather than assumed correct.
+                &quot;Location Unverified&quot; rather than assumed correct.
               </li>
 
               <li>
                 Displayed addresses are reformatted from the source dataset
                 (ordinal suffixes, casing) and may differ slightly from
                 official listings.
-              </li>
-
-              <li>
-                Google Street View imagery is provided by Google Maps and
-                may not reflect the current storefront or business
-                operations.
               </li>
             </ul>
           }

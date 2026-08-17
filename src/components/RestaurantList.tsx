@@ -35,7 +35,8 @@ const RESTAURANT_LIST_INFO_CONTENT = (
       <ul>
         <li>
           Select a restaurant card to display that restaurant&apos;s details
-          and inspection history.
+          and inspection history, and to pan and zoom the map to its
+          location.
         </li>
 
         <li>

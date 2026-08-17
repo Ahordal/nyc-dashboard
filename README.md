@@ -46,7 +46,7 @@ The project is split across two branches:
 
 Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own coordinates to confirm accuracy) happens separately, **not** during the build:
 
-- `.github/workflows/geocode-backfill.yml` runs daily on a fixed schedule (approximately 0500 ADT), resolves new/changed restaurants against LocationIQ (~4,900/day, under the free-tier cap), commits the updated cache to the `data` branch, and triggers a Vercel rebuild
+- `.github/workflows/geocode-backfill.yml` runs daily on a fixed schedule (approximately 0500 ADT), resolving new/changed restaurants against LocationIQ up to a cap of ~4,900/day (under the free-tier limit), commits the updated cache to the `data` branch, and triggers a Vercel rebuild. That cap is really only reached during the initial backfill (about a week to cover the full dataset); afterward, daily runs only need to resolve the small trickle of new/changed restaurants and use a fraction of the quota.
 - `fetch-inspection.mjs` only ever reads whatever's already committed on `data` — it never calls LocationIQ itself
 - `.github/workflows/reset-out-of-bounds-cache.yml` is a one-off cleanup workflow for cache entries that were incorrectly accepted under an older scoring pass
 
@@ -76,7 +76,7 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 
 **API Handling and Quota Management**
 * The pipeline acts as a wrapper around the LocationIQ API and enforces a strict 1,000ms delay between calls to safely stay under per-second rate limits.
-* It tracks daily API usage with a default limit of 4,900 requests, automatically stopping the backfill loop when the quota is exhausted so the remainder can be processed during the next run.
+* It tracks daily API usage with a default limit of 4,900 requests, automatically stopping the backfill loop when the quota is exhausted so the remainder can be processed during the next run. In practice this cap is only actually reached during the initial backfill; once the dataset is fully resolved, daily runs use only a fraction of it.
 * If a 429 rate-limit error is encountered, the script throws a custom `RateLimitedError` to immediately halt the entire run, preventing wasted processing time and further rejected requests.
 
 **Query Optimization**
