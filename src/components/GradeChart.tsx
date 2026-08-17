@@ -410,25 +410,47 @@ export default function GradeChart({
 
                 {/* Second line - active grade + its count, or the running total */}
                 {activeItem ? (
-                  <span
+                  <div
                     style={{
-                      fontFamily: "var(--font-mono)",
-                      fontSize: "0.8rem",
-                      fontWeight: 700,
-                      color: activeItem.color,
-                      marginTop: "0.25rem",
-                      lineHeight: 1,
+                      display: "flex",
+                      flexDirection: "column",
+                      alignItems: "center",
+                      marginTop: "0.45rem",
                     }}
                   >
-                    {activeItem.value.toLocaleString()}
-                  </span>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-mono)",
+                        fontSize: "0.8rem",
+                        fontWeight: 700,
+                        color: activeItem.color,
+                        lineHeight: 1,
+                      }}
+                    >
+                      {activeItem.value.toLocaleString()}
+                    </span>
+
+                    <span
+                      style={{
+                        fontSize: "0.8rem",
+                        fontWeight: 600,
+                        color: "var(--text-muted)",
+                        marginTop: "0.15rem",
+                        lineHeight: 1.3,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.02em",
+                      }}
+                    >
+                      in map view
+                    </span>
+                  </div>
                 ) : (
                   <div
                     style={{
                       fontSize: "0.8rem",
                       fontWeight: 600,
                       color: "var(--text-muted)",
-                      marginTop: "0.25rem",
+                      marginTop: "0.45rem",
                       lineHeight: 1.3,
                       textTransform: "uppercase",
                       letterSpacing: "0.02em",
