@@ -131,7 +131,7 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 
 ### Data Pipeline & Automation
 - **Node.js:** Powers the custom build-time data fetching, coordinate validation, and pure-logic geocoding scripts.
-- **GitHub Actions:** Automates the daily Socrata data fetch, manages the background LocationIQ geocoding queue, and handles safe, automated cache commits back to the repository.
+- **GitHub Actions:** Runs the daily LocationIQ geocoding backfill and handles safe, automated cache commits back to the repository; the Socrata data fetch itself runs as part of every Vercel build, not on a GitHub Actions schedule.
 - **Data Sources:** [NYC DOHMH Restaurant Inspection Results](https://opendata.cityofnewyork.us/) via the Socrata API, with location verification powered by [LocationIQ](https://locationiq.com/).
 
 ### Hosting
@@ -142,6 +142,7 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 ```bash
 npm install
 npm run dev
+```
 
 Requires Node ≥ 22.12.0.
 
@@ -172,7 +173,7 @@ Running `npm run build` regenerates the `public/data/` directory directly from
 live DOHMH data on every build, ensuring no static dataset files ever need to be
 committed to the `main` branch.
 
-To keep the dashboard fresh, the scheduled g`eocode-backfill` and `reset-out-of-bounds-cache` GitHub Actions automatically trigger Vercel rebuilds via a Deploy Hook (configured as a `VERCEL_DEPLOY_HOOK_URL` repository secret) whenever the cache is updated.
+To keep the dashboard fresh, the scheduled `geocode-backfill` and `reset-out-of-bounds-cache` GitHub Actions automatically trigger Vercel rebuilds via a Deploy Hook (configured as a `VERCEL_DEPLOY_HOOK_URL` repository secret) whenever the cache is updated.
 
 ## Known limitations
 
