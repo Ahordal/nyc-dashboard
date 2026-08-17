@@ -412,37 +412,27 @@ export default function GradeChart({
                 {activeItem ? (
                   <div
                     style={{
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
+                      fontSize: "0.8rem",
+                      fontWeight: 600,
+                      color: "var(--text-muted)",
                       marginTop: "0.45rem",
+                      lineHeight: 1.3,
+                      textTransform: "uppercase",
+                      letterSpacing: "0.02em",
+                      textAlign: "center",
                     }}
                   >
                     <span
                       style={{
                         fontFamily: "var(--font-mono)",
-                        fontSize: "0.8rem",
-                        fontWeight: 700,
                         color: activeItem.color,
-                        lineHeight: 1,
                       }}
                     >
                       {activeItem.value.toLocaleString()}
-                    </span>
-
-                    <span
-                      style={{
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        color: "var(--text-muted)",
-                        marginTop: "0.15rem",
-                        lineHeight: 1.3,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.02em",
-                      }}
-                    >
-                      in map view
-                    </span>
+                    </span>{" "}
+                    Restaurants
+                    <br />
+                    in map view
                   </div>
                 ) : (
                   <div
