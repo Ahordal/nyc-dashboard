@@ -54,6 +54,19 @@ export function GradeRangeInfo() {
       <li>
         <strong
           style={{
+            color: CATEGORY_COLORS.closed,
+          }}
+        >
+          Closed
+        </strong>{" "}
+        — Closed by DOHMH; violations
+        requiring immediate action were
+        cited
+      </li>
+
+      <li>
+        <strong
+          style={{
             color:
               CATEGORY_COLORS.pending,
           }}

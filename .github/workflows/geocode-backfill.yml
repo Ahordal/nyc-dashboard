@@ -1,38 +1,28 @@
 name: Geocode Backfill
 
-# Runs the geocoding backfill against live DOHMH data, commits the
-# updated cache to the `data` branch -- never to `main`, so scheduled
-# cache updates never conflict with in-progress dashboard work -- and
-# then triggers a Vercel rebuild so the site picks up what was just
-# committed. This is the ONLY workflow that calls LocationIQ, and the
-# ONLY thing that pings the Vercel Deploy Hook -- keeping both in one
-# workflow guarantees the rebuild always happens right after fresh data
-# lands, in that order, every time. fetch-inspection.mjs (run during
-# the Vercel build) only ever reads whatever this commits.
+# Updates the geocoding cache with live DOHMH data. Commits to the `data`
+# branch (avoiding `main` conflicts) and triggers a Vercel rebuild to deploy
+# the fresh data. Orchestrating both here guarantees the cache is updated
+# before the site rebuilds.
 #
-# Runs once daily. Each run resolves up to ~4,900 new/changed restaurants
-# (LocationIQ's free tier is 5,000/day; kept a small buffer). Restaurants
-# already resolved are skipped automatically via the cache, so this is
-# resumable across days without any manual intervention -- during the
-# initial backfill it'll take about a week to cover the full dataset, then
-# settle into resolving only the small trickle of new/changed restaurants
-# each day.
+# Runs daily. Resolves up to ~4,900 new/changed restaurants to stay within
+# LocationIQ's 5,000/day free tier. Cached entries are skipped automatically,
+# allowing the script to progressively backfill the dataset over multiple days
+# and then efficiently manage the daily trickle of new restaurants.
 
 on:
   schedule:
     # 8:00 UTC daily (5:00 AM ADT)
     - cron: '0 8 * * *'
-  workflow_dispatch: {} # allows manually triggering a run from the Actions tab
+  workflow_dispatch: {} # Allows manual triggers via the Actions tab
 
-# The default GITHUB_TOKEN is read-only unless explicitly granted write
-# access -- without this, the "Commit updated cache" step can create a
-# commit locally on the runner but fails with a 403 when it tries to push,
-# silently losing that run's entire geocoding progress.
+# Explicit write permission is required. Without it, the default GITHUB_TOKEN
+# is read-only and pushes will silently fail with a 403, losing the run's progress.
 permissions:
   contents: write
 
-# Prevents overlapping runs (e.g. a manual trigger while the scheduled run
-# is still in progress) from racing to write the cache file.
+# Prevents concurrent runs (e.g., scheduled vs. manual) from racing and
+# corrupting the cache file.
 concurrency:
   group: geocode-backfill
   cancel-in-progress: false
@@ -40,7 +30,10 @@ concurrency:
 jobs:
   backfill:
     runs-on: ubuntu-latest
-    timeout-minutes: 120
+    # Bumped to 240m. LocationIQ's 1s rate limit alone takes ~82m for 4,900
+    # requests. The previous 120m timeout was too tight when combined with
+    # DOHMH fetch latency. GitHub-hosted runners allow up to 360m.
+    timeout-minutes: 240
 
     steps:
       - name: Check out repo
@@ -49,19 +42,14 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - name: Install dependencies
         run: npm install
 
-      # Without this, run-geocode-backfill.mjs's loadCache() always starts
-      # from an empty object -- geocode-cache.json is gitignored on main,
-      # and nothing else pulled forward what's already committed on `data`.
-      # That meant needsResolution() saw every restaurant as unresolved on
-      # every run, so the backfill kept re-resolving the same early slice
-      # instead of ever advancing into the rest of the dataset. Seeding
-      # these two files from `data` here is what makes the "resumable
-      # across days" behavior in the header comment actually true.
+      # Pulls existing caches from the `data` branch. Without this, the pipeline
+      # starts empty, ignores past progress, and repeatedly resolves the same
+      # early slice of data on every run.
       - name: Seed cache from data branch
         run: |
           git fetch origin data
@@ -75,21 +63,12 @@ jobs:
           SOCRATA_APP_TOKEN: ${{ secrets.SOCRATA_APP_TOKEN }}
         run: node run-geocode-backfill.mjs
 
-      # Merges this run's results against whatever's currently on `data`
-      # (data-level merge, not a raw git merge) and pushes -- see
-      # merge-and-commit-cache.mjs for the full sequence. This replaces
-      # the old orphan-branch force-push, which always fully overwrote
-      # `data` with only this run's local results and could never build
-      # on a previous day's progress.
+      # Appends new resolutions to the `data` branch's cache.
       #
-      # CAUTION FOR FUTURE STEPS: merge-and-commit-cache.mjs does
-      # `git reset --hard origin/data` partway through, which resets the
-      # ENTIRE working tree (not just pipeline/) to data's orphan history --
-      # package.json, src/, everything from `main` disappears from the
-      # runner's disk after this step runs. Harmless today since nothing
-      # after this needs repo files, but any future step added AFTER this
-      # one that expects the checked-out `main` tree will break. Add it
-      # before this step, not after.
+      # CAUTION: merge-and-commit-cache.mjs resets the working tree to the `data`
+      # branch's orphan history partway through. Any subsequent steps expecting files
+      # from `main` (like package.json or src/) will disappear and fail. Any new
+      # steps requiring the repo files MUST be added before this step.
       - name: Commit updated cache to data branch
         if: always()
         working-directory: pipeline
@@ -98,13 +77,9 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           node merge-and-commit-cache.mjs
 
-      # Runs regardless of whether the backfill or commit steps above
-      # succeeded, failed, or found nothing new to commit -- the site
-      # should still refresh daily against the latest live DOHMH data
-      # even on a day where geocoding didn't produce any cache changes,
-      # or hit an error. Vercel's own build re-fetches inspection data
-      # independently, so a rebuild is still worthwhile even when this
-      # job's own fetch had trouble.
+      # Forces a Vercel rebuild so the site fetches the latest live DOHMH data.
+      # Uses always() to ensure daily updates deploy even if the geocoding
+      # step fails or produces no new cache entries.
       - name: Trigger Vercel deploy
         if: always()
         run: curl -fsSL -X POST "${{ secrets.VERCEL_DEPLOY_HOOK_URL }}"

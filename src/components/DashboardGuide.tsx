@@ -224,9 +224,8 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
           dataNotes={
             <ul>
               <li>
-                The underlying dataset is refreshed daily; individual
-                restaurant records may lag behind their most recent
-                inspection by a few days.
+                The underlying dataset is provided by DOHMH and may not
+                reflect inspections in real time.
               </li>
 
               <li>
@@ -240,9 +239,21 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
               </li>
 
               <li>
+                Restaurants with no scored inspection on record (including
+                ones never inspected) do not appear on the map at all.
+              </li>
+
+              <li>
+                The &quot;latest&quot; inspection shown may not be a
+                restaurant&apos;s most recent visit — non-substantive
+                administrative or compliance checks without a score are
+                skipped in favor of the last scored inspection.
+              </li>
+
+              <li>
                 Restaurant locations are geocoded; some could not be
                 automatically confirmed and are flagged on the map as
-                &quot;Location Unverified&quot; rather than assumed correct.
+                &quot;Unverified&quot; rather than assumed correct.
               </li>
 
               <li>

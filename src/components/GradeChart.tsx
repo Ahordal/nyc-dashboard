@@ -12,7 +12,6 @@ import {
 } from "recharts";
 
 import PanelHeader from "./PanelHeader";
-import { GradeRangeInfo } from "./InfoPopupSharedContent";
 
 import type { RestaurantProperties } from "../types/restaurant";
 import type { Filters, SetFilters } from "../types/filters";
@@ -24,8 +23,8 @@ const GRADE_CHART_INFO_CONTENT = (
       <h4 className="section-header">What This Shows</h4>
       <ul>
         <li>
-          Displays the proportion of restaurant inspection grades based on the
-          current map view.
+          Displays the proportion of restaurant inspection grades and
+          statuses based on the current map view.
         </li>
       </ul>
     </div>
@@ -34,14 +33,40 @@ const GRADE_CHART_INFO_CONTENT = (
       <h4 className="section-header">Interaction</h4>
       <ul>
         <li>Hover over any slice to inspect its details in the center.</li>
-        <li>Click any slice to filter the map view by that specific grade.</li>
+        <li>Click any slice to filter the map view by that specific grade or status.</li>
         <li>Click again to clear the filter.</li>
       </ul>
     </div>
 
     <div className="info-popup-section">
-      <h4 className="section-header">Grade Ranges</h4>
-      <GradeRangeInfo />
+      <h4 className="section-header">Grade & Status Reference</h4>
+      <ul>
+        <li>
+          <strong style={{ color: CATEGORY_COLORS.A }}>A</strong> — 0 to 13
+          points
+        </li>
+
+        <li>
+          <strong style={{ color: CATEGORY_COLORS.B }}>B</strong> — 14 to 27
+          points
+        </li>
+
+        <li>
+          <strong style={{ color: CATEGORY_COLORS.C }}>C</strong> — 28 or
+          more points
+        </li>
+
+        <li>
+          <strong style={{ color: CATEGORY_COLORS.closed }}>Closed</strong>{" "}
+          — Closed by DOHMH; violations requiring immediate action were
+          cited
+        </li>
+
+        <li>
+          <strong style={{ color: CATEGORY_COLORS.pending }}>Pending</strong>{" "}
+          — Grade not yet finalized (includes N, P, and Z)
+        </li>
+      </ul>
     </div>
   </>
 );
@@ -404,12 +429,18 @@ export default function GradeChart({
                       fontWeight: 600,
                       color: "var(--text-muted)",
                       marginTop: "0.25rem",
-                      lineHeight: 1.1,
+                      lineHeight: 1.3,
                       textTransform: "uppercase",
                       letterSpacing: "0.02em",
+                      textAlign: "center",
                     }}
                   >
-                    {totalCount.toLocaleString()} Restaurants
+                    <span style={{ color: "var(--text-body)" }}>
+                      {totalCount.toLocaleString()}
+                    </span>{" "}
+                    Restaurants
+                    <br />
+                    in map view
                   </div>
                 )}
               </div>
