@@ -30,6 +30,7 @@ import {
   queryVisibleRestaurants,
   checkSelectionAgainstFilters,
   queryFilterExtent,
+  RESTAURANT_OUT_FIELDS,
 } from "../types/mapQueries";
 
 esriConfig.apiKey = import.meta.env.PUBLIC_ARCGIS_API_KEY;
@@ -211,7 +212,12 @@ export default function InspectionMapView({
       url: "/data/latest-inspections.geojson",
       title: "NYC Restaurant Inspections",
       renderer: renderer as any,
-      outFields: ["*"],
+      // Trimmed to fields the dashboard actually displays/consumes --
+      // see RESTAURANT_OUT_FIELDS in mapQueries.ts for what's excluded
+      // and why. This is what backs graphicHit.graphic.attributes on
+      // map clicks (-> selectedRestaurant -> RestaurantDetails/Report),
+      // so it needs to stay in sync with what those components read.
+      outFields: RESTAURANT_OUT_FIELDS,
       copyright: "NYC DOHMH | Cartography: Alex Hordal",
       labelingInfo: [labelClass],
       labelsVisible: true,

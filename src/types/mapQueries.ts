@@ -14,6 +14,44 @@ import Extent from "@arcgis/core/geometry/Extent";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 
+// Fields actually read by the dashboard's components (restaurant list
+// cards, details panel, report, map filter logic). Deliberately excludes
+// fields that exist in the source GeoJSON/pipeline output but are never
+// displayed or consumed client-side: search_index (query-only -- WHERE
+// clauses can filter on it regardless of outFields, since outFields only
+// controls what comes back in a result's attributes, not what's
+// filterable), dohmh_latitude/dohmh_longitude, neighbourhood,
+// community_board, council_district, record_date, grade_date, and
+// display_address (superseded by display_street + building/boro
+// composition in RestaurantCard/RestaurantDetails). Excluding them here
+// cuts the per-feature attribute payload by roughly 30%, which matters
+// most for queryVisibleRestaurants below -- it can return thousands of
+// restaurants on every pan/zoom and its results get pushed into React
+// state.
+export const RESTAURANT_OUT_FIELDS = [
+  "id",
+  "camis",
+  "name",
+  "latitude",
+  "longitude",
+  "boro",
+  "building",
+  "street",
+  "display_street",
+  "zipcode",
+  "phone",
+  "cuisine",
+  "location_status",
+  "grade",
+  "score",
+  "inspection_date",
+  "inspection_type",
+  "action",
+  "violations",
+  "current_status_code",
+  "current_status_label",
+];
+
 export const CATEGORY_CLAUSES: Record<string, string> = {
   A: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score <= 13`,
   B: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score BETWEEN 14 AND 27`,
@@ -146,7 +184,7 @@ export async function queryVisibleRestaurants(
   baseQuery.geometry = view.extent;
   baseQuery.spatialRelationship = "intersects";
   baseQuery.returnGeometry = false;
-  baseQuery.outFields = ["*"];
+  baseQuery.outFields = RESTAURANT_OUT_FIELDS;
 
   const allFeatures: Graphic[] = [];
   let start = 0;
@@ -193,7 +231,13 @@ export async function checkSelectionAgainstFilters(
     ? `id = '${restaurantId}' AND (${definitionExpression})`
     : `id = '${restaurantId}'`;
   query.returnGeometry = options.returnGeometry ?? false;
-  query.outFields = ["*"];
+  // Callers only ever read stillMatches/objectId/geometry from the
+  // result, never restaurant properties -- so the only attribute this
+  // query actually needs back is the object ID field itself. Falls back
+  // to "*" if the layer hasn't resolved objectIdField yet (shouldn't
+  // happen in practice, since every call site awaits layer.load() first,
+  // but safer than silently requesting a field that doesn't exist).
+  query.outFields = layer.objectIdField ? [layer.objectIdField] : ["*"];
 
   const result = await layer.queryFeatures(query);
 
@@ -241,7 +285,9 @@ export async function queryFilterExtent(
   const baseQuery = layer.createQuery();
   baseQuery.where = whereClause;
   baseQuery.returnGeometry = true;
-  baseQuery.outFields = ["*"];
+  // Only feature.geometry is read below -- no restaurant properties are
+  // needed for a bounding-box computation, so request none back.
+  baseQuery.outFields = [];
 
   const points: Point[] = [];
   let start = 0;
