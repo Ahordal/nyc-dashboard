@@ -1,11 +1,7 @@
 // PanelHeader.tsx
 //
-// Reusable header displayed at the top of dashboard panels.
-//
-// Displays a panel title with an optional information button that toggles
-// a contextual help popup. Popups share a consistent width and are rendered
-// through a portal so they cannot be clipped by panels or covered by chart
-// tooltips.
+// Reusable panel header component. Displays the panel title and an optional 
+// info button that triggers an auto-positioning, portal-rendered tooltip.
 
 import {
   useEffect,
@@ -34,16 +30,9 @@ type PanelHeaderProps = {
   infoPlacement?: InfoPlacement;
 };
 
-// Consistent width shared by every information popup.
 const POPUP_MAX_WIDTH = 450;
-
-// Space between the information button/header and the popup.
 const POPUP_GAP = 8;
-
-// Minimum distance between the popup and the viewport edges.
 const VIEWPORT_PADDING = 8;
-
-// Keeps information popups above chart tooltips and other dashboard content.
 const INFO_POPUP_Z_INDEX = 10000;
 
 const HIDDEN_POPUP_STYLE: CSSProperties = {
@@ -67,10 +56,8 @@ export default function PanelHeader({
   const popupId = useId();
 
   const [showInfo, setShowInfo] = useState(false);
-
   const [resolvedPlacement, setResolvedPlacement] =
     useState<ResolvedPlacement>("down");
-
   const [popupStyle, setPopupStyle] =
     useState<CSSProperties>(HIDDEN_POPUP_STYLE);
 
@@ -78,7 +65,7 @@ export default function PanelHeader({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
 
-  // Measure and position the portalled popup before the browser paints it.
+  // Position and clamp the portal popup relative to the button and viewport before paint
   useLayoutEffect(() => {
     if (
       !showInfo ||
@@ -93,7 +80,6 @@ export default function PanelHeader({
 
     function updatePosition() {
       const triggerRect = button.getBoundingClientRect();
-
       const viewportWidth = window.innerWidth;
       const viewportHeight = window.innerHeight;
 
@@ -101,19 +87,16 @@ export default function PanelHeader({
         viewportWidth - VIEWPORT_PADDING * 2,
         0,
       );
-
       const availableHeight = Math.max(
         viewportHeight - VIEWPORT_PADDING * 2,
         0,
       );
-
       const popupWidth = Math.min(
         POPUP_MAX_WIDTH,
         availableWidth,
       );
 
-      // Width and maximum height must be applied before measuring because
-      // text wrapping affects the final popup height.
+      // Pre-set constraints to accurately measure text-wrapped height
       popup.style.width = `${popupWidth}px`;
       popup.style.maxHeight = `${availableHeight}px`;
       popup.style.overflowY = "auto";
@@ -169,8 +152,7 @@ export default function PanelHeader({
         maximumTop,
       );
 
-      // Align the popup's right edge with the information button rather
-      // than aligning it with the full panel.
+      // Align popup right edge with the info button
       const preferredLeft =
         triggerRect.right - popupWidth;
 
@@ -213,8 +195,6 @@ export default function PanelHeader({
       "resize",
       updatePosition,
     );
-
-    // Capture scroll events from the window and nested scrolling panels.
     window.addEventListener(
       "scroll",
       updatePosition,
@@ -234,13 +214,11 @@ export default function PanelHeader({
         "resize",
         updatePosition,
       );
-
       window.removeEventListener(
         "scroll",
         updatePosition,
         true,
       );
-
       resizeObserver?.disconnect();
     };
   }, [
@@ -249,15 +227,13 @@ export default function PanelHeader({
     infoContent,
   ]);
 
-  // Close when clicking outside both the header and the portalled popup.
+  // Handle outside clicks and Escape key presses
   useEffect(() => {
     if (!showInfo) {
       return;
     }
 
-    function handlePointerDown(
-      event: PointerEvent,
-    ) {
+    function handlePointerDown(event: PointerEvent) {
       const target = event.target;
 
       if (!(target instanceof Node)) {
@@ -274,9 +250,7 @@ export default function PanelHeader({
       setShowInfo(false);
     }
 
-    function handleKeyDown(
-      event: KeyboardEvent,
-    ) {
+    function handleKeyDown(event: KeyboardEvent) {
       if (event.key !== "Escape") {
         return;
       }
@@ -290,7 +264,6 @@ export default function PanelHeader({
       handlePointerDown,
       true,
     );
-
     document.addEventListener(
       "keydown",
       handleKeyDown,
@@ -302,7 +275,6 @@ export default function PanelHeader({
         handlePointerDown,
         true,
       );
-
       document.removeEventListener(
         "keydown",
         handleKeyDown,
@@ -349,15 +321,10 @@ export default function PanelHeader({
             className="panel-header-info-button"
             onClick={() => {
               if (!showInfo) {
-                setPopupStyle(
-                  HIDDEN_POPUP_STYLE,
-                );
+                setPopupStyle(HIDDEN_POPUP_STYLE);
               }
 
-              setShowInfo(
-                (currentValue) =>
-                  !currentValue,
-              );
+              setShowInfo((currentValue) => !currentValue);
             }}
             aria-label={`About ${title ?? "panel"}`}
             aria-expanded={showInfo}
@@ -367,9 +334,7 @@ export default function PanelHeader({
                 : undefined
             }
           >
-            <FontAwesomeIcon
-              icon={faCircleInfo}
-            />
+            <FontAwesomeIcon icon={faCircleInfo} />
           </button>
         )}
       </div>

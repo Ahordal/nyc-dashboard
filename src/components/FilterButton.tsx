@@ -1,3 +1,8 @@
+// FilterButton.tsx
+//
+// A reusable button component for filter controls that toggles an active CSS state
+// and forwards standard HTML button attributes.
+
 import type {
   ButtonHTMLAttributes,
   ReactNode,

@@ -1,12 +1,7 @@
 // DashboardGuide.tsx
 //
-// Dashboard-wide reference for concepts shared across multiple panels.
-//
-// The panel itself shows just a header (with an information button) and
-// a compact row of dataset stats -- last updated, restaurant count, and
-// inspection count. The information button opens a centered modal with
-// the full dashboard guide (grades, statuses, filters, data notes,
-// resources), since that content is too long to live in the panel body.
+// Displays dataset metadata stats (last updated, total restaurants, inspection count) 
+// and provides a modal trigger for the full dashboard reference guide.
 
 import { useState } from "react";
 
@@ -27,9 +22,7 @@ type DashboardGuideProps = {
   meta: DashboardMeta | null;
 };
 
-// Shown in place of a value that hasn't loaded yet (or failed to load),
-// so the stat row is always present rather than appearing only once
-// dashboard-meta.json is available.
+// Fallback for missing or unparsed metadata values.
 const PLACEHOLDER = "—";
 
 function formatLastUpdated(lastUpdated: string | null | undefined): string {
@@ -58,10 +51,7 @@ function formatCount(count: number | null | undefined): string {
   return count.toLocaleString();
 }
 
-// Renders nothing for a missing baseline (null/undefined) or an actual
-// zero-change day -- only a real +/- change gets a badge. Reuses the
-// dashboard-guide-meta-delta CSS classes, which already existed in
-// global.css waiting for a caller.
+// Formats non-zero baseline changes with a +/- sign and status styling.
 function formatDelta(delta: number | null | undefined) {
   if (delta == null || delta === 0) {
     return null;
@@ -166,7 +156,7 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
               Explores NYC restaurant inspection records through the map, grade and borough filters, search, restaurant list, restaurant details, inspection reports, performance chart and the grade breakdown pie chart.
             </p>
           }
-             howToUse={
+          howToUse={
             <ul>
               <li>
                 Grade and Borough controls can be combined to narrow the

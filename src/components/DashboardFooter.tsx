@@ -1,8 +1,7 @@
 // DashboardFooter.tsx
 //
 // Site-level attribution bar spanning the full width of the dashboard.
-// Distinct from DashboardGuide -- this is "about this project/creator"
-// rather than "about this dataset".
+
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

@@ -20,6 +20,7 @@ import RestaurantReport from "./RestaurantReport";
 import MapView from "./MapView";
 import PerformanceChart from "./PerformanceChart";
 import DashboardFooter from "./DashboardFooter";
+import NoticeOverlay from "./NoticeOverlay";
 
 import type { Filters } from "../types/filters";
 
@@ -30,21 +31,30 @@ import type {
 } from "../types/restaurant";
 
 import type { DashboardMeta } from "../types/dashboardMeta";
+import type { GradeCounts } from "./MapView";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 type ExplorerTab = "list" | "details" | "report";
 
-// How long the filter-change overlay stays visible before fading out.
 const FILTER_NOTICE_DURATION_MS = 2500;
 
-// Maps the Grade filter's button labels to the corresponding category colours.
+const MAX_HISTORY_CACHE_ENTRIES = 50;
+
 const GRADE_FILTER_COLORS: Record<string, string> = {
   A: CATEGORY_COLORS.A,
   B: CATEGORY_COLORS.B,
   C: CATEGORY_COLORS.C,
   Pending: CATEGORY_COLORS.pending,
   Closed: CATEGORY_COLORS.closed,
+};
+
+const EMPTY_GRADE_COUNTS: GradeCounts = {
+  A: 0,
+  B: 0,
+  C: 0,
+  pending: 0,
+  closed: 0,
 };
 
 export default function Dashboard() {
@@ -65,50 +75,38 @@ export default function Dashboard() {
     RestaurantProperties[]
   >([]);
 
-  // Same extent/borough/search filtering as visibleRestaurants, but never
-  // grade-filtered -- this is what GradeChart needs so a selected grade
-  // stays exploded/highlighted among all five slices instead of the ring
-  // collapsing to a single 100% slice. StatsPanel and RestaurantList
-  // intentionally keep using the grade-filtered visibleRestaurants above,
-  // since their counts describe what's actually rendered on the map.
-  const [visibleRestaurantsUngraded, setVisibleRestaurantsUngraded] =
-    useState<RestaurantProperties[]>([]);
+  // Grade/status tally for the current map view (extent + borough +
+  // search, deliberately NOT grade-filtered -- see MapView's
+  // onGradeCountsChange doc comment) -- this is what GradeChart needs so
+  // a selected grade stays exploded/highlighted among all five slices
+  // instead of the ring collapsing to a single 100% slice. Used to be a
+  // full RestaurantProperties[] array (visibleRestaurantsUngraded, up to
+  // ~27k objects at city zoom) computed just so GradeChart could tally
+  // five numbers from it -- MapView now computes that tally itself and
+  // only the counts land in state here. StatsPanel and RestaurantList
+  // intentionally keep using the grade-filtered visibleRestaurants
+  // above, since their counts/rows describe what's actually rendered on
+  // the map.
+  const [gradeCounts, setGradeCounts] =
+    useState<GradeCounts>(EMPTY_GRADE_COUNTS);
 
-  const [restaurantCount, setRestaurantCount] = useState(0);
-
-  // Inspection history for the currently selected restaurant.
   const [history, setHistory] = useState<InspectionEvent[]>([]);
 
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
 
-  // The inspection most recently selected by the user.
   const [selectedInspectionId, setSelectedInspectionId] = useState<
     string | null
   >(null);
 
-  // The inspection currently hovered or keyboard-focused in the Details
-  // history list. This previews the matching chart point without selecting it.
   const [hoveredInspectionId, setHoveredInspectionId] = useState<string | null>(
     null,
   );
 
   const historyCache = useRef<Map<string, InspectionEvent[]>>(new Map());
 
-  // Violation code descriptions are fetched once and shared by the report.
   const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>({});
 
-  // Dataset freshness/size, fetched once and shared by the Dashboard
-  // Information modal.
   const [dashboardMeta, setDashboardMeta] = useState<DashboardMeta | null>(
-    null,
-  );
-
-  // Transient overlay shown when filters or search terms change.
-  const [showFilterNotice, setShowFilterNotice] = useState(false);
-
-  const isFirstFilterRender = useRef(true);
-
-  const filterNoticeTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
     null,
   );
 
@@ -116,48 +114,11 @@ export default function Dashboard() {
 
   const boroughsKey = filters.boroughs.join(",");
 
-  // Use the explicitly selected inspection when one still exists in the
-  // current restaurant's history. Otherwise, default the Report tab to the
-  // most recent inspection.
   const reportInspectionId =
     selectedInspectionId !== null &&
     history.some((event) => event.id === selectedInspectionId)
       ? selectedInspectionId
       : (history[history.length - 1]?.id ?? null);
-
-  useEffect(() => {
-    if (isFirstFilterRender.current) {
-      isFirstFilterRender.current = false;
-
-      return;
-    }
-
-    if (filterNoticeTimeoutRef.current) {
-      clearTimeout(filterNoticeTimeoutRef.current);
-    }
-
-    setShowFilterNotice(false);
-
-    const animationFrame = requestAnimationFrame(() => {
-      setShowFilterNotice(true);
-
-      filterNoticeTimeoutRef.current = setTimeout(() => {
-        setShowFilterNotice(false);
-      }, FILTER_NOTICE_DURATION_MS);
-    });
-
-    return () => {
-      cancelAnimationFrame(animationFrame);
-    };
-  }, [gradesKey, boroughsKey, searchQuery]);
-
-  useEffect(() => {
-    return () => {
-      if (filterNoticeTimeoutRef.current) {
-        clearTimeout(filterNoticeTimeoutRef.current);
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -201,7 +162,6 @@ export default function Dashboard() {
     };
   }, []);
 
-  // Load inspection history whenever the selected restaurant changes.
   useEffect(() => {
     setSelectedInspectionId(null);
 
@@ -217,6 +177,9 @@ export default function Dashboard() {
     const cachedHistory = historyCache.current.get(selectedRestaurant.camis);
 
     if (cachedHistory) {
+      historyCache.current.delete(selectedRestaurant.camis);
+      historyCache.current.set(selectedRestaurant.camis, cachedHistory);
+
       setHistory(cachedHistory);
 
       setIsLoadingHistory(false);
@@ -234,7 +197,12 @@ export default function Dashboard() {
     })
       .then((response) => (response.ok ? response.json() : []))
       .then((data: InspectionEvent[]) => {
-        historyCache.current.set(selectedRestaurant.camis, data);
+        const cache = historyCache.current;
+        if (cache.size >= MAX_HISTORY_CACHE_ENTRIES) {
+          const oldestKey = cache.keys().next().value;
+          if (oldestKey !== undefined) cache.delete(oldestKey);
+        }
+        cache.set(selectedRestaurant.camis, data);
 
         setHistory(data);
 
@@ -253,7 +221,6 @@ export default function Dashboard() {
     };
   }, [selectedRestaurant?.camis]);
 
-  // Selecting a restaurant from the list or map opens its Details tab.
   function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
     setHoveredInspectionId(null);
 
@@ -266,7 +233,6 @@ export default function Dashboard() {
     }
   }
 
-  // Selecting an inspection opens its report and pins the matching chart point.
   function handleSelectInspection(inspectionId: string) {
     setHoveredInspectionId(null);
 
@@ -275,13 +241,10 @@ export default function Dashboard() {
     setActiveExplorerTab("report");
   }
 
-  // Preview an inspection from the Details history list without opening it.
   function handleHoverInspection(inspectionId: string | null) {
     setHoveredInspectionId(inspectionId);
   }
 
-  // Clear transient and pinned chart popups when moving away from Report.
-  // selectedInspectionId remains stored so returning to Report restores it.
   function handleExplorerTabChange(tab: ExplorerTab) {
     setHoveredInspectionId(null);
 
@@ -302,7 +265,7 @@ export default function Dashboard() {
 
           <div className="grade-chart">
             <GradeChart
-              restaurants={visibleRestaurantsUngraded}
+              counts={gradeCounts}
               filters={filters}
               setFilters={setFilters}
             />
@@ -333,7 +296,7 @@ export default function Dashboard() {
               selectedRestaurantId={selectedRestaurant?.id ?? null}
               onSelectRestaurant={handleSelectRestaurant}
               onVisibleRestaurantsChange={setVisibleRestaurants}
-              onUngradedVisibleRestaurantsChange={setVisibleRestaurantsUngraded}
+              onGradeCountsChange={setGradeCounts}
             />
           </div>
         </div>
@@ -393,7 +356,6 @@ export default function Dashboard() {
                 restaurants={visibleRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
                 onSelectRestaurant={handleSelectRestaurant}
-                onCountChange={setRestaurantCount}
               />
             </div>
 
@@ -424,68 +386,58 @@ export default function Dashboard() {
               />
             </div>
 
-            {showFilterNotice && (
-              <div
-                key={`${gradesKey}-${boroughsKey}-${searchQuery}`}
-                className="filter-notice-overlay">
-                <div className="filter-notice-text">
-                  {filters.grades.length > 0 && (
-                    <span className="filter-notice-group">
-                      Grade:{" "}
-                      {filters.grades.map((grade, index) => (
-                        <span key={grade}>
-                          <span
-                            style={{
-                              color: GRADE_FILTER_COLORS[grade],
-                            }}>
-                            {grade}
-                          </span>
-
-                          {index < filters.grades.length - 1 && ", "}
-                        </span>
-                      ))}
-                    </span>
-                  )}
-
-                  {filters.grades.length > 0 && filters.boroughs.length > 0 && (
-                    <span className="filter-notice-separator"> · </span>
-                  )}
-
-                  {filters.boroughs.length > 0 && (
-                    <span className="filter-notice-group">
-                      Borough: {filters.boroughs.join(", ")}
-                    </span>
-                  )}
-
-                  {(filters.grades.length > 0 || filters.boroughs.length > 0) &&
-                    searchQuery && (
-                      <span className="filter-notice-separator"> · </span>
-                    )}
-
-                  {searchQuery && (
-                    <span className="filter-notice-group">
-                      Search: &quot;
-                      {searchQuery}
-                      &quot;
-                    </span>
-                  )}
-
-                  {filters.grades.length === 0 &&
-                    filters.boroughs.length === 0 &&
-                    !searchQuery && (
-                      <span className="filter-notice-group">
-                        All Restaurants
+            <NoticeOverlay
+              triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}`}
+              durationMs={FILTER_NOTICE_DURATION_MS}>
+              {filters.grades.length > 0 && (
+                <span className="filter-notice-group">
+                  Grade:{" "}
+                  {filters.grades.map((grade, index) => (
+                    <span key={grade}>
+                      <span
+                        style={{
+                          color: GRADE_FILTER_COLORS[grade],
+                        }}>
+                        {grade}
                       </span>
-                    )}
 
-                  <span className="filter-notice-separator"> — </span>
+                      {index < filters.grades.length - 1 && ", "}
+                    </span>
+                  ))}
+                </span>
+              )}
 
+              {filters.grades.length > 0 && filters.boroughs.length > 0 && (
+                <span className="filter-notice-separator">, </span>
+              )}
+
+              {filters.boroughs.length > 0 && (
+                <span className="filter-notice-group">
+                  Borough: {filters.boroughs.join(", ")}
+                </span>
+              )}
+
+              {(filters.grades.length > 0 || filters.boroughs.length > 0) &&
+                searchQuery && (
+                  <span className="filter-notice-separator">, </span>
+                )}
+
+              {searchQuery && (
+                <span className="filter-notice-group">
+                  Search: &quot;
+                  {searchQuery}
+                  &quot;
+                </span>
+              )}
+
+              {filters.grades.length === 0 &&
+                filters.boroughs.length === 0 &&
+                !searchQuery && (
                   <span className="filter-notice-group">
-                    {restaurantCount.toLocaleString()} restaurants
+                    All Restaurants
                   </span>
-                </div>
-              </div>
-            )}
+                )}
+            </NoticeOverlay>
           </div>
         </div>
 

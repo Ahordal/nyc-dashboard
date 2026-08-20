@@ -1,7 +1,7 @@
 // GradeChart.tsx
 //
-// Displays a maximized interactive donut chart breaking down restaurant grades
-// for the current map view, with dynamic center-hole content and no outer labels.
+// Interactive donut chart showing restaurant grade and status distributions for 
+// the current map view, featuring dynamic center summary content and slice filtering.
 
 import { useMemo, useState } from "react";
 import {
@@ -13,9 +13,9 @@ import {
 
 import PanelHeader from "./PanelHeader";
 
-import type { RestaurantProperties } from "../types/restaurant";
 import type { Filters, SetFilters } from "../types/filters";
-import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";
+import type { GradeCounts } from "./MapView";
+import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 const GRADE_CHART_INFO_CONTENT = (
   <>
@@ -42,29 +42,19 @@ const GRADE_CHART_INFO_CONTENT = (
       <h4 className="section-header">Grade & Status Reference</h4>
       <ul>
         <li>
-          <strong style={{ color: CATEGORY_COLORS.A }}>A</strong> — 0 to 13
-          points
+          <strong style={{ color: CATEGORY_COLORS.A }}>A</strong> — 0 to 13 points
         </li>
-
         <li>
-          <strong style={{ color: CATEGORY_COLORS.B }}>B</strong> — 14 to 27
-          points
+          <strong style={{ color: CATEGORY_COLORS.B }}>B</strong> — 14 to 27 points
         </li>
-
         <li>
-          <strong style={{ color: CATEGORY_COLORS.C }}>C</strong> — 28 or
-          more points
+          <strong style={{ color: CATEGORY_COLORS.C }}>C</strong> — 28 or more points
         </li>
-
         <li>
-          <strong style={{ color: CATEGORY_COLORS.closed }}>Closed</strong>{" "}
-          — Closed by DOHMH; violations requiring immediate action were
-          cited
+          <strong style={{ color: CATEGORY_COLORS.closed }}>Closed</strong> — Closed by DOHMH; violations requiring immediate action cited
         </li>
-
         <li>
-          <strong style={{ color: CATEGORY_COLORS.pending }}>Pending</strong>{" "}
-          — Grade not yet finalized (includes N, P, and Z)
+          <strong style={{ color: CATEGORY_COLORS.pending }}>Pending</strong> — Grade not yet finalized (includes N, P, and Z)
         </li>
       </ul>
     </div>
@@ -77,10 +67,15 @@ const SLICE_CONFIG = [
   { key: "C", label: "C", color: CATEGORY_COLORS.C },
   { key: "pending", label: "Pending", color: CATEGORY_COLORS.pending },
   { key: "closed", label: "Closed", color: CATEGORY_COLORS.closed },
-];
+] as const;
 
 type GradeChartProps = {
-  restaurants: RestaurantProperties[];
+  // Grade/status tally for the current map view, pre-computed in MapView
+  // (see reportVisibleRestaurants there). This used to be a full
+  // RestaurantProperties[] array -- up to ~27,000 objects at city zoom
+  // -- but this component only ever needed the five counts derived from
+  // it, so MapView now computes and passes just that instead.
+  counts: GradeCounts;
   filters: Filters;
   setFilters: SetFilters;
 };
@@ -94,32 +89,6 @@ type ChartDataItem = {
   isSelected: boolean;
 };
 
-// Custom shape renderer, split into two layers:
-//
-//   1. A stable "hit" Sector, always rendered at its natural (unmoved,
-//      un-grown) geometry. This is what actually receives hover/click
-//      events. Its geometry NEVER changes based on active state --
-//      that's deliberate. Moving/growing the element that owns mouse
-//      events is what caused hover to feel "sticky": once the shape's
-//      geometry shifts, the pointer is no longer over it, but the
-//      browser only recomputes hover targets on the next mousemove --
-//      so leaving fires late or not at all until the cursor happens to
-//      move again. Keeping this layer's geometry fixed means hover
-//      detection is rock solid regardless of what's drawn on top.
-//      Invisible when active (opacity: 0) but still fully hoverable/
-//      clickable -- opacity doesn't affect SVG hit-testing under the
-//      default pointer-events: visiblePainted (only fill: none or
-//      visibility: hidden would).
-//
-//   2. A visual-only "display" Sector, rendered on top ONLY when active,
-//      with pointer-events: none so it never interferes with #1. This
-//      is what actually explodes -- by growing outerRadius rather than
-//      translating cx/cy. Radius growth pushes every point along the
-//      arc outward along ITS OWN angle, so it reads as "expanding" for
-//      a sliver slice and a 70%-of-the-ring slice alike. A single
-//      directional translate (the previous approach) only ever looks
-//      right for small slices -- a dominant slice just slides toward
-//      one side instead of visibly growing.
 const ACTIVE_RADIUS_GROWTH = 10; // px
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -180,39 +149,17 @@ const renderCustomizedShape = (props: any) => {
 };
 
 export default function GradeChart({
-  restaurants,
+  counts,
   filters,
   setFilters,
 }: GradeChartProps) {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-  // By explicitly providing the generic type here, TypeScript can no longer infer 'never'
   const { data, totalCount, activeItem } = useMemo<{
     data: ChartDataItem[];
     totalCount: number;
     activeItem: ChartDataItem | null;
   }>(() => {
-    const tally: Record<string, number> = {
-      A: 0,
-      B: 0,
-      C: 0,
-      pending: 0,
-      closed: 0,
-    };
-
-    let total = 0;
-    for (const restaurant of restaurants) {
-      const category = getGradeCategory(
-        restaurant.action,
-        restaurant.grade,
-        restaurant.score,
-      );
-      if (tally[category] !== undefined) {
-        tally[category] += 1;
-        total += 1;
-      }
-    }
-
     let hoveredDataObj: ChartDataItem | null = null;
     let selectedDataObj: ChartDataItem | null = null;
 
@@ -225,7 +172,7 @@ export default function GradeChart({
       const item: ChartDataItem = {
         name: key,
         label,
-        value: tally[key] ?? 0,
+        value: counts[key] ?? 0,
         color,
         isHovered,
         isSelected,
@@ -239,24 +186,21 @@ export default function GradeChart({
 
     const active = hoveredDataObj || selectedDataObj;
 
+    const total =
+      counts.A + counts.B + counts.C + counts.pending + counts.closed;
+
     return {
       data: chartData,
       totalCount: total,
       activeItem: active,
     };
-  }, [restaurants, filters.grades, hoveredIndex]);
+  }, [counts, filters.grades, hoveredIndex]);
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const handleClick = (entry: any, _index: number, event: any) => {
-    // Recharts bubbles the underlying DOM click up through the SVG --
-    // without stopping it here, clicking a slice would ALSO trigger the
-    // background click handler below (meant for clicking off a slice to
-    // clear the filter), immediately undoing the selection this click
-    // just made.
     event?.stopPropagation?.();
 
     const clickedGrade = entry.label;
-
     const isAlreadySelected =
       filters.grades.length === 1 && filters.grades[0] === clickedGrade;
 
@@ -266,10 +210,6 @@ export default function GradeChart({
     });
   };
 
-  // Clicking anywhere in the chart that ISN'T a slice (the donut hole,
-  // the space around the ring, etc.) clears the grade filter -- same
-  // idea as clicking outside an open dropdown to close it. Slice clicks
-  // stop propagation (see handleClick above) before they ever reach this.
   const handleBackgroundClick = () => {
     if (filters.grades.length > 0) {
       setFilters({ ...filters, grades: [] });
@@ -278,11 +218,6 @@ export default function GradeChart({
 
   return (
     <section className="panel grade-chart-panel">
-      {/* Recharts makes Pie/Sector elements focusable for keyboard/screen-reader
-          access, which is good -- but it also means clicking a slice leaves a
-          visible browser focus outline around the SVG. This suppresses that
-          outline visually only; focusability itself is untouched, so tabbing
-          through the chart still works the same as before. */}
       <style>{`
         .grade-chart-svg-wrap svg:focus,
         .grade-chart-svg-wrap svg *:focus {
@@ -293,7 +228,7 @@ export default function GradeChart({
       <PanelHeader
         title="Grade Breakdown"
         infoContent={GRADE_CHART_INFO_CONTENT}
-        infoPlacement="up"
+        infoPlacement="down"
       />
 
       <div
@@ -345,7 +280,6 @@ export default function GradeChart({
                 </PieChart>
               </ResponsiveContainer>
 
-              {/* Maximized Centered Content Inside the Donut Hole */}
               <div
                 style={{
                   position: "absolute",
@@ -362,8 +296,6 @@ export default function GradeChart({
                   maxWidth: "180px",
                 }}
               >
-                {/* Legend row - stays visible at all times; dims non-active entries
-                    when something is hovered or selected, rather than disappearing. */}
                 <div
                   style={{
                     fontSize: "0.8rem",
@@ -408,7 +340,6 @@ export default function GradeChart({
                   })}
                 </div>
 
-                {/* Second line - active grade + its count, or the running total */}
                 {activeItem ? (
                   <div
                     style={{

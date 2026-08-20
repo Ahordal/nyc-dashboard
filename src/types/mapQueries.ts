@@ -15,7 +15,7 @@ import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 
 // Fields actually read by the dashboard's components (restaurant list
-// cards, details panel, report, map filter logic). Deliberately excludes
+// cards, details panel, map filter logic). Deliberately excludes
 // fields that exist in the source GeoJSON/pipeline output but are never
 // displayed or consumed client-side: search_index (query-only -- WHERE
 // clauses can filter on it regardless of outFields, since outFields only
@@ -23,11 +23,26 @@ import type { RestaurantProperties } from "../types/restaurant";
 // filterable), dohmh_latitude/dohmh_longitude, neighbourhood,
 // community_board, council_district, record_date, grade_date, and
 // display_address (superseded by display_street + building/boro
-// composition in RestaurantCard/RestaurantDetails). Excluding them here
-// cuts the per-feature attribute payload by roughly 30%, which matters
-// most for queryVisibleRestaurants below -- it can return thousands of
-// restaurants on every pan/zoom and its results get pushed into React
-// state.
+// composition in RestaurantCard/RestaurantDetails).
+//
+// Also deliberately excludes "violations" -- unlike the other excluded
+// fields above, this one IS displayed, but only for a single selected
+// restaurant at a time (RestaurantReport's initial/no-history-yet
+// view). It's also by far the heaviest field per feature (raw JSON
+// text of a restaurant's violation records). Because this field list is
+// used both as the GeoJSONLayer's own outFields (which keeps that data
+// resident for every one of its ~27,000 graphics, all the time, not
+// just what's in view) AND as queryVisibleRestaurants' outFields (which
+// re-pulls it into React state on every pan/zoom), leaving "violations"
+// out of this shared list was a significant chunk of the dashboard's
+// memory footprint. See RESTAURANT_DETAIL_OUT_FIELDS and
+// fetchRestaurantDetail below for how a single restaurant's violations
+// text is fetched instead, on click, rather than held for all 27k.
+//
+// Excluding all of the above cuts the per-feature attribute payload
+// substantially, which matters most for queryVisibleRestaurants below
+// -- it can return thousands of restaurants on every pan/zoom and its
+// results get pushed into React state.
 export const RESTAURANT_OUT_FIELDS = [
   "id",
   "camis",
@@ -47,9 +62,16 @@ export const RESTAURANT_OUT_FIELDS = [
   "inspection_date",
   "inspection_type",
   "action",
-  "violations",
   "current_status_code",
   "current_status_label",
+];
+
+// Full field set for a single restaurant's complete record, including
+// its current inspection's violations text. Only ever requested for one
+// restaurant at a time -- see fetchRestaurantDetail.
+export const RESTAURANT_DETAIL_OUT_FIELDS = [
+  ...RESTAURANT_OUT_FIELDS,
+  "violations",
 ];
 
 export const CATEGORY_CLAUSES: Record<string, string> = {
@@ -208,6 +230,30 @@ export async function queryVisibleRestaurants(
   );
 }
 
+// Fetches the complete record -- including violations text -- for a
+// single restaurant. Used on click/select instead of relying on
+// RESTAURANT_OUT_FIELDS (which deliberately excludes "violations" to
+// keep the layer's resident graphics and the bulk visible-restaurants
+// query lean). This is a small, targeted query against just one
+// restaurant's id, so paying for the full field list here doesn't carry
+// the same cost it would across thousands of features.
+export async function fetchRestaurantDetail(
+  layer: GeoJSONLayer,
+  restaurantId: string,
+): Promise<RestaurantProperties | null> {
+  await layer.load();
+
+  const query = layer.createQuery();
+  query.where = `id = '${restaurantId}'`;
+  query.outFields = RESTAURANT_DETAIL_OUT_FIELDS;
+  query.returnGeometry = false;
+
+  const result = await layer.queryFeatures(query);
+  const feature = result.features[0];
+
+  return feature ? (feature.attributes as RestaurantProperties) : null;
+}
+
 // Result of checking a single restaurant ID against the active
 // definitionExpression. Combines what used to be TWO separate queries
 // (one to check if the restaurant still matches the filters, a second
@@ -273,15 +319,41 @@ export type FilterExtentResult = {
   isDegenerate: boolean;
 };
 
-// Computes the extent of everything matching whereClause by querying
-// actual point geometries and building the bounding box ourselves,
-// rather than using layer.queryExtent() -- see FilterExtentResult's
-// comment for why that method can't be trusted for small/clustered
-// result sets.
+// Computes the extent of everything matching whereClause. For large
+// result sets (the common case -- a borough selection can match
+// thousands of restaurants), layer.queryExtent() is used directly: a
+// single lightweight request, no per-feature geometry download. It's
+// only avoided for SMALL result sets, because that's specifically where
+// it was observed returning a bogus, enormous square extent (width ===
+// height, ~222,639, mislabeled as degrees) instead of the real tight
+// cluster -- see isDegenerate below. A quick queryFeatureCount() (also
+// geometry-free) decides which path to take, so the expensive manual
+// per-point computation only ever runs for small counts, not for a
+// borough-sized match.
+const DEGENERATE_CHECK_THRESHOLD = 25;
+
 export async function queryFilterExtent(
   layer: GeoJSONLayer,
   whereClause: string,
 ): Promise<FilterExtentResult> {
+  const countQuery = layer.createQuery();
+  countQuery.where = whereClause;
+  const count = await layer.queryFeatureCount(countQuery);
+
+  if (count === 0) {
+    return { count: 0, extent: null, isDegenerate: false };
+  }
+
+  if (count > DEGENERATE_CHECK_THRESHOLD) {
+    // Large match (e.g. a borough) -- queryExtent()'s bug only shows up
+    // for tiny clustered sets, so it's safe and much cheaper here: one
+    // request instead of N pages of full point geometry.
+    const result = await layer.queryExtent(countQuery);
+    return { count, extent: result.extent ?? null, isDegenerate: false };
+  }
+
+  // Small match -- fall back to the exact per-point computation so the
+  // "same building" degenerate case is still caught correctly.
   const baseQuery = layer.createQuery();
   baseQuery.where = whereClause;
   baseQuery.returnGeometry = true;

@@ -1,9 +1,7 @@
 // ExplorerSearch.tsx
 //
-// Standalone search panel that sits above the explorer (list/details)
-// column, matching its width. Debounces the raw input locally before
-// reporting the query up to Dashboard, so a full-dataset search isn't
-// re-run on every keystroke -- only once typing pauses.
+// Search panel for filtering restaurants by name or cuisine.
+// Debounces text input before updating the parent dashboard query.
 
 import { useEffect, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -31,7 +29,7 @@ export default function ExplorerSearch({
 
   function handleClear() {
     setInputValue("");
-    onSearchChange(""); // clear immediately, don't wait for the debounce
+    onSearchChange(""); // Clear immediately without debounce delay
   }
 
   return (
@@ -57,7 +55,6 @@ export default function ExplorerSearch({
             </button>
           )}
         </div>
-       
       </div>
     </section>
   );

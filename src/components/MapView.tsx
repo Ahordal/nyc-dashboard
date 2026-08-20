@@ -21,13 +21,16 @@ import FeatureEffect from "@arcgis/core/layers/support/FeatureEffect";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 
 import esriConfig from "@arcgis/core/config";
+import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 import { CATEGORY_COLORS } from "../utils/gradeColours";
+import { getGradeCategory } from "../utils/gradeCategory";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
   queryVisibleRestaurants,
+  fetchRestaurantDetail,
   checkSelectionAgainstFilters,
   queryFilterExtent,
   RESTAURANT_OUT_FIELDS,
@@ -132,10 +135,23 @@ const labelClass = new LabelClass({
 const NO_SELECTION_FILTER = new FeatureFilter({ objectIds: [-1] });
 
 // Default map view -- used both for the initial load and to reset the
-// camera when borough/search filters are cleared back to "none" with
-// nothing selected (see the filter effect below).
-const DEFAULT_CENTER: [number, number] = [-73.98, 40.75];
-const DEFAULT_ZOOM = 11;
+// camera when borough/search filters are cleared back to "none".
+const DEFAULT_CENTER: [number, number] = [-73.98, 40.7];
+const DEFAULT_ZOOM = 10;
+
+// Grade/status tally for the current map view -- this is ALL GradeChart
+// actually needs (five numbers), not the full restaurant array that used
+// to be passed up for it. See onGradeCountsChange below and
+// reportVisibleRestaurants' computation of this value.
+export type GradeCounts = Record<"A" | "B" | "C" | "pending" | "closed", number>;
+
+const EMPTY_GRADE_COUNTS: GradeCounts = {
+  A: 0,
+  B: 0,
+  C: 0,
+  pending: 0,
+  closed: 0,
+};
 
 type MapViewProps = {
   filters: Filters;
@@ -146,14 +162,17 @@ type MapViewProps = {
   // now (extent + borough + search + grade). StatsPanel's "in map view"
   // count and RestaurantList both need this true, current-view set.
   onVisibleRestaurantsChange?: (restaurants: RestaurantProperties[]) => void;
-  // NOT grade-filtered -- extent + borough + search only, same set
-  // buildDefinitionExpression deliberately excludes grade from (see
-  // mapQueries.ts). This is what GradeChart needs so a selected grade
-  // stays exploded/highlighted among all five slices instead of
-  // collapsing the ring down to a single 100% slice.
-  onUngradedVisibleRestaurantsChange?: (
-    restaurants: RestaurantProperties[],
-  ) => void;
+  // Grade/status tally computed from extent + borough + search only, NOT
+  // grade-filtered -- same underlying set buildDefinitionExpression
+  // deliberately excludes grade from (see mapQueries.ts). This is what
+  // GradeChart needs so a selected grade stays exploded/highlighted
+  // among all five slices instead of collapsing the ring down to a
+  // single 100% slice. Previously this delivered the full restaurant
+  // array (up to ~27k objects at city zoom) just so GradeChart could
+  // tally five numbers from it; now the tally is computed once here and
+  // only the counts are passed up, since that's all GradeChart ever
+  // read from the array.
+  onGradeCountsChange?: (counts: GradeCounts) => void;
 };
 
 export default function InspectionMapView({
@@ -162,7 +181,7 @@ export default function InspectionMapView({
   selectedRestaurantId = null,
   onSelectRestaurant,
   onVisibleRestaurantsChange,
-  onUngradedVisibleRestaurantsChange,
+  onGradeCountsChange,
 }: MapViewProps) {
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<GeoJSONLayer | null>(null);
@@ -197,6 +216,21 @@ export default function InspectionMapView({
   // response.
   const queryRequestIdRef = useRef(0);
 
+  // Kept in sync via the effect below so reportVisibleRestaurants
+  // (declared once, at component scope -- see below) always reads the
+  // CURRENT filters, no matter which effect's stale closure happens to
+  // be calling it. Same pattern as selectedRestaurantIdRef/
+  // onSelectRestaurantRef just above.
+  const filtersRef = useRef(filters);
+
+  // Guards against a click's fetchRestaurantDetail() call resolving
+  // after a NEWER click has already fired -- e.g. clicking one
+  // restaurant, then quickly clicking another (or empty map space)
+  // before the first detail fetch finishes. Without this, a slow first
+  // response could land after a faster second one and clobber the
+  // correct, more recent selection with stale data.
+  const clickRequestIdRef = useRef(0);
+
   useEffect(() => {
     selectedRestaurantIdRef.current = selectedRestaurantId;
   }, [selectedRestaurantId]);
@@ -204,6 +238,77 @@ export default function InspectionMapView({
   useEffect(() => {
     onSelectRestaurantRef.current = onSelectRestaurant;
   }, [onSelectRestaurant]);
+
+  useEffect(() => {
+    filtersRef.current = filters;
+  }, [filters]);
+
+  // Queries the restaurants visible in the current extent and reports
+  // them: the grade-filtered set via onVisibleRestaurantsChange, and a
+  // grade/status tally (computed from the ungraded set, before the
+  // active grade filter is applied) via onGradeCountsChange. Declared
+  // ONCE at component scope -- not nested inside either effect below --
+  // specifically so both the mount effect's `stationary` watcher and
+  // the filters-change effect call the exact same function and can
+  // never drift into two different copies of this logic that read
+  // filters differently. Reads filtersRef.current (never a plain
+  // `filters` closure) so it's correct even when invoked from the mount
+  // effect's long-lived, effectively-never-rerun closure.
+  async function reportVisibleRestaurants(
+    view: MapView,
+    layer: GeoJSONLayer,
+  ) {
+    if (!onVisibleRestaurantsChange && !onGradeCountsChange) return;
+    const requestId = ++queryRequestIdRef.current;
+    try {
+      const restaurants = await queryVisibleRestaurants(view, layer);
+      if (requestId !== queryRequestIdRef.current) return;
+
+      // Tally computed once here, from the ungraded set, so
+      // onGradeCountsChange only ever needs to carry five numbers up to
+      // Dashboard/GradeChart -- not a copy of every restaurant in view.
+      if (onGradeCountsChange) {
+        const counts: GradeCounts = { ...EMPTY_GRADE_COUNTS };
+        for (const r of restaurants) {
+          const category = getGradeCategory(r.action, r.grade, r.score);
+          if (counts[category] !== undefined) {
+            counts[category] += 1;
+          }
+        }
+        onGradeCountsChange(counts);
+      }
+
+      const activeGrades = filtersRef.current.grades;
+      const filteredRestaurants = restaurants.filter((r) => {
+        if (activeGrades.length === 0) return true;
+
+        const status = r.current_status_code;
+        const grade = r.grade;
+        const score = r.score;
+
+        let category = "C";
+        if (status === "closed") {
+          category = "closed";
+        } else if (grade === "Z" || grade === "P" || grade === "N") {
+          category = "pending";
+        } else if (score <= 13) {
+          category = "A";
+        } else if (score <= 27) {
+          category = "B";
+        }
+
+        if (activeGrades.includes("Closed") && category === "closed") return true;
+        if (activeGrades.includes("Pending") && category === "pending") return true;
+        if (grade && activeGrades.includes(grade)) return true;
+
+        return false;
+      });
+
+      onVisibleRestaurantsChange?.(filteredRestaurants);
+    } catch (err) {
+      console.error("MapView: failed to query visible restaurants", err);
+    }
+  }
 
   useEffect(() => {
     if (!mapDivRef.current) return;
@@ -214,9 +319,12 @@ export default function InspectionMapView({
       renderer: renderer as any,
       // Trimmed to fields the dashboard actually displays/consumes --
       // see RESTAURANT_OUT_FIELDS in mapQueries.ts for what's excluded
-      // and why. This is what backs graphicHit.graphic.attributes on
-      // map clicks (-> selectedRestaurant -> RestaurantDetails/Report),
-      // so it needs to stay in sync with what those components read.
+      // and why. Deliberately excludes "violations" -- this list
+      // controls what stays resident in memory for every one of the
+      // layer's ~27,000 graphics, not just what's currently in view, so
+      // keeping it lean matters a lot here. A restaurant's violations
+      // text is fetched separately, only for the one restaurant a user
+      // actually clicks -- see the click handler below.
       outFields: RESTAURANT_OUT_FIELDS,
       copyright: "NYC DOHMH | Cartography: Alex Hordal",
       labelingInfo: [labelClass],
@@ -240,57 +348,18 @@ export default function InspectionMapView({
 
     view.popupEnabled = false;
 
-    const reportVisibleRestaurants = async () => {
-      if (!onVisibleRestaurantsChange && !onUngradedVisibleRestaurantsChange)
-        return;
-      const requestId = ++queryRequestIdRef.current;
-      try {
-        const restaurants = await queryVisibleRestaurants(view, layer);
-        if (requestId !== queryRequestIdRef.current) return;
-
-        onUngradedVisibleRestaurantsChange?.(restaurants);
-
-        const activeGrades = filters.grades;
-        const filteredRestaurants = restaurants.filter((r) => {
-          if (activeGrades.length === 0) return true;
-          
-          const status = r.current_status_code;
-          const grade = r.grade;
-          const score = r.score;
-
-          let category = "C";
-          if (status === "closed") {
-            category = "closed";
-          } else if (grade === "Z" || grade === "P" || grade === "N") {
-            category = "pending";
-          } else if (score <= 13) {
-            category = "A";
-          } else if (score <= 27) {
-            category = "B";
-          }
-
-          if (activeGrades.includes("Closed") && category === "closed") return true;
-          if (activeGrades.includes("Pending") && category === "pending") return true;
-          if (grade && activeGrades.includes(grade)) return true;
-
-          return false;
-        });
-
-        onVisibleRestaurantsChange?.(filteredRestaurants);
-      } catch (err) {
-        console.error("MapView: failed to query visible restaurants", err);
-      }
-    };
-
     view.when(() => {
-      reportVisibleRestaurants();
+      reportVisibleRestaurants(view, layer);
     });
 
-    const stationaryWatchHandle = view.watch("stationary", (isStationary) => {
-      if (isStationary) {
-        reportVisibleRestaurants();
-      }
-    });
+    const stationaryWatchHandle = reactiveUtils.watch(
+      () => view.stationary,
+      (isStationary) => {
+        if (isStationary) {
+          reportVisibleRestaurants(view, layer);
+        }
+      },
+    );
 
     const clickHandle = view.on("click", async (event) => {
       const response = await view.hitTest(event);
@@ -301,9 +370,34 @@ export default function InspectionMapView({
           "graphic" in result && (result as any).graphic.layer === layer,
       ) as { graphic: { attributes: RestaurantProperties } } | undefined;
 
+      const requestId = ++clickRequestIdRef.current;
+
       if (graphicHit) {
         if (onSelectRestaurant) {
-          onSelectRestaurant(graphicHit.graphic.attributes);
+          // The graphic's own attributes only carry RESTAURANT_OUT_FIELDS
+          // (no "violations" -- see the layer's outFields comment above),
+          // so fetch that one restaurant's complete record -- including
+          // violations -- via a small targeted query instead of holding
+          // it for all 27k graphics all the time.
+          const id = graphicHit.graphic.attributes.id;
+
+          try {
+            const full = await fetchRestaurantDetail(layer, id);
+            if (requestId !== clickRequestIdRef.current) return; // superseded by a newer click
+
+            onSelectRestaurant(full ?? graphicHit.graphic.attributes);
+          } catch (err) {
+            console.error(
+              "MapView: failed to fetch full restaurant detail",
+              err,
+            );
+            if (requestId !== clickRequestIdRef.current) return;
+
+            // Fall back to the lean attributes already on hand so
+            // selection still works even if the detail fetch fails --
+            // just without violations until re-clicked successfully.
+            onSelectRestaurant(graphicHit.graphic.attributes);
+          }
         }
       } else {
         if (onSelectRestaurant) {
@@ -312,8 +406,33 @@ export default function InspectionMapView({
       }
     });
 
-    const pointerMoveHandle = view.on("pointer-move", async (event) => {
+    // Hit-testing the map is a real WebGL raycast, not a cheap lookup --
+    // pointer-move fires on every pixel of mouse movement, so testing on
+    // every single event floods the map with dozens of overlapping async
+    // hitTest calls per second of mouse movement. This throttles actual
+    // hitTest calls to roughly once per POINTER_MOVE_THROTTLE_MS, always
+    // using the freshest known pointer position when it fires (rather
+    // than the position at the start of the throttle window). The
+    // requestToken guard additionally protects against a slower, older
+    // hitTest resolving AFTER a newer one and clobbering the cursor with
+    // stale results -- throttling the call rate alone doesn't guarantee
+    // in-order resolution, since each hitTest is still async and can
+    // take a variable amount of time.
+    const POINTER_MOVE_THROTTLE_MS = 60;
+    let pointerMoveTimeoutId: number | null = null;
+    // ArcGIS doesn't export a standalone type for this event (it's
+    // produced via an overloaded `on()` signature), so this matches the
+    // implicit `any` the event already had before it was hoisted out of
+    // the inline handler -- consistent with the `as any` casts already
+    // used elsewhere in this file for ArcGIS's hit-test result shapes.
+    let latestPointerMoveEvent: any = null;
+    let latestHitTestToken = 0;
+
+    const runHitTest = async (event: any) => {
+      const token = ++latestHitTestToken;
       const response = await view.hitTest(event);
+      if (token !== latestHitTestToken) return; // superseded by a newer hitTest
+
       const isOverFeature = response.results.some(
         (result) =>
           "graphic" in result && (result as any).graphic.layer === layer,
@@ -321,11 +440,26 @@ export default function InspectionMapView({
       if (view.container) {
         view.container.style.cursor = isOverFeature ? "pointer" : "default";
       }
+    };
+
+    const pointerMoveHandle = view.on("pointer-move", (event) => {
+      latestPointerMoveEvent = event;
+      if (pointerMoveTimeoutId !== null) return;
+
+      pointerMoveTimeoutId = window.setTimeout(() => {
+        pointerMoveTimeoutId = null;
+        const eventToTest = latestPointerMoveEvent;
+        latestPointerMoveEvent = null;
+        if (eventToTest) void runHitTest(eventToTest);
+      }, POINTER_MOVE_THROTTLE_MS);
     });
 
     return () => {
       clickHandle.remove();
       pointerMoveHandle.remove();
+      if (pointerMoveTimeoutId !== null) {
+        window.clearTimeout(pointerMoveTimeoutId);
+      }
       stationaryWatchHandle.remove();
       view.destroy();
     };
@@ -526,7 +660,14 @@ export default function InspectionMapView({
       }
 
       // Camera behavior triggered only by borough or search changes.
-      // Grade-only changes never reach this block.
+      // Grade-only changes never reach this block. Tracks whether a
+      // goTo() was ACTUALLY issued (not just attempted) -- cameraTrigger
+      // alone isn't enough, since a search/borough combination that
+      // matches nothing (count === 0) or resolves to the same view never
+      // calls goTo, and in that case there's no future `stationary`
+      // event to rely on for reporting the new visible set.
+      let cameraWillMove = false;
+
       if (cameraTrigger && view) {
         if (newDefinitionExpression) {
           try {
@@ -536,6 +677,7 @@ export default function InspectionMapView({
             );
 
             if (count > 0 && extent) {
+              cameraWillMove = true;
               if (isDegenerate) {
                 view.goTo({ center: extent.center, zoom: 16 });
               } else {
@@ -548,58 +690,27 @@ export default function InspectionMapView({
               err,
             );
           }
-        } else if (!(currentId && stillMatches)) {
+        } else {
+          cameraWillMove = true;
           view.goTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM });
         }
+      }
+
+      // Report the new visible set right away UNLESS the camera is about
+      // to pan/zoom -- in that case, querying now would read the
+      // pre-transition extent (wrong), and the `stationary` watcher in
+      // the mount effect above will correctly re-report once the camera
+      // actually settles at the new extent. Both paths call the same
+      // reportVisibleRestaurants function declared at component scope,
+      // so there's exactly one implementation of this query+categorize
+      // logic -- not two copies that can drift out of sync.
+      if (view && !cameraWillMove) {
+        await reportVisibleRestaurants(view, layer);
       }
     }
 
     syncSelectionAndZoom();
-
-    if (view && (onVisibleRestaurantsChange || onUngradedVisibleRestaurantsChange)) {
-      const requestId = ++queryRequestIdRef.current;
-      queryVisibleRestaurants(view, layer)
-        .then((restaurants) => {
-          if (requestId !== queryRequestIdRef.current) return;
-
-          onUngradedVisibleRestaurantsChange?.(restaurants);
-
-          const activeGrades = filters.grades;
-          const filteredRestaurants = restaurants.filter((r) => {
-            if (activeGrades.length === 0) return true;
-            
-            const status = r.current_status_code;
-            const grade = r.grade;
-            const score = r.score;
-
-            let category = "C";
-            if (status === "closed") {
-              category = "closed";
-            } else if (grade === "Z" || grade === "P" || grade === "N") {
-              category = "pending";
-            } else if (score <= 13) {
-              category = "A";
-            } else if (score <= 27) {
-              category = "B";
-            }
-
-            if (activeGrades.includes("Closed") && category === "closed") return true;
-            if (activeGrades.includes("Pending") && category === "pending") return true;
-            if (grade && activeGrades.includes(grade)) return true;
-
-            return false;
-          });
-
-          onVisibleRestaurantsChange?.(filteredRestaurants);
-        })
-        .catch((err) =>
-          console.error(
-            "MapView: failed to query visible restaurants after filter change",
-            err,
-          ),
-        );
-    }
-  }, [filters, searchQuery, onVisibleRestaurantsChange, onUngradedVisibleRestaurantsChange]);
+  }, [filters, searchQuery, onVisibleRestaurantsChange, onGradeCountsChange]);
 
   return <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />;
 }

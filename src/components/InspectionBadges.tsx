@@ -1,10 +1,13 @@
 // InspectionBadges.tsx
+//
+// Renders restaurant grade and score badge pairs with category-based styling 
+// and fallbacks for missing values.
 
 import type { CSSProperties } from "react";
 import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";
 
 type InspectionBadgesProps = {
-  score: number | null; // <-- FIXED: Now accepts null
+  score: number | null;
   grade: string | null;
   action?: string | null;
   style?: CSSProperties;
@@ -16,7 +19,6 @@ export default function InspectionBadges({
   action,
   style,
 }: InspectionBadgesProps) {
-  // Coerce score to 0 for the category math if it happens to be null
   const category = getGradeCategory(action ?? "", grade, score ?? 0);
   const categoryColor = CATEGORY_COLORS[category];
 
@@ -32,7 +34,7 @@ export default function InspectionBadges({
       <div className="badge-box">
         <span className="badge-label">SCORE</span>
         <span className="badge-val" style={{ color: categoryColor }}>
-          {score ?? "N/A"} {/* FIXED: Renders N/A if no score exists */}
+          {score ?? "N/A"}
         </span>
       </div>
     </div>

@@ -1361,7 +1361,7 @@ background-color:#252525
 .filter-notice-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(37, 37, 37, 0.8);
+  background: rgba(37, 37, 37, 1);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1369,7 +1369,7 @@ background-color:#252525
   pointer-events: none;
   padding: var(--space-s);
   text-align: center;
-  animation: filterNoticeFade 2.5s ease forwards;
+  animation: filterNoticeFade 2s ease forwards;
 }
 
 .filter-notice-text {

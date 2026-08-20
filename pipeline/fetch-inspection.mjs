@@ -1,68 +1,10 @@
 // fetch-inspections.mjs
 //
-// Fetches the full NYC DOHMH Restaurant Inspection Results dataset from the
-// Socrata (SODA) API, then produces four output files:
-//
-//   1. public/data/latest-inspections.geojson
-//      One point feature per restaurant (CAMIS), representing that
-//      restaurant's most recent SCORED inspection (which can span
-//      multiple violation rows sharing the same date -- those are
-//      rolled up into a single `violations` array rather than picking
-//      one arbitrarily). If a restaurant's truly-latest visit has no
-//      score (a non-substantive compliance/administrative check), this
-//      falls back to their last real graded/scored inspection instead.
-//      Restaurants with NO scored inspection anywhere in their history
-//      (including ones that have never been inspected at all) are
-//      excluded from this file entirely, rather than appearing as a
-//      "no data" placeholder. Used to drive the map, KPI counts, and
-//      grade breakdown donut chart.
-//
-//   2. public/data/history/{camis}.json
-//      One small file per restaurant, holding just that restaurant's
-//      SCORED inspection EVENTS (grouped by inspection_date, with that
-//      date's violations rolled up), sorted oldest -> newest. Used to
-//      drive the "Score Over Time" chart -- fetched only for the
-//      restaurant a visitor actually selects, rather than one giant file
-//      containing every restaurant's history. Each point carries enough
-//      detail (grade, violations, inspection type) to open its own
-//      inspection detail view when clicked, not just plot a bare number.
-//      The directory is wiped and fully regenerated on every run, so a
-//      restaurant that drops out of the dataset doesn't leave an
-//      orphaned file behind. Every restaurant with a file here has at
-//      least one scored inspection -- the same underlying criterion
-//      latest-inspections.geojson uses -- though the map file also
-//      requires valid coordinates, so a restaurant with bad/missing
-//      lat-long data could have a history file here without appearing
-//      on the map.
-//
-//   3. public/data/violation-codes.json
-//      A single small lookup object mapping each violation `code` (e.g.
-//      "06B") to its description and official DOHMH category. There are
-//      only ~115 distinct codes actively cited across the dataset, but tens
-//      of thousands of inspection events cite them -- embedding the full text
-//      on every single violation entry in the two files above means the
-//      same strings get duplicated thousands of times over. Instead,
-//      violations in both other output files carry only `code` and
-//      `critical_flag`; consumers look up details here by code.
-//      Cuts the combined output size roughly in half.
-//
-//   4. public/data/dashboard-meta.json
-//      A small summary object -- { lastUpdated, restaurantCount,
-//      inspectionCount, restaurantDelta, inspectionDelta } -- describing
-//      this run's freshness and the overall size of the dataset.
-//      restaurantCount mirrors latest-inspections.geojson's feature count;
-//      inspectionCount sums every scored inspection event across all
-//      restaurants in the history output. The two deltas compare against
-//      counts-snapshot.json -- the baseline written once a day by the
-//      geocode-backfill workflow -- and are null (not 0) when no baseline
-//      is available yet, e.g. before the first backfill run has ever
-//      committed a snapshot. Powers the "Dashboard Information" panel's
-//      stat row, including the +/- change indicators next to each count.
-//
-// public/data/ is regenerated from scratch on every run and is NOT meant
-// to be committed to Git -- see the project README for how this fits into
-// the Vercel build step vs. the scheduled GitHub Action that pings a
-// Vercel Deploy Hook to keep data fresh without any code changes.
+// Fetches NYC DOHMH inspection records from SODA API and compiles 4 static assets:
+// 1. latest-inspections.geojson: Most recent scored inspection per restaurant (powers map/KPIs).
+// 2. history/{camis}.json: Individual time-series files per CAMIS for on-demand score charts.
+// 3. violation-codes.json: Code-to-description/category lookup to prevent text duplication.
+// 4. dashboard-meta.json: Summary counts and daily baseline deltas.
 
 import { writeFile, readFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
@@ -70,58 +12,34 @@ import { pathToFileURL } from "node:url";
 import { loadCache } from "./cache.mjs";
 import { formatDisplayAddress, formatDisplayStreet } from "./normalize.mjs";
 
-// Path to the geocode cache committed to the repo by the scheduled
-// GitHub Action (see run-geocode-backfill.mjs). This file is READ ONLY
-// here -- no network calls, no LocationIQ API key needed at build time.
-// If the cache doesn't exist yet (e.g. before the first backfill run),
-// loadCache() returns {} and every restaurant simply falls back to its
-// DOHMH coordinate with location_status "pending".
+// Read-only geocode cache committed by scheduled backfill. If absent, falls back to raw DOHMH coords.
 const GEOCODE_CACHE_PATH = path.join(import.meta.dirname, "geocode-cache.json");
 
-// Path to the baseline snapshot committed once a day by the scheduled
-// geocode-backfill workflow (see run-geocode-backfill.mjs /
-// merge-and-commit-cache.mjs). Read-only here, same as the geocode cache --
-// this is what today's counts get diffed against to produce the +/- deltas.
-// If it doesn't exist yet, loadCountsSnapshot() returns null and the
-// deltas are simply omitted (null) rather than showing a false "+N".
+// Read-only snapshot of previous run counts. Used to compute +/- deltas without external DB.
 const COUNTS_SNAPSHOT_PATH = path.join(import.meta.dirname, "counts-snapshot.json");
 
-// Path to the locally committed violation categories CSV mapping file.
 const CATEGORY_CSV_PATH = path.join(import.meta.dirname, "violation-categories.csv");
 
 const DATASET_URL = "https://data.cityofnewyork.us/resource/43nn-pn8j.json";
-const PAGE_SIZE = 50000; // Socrata's max recommended page size
+const PAGE_SIZE = 50000; // Socrata maximum recommended page size
 
-// Anchored to this script's own location, not the caller's working
-// directory -- so this always resolves to <repo root>/public/data,
-// whether the script is run from the repo root, from inside pipeline/,
-// or (as in the GitHub Action) with pipeline/ set as the working directory.
+// Anchored to script directory to ensure consistent path resolution across local and CI environments.
 const OUTPUT_DIR = path.resolve(import.meta.dirname, "../public/data");
 
-// Per-restaurant history files live here (one small file per CAMIS)
-// instead of one giant inspection-history.json, so a visitor only ever
-// downloads the one restaurant's history they actually click into.
+// Per-CAMIS files prevent clients from downloading full historical datasets for single lookups.
 export const HISTORY_DIR = path.join(OUTPUT_DIR, "history");
 
 const REQUEST_HEADERS = process.env.SOCRATA_APP_TOKEN
   ? { "X-App-Token": process.env.SOCRATA_APP_TOKEN }
   : {};
 
-// Retry settings for transient Socrata errors (429/500/503, etc).
 const MAX_RETRIES = 4;
-const BASE_RETRY_DELAY_MS = 1000; // 1s, then 2s, then 4s, then 8s
+const BASE_RETRY_DELAY_MS = 1000; // Exponential backoff: 1s, 2s, 4s, 8s
 
-// The placeholder date Socrata uses for restaurants that haven't been
-// inspected yet. These are excluded from the "most recent inspection" logic
-// but they could still appear in the raw data. Comparisons below rely on
-// this being a fixed-format ISO-8601 string, same shape as inspection_date
-// values returned by the API, so plain string comparison stays valid.
+// Socrata default placeholder for uninspected entities; excluded from scored calculations.
 const NOT_YET_INSPECTED_DATE = "1900-01-01T00:00:00.000";
 
-// Loose bounding box around NYC (including a small margin), used to catch
-// obviously-wrong coordinates -- e.g. (0, 0), swapped lat/lon, or other
-// "illogical values" the dataset's own documentation warns about -- rather
-// than plotting a garbage point somewhere nonsensical on the map.
+// Bounding box filter to discard (0,0), inverted coordinates, or out-of-state bad data.
 const NYC_BOUNDS = {
   minLat: 40.4,
   maxLat: 41.0,
@@ -138,10 +56,7 @@ function isWithinNYC(lat, lon) {
   );
 }
 
-// The API returns BORO as a title-case string already ("Brooklyn", "Bronx"),
-// matching BoroughFilters values directly. This map is kept as a
-// safety net in case that casing ever drifts, normalizing whatever comes
-// back to the exact values the UI expects.
+// Safety normalization map in case API casing drifts from expected filter values.
 const BORO_DISPLAY_NAMES = {
   MANHATTAN: "Manhattan",
   BRONX: "Bronx",
@@ -150,13 +65,7 @@ const BORO_DISPLAY_NAMES = {
   "STATEN ISLAND": "Staten Island",
 };
 
-// The dataset's own documentation lists exactly these five ACTION values.
-// Whichever one appears on a restaurant's MOST RECENT inspection tells us
-// their current DOHMH-enforced status -- e.g. if the last thing on record
-// is "re-closed," they're currently closed; if it's "re-opened" (or just a
-// normal inspection with or without violations), they're open. Anything
-// that doesn't exactly match one of these known values falls through to
-// "unknown" rather than guessing.
+// DOHMH status actions. Unrecognized values fall back to 'unknown' to avoid misrepresenting closures.
 const OPEN_ACTIONS = new Set([
   "Violations were cited in the following area(s).",
   "No violations were recorded at the time of this inspection.",
@@ -168,17 +77,8 @@ const CLOSED_ACTIONS = new Set([
 ]);
 
 /**
- * Derives a restaurant's current open/closed status from its most recent
- * SCORED inspection's ACTION text. Anything that doesn't exactly match
- * one of the known values falls through to "unknown" rather than
- * guessing -- silently assuming "open" for an unrecognized value would
- * be the wrong kind of mistake on a public health tool.
- *
- * Returns { code, label }: `code` is a stable machine-readable value
- * ("open" / "closed" / "unknown") meant for filtering and rendering
- * logic, while `label` is the human-readable display text. Consumers
- * should always match on `code`, never on `label` -- the label is free
- * to change wording without that being a breaking change.
+ * Derives operational status from latest ACTION text.
+ * Consumers should filter on `code` rather than mutable UI `label` strings.
  */
 function deriveCurrentStatus(action) {
   if (OPEN_ACTIONS.has(action)) return { code: "open", label: "Open" };
@@ -193,8 +93,7 @@ export function normalizeBoro(rawBoro) {
   return BORO_DISPLAY_NAMES[key] ?? rawBoro;
 }
 
-// Legal/corporate suffixes stripped from search tokens -- these rarely
-// help someone find a restaurant and only add noise to the index.
+// Stripped to remove low-signal noise from search index.
 const CORPORATE_SUFFIXES = new Set([
   "INC",
   "LLC",
@@ -205,13 +104,8 @@ const CORPORATE_SUFFIXES = new Set([
   "PC",
 ]);
 
-// Two-way street/word abbreviation expansions. Each key maps to the
-// expansion added as an EXTRA token alongside the original -- both forms
-// end up in the search index, so a query in either form matches. "ST" is
-// deliberately mapped to both "STREET" and "SAINT" since it's genuinely
-// ambiguous without positional context (e.g. "1st St" vs "St. Mark's");
-// adding both extra tokens is harmless for matching purposes, it just
-// means "ST" contributes a bit of redundant searchable text.
+// Bidirectional token expansions to support both abbreviated and spelled-out queries.
+// ST maps to both STREET and SAINT to handle ambiguous names without complex NLP.
 const ABBREVIATION_EXPANSIONS = {
   ST: ["STREET", "SAINT"],
   AVE: ["AVENUE"],
@@ -234,36 +128,27 @@ const ABBREVIATION_EXPANSIONS = {
   W: ["WEST"],
 };
 
-/**
- * Normalizes a single free-text field into a set of searchable tokens:
- * uppercased, apostrophes/periods stripped (so "INT'L" and "ST." become
- * "INTL" and "ST" before abbreviation lookup), corporate suffixes
- * dropped, and each remaining word expanded via ABBREVIATION_EXPANSIONS
- * where applicable (original word is always kept alongside its
- * expansion(s), never replaced).
- *
- * Returns an array of tokens rather than a joined string, so callers can
- * combine tokens from multiple source fields before deduping/joining
- * once at the end.
- */
 function stripDiacritics(text) {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
+/**
+ * Tokenizes text: strips punctuation/suffixes, preserves & as AND, and injects expansions.
+ */
 function normalizeToTokens(raw) {
   if (!raw) return [];
 
   const cleaned = stripDiacritics(String(raw))
     .toUpperCase()
-    .replace(/&/g, " AND ") // & -> AND as its own token, not stripped
-    .replace(/['".]/g, "") // strip apostrophes and periods
-    .replace(/[^A-Z0-9\s]/g, " "); // any other punctuation -> space
+    .replace(/&/g, " AND ")
+    .replace(/['".]/g, "")
+    .replace(/[^A-Z0-9\s]/g, " ");
 
   const words = cleaned.split(/\s+/).filter(Boolean);
   const tokens = [];
 
   for (const word of words) {
-    if (CORPORATE_SUFFIXES.has(word)) continue; // drop entirely, no value as a search term
+    if (CORPORATE_SUFFIXES.has(word)) continue;
     tokens.push(word);
     const expansions = ABBREVIATION_EXPANSIONS[word];
     if (expansions) tokens.push(...expansions);
@@ -273,9 +158,8 @@ function normalizeToTokens(raw) {
 }
 
 /**
- * Builds the single normalized `search_index` string stored on each
- * restaurant feature, combining name, cuisine, street, and building into
- * one searchable field.
+ * Combines entity fields into a deduplicated, space-delimited search token string.
+ * Splits parentheticals, slashes, and leading 'THE' into distinct searchable segments.
  */
 export function buildSearchIndex({ name, cuisine, street, building }) {
   const tokenSets = [];
@@ -314,9 +198,6 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-/**
- * Fetches a URL with retry and exponential backoff.
- */
 async function fetchWithRetry(url, attempt = 1) {
   let response;
 
@@ -350,8 +231,7 @@ async function fetchWithRetry(url, attempt = 1) {
 }
 
 /**
- * Loads and parses the local DOHMH Violation Code mapping CSV file offline.
- * Returns a dictionary mapping violation codes to their categories.
+ * Parses violation category CSV to enrich violation descriptions with official groupings.
  */
 async function loadLocalViolationCategories() {
   console.log("Loading local violation categories from file...");
@@ -415,11 +295,7 @@ const SELECT_FIELDS = [
   "council_district",
 ].join(",");
 
-/**
- * Fetches the dataset's authoritative row count via Socrata's count()
- * aggregate. Used by fetchAllRows() to verify the paginated fetch below
- * actually retrieved everything, rather than trusting page-length alone.
- */
+// Queries dataset count aggregate to validate paginated pipeline completeness.
 async function fetchExpectedRowCount() {
   const url = `${DATASET_URL}?$select=count(*) as count`;
   const response = await fetchWithRetry(url);
@@ -428,23 +304,9 @@ async function fetchExpectedRowCount() {
 }
 
 /**
- * Fetches every row from the dataset using paginated SODA API requests.
- *
- * $order includes `:id` -- Socrata's internal, guaranteed-unique row
- * identifier -- as a final tiebreaker after camis/inspection_date.
- * Without it, rows sharing the same camis+inspection_date (very common --
- * one row per violation code cited that day) have no stable order across
- * separate paginated requests. Socrata is free to break that tie
- * differently on each request, so the boundary between two pages can land
- * inside a tied group and silently drop rows that fall on the "wrong"
- * side of it that particular run -- a bug that shows up as a small,
- * inconsistent under-count from run to run rather than a hard failure.
- *
- * As a second line of defense, the total fetched row count is checked
- * against Socrata's own count(*) for the dataset. A mismatch throws
- * rather than writing a possibly-incomplete dataset -- an incomplete
- * fetch should fail the build loudly, not ship quietly as a slightly
- * smaller "successful" run.
+ * Paginates SODA API. Orders by `:id` tiebreaker to prevent silent row drops
+ * across page boundaries when multiple violations share identical dates.
+ * Aborts on total count mismatch to prevent writing truncated builds.
  */
 export async function fetchAllRows() {
   const expectedCount = await fetchExpectedRowCount();
@@ -477,10 +339,7 @@ export async function fetchAllRows() {
   return rows;
 }
 
-/**
- * Builds the code-to-details lookup written to violation-codes.json,
- * combining description and official category.
- */
+// Builds central violation lookup to avoid repeating verbose description strings across individual files.
 export function buildViolationCodeLookup(rows, categoryMapping) {
   const lookup = {};
   for (const row of rows) {
@@ -508,6 +367,7 @@ export function groupByCamis(rows) {
   return grouped;
 }
 
+// Groups flat violation rows into unified inspection events by date.
 export function groupRowsByInspectionDate(camis, records) {
   const inspected = records.filter(
     (r) => r.inspection_date && r.inspection_date !== NOT_YET_INSPECTED_DATE,
@@ -573,6 +433,10 @@ export function buildGeocodeInputList(eventsByRestaurant) {
   return restaurants;
 }
 
+/**
+ * Builds the primary GeoJSON feature collection for the map.
+ * Enforces spatial validity (NYC bounding box) and resolves geocode cache overrides.
+ */
 export function buildLatestInspectionsGeoJSON(
   eventsByRestaurant,
   generatedAt,
@@ -581,6 +445,7 @@ export function buildLatestInspectionsGeoJSON(
   const features = [];
 
   for (const [camis, events] of eventsByRestaurant) {
+    // Only map restaurants with at least one historical scored event.
     const scoredEvents = events.filter(
       (event) =>
         event.primary.score != null && event.date !== NOT_YET_INSPECTED_DATE,
@@ -600,10 +465,7 @@ export function buildLatestInspectionsGeoJSON(
 
     const cacheEntry = geocodeCache[camis];
 
-    // A house-number match alone doesn't guarantee the result is actually
-    // in NYC -- e.g. a real "25 Madison Avenue" exists in Glen Cove, NY,
-    // well outside the five boroughs. Require the resolved coordinate to
-    // also fall within NYC bounds before trusting "verified".
+    // Must match bounds check; prevents false positive matches on duplicate street names outside NYC.
     const hasVerifiedResolution =
       cacheEntry?.status === "verified" &&
       cacheEntry.resolved &&
@@ -614,10 +476,7 @@ export function buildLatestInspectionsGeoJSON(
     const displayLat = hasVerifiedResolution ? cacheEntry.resolved.lat : dohmhLatRaw;
     const displayLon = hasVerifiedResolution ? cacheEntry.resolved.lon : dohmhLonRaw;
 
-    // A "verified" cache entry that failed the NYC bounds check was still
-    // genuinely attempted -- it just couldn't be trusted -- so it's flagged
-    // "unverified" rather than "pending", which would incorrectly imply
-    // geocoding hasn't run for this restaurant yet.
+    // Cache entries that failed NYC bounds are flagged 'unverified' rather than 'pending' (already attempted).
     const failedBoundsCheck =
       cacheEntry?.status === "verified" &&
       cacheEntry.resolved &&
@@ -729,8 +588,7 @@ export function buildDashboardMeta(generatedAt, restaurantCount, historyRestaura
     0,
   );
 
-  // null (not 0) when there's no baseline to compare against yet, so the
-  // UI can distinguish "no data" from an actual zero-change day.
+  // Null indicates missing baseline (first run) to distinguish from true zero-change delta.
   const restaurantDelta =
     baselineSnapshot?.restaurantCount != null
       ? restaurantCount - baselineSnapshot.restaurantCount
@@ -750,10 +608,7 @@ export function buildDashboardMeta(generatedAt, restaurantCount, historyRestaura
   };
 }
 
-// Loads the baseline counts-snapshot.json written by the geocode-backfill
-// workflow. Mirrors loadCache()'s tolerance for a missing/corrupt file --
-// returns null rather than throwing, since this file simply won't exist
-// yet before the first backfill run has ever committed one.
+// Tolerates missing/corrupted baseline file by returning null instead of throwing.
 async function loadCountsSnapshot(filePath) {
   try {
     const raw = await readFile(filePath, "utf-8");
@@ -776,6 +631,7 @@ async function runInBatches(items, batchSize, fn) {
   }
 }
 
+// Re-creates history directory on every build to prevent orphaned files from decommissioned venues.
 export async function writeHistoryFiles(restaurants) {
   await rm(HISTORY_DIR, { recursive: true, force: true });
   await mkdir(HISTORY_DIR, { recursive: true });
@@ -812,7 +668,6 @@ async function main() {
     const eventsByRestaurant = buildEventsByRestaurant(grouped);
     const generatedAt = new Date().toISOString();
     
-    // Load official violation categories from the local repository asset
     const categoryMapping = await loadLocalViolationCategories();
     
     latestGeoJSON = buildLatestInspectionsGeoJSON(

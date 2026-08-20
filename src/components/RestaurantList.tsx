@@ -15,6 +15,7 @@ import InfoPopupContent from "./InfoPopupContent";
 import SortDropdown from "./SortDropdown";
 import RestaurantCard from "./RestaurantCard";
 import PaginationBar from "./PaginationBar";
+import NoticeOverlay from "./NoticeOverlay";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
@@ -108,16 +109,12 @@ type RestaurantListProps = {
   onSelectRestaurant?: (
     restaurant: RestaurantProperties,
   ) => void;
-  onCountChange?: (
-    count: number,
-  ) => void;
 };
 
 export default function RestaurantList({
   restaurants,
   selectedRestaurantId = null,
   onSelectRestaurant,
-  onCountChange,
 }: RestaurantListProps) {
   const [
     sortField,
@@ -160,56 +157,6 @@ export default function RestaurantList({
     useRef<string | null>(
       selectedRestaurantId,
     );
-
-  const [
-    showSortNotice,
-    setShowSortNotice,
-  ] = useState(false);
-
-  const isFirstSortRender =
-    useRef(true);
-
-  const sortNoticeTimeoutRef =
-    useRef<
-      ReturnType<typeof setTimeout> | null
-    >(null);
-
-  useEffect(() => {
-    if (isFirstSortRender.current) {
-      isFirstSortRender.current = false;
-      return;
-    }
-
-    if (
-      sortNoticeTimeoutRef.current
-    ) {
-      clearTimeout(
-        sortNoticeTimeoutRef.current,
-      );
-    }
-
-    setShowSortNotice(true);
-
-    sortNoticeTimeoutRef.current =
-      setTimeout(() => {
-        setShowSortNotice(false);
-      }, SORT_NOTICE_DURATION_MS);
-  }, [
-    sortField,
-    sortDirection,
-  ]);
-
-  useEffect(() => {
-    return () => {
-      if (
-        sortNoticeTimeoutRef.current
-      ) {
-        clearTimeout(
-          sortNoticeTimeoutRef.current,
-        );
-      }
-    };
-  }, []);
 
   useEffect(() => {
     const cardList =
@@ -384,15 +331,6 @@ export default function RestaurantList({
     restaurants,
     sortField,
     sortDirection,
-  ]);
-
-  useEffect(() => {
-    onCountChange?.(
-      sorted.length,
-    );
-  }, [
-    sorted.length,
-    onCountChange,
   ]);
 
   useEffect(() => {
@@ -601,22 +539,20 @@ export default function RestaurantList({
           itemName="restaurants"
         />
 
-        {showSortNotice && (
-          <div className="filter-notice-overlay">
-            <div className="filter-notice-text">
-              Sorted by{" "}
-              {currentSortLabel} —{" "}
-              {sortDirection ===
-              "asc"
-                ? "Ascending"
-                : "Descending"}{" "}
-              · Page{" "}
-              {clampedPage.toLocaleString()}{" "}
-              of{" "}
-              {totalPages.toLocaleString()}
-            </div>
-          </div>
-        )}
+        <NoticeOverlay
+          triggerKey={`${sortField}-${sortDirection}`}
+          durationMs={SORT_NOTICE_DURATION_MS}>
+          Sorted by{" "}
+          {currentSortLabel} —{" "}
+          {sortDirection ===
+          "asc"
+            ? "Ascending"
+            : "Descending"}{" "}
+          · Page{" "}
+          {clampedPage.toLocaleString()}{" "}
+          of{" "}
+          {totalPages.toLocaleString()}
+        </NoticeOverlay>
       </div>
     </section>
   );

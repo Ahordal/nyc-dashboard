@@ -1,16 +1,7 @@
 // Badge.tsx
-//
-// Small reusable "pill" label used throughout the dashboard for violation
-// severity, violation codes, violation categories, inspection status
-// flags (e.g. "Closed by DOHMH"), and geocoding confidence (e.g.
-// "Verified" / "Unverified" / "Pending" location).
-//
-// This is the single source of truth for severity colors (Critical /
-// Not Critical) so they can't drift out of sync between the places that
-// render them (ViolationList, the info popup legend in RestaurantReport,
-// etc). Sizing (padding, border-radius, line-height) and all status-flag
-// colors (including the location-* variants below) come from the shared
-// .violation-tag / .status-flag CSS classes in global.css.
+// Reusable pill badge for violation severity, codes, categories, and status flags.
+// Serves as the single source of truth for severity colors; base sizing and 
+// other variant styles are defined in global.css.
 
 import type { CSSProperties, ReactNode } from "react";
 
@@ -31,20 +22,13 @@ type SeverityStyle = {
   color: string;
 };
 
-// Central severity color mapping. Update colors here and every badge
-// (violation tags, the info popup legend) picks up the change.
+// Central source of truth for violation severity colors.
 export const SEVERITY_STYLES: Record<"critical" | "not-critical", SeverityStyle> = {
   critical: { background: "#8B0000", color: "#ffffff" },
   "not-critical": { background: "#E6B800", color: "#1a1a1a" },
 };
 
-// Maps each variant to the existing CSS classes that carry the shared
-// badge sizing plus whatever variant-specific styling (border, background,
-// letter-spacing, etc.) already lives in global.css. The three location-*
-// variants reuse the same STATUS FLAGS & BADGES section in global.css as
-// status-open/closed/unknown (status-location-verified/unverified/pending),
-// rather than inline colors, so they stay visually consistent with the
-// rest of the badge family and pick up palette changes automatically.
+// Maps variants to their shared base and modifier CSS classes in global.css.
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
   critical: "violation-tag severity-tag",
   "not-critical": "violation-tag severity-tag",
