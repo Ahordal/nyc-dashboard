@@ -9,8 +9,9 @@
 // the map's extent.
 //
 // Query/geometry logic (visible-restaurant queries, filter extent
-// computation, selection-vs-filter checks) lives in ./mapQueries -- this
-// file focuses on React state, effects, and ArcGIS event wiring.
+// computation, selection-vs-filter checks) lives in
+// ../queries/mapQueries -- this file focuses on React state, effects,
+// and ArcGIS event wiring.
 
 import { useEffect, useRef } from "react";
 import Map from "@arcgis/core/Map";
@@ -34,7 +35,7 @@ import {
   checkSelectionAgainstFilters,
   queryFilterExtent,
   RESTAURANT_OUT_FIELDS,
-} from "../types/mapQueries";
+} from "../queries/mapQueries";
 
 esriConfig.apiKey = import.meta.env.PUBLIC_ARCGIS_API_KEY;
 

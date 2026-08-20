@@ -5,7 +5,7 @@
 // Owns the dashboard's shared state, assembles the application layout,
 // and coordinates data flow between the dashboard's child components.
 
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 
 import DashboardTitle from "./DashboardTitle";
 import GradeFilters from "./GradeFilters";
@@ -17,10 +17,10 @@ import ExplorerSearch from "./ExplorerSearch";
 import RestaurantList from "./RestaurantList";
 import RestaurantDetails from "./RestaurantDetails";
 import RestaurantReport from "./RestaurantReport";
-import MapView from "./MapView";
 import PerformanceChart from "./PerformanceChart";
 import DashboardFooter from "./DashboardFooter";
 import NoticeOverlay from "./NoticeOverlay";
+import MapViewSkeleton from "./MapViewSkeleton";
 
 import type { Filters } from "../types/filters";
 
@@ -34,6 +34,16 @@ import type { DashboardMeta } from "../types/dashboardMeta";
 import type { GradeCounts } from "./MapView";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
+
+// @arcgis/core is by far the heaviest dependency in this app (it alone
+// accounts for the bulk of the main bundle). Loading MapView via
+// React.lazy splits it into its own chunk that's only fetched once the
+// browser is idle/rendering this component, instead of blocking the
+// FIRST paint of the title, guide, and grade chart on ArcGIS's JS
+// finishing download+parse. MapViewSkeleton (above, via Suspense)
+// fills the map's grid area with a same-shaped placeholder in the
+// meantime so the layout doesn't jump once the real map mounts.
+const MapView = lazy(() => import("./MapView"));
 
 type ExplorerTab = "list" | "details" | "report";
 
@@ -290,14 +300,16 @@ export default function Dashboard() {
           </div>
 
           <div className="map-view">
-            <MapView
-              filters={filters}
-              searchQuery={searchQuery}
-              selectedRestaurantId={selectedRestaurant?.id ?? null}
-              onSelectRestaurant={handleSelectRestaurant}
-              onVisibleRestaurantsChange={setVisibleRestaurants}
-              onGradeCountsChange={setGradeCounts}
-            />
+            <Suspense fallback={<MapViewSkeleton />}>
+              <MapView
+                filters={filters}
+                searchQuery={searchQuery}
+                selectedRestaurantId={selectedRestaurant?.id ?? null}
+                onSelectRestaurant={handleSelectRestaurant}
+                onVisibleRestaurantsChange={setVisibleRestaurants}
+                onGradeCountsChange={setGradeCounts}
+              />
+            </Suspense>
           </div>
         </div>
 

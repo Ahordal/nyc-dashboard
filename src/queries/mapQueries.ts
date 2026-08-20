@@ -4,7 +4,10 @@
 // separate from MapView.tsx so that component orchestrates React state
 // and effects, while this module owns "ask the layer a question, get
 // data back" logic -- independently readable, and independently
-// reusable if another component ever needs the same queries.
+// reusable if another component ever needs the same queries. Lives in
+// its own src/queries/ folder rather than src/types/ -- it's query
+// logic, not type definitions, so it was previously easy to miss here
+// looking for it alongside filters.ts/restaurant.ts.
 
 import type GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
 import type MapView from "@arcgis/core/views/MapView";
@@ -205,8 +208,9 @@ export async function queryVisibleRestaurants(
   const baseQuery = layer.createQuery();
   baseQuery.geometry = view.extent;
   baseQuery.spatialRelationship = "intersects";
-  baseQuery.returnGeometry = false;
+  baseQuery.where = layer.definitionExpression ?? "1=1";
   baseQuery.outFields = RESTAURANT_OUT_FIELDS;
+  baseQuery.returnGeometry = false;
 
   const allFeatures: Graphic[] = [];
   let start = 0;
