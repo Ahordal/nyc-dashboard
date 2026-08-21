@@ -11,5 +11,5 @@ export type Filters = {
   grades: string[];
   boroughs: string[];
 };
-
+export type MapDisplayMode = "points" | "clusters";
 export type SetFilters = Dispatch<SetStateAction<Filters>>;

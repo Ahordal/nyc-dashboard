@@ -46,6 +46,30 @@ function yearsSince(dateString: string): number {
   return (now - then) / (1000 * 60 * 60 * 24 * 365.25);
 }
 
+// Extracts total counts of Critical and Not Critical violations for an inspection event
+function getViolationCounts(event: InspectionEvent): {
+  critical: number;
+  notCritical: number;
+} {
+  if (!event.violations || event.violations.length === 0) {
+    return { critical: 0, notCritical: 0 };
+  }
+
+  let critical = 0;
+  let notCritical = 0;
+
+  for (const v of event.violations) {
+    const flag = v.critical_flag?.toLowerCase();
+    if (flag === "critical" || flag === "y") {
+      critical += 1;
+    } else if (flag === "not critical" || flag === "n") {
+      notCritical += 1;
+    }
+  }
+
+  return { critical, notCritical };
+}
+
 // Maps a restaurant's current_status_code to the matching Badge variant,
 // falling back to "status-unknown" for any unrecognized code.
 function statusVariant(code: string): BadgeVariant {
@@ -120,38 +144,38 @@ const RESTAURANT_INFO_CONTENT = (
     statuses={
       <ul>
         <li>
-          <Badge variant="status-open">Open</Badge> — Most recent
-          inspection wasn&apos;t a closure.{" "}
+          <Badge variant="status-open">Open</Badge> — Most recent inspection
+          wasn&apos;t a closure.{" "}
           <strong>
             Reflects dataset status, not live business operations.
           </strong>
         </li>
 
         <li>
-          <Badge variant="status-unknown">Unknown</Badge> — No
-          reliable status recorded
+          <Badge variant="status-unknown">Unknown</Badge> — No reliable status
+          recorded
         </li>
 
         <li>
-          <Badge variant="status-closed">Closed by DOHMH</Badge> —
-          Most recent inspection resulted in a closure
+          <Badge variant="status-closed">Closed by DOHMH</Badge> — Most recent
+          inspection resulted in a closure
         </li>
 
         <li>
-          <Badge variant="location-verified">Verified</Badge> — An
-          independent geocoder confirmed this location.
+          <Badge variant="location-verified">Verified</Badge> — An independent
+          geocoder confirmed this location.
         </li>
 
         <li>
-          <Badge variant="location-unverified">Unverified</Badge> —
-          Geocoding ran but couldn&apos;t confirm a match. The coordinate
-          shown falls back to DOHMH&apos;s on-file location.
+          <Badge variant="location-unverified">Unverified</Badge> — Geocoding
+          ran but couldn&apos;t confirm a match. The coordinate shown falls back
+          to DOHMH&apos;s on-file location.
         </li>
 
         <li>
-          <Badge variant="location-pending">Pending</Badge> — Not yet
-          checked by the geocoder. The coordinate shown is DOHMH&apos;s
-          on-file location for now.
+          <Badge variant="location-pending">Pending</Badge> — Not yet checked by
+          the geocoder. The coordinate shown is DOHMH&apos;s on-file location
+          for now.
         </li>
       </ul>
     }
@@ -166,9 +190,9 @@ const RESTAURANT_INFO_CONTENT = (
 
         <li>
           Restaurant locations are independently geocoded and checked against
-          DOHMH's on-file address where possible. See the Location badge
-          under Geographical Information — Verified, Unverified, or Pending
-          (described above).
+          DOHMH's on-file address where possible. See the Location badge under
+          Geographical Information — Verified, Unverified, or Pending (described
+          above).
         </li>
       </ul>
     }
@@ -354,7 +378,8 @@ export default function RestaurantDetails({
               <td>Location</td>
 
               <td>
-                <Badge variant={locationStatusVariant(restaurant.location_status)}>
+                <Badge
+                  variant={locationStatusVariant(restaurant.location_status)}>
                   {LOCATION_STATUS_LABELS[restaurant.location_status]}
                 </Badge>
               </td>
@@ -367,19 +392,20 @@ export default function RestaurantDetails({
             </tr>
 
             <tr>
-              <td>Google Street View</td>
+              <td>Google Maps</td>
 
               <td>
                 {restaurant.latitude && restaurant.longitude ? (
-                  
-                    <a href={`https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${restaurant.latitude},${restaurant.longitude}`}
+                  <a
+                    href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                      `${restaurant.name} ${restaurant.building || ""} ${restaurant.street || ""} ${restaurant.boro || ""}`,
+                    )}`}
                     target="_blank"
                     rel="noopener noreferrer">
-                    View Street View{" "}
+                    View Restaurant{" "}
                     <FontAwesomeIcon
                       icon={faArrowUpRightFromSquare}
                       className="external-link-icon"
-                      aria-hidden="true"
                     />
                   </a>
                 ) : (
@@ -411,13 +437,15 @@ export default function RestaurantDetails({
 
               const eventGrade = event.grade ?? "N/A";
 
+              const { critical, notCritical } = getViolationCounts(event);
+
               return (
                 <li
                   key={event.id}
                   className={isSelected ? "inspection-row-selected" : ""}
                   style={
-                    isSelected 
-                      ? { outlineColor: CATEGORY_COLORS[eventCategory] } 
+                    isSelected
+                      ? { outlineColor: CATEGORY_COLORS[eventCategory] }
                       : undefined
                   }
                   role="button"
@@ -425,6 +453,7 @@ export default function RestaurantDetails({
                   aria-current={isSelected ? "true" : undefined}
                   aria-label={[
                     `Open inspection report for ${eventDate}.`,
+                    `${critical} Critical, ${notCritical} Not Critical violations.`,
                     `Grade ${eventGrade}.`,
                     `Score ${event.score}.`,
                   ].join(" ")}
@@ -453,6 +482,7 @@ export default function RestaurantDetails({
                       onSelectInspection(event.id);
                     }
                   }}>
+                  {/* 1. Dot */}
                   <span
                     className="inspection-row-dot"
                     style={{
@@ -461,8 +491,45 @@ export default function RestaurantDetails({
                     aria-hidden="true"
                   />
 
+                  {/* 2. Date */}
                   <span className="inspection-row-date">{eventDate}</span>
 
+                  {/* 3. Badges */}
+                  <div className="inspection-violation-counts">
+                    {critical === 0 &&
+                    notCritical === 0 &&
+                    event.score === 0 ? (
+                      <span className="violation-slot-full">
+                        <Badge variant="status-open">0 Violations</Badge>
+                      </span>
+                    ) : (
+                      <>
+                        <span className="violation-slot violation-slot-critical">
+                          {critical > 0 && (
+                            <span className="violation-count-item">
+                              <span className="violation-count-val">
+                                {critical}
+                              </span>
+                              <Badge variant="critical">Critical</Badge>
+                            </span>
+                          )}
+                        </span>
+
+                        <span className="violation-slot violation-slot-not-critical">
+                          {notCritical > 0 && (
+                            <span className="violation-count-item">
+                              <span className="violation-count-val">
+                                {notCritical}
+                              </span>
+                              <Badge variant="not-critical">Not Critical</Badge>
+                            </span>
+                          )}
+                        </span>
+                      </>
+                    )}
+                  </div>
+
+                  {/* 4. Grade */}
                   <span
                     className="inspection-row-grade"
                     style={{
@@ -471,6 +538,7 @@ export default function RestaurantDetails({
                     {eventGrade}
                   </span>
 
+                  {/* 5. Score */}
                   <span className="inspection-row-score">{event.score}</span>
                 </li>
               );

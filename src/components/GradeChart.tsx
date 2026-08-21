@@ -382,8 +382,7 @@ export default function GradeChart({
                       {totalCount.toLocaleString()}
                     </span>{" "}
                     Restaurants
-                    <br />
-                    in map view
+                 
                   </div>
                 )}
               </div>

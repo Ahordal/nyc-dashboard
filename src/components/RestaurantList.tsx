@@ -1,8 +1,4 @@
 // RestaurantList.tsx
-//
-// Displays the restaurants currently included by the map view, filters,
-// and search as a sortable and paginated list of cards.
-
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
@@ -28,9 +24,8 @@ const RESTAURANT_LIST_INFO_CONTENT = (
     howToUse={
       <ul>
         <li>
-          Select a restaurant card to display that restaurant&apos;s details
-          and inspection history, and to pan and zoom the map to its
-          location.
+          Select a restaurant card to display that restaurant&apos;s details and
+          inspection history, and to pan and zoom the map to its location.
         </li>
 
         <li>
@@ -38,9 +33,7 @@ const RESTAURANT_LIST_INFO_CONTENT = (
           results.
         </li>
 
-        <li>
-          Use the pagination controls to move between pages of results.
-        </li>
+        <li>Use the pagination controls to move between pages of results.</li>
       </ul>
     }
     dataNotes={
@@ -66,7 +59,7 @@ const SORT_FIELD_OPTIONS: { value: SortField; label: string }[] = [
   { value: "score", label: "Score" },
 ];
 
-const SORT_NOTICE_DURATION_MS = 900;
+const SORT_NOTICE_DURATION_MS = 1300;
 
 const CARD_HEIGHT = 88;
 const MIN_PAGE_SIZE = 4;
@@ -75,163 +68,122 @@ type RestaurantListProps = {
   restaurants: RestaurantProperties[];
   selectedRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties) => void;
+  children?: React.ReactNode; // Slot for external filter notice overlay
 };
 
 export default function RestaurantList({
   restaurants,
   selectedRestaurantId = null,
   onSelectRestaurant,
+  children,
 }: RestaurantListProps) {
   const [sortField, setSortField] = useState<SortField>("inspection_date");
-
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
-
   const [page, setPage] = useState(1);
-
   const [pageSize, setPageSize] = useState(10);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
-
   const cardListRef = useRef<HTMLDivElement | null>(null);
-
   const prevRestaurantCountRef = useRef(restaurants.length);
-
-  const prevSelectedIdForResetRef = useRef<string | null>(
-    selectedRestaurantId,
-  );
+  const prevSelectedIdRef = useRef<string | null>(selectedRestaurantId);
 
   useEffect(() => {
     const cardList = cardListRef.current;
-
-    if (!cardList) {
-      return;
-    }
+    if (!cardList) return;
 
     const recomputePageSize = () => {
       const availableHeight = cardList.clientHeight;
-
       const fit = Math.floor(availableHeight / CARD_HEIGHT);
-
-      setPageSize((previousPageSize) => {
-        const nextPageSize = Math.max(MIN_PAGE_SIZE, fit);
-
-        return nextPageSize === previousPageSize
-          ? previousPageSize
-          : nextPageSize;
-      });
+      setPageSize(Math.max(MIN_PAGE_SIZE, fit));
     };
 
     recomputePageSize();
-
     const resizeObserver = new ResizeObserver(recomputePageSize);
-
     resizeObserver.observe(cardList);
 
-    return () => {
-      resizeObserver.disconnect();
-    };
+    return () => resizeObserver.disconnect();
   }, []);
 
   const sorted = useMemo(() => {
     const sortableList = [...restaurants];
-
     const directionMultiplier = sortDirection === "asc" ? 1 : -1;
 
     sortableList.sort((first, second) => {
+      let comparison = 0;
+
       switch (sortField) {
         case "name":
-          return first.name.localeCompare(second.name) * directionMultiplier;
-
+          comparison = (first.name || "").localeCompare(second.name || "");
+          break;
         case "cuisine":
-          return (
-            (first.cuisine || "").localeCompare(second.cuisine || "") *
-            directionMultiplier
+          comparison = (first.cuisine || "").localeCompare(
+            second.cuisine || "",
           );
-
+          break;
         case "score":
-          return (first.score - second.score) * directionMultiplier;
-
-        case "inspection_date":
-          return (
-            (new Date(first.inspection_date).getTime() -
-              new Date(second.inspection_date).getTime()) *
-            directionMultiplier
-          );
-
+          comparison = (first.score ?? 0) - (second.score ?? 0);
+          break;
+        case "inspection_date": {
+          const t1 = first.inspection_date
+            ? new Date(first.inspection_date).getTime()
+            : 0;
+          const t2 = second.inspection_date
+            ? new Date(second.inspection_date).getTime()
+            : 0;
+          comparison =
+            (Number.isNaN(t1) ? 0 : t1) - (Number.isNaN(t2) ? 0 : t2);
+          break;
+        }
         case "grade": {
-          const isPending = (restaurant: RestaurantProperties) =>
-            !restaurant.grade ||
-            restaurant.grade === "N" ||
-            restaurant.grade === "P" ||
-            restaurant.grade === "Z";
-
+          const isPending = (r: RestaurantProperties) =>
+            !r.grade || r.grade === "N" || r.grade === "P" || r.grade === "Z";
           const firstPending = isPending(first);
-
           const secondPending = isPending(second);
 
-          if (firstPending !== secondPending) {
-            return firstPending ? 1 : -1;
+          if (firstPending !== secondPending) return firstPending ? 1 : -1;
+          if (!firstPending && !secondPending) {
+            const rank = (r: RestaurantProperties) =>
+              r.grade === "A" ? 0 : r.grade === "B" ? 1 : 2;
+            comparison = rank(first) - rank(second);
           }
-
-          if (firstPending && secondPending) {
-            return 0;
-          }
-
-          const rank = (restaurant: RestaurantProperties) =>
-            restaurant.grade === "A" ? 0 : restaurant.grade === "B" ? 1 : 2;
-
-          const rankDifference = rank(first) - rank(second);
-
-          if (rankDifference !== 0) {
-            return rankDifference * directionMultiplier;
-          }
-
-          return (first.score - second.score) * directionMultiplier;
+          break;
         }
-
         default:
-          return 0;
+          comparison = 0;
       }
+
+      if (comparison !== 0) return comparison * directionMultiplier;
+      const nameTie = (first.name || "").localeCompare(second.name || "");
+      if (nameTie !== 0) return nameTie;
+      return (first.id || "").localeCompare(second.id || "");
     });
 
     return sortableList;
   }, [restaurants, sortField, sortDirection]);
 
   useEffect(() => {
-    const countChanged =
-      prevRestaurantCountRef.current !== restaurants.length;
-
-    const justDeselected =
-      prevSelectedIdForResetRef.current !== null &&
-      selectedRestaurantId === null;
+    const countChanged = prevRestaurantCountRef.current !== restaurants.length;
+    const selectedChanged = prevSelectedIdRef.current !== selectedRestaurantId;
 
     prevRestaurantCountRef.current = restaurants.length;
+    prevSelectedIdRef.current = selectedRestaurantId;
 
-    prevSelectedIdForResetRef.current = selectedRestaurantId;
-
-    if (selectedRestaurantId && sorted.length > 0) {
-      const index = sorted.findIndex(
-        (restaurant) => restaurant.id === selectedRestaurantId,
-      );
-
+    if (selectedChanged && selectedRestaurantId && sorted.length > 0) {
+      const index = sorted.findIndex((r) => r.id === selectedRestaurantId);
       if (index !== -1) {
         setPage(Math.floor(index / pageSize) + 1);
-
         return;
       }
     }
 
-    if (countChanged || justDeselected) {
+    if (countChanged) {
       setPage(1);
     }
-  }, [restaurants.length, selectedRestaurantId, sorted, pageSize]);
+  }, [restaurants.length, selectedRestaurantId, pageSize, sorted]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
-
   const clampedPage = Math.min(page, totalPages);
-
   const pageStart = (clampedPage - 1) * pageSize;
-
   const pageItems = sorted.slice(pageStart, pageStart + pageSize);
 
   const currentSortLabel =
@@ -265,35 +217,28 @@ export default function RestaurantList({
             type="button"
             className="sort-direction-toggle"
             onClick={() => {
-              setSortDirection((currentDirection) =>
-                currentDirection === "asc" ? "desc" : "asc",
+              setSortDirection((current) =>
+                current === "asc" ? "desc" : "asc",
               );
-
               setPage(1);
             }}
-            aria-label={`Sort ${
-              sortDirection === "asc" ? "descending" : "ascending"
-            }`}>
+            aria-label={`Sort ${sortDirection === "asc" ? "descending" : "ascending"}`}>
             <FontAwesomeIcon
               icon={faArrowUp}
-              className={`sort-direction-arrow ${
-                sortDirection === "desc" ? "flipped" : ""
-              }`}
+              className={`sort-direction-arrow ${sortDirection === "desc" ? "flipped" : ""}`}
             />
-
             <span>{sortDirection === "asc" ? "Ascending" : "Descending"}</span>
           </button>
         </div>
 
+        {/* Both Sort and Filter notices are anchored strictly to the card viewport */}
         <div ref={cardListRef} className="restaurant-card-list">
           {pageItems.map((restaurant) => (
             <RestaurantCard
               key={restaurant.id}
               restaurant={restaurant}
               isSelected={restaurant.id === selectedRestaurantId}
-              onClick={(selectedRestaurant) => {
-                onSelectRestaurant?.(selectedRestaurant);
-              }}
+              onClick={(selected) => onSelectRestaurant?.(selected)}
             />
           ))}
 
@@ -302,6 +247,17 @@ export default function RestaurantList({
               No restaurants match the current view and filters.
             </div>
           )}
+
+          {/* Sort Notice */}
+          <NoticeOverlay
+            triggerKey={`${sortField}-${sortDirection}`}
+            durationMs={SORT_NOTICE_DURATION_MS}>
+            Sorted by {currentSortLabel} —{" "}
+            {sortDirection === "asc" ? "Ascending" : "Descending"}
+          </NoticeOverlay>
+
+          {/* Filter Notice Passed Down */}
+          {children}
         </div>
 
         <PaginationBar
@@ -311,18 +267,6 @@ export default function RestaurantList({
           onPageChange={setPage}
           itemName="restaurants"
         />
-
-        <NoticeOverlay
-          triggerKey={`${sortField}-${sortDirection}`}
-          durationMs={SORT_NOTICE_DURATION_MS}>
-          Sorted by{" "}
-          {currentSortLabel} —{" "}
-          {sortDirection === "asc" ? "Ascending" : "Descending"}{" "}
-          · Page{" "}
-          {clampedPage.toLocaleString()}{" "}
-          of{" "}
-          {totalPages.toLocaleString()}
-        </NoticeOverlay>
       </div>
     </section>
   );

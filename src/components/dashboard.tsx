@@ -5,7 +5,14 @@
 // Owns the dashboard's shared state, assembles the application layout,
 // and coordinates data flow between the dashboard's child components.
 
-import { lazy, Suspense, useEffect, useRef, useState } from "react";
+import {
+  lazy,
+  Suspense,
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+} from "react";
 
 import DashboardTitle from "./DashboardTitle";
 import GradeFilters from "./GradeFilters";
@@ -22,6 +29,9 @@ import DashboardFooter from "./DashboardFooter";
 import NoticeOverlay from "./NoticeOverlay";
 import MapViewSkeleton from "./MapViewSkeleton";
 
+import { useUrlSync } from "../hooks/useUrlSync";
+import type { InitialUrlState } from "../hooks/useUrlSync";
+
 import type { Filters } from "../types/filters";
 
 import type {
@@ -35,19 +45,11 @@ import type { GradeCounts } from "./MapView";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
-// @arcgis/core is by far the heaviest dependency in this app (it alone
-// accounts for the bulk of the main bundle). Loading MapView via
-// React.lazy splits it into its own chunk that's only fetched once the
-// browser is idle/rendering this component, instead of blocking the
-// FIRST paint of the title, guide, and grade chart on ArcGIS's JS
-// finishing download+parse. MapViewSkeleton (above, via Suspense)
-// fills the map's grid area with a same-shaped placeholder in the
-// meantime so the layout doesn't jump once the real map mounts.
 const MapView = lazy(() => import("./MapView"));
 
 type ExplorerTab = "list" | "details" | "report";
 
-const FILTER_NOTICE_DURATION_MS = 2500;
+const FILTER_NOTICE_DURATION_MS = 1300;
 
 const MAX_HISTORY_CACHE_ENTRIES = 50;
 
@@ -78,6 +80,12 @@ export default function Dashboard() {
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<RestaurantProperties | null>(null);
 
+
+
+  const [pendingCamisFromUrl, setPendingCamisFromUrl] = useState<string | null>(
+    null,
+  );
+
   const [activeExplorerTab, setActiveExplorerTab] =
     useState<ExplorerTab>("list");
 
@@ -85,18 +93,6 @@ export default function Dashboard() {
     RestaurantProperties[]
   >([]);
 
-  // Grade/status tally for the current map view (extent + borough +
-  // search, deliberately NOT grade-filtered -- see MapView's
-  // onGradeCountsChange doc comment) -- this is what GradeChart needs so
-  // a selected grade stays exploded/highlighted among all five slices
-  // instead of the ring collapsing to a single 100% slice. Used to be a
-  // full RestaurantProperties[] array (visibleRestaurantsUngraded, up to
-  // ~27k objects at city zoom) computed just so GradeChart could tally
-  // five numbers from it -- MapView now computes that tally itself and
-  // only the counts land in state here. StatsPanel and RestaurantList
-  // intentionally keep using the grade-filtered visibleRestaurants
-  // above, since their counts/rows describe what's actually rendered on
-  // the map.
   const [gradeCounts, setGradeCounts] =
     useState<GradeCounts>(EMPTY_GRADE_COUNTS);
 
@@ -129,6 +125,53 @@ export default function Dashboard() {
     history.some((event) => event.id === selectedInspectionId)
       ? selectedInspectionId
       : (history[history.length - 1]?.id ?? null);
+
+  // Initialize state from URL params on first mount
+  const handleInitialUrlState = useCallback((initial: InitialUrlState) => {
+    if (initial.grades.length > 0 || initial.boroughs.length > 0) {
+      setFilters({
+        grades: initial.grades,
+        boroughs: initial.boroughs,
+      });
+    }
+
+    if (initial.searchQuery) {
+      setSearchQuery(initial.searchQuery);
+    }
+
+    if (initial.camis) {
+      setPendingCamisFromUrl(initial.camis);
+    }
+  }, []);
+
+  // Sync state back to URL parameters
+  useUrlSync(
+    {
+      grades: filters.grades,
+      boroughs: filters.boroughs,
+      searchQuery,
+      selectedRestaurantCamis: selectedRestaurant?.camis ?? null,
+    },
+    handleInitialUrlState,
+  );
+
+  // If a restaurant was specified in the initial URL, select it once visible
+  useEffect(() => {
+    if (!pendingCamisFromUrl || visibleRestaurants.length === 0) {
+      return;
+    }
+
+    const match = visibleRestaurants.find(
+      (restaurant) =>
+        restaurant.camis === pendingCamisFromUrl ||
+        restaurant.id === pendingCamisFromUrl,
+    );
+
+    if (match) {
+      handleSelectRestaurant(match);
+      setPendingCamisFromUrl(null);
+    }
+  }, [pendingCamisFromUrl, visibleRestaurants]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -308,7 +351,7 @@ export default function Dashboard() {
                 filters={filters}
                 searchQuery={searchQuery}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
-                onSelectRestaurant={handleSelectRestaurant}
+                onSelectRestaurant={handleSelectRestaurant}                
                 onVisibleRestaurantsChange={setVisibleRestaurants}
                 onGradeCountsChange={setGradeCounts}
               />
@@ -370,8 +413,60 @@ export default function Dashboard() {
               <RestaurantList
                 restaurants={visibleRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
-                onSelectRestaurant={handleSelectRestaurant}
-              />
+                onSelectRestaurant={handleSelectRestaurant}>
+                <NoticeOverlay
+                  triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}`}
+                  durationMs={FILTER_NOTICE_DURATION_MS}>
+                  {filters.grades.length > 0 && (
+                    <span className="filter-notice-group">
+                      Grade:{" "}
+                      {filters.grades.map((grade, index) => (
+                        <span key={grade}>
+                          <span
+                            style={{
+                              color: GRADE_FILTER_COLORS[grade],
+                            }}>
+                            {grade}
+                          </span>
+
+                          {index < filters.grades.length - 1 && ", "}
+                        </span>
+                      ))}
+                    </span>
+                  )}
+
+                  {filters.grades.length > 0 && filters.boroughs.length > 0 && (
+                    <span className="filter-notice-separator">, </span>
+                  )}
+
+                  {filters.boroughs.length > 0 && (
+                    <span className="filter-notice-group">
+                      Borough: {filters.boroughs.join(", ")}
+                    </span>
+                  )}
+
+                  {(filters.grades.length > 0 || filters.boroughs.length > 0) &&
+                    searchQuery && (
+                      <span className="filter-notice-separator">, </span>
+                    )}
+
+                  {searchQuery && (
+                    <span className="filter-notice-group">
+                      Search: &quot;
+                      {searchQuery}
+                      &quot;
+                    </span>
+                  )}
+
+                  {filters.grades.length === 0 &&
+                    filters.boroughs.length === 0 &&
+                    !searchQuery && (
+                      <span className="filter-notice-group">
+                        All Restaurants
+                      </span>
+                    )}
+                </NoticeOverlay>
+              </RestaurantList>
             </div>
 
             <div
@@ -400,57 +495,6 @@ export default function Dashboard() {
                 onSelectInspection={handleSelectInspection}
               />
             </div>
-
-            <NoticeOverlay
-              triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}`}
-              durationMs={FILTER_NOTICE_DURATION_MS}>
-              {filters.grades.length > 0 && (
-                <span className="filter-notice-group">
-                  Grade:{" "}
-                  {filters.grades.map((grade, index) => (
-                    <span key={grade}>
-                      <span
-                        style={{
-                          color: GRADE_FILTER_COLORS[grade],
-                        }}>
-                        {grade}
-                      </span>
-
-                      {index < filters.grades.length - 1 && ", "}
-                    </span>
-                  ))}
-                </span>
-              )}
-
-              {filters.grades.length > 0 && filters.boroughs.length > 0 && (
-                <span className="filter-notice-separator">, </span>
-              )}
-
-              {filters.boroughs.length > 0 && (
-                <span className="filter-notice-group">
-                  Borough: {filters.boroughs.join(", ")}
-                </span>
-              )}
-
-              {(filters.grades.length > 0 || filters.boroughs.length > 0) &&
-                searchQuery && (
-                  <span className="filter-notice-separator">, </span>
-                )}
-
-              {searchQuery && (
-                <span className="filter-notice-group">
-                  Search: &quot;
-                  {searchQuery}
-                  &quot;
-                </span>
-              )}
-
-              {filters.grades.length === 0 &&
-                filters.boroughs.length === 0 &&
-                !searchQuery && (
-                  <span className="filter-notice-group">All Restaurants</span>
-                )}
-            </NoticeOverlay>
           </div>
         </div>
 
