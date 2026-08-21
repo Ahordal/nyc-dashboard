@@ -229,6 +229,9 @@ export default function Dashboard() {
     return () => {
       controller.abort();
     };
+    // Key on camis rather than object identity: map queries can return fresh
+    // object refs for the same restaurant, causing unnecessary cache refetches.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedRestaurant?.camis]);
 
   function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
@@ -445,9 +448,7 @@ export default function Dashboard() {
               {filters.grades.length === 0 &&
                 filters.boroughs.length === 0 &&
                 !searchQuery && (
-                  <span className="filter-notice-group">
-                    All Restaurants
-                  </span>
+                  <span className="filter-notice-group">All Restaurants</span>
                 )}
             </NoticeOverlay>
           </div>

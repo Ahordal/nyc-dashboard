@@ -723,7 +723,7 @@ export default function PerformanceChart({
       return;
     }
 
-    let nextIndex: number | null = null;
+    let nextIndex: number;
 
     switch (event.key) {
       case "ArrowRight":

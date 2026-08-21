@@ -4,7 +4,7 @@
 // it's an acceptable match. This is deliberately separate from the LocationIQ
 // API wrapper so it can be unit tested against fixture data.
 
-import { houseNumbersMatch, streetNamesMatch, normalizeHouseNumber, isWithinNYC } from './normalize.mjs';
+import { houseNumbersMatch, streetNamesMatch, isWithinNYC } from './normalize.mjs';
 
 // Haversine distance in meters between two lat/lon points.
 export function distanceMeters(lat1, lon1, lat2, lon2) {
