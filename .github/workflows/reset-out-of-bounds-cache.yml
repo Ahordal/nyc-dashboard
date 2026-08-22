@@ -17,12 +17,6 @@ name: Reset Out-of-Bounds Geocode Cache Entries
 # reset-out-of-bounds-cache-entries.mjs itself.
 
 on:
-  schedule:
-    # 21:15 UTC (6:15 PM ADT). This is a ONE-OFF cleanup -- remove this
-    # schedule block after its first successful run so it doesn't keep
-    # firing daily; workflow_dispatch below is enough for any future
-    # manual re-runs.
-    - cron: '15 21 * * *'
   workflow_dispatch: {} # Actions tab -> this workflow -> Run workflow
 
 permissions:

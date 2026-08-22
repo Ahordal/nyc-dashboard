@@ -355,15 +355,14 @@ export default function GradeChart({
                   >
                     <span
                       style={{
-                        fontFamily: "var(--font-mono)",
+                        fontFamily: "var(--font-display)",
                         color: activeItem.color,
                       }}
                     >
                       {activeItem.value.toLocaleString()}
                     </span>{" "}
                     Restaurants
-                    <br />
-                    in map view
+                    
                   </div>
                 ) : (
                   <div

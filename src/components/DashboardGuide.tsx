@@ -96,25 +96,27 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
       </div>
 
       <div className="dashboard-guide-meta">
-        <div className="dashboard-guide-meta-item">
-          <span className="dashboard-guide-meta-label">
-            Last Updated: &nbsp; 
-          </span>
+        <div className="dashboard-guide-meta-row">
+          <div className="dashboard-guide-meta-item">
+            <span className="dashboard-guide-meta-label">
+              Last Updated: &nbsp; 
+            </span>
 
-          <span className="dashboard-guide-meta-value">
-            {formatLastUpdated(meta?.lastUpdated)}
-          </span>
-        </div>
+            <span className="dashboard-guide-meta-value">
+              {formatLastUpdated(meta?.lastUpdated)}
+            </span>
+          </div>
 
-        <div className="dashboard-guide-meta-item">
-          <span className="dashboard-guide-meta-label">
-            Total Restaurant Count: &nbsp; 
-          </span>
+          <div className="dashboard-guide-meta-item">
+            <span className="dashboard-guide-meta-label">
+              Total Restaurant Count: &nbsp; 
+            </span>
 
-          <span className="dashboard-guide-meta-value">
-            {formatCount(meta?.restaurantCount)}
-            {formatDelta(meta?.restaurantDelta)}
-          </span>
+            <span className="dashboard-guide-meta-value">
+              {formatCount(meta?.restaurantCount)}
+              {formatDelta(meta?.restaurantDelta)}
+            </span>
+          </div>
         </div>
 
         <div className="dashboard-guide-meta-item">
@@ -125,6 +127,18 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
           <span className="dashboard-guide-meta-value">
             {formatCount(meta?.inspectionCount)}
             {formatDelta(meta?.inspectionDelta)}
+          </span>
+        </div>
+
+        <div className="dashboard-guide-meta-divider" />
+
+        <div className="dashboard-guide-meta-item">
+          <span className="dashboard-guide-meta-label">
+            Dashboard & Cartography: &nbsp; 
+          </span>
+
+          <span className="dashboard-guide-meta-value">
+            Alex Hordal
           </span>
         </div>
       </div>
@@ -153,40 +167,40 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
         <InfoPopupContent
           overview={
             <p>
-              Explores NYC restaurant inspection records through the map, grade and borough filters, search, restaurant list, restaurant details, inspection reports, performance chart and the grade breakdown pie chart.
+              Explores NYC restaurant inspection records through the map, grade and borough filters, search, restaurant list, restaurant details, inspection reports, performance chart and the grade breakdown pie chart[cite: 12].
             </p>
           }
           howToUse={
             <ul>
               <li>
                 Grade and Borough controls can be combined to narrow the
-                restaurants shown.
+                restaurants shown[cite: 12].
               </li>
 
               <li>
                 Search further narrows the current results by restaurant
-                name or cuisine.
+                name or cuisine[cite: 12].
               </li>
 
               <li>
                 Restaurant lists and dashboard summaries update with the
-                current map view, filters, and search.
+                current map view, filters, and search[cite: 12].
               </li>
 
               <li>
                 Click a restaurant on the map or in the list to view its
-                details, inspection history, and performance chart.
+                details, inspection history, and performance chart[cite: 12].
               </li>
 
               <li>
                 Panning or zooming the map changes which restaurants are
-                "in view". The list, stats panel, and grade
-                chart then dynamically update to match.
+                &quot;in view&quot;. The list, stats panel, and grade
+                chart then dynamically update to match[cite: 12].
               </li>
 
               <li>
-                Use the list's sort and pagination controls to browse
-                restaurants currently in view.
+                Use the list&apos;s sort and pagination controls to browse
+                restaurants currently in view[cite: 12].
               </li>
             </ul>
           }
@@ -199,7 +213,7 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
                   target="_blank"
                   rel="noreferrer"
                 >
-                  DOHMH New York City Restaurant Inspection Results
+                  DOHMH New York City Restaurant Inspection Results[cite: 12]
                 </a>{" "}
                 <FontAwesomeIcon
                   icon={
@@ -215,41 +229,41 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
             <ul>
               <li>
                 The underlying dataset is provided by DOHMH and may not
-                reflect inspections in real time.
+                reflect inspections in real time[cite: 12].
               </li>
 
               <li>
                 Historical inspection reports may differ from a
-                restaurant&apos;s latest grade, score, or recorded status.
+                restaurant&apos;s latest grade, score, or recorded status[cite: 12].
               </li>
 
               <li>
                 Inspections without numerical scores may be excluded from
-                score-based charts and summaries.
+                score-based charts and summaries[cite: 12].
               </li>
 
               <li>
                 Restaurants with no scored inspection on record (including
-                ones never inspected) do not appear on the map at all.
+                ones never inspected) do not appear on the map at all[cite: 12].
               </li>
 
               <li>
                 The &quot;latest&quot; inspection shown may not be a
                 restaurant&apos;s most recent visit — non-substantive
                 administrative or compliance checks without a score are
-                skipped in favor of the last scored inspection.
+                skipped in favor of the last scored inspection[cite: 12].
               </li>
 
               <li>
                 Restaurant locations are geocoded; some could not be
                 automatically confirmed and are flagged on the map as
-                &quot;Location Unverified&quot; rather than assumed correct.
+                &quot;Location Unverified&quot; rather than assumed correct[cite: 12].
               </li>
 
               <li>
                 Displayed addresses are reformatted from the source dataset
                 (ordinal suffixes, casing) and may differ slightly from
-                official listings.
+                official listings[cite: 12].
               </li>
             </ul>
           }

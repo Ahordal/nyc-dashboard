@@ -14,7 +14,7 @@ export default function PaginationBar({
   totalPages,
   totalItems,
   onPageChange,
-  itemName = "items",
+  itemName = "restaurants",
 }: PaginationBarProps) {
   // If there's nothing to paginate, render nothing.
   if (totalItems === 0) return null;
@@ -27,9 +27,11 @@ export default function PaginationBar({
         disabled={currentPage === 1}>
         Previous
       </button>
-      <span>
-        Page {currentPage} of {totalPages.toLocaleString()} (
-        {totalItems.toLocaleString()} {itemName} in map view)
+      <span className="pagination-text">
+        Page <span className="pagination-num">{currentPage}</span> of{" "}
+        <span className="pagination-num">{totalPages.toLocaleString()}</span> (
+        <span className="pagination-num">{totalItems.toLocaleString()}</span>{" "}
+        {itemName})
       </span>
       <button
         type="button"

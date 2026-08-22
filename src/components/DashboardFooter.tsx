@@ -2,7 +2,6 @@
 //
 // Site-level attribution bar spanning the full width of the dashboard.
 
-
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faLinkedin,

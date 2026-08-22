@@ -1,5 +1,7 @@
 /*///////////////////////////////////////////// 1. RESET & GLOBAL FOUNDATIONS //////////////////////////////////////////////*/
 
+/* 1.1 IMPORTS & BOX SIZING */
+
 @import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
 
 *,
@@ -7,6 +9,8 @@
 *::after {
   box-sizing: border-box;
 }
+
+/* 1.2 BASE ELEMENTS & SCROLLBARS */
 
 body,
 h1, h2, h3, h4, h5, h6,
@@ -23,7 +27,7 @@ body,
 }
 
 html {
-  scrollbar-color: #4a4a4a #2b2b2b;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 body {
@@ -35,6 +39,8 @@ body {
   padding: var(--space-s);
   overflow: hidden;
 }
+
+/* 1.3 GLOBAL LINKS & POPUPS */
 
 a {
   color: var(--text-body);
@@ -56,10 +62,13 @@ a:focus-visible {
 
 /*///////////////////////////////////////////// 2. VARIABLES //////////////////////////////////////////////*/
 
+/* 2.1 COLOR PALETTE & DESIGN TOKENS */
+
 :root {
   --bg: #212121;
   --bg-alt: #252525;
   --bg-panel: #2b2b2b;
+  --bg-row-alt: #292929;
   
   --text-body: #d6d8d4;
   --text-heading: #ffffff;
@@ -67,8 +76,23 @@ a:focus-visible {
 
   --border-panel: #424242;
 
-  --status-positive: #66bb6a;
-  --status-negative: #ef5350;
+  --status-positive-bg: #3cb44b;
+  --status-positive-text: #ffffff;
+  --status-negative-bg: #8b0000;
+  --status-negative-text: #ffffff;
+  --status-warning-bg: #e6b800;
+  --status-warning-text: #1a1a1a;
+  
+  --status-delta-positive: #66bb6a;
+  --status-delta-negative: #ef5350;
+
+  --badge-bg: rgba(0, 0, 0, 0.25);
+  --shadow-overlay: rgba(0, 0, 0, 0.4);
+  --shadow-modal: rgba(0, 0, 0, 0.6);
+  --shadow-controls: rgba(0, 0, 0, 0.3);
+
+  --scrollbar-thumb: #4a4a4a;
+  --scrollbar-track: #2b2b2b;
 
   --space-xs: 0.5rem;
   --space-s: 1rem;
@@ -85,6 +109,8 @@ a:focus-visible {
 }
 
 /*///////////////////////////////////////////// 3. APP & GRID LAYOUT //////////////////////////////////////////////*/
+
+/* 3.1 CONTAINER & DASHBOARD CSS GRID */
 
 .dashboard-container {
   width: 100%;
@@ -108,6 +134,8 @@ a:focus-visible {
     "footer footer footer";
   gap: var(--space-xs);
 }
+
+/* 3.2 SIDEBAR & STRUCTURAL AREAS */
 
 .left-sidebar {
   grid-area: sidebar;
@@ -168,6 +196,8 @@ a:focus-visible {
 
 /*///////////////////////////////////////////// 4. FOOTER //////////////////////////////////////////////*/
 
+/* 4.1 FOOTER BAR & LAYOUT */
+
 .dashboard-footer {
   grid-area: footer;
   min-width: 0;
@@ -193,6 +223,8 @@ a:focus-visible {
   color: var(--text-muted);
 }
 
+/* 4.2 FOOTER CONTENT & SOCIAL LINKS */
+
 .footer-location {
   display: flex;
   align-items: center;
@@ -217,6 +249,11 @@ a:focus-visible {
   color: var(--text-muted);
   display: inline-flex;
   align-items: center;
+  transition: color 0.15s ease;
+}
+
+.footer-links a:hover {
+  color: var(--link-hover);
 }
 
 .footer-divider {
@@ -230,6 +267,8 @@ a:focus-visible {
 }
 
 /*///////////////////////////////////////////// 5. PANELS, HEADERS & MODALS //////////////////////////////////////////////*/
+
+/* 5.1 PANEL CONTAINERS & HEADERS */
 
 .panel {
   width: 100%;
@@ -298,7 +337,7 @@ a:focus-visible {
   padding: var(--space-s);
   font-size: 0.9em;
   line-height: 1.6;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px var(--shadow-overlay);
 }
 
 .panel-header-popup ul,
@@ -315,10 +354,12 @@ a:focus-visible {
   margin-bottom: 0;
 }
 
+/* 5.2 MODALS & POPUPS */
+
 .info-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
+  background: var(--shadow-modal);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -368,6 +409,8 @@ a:focus-visible {
 
 /*///////////////////////////////////////////// 6. DASHBOARD TITLE //////////////////////////////////////////////*/
 
+/* 6.1 TITLE TYPOGRAPHY & WRAPPER */
+
 .dashboard-title-panel {
   display: flex;
   flex-direction: column;
@@ -402,7 +445,7 @@ a:focus-visible {
   line-height: 1;
   letter-spacing: -0.05em; 
   margin-left: -0.06em; 
-  text-shadow: -3px 4px 0px #252525;
+  text-shadow: -3px 4px 0px var(--bg-alt);
 }
 
 .h1-med {
@@ -421,6 +464,8 @@ a:focus-visible {
 }
 
 /*///////////////////////////////////////////// 7. DASHBOARD FILTERS //////////////////////////////////////////////*/
+
+/* 7.1 FILTER BAR & BUTTONS */
 
 .dashboard-filters {
   display: grid;
@@ -506,7 +551,7 @@ a:focus-visible {
   border-color: var(--border-panel);
   color: var(--link-hover);
   font-weight: bold;
-  border-bottom: 3px solid #424242;
+  border-bottom: 3px solid var(--border-panel);
 }
 
 .filter-clear {
@@ -514,6 +559,8 @@ a:focus-visible {
 }
 
 /*///////////////////////////////////////////// 8. STATS PANEL //////////////////////////////////////////////*/
+
+/* 8.1 STATS LAYOUT & COUNTERS */
 
 .map-stats {
   min-width: 0;
@@ -616,6 +663,8 @@ a:focus-visible {
 
 /*///////////////////////////////////////////// 9. SEARCH PANEL //////////////////////////////////////////////*/
 
+/* 9.1 SEARCH BAR & INPUT CONTROLS */
+
 .search-panel-body {
   display: flex;
   align-items: center;
@@ -691,6 +740,8 @@ a:focus-visible {
 }
 
 /*///////////////////////////////////////////// 10. RESTAURANT EXPLORER & LIST //////////////////////////////////////////////*/
+
+/* 10.1 EXPLORER TABS */
 
 .explorer {
   grid-area: explorer;
@@ -783,24 +834,32 @@ a:focus-visible {
   padding: var(--space-s);
 }
 
+/* 10.2 LIST PAGINATION */
+
 .restaurant-list-pagination {
   flex-shrink: 0;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0;
-  font-size: 0.85rem;
+  font-size: 0.8rem;
   font-weight: 600;
-  color: var(--text-body);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  text-transform: uppercase;
 }
 
 .restaurant-list-pagination button {
   background: transparent;
-  color: var(--text-body);
+  color: var(--text-muted);
   border: 1px solid var(--border-panel);
   padding: 0.25rem 0.6rem;
-  font: inherit;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  font-weight: 700;
+  text-transform: uppercase;
   cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
 }
 
 .restaurant-list-pagination button:hover:not(:disabled) {
@@ -812,6 +871,21 @@ a:focus-visible {
   opacity: 0.4;
   cursor: default;
 }
+
+.pagination-text {
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.pagination-num {
+  font-family: var(--font-body);
+  color: var(--text-body);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* 10.3 LIST SORTING & CARDS */
 
 .restaurant-list-sort-bar {
   display: flex;
@@ -914,7 +988,7 @@ a:focus-visible {
 }
 
 .sort-dropdown-option.selected {
-  background-color: #252525;
+  background-color: var(--bg-alt);
 }
 
 .sort-dropdown-trigger-label {
@@ -1018,7 +1092,7 @@ a:focus-visible {
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--badge-bg);
 }
 
 .badge-label {
@@ -1039,6 +1113,8 @@ a:focus-visible {
 }
 
 /*///////////////////////////////////////////// 11. RESTAURANT DETAILS & REPORTS //////////////////////////////////////////////*/
+
+/* 11.1 DETAILS HEADER & TABLES */
 
 .restaurant-details-panel {
   display: flex;
@@ -1130,12 +1206,12 @@ a:focus-visible {
 }
 
 .details-table tr:nth-child(even) {
-  background-color: #292929;
+  background-color: var(--bg-row-alt);
 }
 
 .details-stale-note {
   font-size: 0.85em;
-  color: #e6b800;
+  color: var(--status-warning-bg);
 }
 
 .details-pending-note {
@@ -1164,6 +1240,8 @@ a:focus-visible {
   letter-spacing: 0.05em;
   color: var(--text-muted);
 }
+
+/* 11.2 INSPECTION REPORTS NAVIGATION */
 
 .restaurant-report-panel {
   display: flex;
@@ -1216,18 +1294,20 @@ a:focus-visible {
 
 /*///////////////////////////////////////////// 12. STATUS FLAGS & VIOLATIONS //////////////////////////////////////////////*/
 
+/* 12.1 STATUS BADGES & TAGS */
+
 .status-flag {
   margin-left: -0.1rem;
 }
 
 .status-open {
-  background-color: #3cb44b;
-  color: #ffffff;
+  background-color: var(--status-positive-bg);
+  color: var(--status-positive-text);
 }
 
 .status-closed {
-  background-color: #8b0000;
-  color: #ffffff;
+  background-color: var(--status-negative-bg);
+  color: var(--status-negative-text);
 }
 
 .status-unknown {
@@ -1236,19 +1316,21 @@ a:focus-visible {
 }
 
 .status-location-verified {
-  background-color: #3cb44b;
-  color: #ffffff;
+  background-color: var(--status-positive-bg);
+  color: var(--status-positive-text);
 }
 
 .status-location-unverified {
-  background-color: #e6b800;
-  color: #1a1a1a;
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-text);
 }
 
 .status-location-pending {
   background-color: var(--border-panel);
   color: var(--text-muted);
 }
+
+/* 12.2 VIOLATION LISTS & FORMATTING */
 
 .violations-list {
   list-style: none;
@@ -1258,14 +1340,14 @@ a:focus-visible {
 }
 
 .violations-list li {
-  background-color: #292929;
+  background-color: var(--bg-row-alt);
   border-left: 3px solid var(--border-panel);
   padding: var(--space-xs);
   font-size: 0.8125rem;
 }
 
 .violations-list li.violation-item {
-  background-color: #292929;
+  background-color: var(--bg-row-alt);
   border-left: 3px solid var(--border-panel);
   padding: 12px 16px;
   display: flex;
@@ -1324,6 +1406,8 @@ a:focus-visible {
 
 /*///////////////////////////////////////////// 13. INSPECTION HISTORY //////////////////////////////////////////////*/
 
+/* 13.1 HISTORY LIST & ROWS */
+
 .inspection-history-list {
   list-style: none;
   display: flex;
@@ -1340,7 +1424,7 @@ a:focus-visible {
 }
 
 .inspection-history-list li:nth-child(even) {
-  background-color: #292929;
+  background-color: var(--bg-row-alt);
 }
 
 .inspection-history-list li:hover {
@@ -1378,6 +1462,8 @@ a:focus-visible {
   color: var(--text-muted);
   font-variant-numeric: tabular-nums;
 }
+
+/* 13.2 VIOLATION COUNTERS */
 
 .inspection-violation-counts {
   display: grid;
@@ -1418,6 +1504,8 @@ a:focus-visible {
 
 /*///////////////////////////////////////////// 14. PERFORMANCE CHARTS & GUIDES //////////////////////////////////////////////*/
 
+/* 14.1 PERFORMANCE CHART UI */
+
 .performance-chart-panel {
   display: flex;
   flex-direction: column;
@@ -1435,15 +1523,15 @@ a:focus-visible {
 }
 
 .performance-chart-body circle:focus-visible {
-  outline: 2px solid var(--accent-color, #4dabf7);
+  outline: 2px solid var(--accent-blue);
   outline-offset: 2px;
 }
 
 .performance-tooltip {
   position: absolute;
   pointer-events: none;
-  background: var(--bg-panel, #222222);
-  border: 1px solid var(--border-panel, #444444);
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
   padding: 8px 12px;
   z-index: 10;
   white-space: nowrap;
@@ -1451,20 +1539,20 @@ a:focus-visible {
 
 .performance-tooltip-date {
   margin-bottom: 4px;
-  color: var(--text-muted, #aaaaaa);
+  color: var(--text-muted);
   font-size: 0.85rem;
   font-weight: 700;
 }
 
 .performance-tooltip-score {
-  color: var(--text-body, #dddddd);
+  color: var(--text-body);
   font-size: 0.85rem;
 }
 
 .performance-tooltip-score span {
   font-family: var(--font-mono);
   font-weight: 600;
-  color: var(--text-heading, #ffffff);
+  color: var(--text-heading);
 }
 
 .chart-dot {
@@ -1476,6 +1564,8 @@ a:focus-visible {
   filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
   z-index: 10;
 }
+
+/* 14.2 GRADE CHART CONTAINER */
 
 .grade-chart {
   flex: 1 1 0%;
@@ -1490,6 +1580,8 @@ a:focus-visible {
   flex-direction: column;
   height: 100%;
 }
+
+/* 14.3 DASHBOARD GUIDE PANEL */
 
 .dashboard-guide-panel {
   display: flex;
@@ -1583,11 +1675,19 @@ a:focus-visible {
   min-height: 0;
 }
 
+/* 14.4 DASHBOARD META */
+
 .dashboard-guide-meta {
   display: flex;
-  gap: 20px;
+  flex-direction: column;
+  gap: 0.75rem;
   padding: 1rem;
-  border-top: 1px solid var(--panel-border, rgba(255, 255, 255, 0.08));
+  border-top: 1px solid var(--border-panel);
+}
+
+.dashboard-guide-meta-row {
+  display: flex;
+  gap: 20px;
   flex-wrap: wrap;
 }
 
@@ -1596,6 +1696,12 @@ a:focus-visible {
   flex-direction: column;
   gap: 2px;
   min-width: 120px;
+}
+
+.dashboard-guide-meta-divider {
+  width: 100%;
+  border-top: 1px solid var(--border-panel);
+  margin: 0.1rem 0;
 }
 
 .dashboard-guide-meta-label {
@@ -1624,14 +1730,16 @@ a:focus-visible {
 }
 
 .dashboard-guide-meta-delta-positive {
-  color: var(--status-positive);
+  color: var(--status-delta-positive);
 }
 
 .dashboard-guide-meta-delta-negative {
-  color: var(--status-negative);
+  color: var(--status-delta-negative);
 }
 
 /*///////////////////////////////////////////// 15. MAP VIEW, LEGENDS & CONTROLS //////////////////////////////////////////////*/
+
+/* 15.1 MAP VIEW CONTAINER & HEADERS */
 
 .map-view-container {
   position: relative;
@@ -1662,7 +1770,7 @@ a:focus-visible {
   margin-bottom: 0;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px var(--shadow-overlay);
   width: 36px !important;
   height: 36px !important;
   padding: 0 !important;
@@ -1682,6 +1790,8 @@ a:focus-visible {
   right: 0;
   left: auto;
 }
+
+/* 15.2 MAP LEGENDS */
 
 .legend-info-grid {
   display: flex;
@@ -1733,7 +1843,7 @@ a:focus-visible {
   vertical-align: middle;
 }
 
-.legend-table td:first-title {
+.legend-table td:first-child {
   width: auto;
 }
 
@@ -1772,6 +1882,8 @@ a:focus-visible {
   font-variant-numeric: tabular-nums;
 }
 
+/* 15.3 MAP CONTROLS & HOVER CARDS */
+
 .map-canvas-wrapper {
   position: relative;
   width: 100%;
@@ -1786,7 +1898,7 @@ a:focus-visible {
   gap: 0.75rem;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 4px 12px var(--shadow-overlay);
   padding: 0.4rem 0.6rem;
   z-index: 15;
 }
@@ -1812,7 +1924,7 @@ a:focus-visible {
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: rgba(0, 0, 0, 0.25);
+  background: var(--badge-bg);
   border-radius: 0;
 }
 
@@ -1855,7 +1967,7 @@ a:focus-visible {
   align-items: center;
   gap: 6px;
   font-variant-numeric: tabular-nums;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 2px 4px var(--shadow-controls);
   box-sizing: border-box;
   text-transform: uppercase;
 }
@@ -1909,9 +2021,25 @@ a:focus-visible {
   width: 48px;
 }
 
+/* 15.4 ESRI OVERRIDES & SKELETONS */
+
 .esri-view {
   --esri-view-outline-color: transparent !important;
   --esri-view-outline: transparent !important;
+}
+
+.esri-attribution {
+  background-color: transparent !important;
+  color: var(--text-muted) !important;
+  font-family: var(--font-display) !important;
+  text-transform: uppercase !important;
+  font-size: 0.75rem !important;
+  padding: 4px 8px !important;
+}
+
+.esri-attribution__sources {
+  color: var(--text-muted) !important;
+  text-transform: uppercase !important;
 }
 
 .map-view :focus,
@@ -1946,7 +2074,7 @@ a:focus-visible {
 .filter-notice-overlay {
   position: absolute;
   inset: 0;
-  background: rgba(37, 37, 37, 1);
+  background: var(--bg-alt);
   display: flex;
   align-items: center;
   justify-content: center;

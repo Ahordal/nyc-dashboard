@@ -245,7 +245,7 @@ export default function RestaurantList({
 
           {pageItems.length === 0 && (
             <div className="restaurant-list-empty">
-              No restaurants match the current view and filters.
+              No restaurants match the current view, filters or search results.
             </div>
           )}
 

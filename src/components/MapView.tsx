@@ -475,7 +475,7 @@ export default function InspectionMapView({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       renderer: pointsRenderer as any,
       outFields: RESTAURANT_OUT_FIELDS,
-      copyright: "NYC DOHMH | Cartography: ALEX HORDAL",
+      copyright: "NYC DOHMH |",
     });
     layerRef.current = layer;
 

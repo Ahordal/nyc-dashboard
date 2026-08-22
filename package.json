@@ -11,7 +11,7 @@
     "build": "node pipeline/fetch-inspection.mjs && npx vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "node --test pipeline/"
+    "test": "node --test pipeline/*.test.mjs"
   },
   "dependencies": {
     "@arcgis/core": "^5.1.0",
