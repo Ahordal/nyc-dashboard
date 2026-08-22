@@ -53,12 +53,12 @@ a:focus-visible {
   color: var(--link-hover);
 }
 
-.panel-header-popup p,
+/* .panel-header-popup p,
 .panel-header-popup li,
 .info-modal-content p,
 .info-modal-content li {
   text-align: justify;
-}
+} */
 
 /*///////////////////////////////////////////// 2. VARIABLES //////////////////////////////////////////////*/
 
@@ -1837,6 +1837,7 @@ a:focus-visible {
   display: inline-block;
   border-radius: 50%;
   flex-shrink: 0;
+  box-sizing: border-box;
 }
 
 .legend-arrow {

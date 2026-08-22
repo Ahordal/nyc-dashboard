@@ -54,13 +54,11 @@ const scoreWeightExpression = `
   if (status == "closed") {
     return 60;
   }
-  var g = $feature.grade;
-  if (g == "Z" || g == "P" || g == "N") {
-    return 20;
-  }
   var s = $feature.score;
-  if (IsEmpty(s) || s < 0) return 0;
-  return s;
+  if (!IsEmpty(s) && s >= 0) {
+    return s;
+  }
+  return 20;
 `;
 
 const pointsRenderer = {
@@ -69,7 +67,7 @@ const pointsRenderer = {
   defaultSymbol: {
     type: "simple-marker",
     color: "#FFFFFF",
-    outline: { color: "rgba(26, 26, 26, 0.8)", width: 0.5 },
+    outline: { color: "rgba(26, 26, 26, 1)", width: 0.5 },
   },
   uniqueValueInfos: [
     {
@@ -77,7 +75,7 @@ const pointsRenderer = {
       symbol: {
         type: "simple-marker",
         color: CATEGORY_COLORS.A,
-        outline: { color: "rgba(26, 26, 26, 0.8)", width: 0.5 },
+        outline: { color: "rgba(26, 26, 26, 1)", width: 0.5 },
       },
     },
     {
@@ -85,7 +83,7 @@ const pointsRenderer = {
       symbol: {
         type: "simple-marker",
         color: CATEGORY_COLORS.B,
-        outline: { color: "rgba(26, 26, 26, 0.8)", width: 0.5 },
+        outline: { color: "rgba(26, 26, 26, 1)", width: 0.5 },
       },
     },
     {
@@ -93,7 +91,7 @@ const pointsRenderer = {
       symbol: {
         type: "simple-marker",
         color: CATEGORY_COLORS.C,
-        outline: { color: "rgba(26, 26, 26, 0.8)", width: 0.5 },
+        outline: { color: "rgba(26, 26, 26, 1)", width: 0.5 },
       },
     },
     {
@@ -101,7 +99,7 @@ const pointsRenderer = {
       symbol: {
         type: "simple-marker",
         color: CATEGORY_COLORS.pending,
-        outline: { color: "rgba(26, 26, 26, 0.8)", width: 0.5 },
+        outline: { color: "rgba(26, 26, 26, 1)", width: 0.5 },
       },
     },
     {
@@ -109,7 +107,7 @@ const pointsRenderer = {
       symbol: {
         type: "simple-marker",
         color: CATEGORY_COLORS.closed,
-        outline: { color: "rgba(26, 26, 26, 0.8)", width: 0.5 },
+        outline: { color: "rgba(26, 26, 26, 1)", width: 0.5 },
       },
     },
   ],
@@ -194,9 +192,9 @@ const MAP_LEGEND_INFO_CONTENT = (
             </td>
             <td>
               <div className="legend-scale-visual">
-                <span className="dot-sample" style={{ width: "4px", height: "4px", backgroundColor: CATEGORY_COLORS.A }}></span>
+                <span className="dot-sample" style={{ width: "4px", height: "4px", backgroundColor: CATEGORY_COLORS.A, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
                 <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
-                <span className="dot-sample" style={{ width: "7px", height: "7px", backgroundColor: CATEGORY_COLORS.A }}></span>
+                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.A, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
               </div>
             </td>
             <td className="legend-score-text">0–13 pts</td>
@@ -207,9 +205,9 @@ const MAP_LEGEND_INFO_CONTENT = (
             </td>
             <td>
               <div className="legend-scale-visual">
-                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.B }}></span>
+                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.B, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
                 <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
-                <span className="dot-sample" style={{ width: "8px", height: "8px", backgroundColor: CATEGORY_COLORS.B }}></span>
+                <span className="dot-sample" style={{ width: "8px", height: "8px", backgroundColor: CATEGORY_COLORS.B, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
               </div>
             </td>
             <td className="legend-score-text">14–27 pts</td>
@@ -220,9 +218,9 @@ const MAP_LEGEND_INFO_CONTENT = (
             </td>
             <td>
               <div className="legend-scale-visual">
-                <span className="dot-sample" style={{ width: "8px", height: "8px", backgroundColor: CATEGORY_COLORS.C }}></span>
+                <span className="dot-sample" style={{ width: "8px", height: "8px", backgroundColor: CATEGORY_COLORS.C, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
                 <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
-                <span className="dot-sample" style={{ width: "10px", height: "10px", backgroundColor: CATEGORY_COLORS.C }}></span>
+                <span className="dot-sample" style={{ width: "11px", height: "11px", backgroundColor: CATEGORY_COLORS.C, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
               </div>
             </td>
             <td className="legend-score-text">28+ pts</td>
@@ -232,8 +230,10 @@ const MAP_LEGEND_INFO_CONTENT = (
               <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.pending }}>Pending</span>
             </td>
             <td>
-              <div className="legend-scale-visual single-dot-align">
-                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.pending }}></span>
+              <div className="legend-scale-visual">
+                <span className="dot-sample" style={{ width: "4px", height: "4px", backgroundColor: CATEGORY_COLORS.pending, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
+                <span className="dot-sample" style={{ width: "11px", height: "11px", backgroundColor: CATEGORY_COLORS.pending, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
               </div>
             </td>
             <td className="legend-score-text">N / P / Z</td>
@@ -244,13 +244,25 @@ const MAP_LEGEND_INFO_CONTENT = (
             </td>
             <td>
               <div className="legend-scale-visual single-dot-align">
-                <span className="dot-sample" style={{ width: "10px", height: "10px", backgroundColor: CATEGORY_COLORS.closed }}></span>
+                <span className="dot-sample" style={{ width: "11px", height: "11px", backgroundColor: CATEGORY_COLORS.closed, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
               </div>
             </td>
             <td className="legend-score-text"></td>
           </tr>
         </tbody>
       </table>
+    }
+    dataNotes={
+      <ul>
+        <li>
+          The map utilizes bivariate symbology: circle size corresponds to the
+          approximate inspection score (larger circle = higher score), and
+          circle color represents the inspection grade.
+        </li>
+        <li>
+          Use the restaurant listing panel to browse and inspect individual establishments when multiple locations share overlapping points.
+        </li>
+      </ul>
     }
   />
 );
@@ -610,7 +622,7 @@ export default function InspectionMapView({
           y: event.y,
           name: attrs.name,
           category,
-          gradeText: category === "closed" ? "Closed" : (attrs.grade ?? "—"),
+          gradeText: attrs.grade ? attrs.grade : "N/A",
           scoreText: attrs.score != null ? String(attrs.score) : "—",
         });
       } else {

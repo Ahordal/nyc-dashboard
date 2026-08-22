@@ -76,18 +76,18 @@ const REPORT_INFO_CONTENT = (
     violations={
       <ul>
         <li>
-          <Badge variant="critical">Critical</Badge> — Violation poses a
-          higher risk to food safety.
+          <Badge variant="critical">Critical</Badge> — Violation poses a higher
+          risk to food safety.
         </li>
 
         <li>
-          <Badge variant="not-critical">Not Critical</Badge> — Violation
-          relates to general sanitation and maintenance.
+          <Badge variant="not-critical">Not Critical</Badge> — Violation relates
+          to general sanitation and maintenance.
         </li>
 
         <li>
-          <Badge variant="code">02H</Badge> — Official NYC violation code
-          for this specific finding.
+          <Badge variant="code">02H</Badge> — Official NYC violation code for
+          this specific finding.
         </li>
 
         <li>
@@ -99,8 +99,8 @@ const REPORT_INFO_CONTENT = (
     statuses={
       <ul>
         <li>
-          <Badge variant="status-closed">Closed by DOHMH</Badge> — The
-          displayed inspection resulted in a closure.
+          <Badge variant="status-closed">Closed by DOHMH</Badge> — The displayed
+          inspection resulted in a closure.
         </li>
       </ul>
     }
@@ -264,15 +264,16 @@ export default function RestaurantReport({
                 {isClosure && (
                   <>
                     {" "}
-                    <Badge
-                      variant="status-closed"
-                      style={{
-                        marginLeft: "8px",
-                        verticalAlign: "middle",
-                        whiteSpace: "nowrap",
-                      }}>
-                      Closed by DOHMH
-                    </Badge>
+                    <div style={{ marginTop: "6px" }}>
+                      <Badge
+                        variant="status-closed"
+                        style={{
+                          marginLeft: "0",
+                          display: "inline-block",
+                        }}>
+                        Closed by DOHMH
+                      </Badge>
+                    </div>
                   </>
                 )}
               </td>
