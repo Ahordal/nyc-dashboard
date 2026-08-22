@@ -190,7 +190,7 @@ const RESTAURANT_INFO_CONTENT = (
 
         <li>
           Restaurant locations are independently geocoded and checked against
-          DOHMH's on-file address where possible. See the Location badge under
+          DOHMH&apos;s on-file address where possible. See the Location badge under
           Geographical Information — Verified, Unverified, or Pending (described
           above).
         </li>
@@ -321,24 +321,28 @@ export default function RestaurantDetails({
               <td>Status</td>
 
               <td>
-                <Badge variant={statusVariant(restaurant.current_status_code)}>
-                  {STATUS_LABELS[restaurant.current_status_code] ??
-                    restaurant.current_status_label}
-                </Badge>
+                <div>
+                  <Badge variant={statusVariant(restaurant.current_status_code)}>
+                    {STATUS_LABELS[restaurant.current_status_code] ??
+                      restaurant.current_status_label}
+                  </Badge>
 
-                {isStale && (
-                  <span className="details-stale-note">
-                    {" "}
-                    Last inspected {Math.floor(inspectionAge)}+ years ago
-                  </span>
-                )}
+                  {isStale && (
+                    <div className="status-note-line">
+                      <span className="details-stale-note">
+                        Last inspected {Math.floor(inspectionAge)}+ years ago
+                      </span>
+                    </div>
+                  )}
 
-                {restaurant.grade && GRADE_PENDING_NOTES[restaurant.grade] && (
-                  <span className="details-pending-note">
-                    {" "}
-                    {GRADE_PENDING_NOTES[restaurant.grade]}
-                  </span>
-                )}
+                  {restaurant.grade && GRADE_PENDING_NOTES[restaurant.grade] && (
+                    <div className="status-note-line">
+                      <span className="details-pending-note">
+                        {GRADE_PENDING_NOTES[restaurant.grade]}
+                      </span>
+                    </div>
+                  )}
+                </div>
               </td>
             </tr>
           </tbody>

@@ -1240,7 +1240,27 @@ a:focus-visible {
   letter-spacing: 0.05em;
   color: var(--text-muted);
 }
+.status-cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+}
 
+.status-notes-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.details-pending-note {
+  display: block;
+  text-align: left;
+  margin-top: 0;
+  margin-bottom: 0;
+  color:var(--text-body);
+}
 /* 11.2 INSPECTION REPORTS NAVIGATION */
 
 .restaurant-report-panel {

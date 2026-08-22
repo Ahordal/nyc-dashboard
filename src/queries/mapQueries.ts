@@ -118,6 +118,15 @@ function normalizeSearchQuery(raw: string): string {
 // slash-joined multi-concept names are all already resolved in the
 // index itself; this just needs to normalize the query the same way.
 // Returns null for an empty/whitespace-only query (no clause to add).
+// Escapes a value for safe interpolation into a SQL-style WHERE clause
+// string, by doubling single quotes -- the standard SQL escaping
+// convention (ArcGIS's query engine follows it too). Centralized here
+// so every WHERE-clause builder in this file uses the same rule rather
+// than each re-implementing (or forgetting) it independently.
+function escapeSqlString(value: string): string {
+  return value.replace(/'/g, "''");
+}
+
 export function buildSearchClause(searchQuery: string): string | null {
   // Nothing typed at all -- no filter, show everything. Distinct from the
   // case below: an untouched search box should never restrict results.
@@ -139,7 +148,7 @@ export function buildSearchClause(searchQuery: string): string | null {
   if (words.length === 0) return null;
 
   const wordClauses = words.map((word) => {
-    const escaped = word.replace(/'/g, "''");
+    const escaped = escapeSqlString(word);
     return `UPPER(search_index) LIKE '%${escaped}%'`;
   });
 
@@ -248,7 +257,7 @@ export async function fetchRestaurantDetail(
   await layer.load();
 
   const query = layer.createQuery();
-  query.where = `id = '${restaurantId}'`;
+  query.where = `id = '${escapeSqlString(restaurantId)}'`;
   query.outFields = RESTAURANT_DETAIL_OUT_FIELDS;
   query.returnGeometry = false;
 
@@ -277,9 +286,10 @@ export async function checkSelectionAgainstFilters(
   options: { returnGeometry?: boolean } = {},
 ): Promise<SelectionCheckResult> {
   const query = layer.createQuery();
+  const escapedId = escapeSqlString(restaurantId);
   query.where = definitionExpression
-    ? `id = '${restaurantId}' AND (${definitionExpression})`
-    : `id = '${restaurantId}'`;
+    ? `id = '${escapedId}' AND (${definitionExpression})`
+    : `id = '${escapedId}'`;
   query.returnGeometry = options.returnGeometry ?? false;
   // Callers only ever read stillMatches/objectId/geometry from the
   // result, never restaurant properties -- so the only attribute this
