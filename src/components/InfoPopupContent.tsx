@@ -16,6 +16,7 @@ type InfoPopupContentProps = {
   statuses?: ReactNode;
   dataAttribution?: ReactNode;
   dataNotes?: ReactNode;
+  legend?: ReactNode;
   resources?: ReactNode;
 };
 
@@ -48,6 +49,7 @@ export default function InfoPopupContent({
   statuses,
   dataAttribution,
   dataNotes,
+  legend,
   resources,
 }: InfoPopupContentProps) {
   return (
@@ -97,6 +99,12 @@ export default function InfoPopupContent({
       {dataNotes && (
         <InfoPopupSection title="Data Notes">
           {dataNotes}
+        </InfoPopupSection>
+      )}
+
+      {legend && (
+        <InfoPopupSection title="Legend">
+          {legend}
         </InfoPopupSection>
       )}
 

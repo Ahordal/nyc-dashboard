@@ -6,22 +6,12 @@
 // Direct pointer hover, history-row preview, keyboard navigation, and pinned
 // report selection are maintained independently.
 //
-// Tooltip priority:
-// 1. A chart dot directly under the pointer.
-// 2. A history row currently hovered or keyboard-focused.
-// 3. The current keyboard-navigation point.
-// 4. The report currently pinned by Dashboard.
+// Tooltip-priority logic lives in useTooltipPriority; keyboard navigation
+// lives in useChartKeyboardNav. This component wires chart-data derivation,
+// sizing, and rendering, plus the one bit of cross-hook coordination: a
+// pointer hover cancels keyboard mode.
 
-import {
-  useCallback,
-  useEffect,
-  useId,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
-
-import type { FocusEvent, KeyboardEvent } from "react";
+import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import {
   LineChart,
@@ -36,6 +26,10 @@ import {
 import PanelHeader from "./PanelHeader";
 import PerformanceDot from "./PerformanceDot";
 import PerformanceTooltip from "./PerformanceTooltip";
+
+import { useChartKeyboardNav } from "../hooks/useChartKeyboardNav";
+import { useTooltipPriority } from "../hooks/useTooltipPriority";
+import type { TooltipPoint } from "../hooks/useTooltipPriority";
 
 import type {
   ChartPoint,
@@ -52,12 +46,6 @@ type PerformanceChartProps = {
   onSelectInspection?: (inspectionId: string) => void;
   hoveredInspectionId?: string | null;
   selectedInspectionId?: string | null;
-};
-
-type TooltipPoint = {
-  cx: number;
-  cy: number;
-  payload: ChartPoint;
 };
 
 type RechartsDotProps = {
@@ -309,21 +297,6 @@ function generateTimeTicks(
   return ticks;
 }
 
-function tooltipPointsMatch(
-  firstPoint: TooltipPoint | null,
-  secondPoint: TooltipPoint | null,
-): boolean {
-  if (firstPoint === null || secondPoint === null) {
-    return firstPoint === secondPoint;
-  }
-
-  return (
-    firstPoint.payload.id === secondPoint.payload.id &&
-    firstPoint.cx === secondPoint.cx &&
-    firstPoint.cy === secondPoint.cy
-  );
-}
-
 export default function PerformanceChart({
   restaurant,
   history,
@@ -335,27 +308,6 @@ export default function PerformanceChart({
   const instructionsId = useId();
 
   const chartBodyRef = useRef<HTMLDivElement | null>(null);
-
-  const dotRefs = useRef<Map<string, SVGCircleElement>>(new Map());
-
-  // Direct hover over a chart dot.
-  const [pointerPoint, setPointerPoint] = useState<TooltipPoint | null>(null);
-
-  // Hover or keyboard focus from the RestaurantDetails history list.
-  const [historyPreviewPoint, setHistoryPreviewPoint] =
-    useState<TooltipPoint | null>(null);
-
-  // Current point selected through chart keyboard navigation.
-  const [keyboardPoint, setKeyboardPoint] = useState<TooltipPoint | null>(null);
-
-  // Current report selection while Dashboard permits it to remain pinned.
-  const [selectedPoint, setSelectedPoint] = useState<TooltipPoint | null>(null);
-
-  const [focusedPointId, setFocusedPointId] = useState<string | null>(null);
-
-  const [isKeyboardModeActive, setIsKeyboardModeActive] = useState(false);
-
-  const [isChartFocusVisible, setIsChartFocusVisible] = useState(false);
 
   const [chartSize, setChartSize] = useState<ChartSize>({
     width: 0,
@@ -459,37 +411,28 @@ export default function PerformanceChart({
     return chartData.find((point) => point.id === hoveredInspectionId) ?? null;
   }, [chartData, hoveredInspectionId]);
 
-  const activeKeyboardPoint = useMemo(() => {
-    return (
-      chartData.find((point) => point.id === focusedPointId) ??
-      selectedChartPoint ??
-      chartData[0] ??
-      null
-    );
-  }, [chartData, focusedPointId, selectedChartPoint]);
+  const keyboardNav = useChartKeyboardNav({
+    chartData,
+    selectedChartPoint,
+    onSelectInspection,
+  });
 
-  const activeTooltipPoint =
-    pointerPoint ??
-    historyPreviewPoint ??
-    (isKeyboardModeActive ? keyboardPoint : selectedPoint);
+  const tooltipPriority = useTooltipPriority({
+    chartData,
+    selectedChartPoint,
+    historyPreviewChartPoint,
+    activeKeyboardPoint: keyboardNav.activeKeyboardPoint,
+    isKeyboardModeActive: keyboardNav.isKeyboardModeActive,
+    chartSize,
+    xMin,
+    xMax,
+    yMax,
+  });
 
-  useEffect(() => {
-    setFocusedPointId(chartData[0]?.id ?? null);
-
-    setPointerPoint(null);
-    setHistoryPreviewPoint(null);
-    setKeyboardPoint(null);
-    setSelectedPoint(null);
-    setIsKeyboardModeActive(false);
-    setIsChartFocusVisible(false);
-  }, [chartData]);
-
-  // A newly selected report becomes the keyboard-navigation starting point.
-  useEffect(() => {
-    if (selectedChartPoint) {
-      setFocusedPointId(selectedChartPoint.id);
-    }
-  }, [selectedChartPoint]);
+  // Pulled out so the callback below depends on the (stable) functions
+  // themselves rather than calling through the hook-result objects.
+  const { exitKeyboardMode } = keyboardNav;
+  const { setPointerPoint } = tooltipPriority;
 
   // Watch ResponsiveContainer so tooltip positions remain aligned with dots.
   useEffect(() => {
@@ -526,240 +469,18 @@ export default function PerformanceChart({
     };
   }, [chartData.length]);
 
-  const registerDotRef = useCallback(
-    (id: string, element: SVGCircleElement | null) => {
-      if (element) {
-        dotRefs.current.set(id, element);
-      } else {
-        dotRefs.current.delete(id);
+  // The one bit of cross-hook coordination: a fresh pointer hover always
+  // wins, so it cancels keyboard mode rather than the other way around.
+  const handlePointerPointChange = useCallback(
+    (point: TooltipPoint | null) => {
+      if (point) {
+        exitKeyboardMode();
       }
+
+      setPointerPoint(point);
     },
-    [],
+    [exitKeyboardMode, setPointerPoint],
   );
-
-  const getRenderedTooltipPoint = useCallback(
-    (point: ChartPoint | null): TooltipPoint | null => {
-      if (!point) {
-        return null;
-      }
-
-      const dot = dotRefs.current.get(point.id);
-
-      if (!dot) {
-        return null;
-      }
-
-      const cx = Number(dot.getAttribute("cx"));
-
-      const cy = Number(dot.getAttribute("cy"));
-
-      if (!Number.isFinite(cx) || !Number.isFinite(cy)) {
-        return null;
-      }
-
-      return {
-        cx,
-        cy,
-        payload: point,
-      };
-    },
-    [],
-  );
-
-  // Synchronize the pinned report point.
-  useEffect(() => {
-    const syncPoint = () => {
-      const nextSelectedPoint = getRenderedTooltipPoint(selectedChartPoint);
-
-      setSelectedPoint((currentPoint) =>
-        tooltipPointsMatch(currentPoint, nextSelectedPoint)
-          ? currentPoint
-          : nextSelectedPoint,
-      );
-    };
-
-    // 1. Try to sync immediately
-    syncPoint();
-
-    // 2. Try again slightly later to ensure Recharts has finished its layout paint
-    const timeoutId = setTimeout(syncPoint, 100);
-
-    return () => clearTimeout(timeoutId);
-  }, [
-    selectedChartPoint,
-    getRenderedTooltipPoint,
-    chartSize.width,
-    chartSize.height,
-    xMin,
-    xMax,
-    yMax,
-  ]);
-
-  // Synchronize the history-row hover/focus preview.
-  useEffect(() => {
-    const nextPreviewPoint = getRenderedTooltipPoint(historyPreviewChartPoint);
-
-    setHistoryPreviewPoint((currentPoint) =>
-      tooltipPointsMatch(currentPoint, nextPreviewPoint)
-        ? currentPoint
-        : nextPreviewPoint,
-    );
-  }, [
-    historyPreviewChartPoint,
-    getRenderedTooltipPoint,
-    chartSize.width,
-    chartSize.height,
-    xMin,
-    xMax,
-    yMax,
-  ]);
-
-  // Synchronize the chart's keyboard-navigation point.
-  useEffect(() => {
-    if (!isKeyboardModeActive) {
-      setKeyboardPoint(null);
-      return;
-    }
-
-    const nextKeyboardPoint = getRenderedTooltipPoint(activeKeyboardPoint);
-
-    setKeyboardPoint((currentPoint) =>
-      tooltipPointsMatch(currentPoint, nextKeyboardPoint)
-        ? currentPoint
-        : nextKeyboardPoint,
-    );
-  }, [
-    activeKeyboardPoint,
-    getRenderedTooltipPoint,
-    isKeyboardModeActive,
-    chartSize.width,
-    chartSize.height,
-    xMin,
-    xMax,
-    yMax,
-  ]);
-
-  const handlePointerPointChange = useCallback((point: TooltipPoint | null) => {
-    if (point) {
-      setIsKeyboardModeActive(false);
-
-      setKeyboardPoint(null);
-    }
-
-    setPointerPoint(point);
-  }, []);
-
-  const handleChartFocus = (event: FocusEvent<HTMLDivElement>) => {
-    if (event.target !== event.currentTarget) {
-      return;
-    }
-
-    const focusIsVisible = event.currentTarget.matches(":focus-visible");
-
-    setIsChartFocusVisible(focusIsVisible);
-
-    if (!focusIsVisible) {
-      return;
-    }
-
-    const point = activeKeyboardPoint ?? selectedChartPoint ?? chartData[0];
-
-    if (!point) {
-      return;
-    }
-
-    setPointerPoint(null);
-
-    setFocusedPointId(point.id);
-
-    setIsKeyboardModeActive(true);
-  };
-
-  const handleChartBlur = (event: FocusEvent<HTMLDivElement>) => {
-    const nextFocusedElement = event.relatedTarget;
-
-    if (
-      nextFocusedElement instanceof Node &&
-      event.currentTarget.contains(nextFocusedElement)
-    ) {
-      return;
-    }
-
-    setIsChartFocusVisible(false);
-
-    setIsKeyboardModeActive(false);
-
-    setKeyboardPoint(null);
-  };
-
-  const handleChartKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
-    if (event.key === "Tab") {
-      return;
-    }
-
-    if (chartData.length === 0) {
-      return;
-    }
-
-    const currentPoint =
-      activeKeyboardPoint ?? selectedChartPoint ?? chartData[0];
-
-    const currentIndex = Math.max(
-      chartData.findIndex((point) => point.id === currentPoint.id),
-      0,
-    );
-
-    if (event.key === "Enter" || event.key === " ") {
-      event.preventDefault();
-
-      setIsChartFocusVisible(true);
-
-      setPointerPoint(null);
-
-      setIsKeyboardModeActive(true);
-
-      onSelectInspection?.(currentPoint.id);
-
-      return;
-    }
-
-    let nextIndex: number;
-
-    switch (event.key) {
-      case "ArrowRight":
-      case "ArrowDown":
-        nextIndex = Math.min(currentIndex + 1, chartData.length - 1);
-        break;
-
-      case "ArrowLeft":
-      case "ArrowUp":
-        nextIndex = Math.max(currentIndex - 1, 0);
-        break;
-
-      case "Home":
-        nextIndex = 0;
-        break;
-
-      case "End":
-        nextIndex = chartData.length - 1;
-        break;
-
-      default:
-        return;
-    }
-
-    event.preventDefault();
-
-    const nextPoint = chartData[nextIndex];
-
-    setIsChartFocusVisible(true);
-
-    setPointerPoint(null);
-
-    setIsKeyboardModeActive(true);
-
-    setFocusedPointId(nextPoint.id);
-  };
 
   let content;
 
@@ -803,16 +524,16 @@ export default function PerformanceChart({
         role="group"
         aria-label="Inspection score history chart"
         aria-describedby={instructionsId}
-        onFocus={handleChartFocus}
-        onBlur={handleChartBlur}
-        onKeyDown={handleChartKeyDown}
+        onFocus={keyboardNav.handleChartFocus}
+        onBlur={keyboardNav.handleChartBlur}
+        onKeyDown={keyboardNav.handleChartKeyDown}
         style={{
           position: "relative",
           width: "100%",
           height: "100%",
           outline: "none",
 
-          boxShadow: isChartFocusVisible
+          boxShadow: keyboardNav.isChartFocusVisible
             ? "inset 0 0 0 2px var(--text-heading)"
             : "none",
         }}>
@@ -825,8 +546,8 @@ export default function PerformanceChart({
           aria-live="polite"
           aria-atomic="true"
           style={VISUALLY_HIDDEN_STYLE}>
-          {isKeyboardModeActive && activeKeyboardPoint
-            ? formatKeyboardPointLabel(activeKeyboardPoint)
+          {keyboardNav.isKeyboardModeActive && keyboardNav.activeKeyboardPoint
+            ? formatKeyboardPointLabel(keyboardNav.activeKeyboardPoint)
             : ""}
         </span>
 
@@ -946,12 +667,13 @@ export default function PerformanceChart({
                 <PerformanceDot
                   {...props}
                   isActive={
-                    activeTooltipPoint?.payload.id === props.payload?.id
+                    tooltipPriority.activeTooltipPoint?.payload.id ===
+                    props.payload?.id
                   }
                   hoveredInspectionId={hoveredInspectionId}
                   onPointerPointChange={handlePointerPointChange}
                   onSelectInspection={onSelectInspection}
-                  registerDotRef={registerDotRef}
+                  registerDotRef={tooltipPriority.registerDotRef}
                 />
               )}
             />
@@ -968,10 +690,12 @@ export default function PerformanceChart({
         </ResponsiveContainer>
 
         <PerformanceTooltip
-          hoveredPoint={activeTooltipPoint}
+          hoveredPoint={tooltipPriority.activeTooltipPoint}
           formattedDate={
-            activeTooltipPoint
-              ? formatTooltipDate(activeTooltipPoint.payload.timestamp)
+            tooltipPriority.activeTooltipPoint
+              ? formatTooltipDate(
+                  tooltipPriority.activeTooltipPoint.payload.timestamp,
+                )
               : ""
           }
         />

@@ -114,7 +114,7 @@ body {
   font-family: var(--font-display);
   font-size: 10rem; 
   font-weight: bold;
-  color:#505050; 
+  color: var(--text-muted);
   line-height: 1;
   letter-spacing: -0.05em; 
   margin-left: -0.06em; 
@@ -125,8 +125,8 @@ body {
   font-family: var(--font-body);
   font-size: 1.35rem;
   font-weight: 700;
-  color: var(--text-body);
-  letter-spacing: 0.02em;
+  color: var(--text-muted);
+  
 
 }
 
@@ -134,8 +134,8 @@ body {
   font-family: var(--font-body);
   font-size: 0.9rem;
   font-weight: 700;
-  color: var(--text-body);
-  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  letter-spacing: 0.05rem;
 }
 /*///////////////////////////////////////////// APP LAYOUT //////////////////////////////////////////////*/
 
@@ -319,7 +319,6 @@ body {
   justify-content: center;
   background-color: var(--bg-alt);
   border: 1px solid var(--border-panel);
-  animation: map-view-skeleton-pulse 1.6s ease-in-out infinite;
 }
 
 .map-view-skeleton-label {
@@ -328,6 +327,7 @@ body {
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-muted);
+  animation: map-view-skeleton-pulse 1.6s ease-in-out infinite; 
 }
 
 @keyframes map-view-skeleton-pulse {
@@ -533,76 +533,248 @@ body {
   color: var(--link-hover);
  
 }
-
-/*///////////////////////////////////////////// MAPVIEW OVERRIDES //////////////////////////////////////////////*/
-
-.esri-view {
-  --esri-view-outline-color: transparent !important;
-  --esri-view-outline: transparent !important;
-}
-/*///////////////////////////////////////////// MAPVIEW OVERRIDES //////////////////////////////////////////////*/
-
-.esri-view {
-  --esri-view-outline-color: transparent !important;
-  --esri-view-outline: transparent !important;
-}
-
-/*///////////////////////////////////////////// MAP VIEW MODE TOGGLE //////////////////////////////////////////////*/
+/*///////////////////////////////////////////// MAP VIEW LEGEND ICON TRIGGER & POPUP ROWS //////////////////////////////////////////////*/
 
 .map-view-container {
   position: relative;
   width: 100%;
   height: 100%;
   overflow: hidden;
-  
+  min-width: 0;
+  min-height: 0;
 }
 
-.map-display-toggle-overlay {
+.map-view-top-header {
   position: absolute;
-  top: 12px;
-  right: 12px;
-  z-index: 10;
+  top: 0.5rem;
+  right: 0.5rem;
+  z-index: 20;
+  width: max-content !important;
   pointer-events: auto;
 }
 
-.map-toggle-group {
-  display: inline-flex;
-  background: var(--bg-panel);
+.map-view-top-header .panel-header-title {
+  display: none !important;
+}
+
+.map-view-top-header .panel-header {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
-  
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  width: 36px !important;
+  height: 36px !important;
+  padding: 0 !important;
+}
+
+.map-view-top-header .panel-header-info-button {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.map-view-top-header .panel-header-popup {
+  width: 250px;
+  right: 0;
+  left: auto;
+}
+
+.legend-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.legend-grade-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+}
+
+.legend-scale-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+}
+
+.dot-sample {
+  display: inline-block;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-arrow {
+  font-size: 0.55rem;
+  color: var(--text-muted);
+}
+
+.single-dot-align {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.legend-score-text {
+  font-size: 0.8rem;
+  color: var(--text-body);
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/*///////////////////////////////////////////// MAP HOVER CARD //////////////////////////////////////////////*/
+
+.map-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+.map-hover-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+  padding: 0.4rem 0.6rem;
+  z-index: 15;
+}
+
+.map-hover-card-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.map-hover-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Reusing the app's badge-box structure for exact square proportions */
+.map-hover-card .badge-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0.25);
+  border-radius: 0;
+}
+
+.map-hover-card .badge-label {
+  font-size: 0.55rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.map-hover-card .badge-val {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+/*///////////////////////////////////////////// LEGEND TABLE OVERRIDES //////////////////////////////////////////////*/
+
+.legend-table td {
+  padding: 0.4rem var(--space-xs);
+  vertical-align: middle;
+}
+
+.legend-table td:first-title {
+  width: auto;
+}
+
+.legend-table td:nth-child(2) {
+  text-align: center;
+}
+/*///////////////////////////////////////////// MAPVIEW OVERRIDES //////////////////////////////////////////////*/
+
+.esri-view {
+  --esri-view-outline-color: transparent !important;
+  --esri-view-outline: transparent !important;
+}
+/*///////////////////////////////////////////// MAP VIEW LEGEND HEADER //////////////////////////////////////////////*/
+
+.map-view-container {
+  position: relative;
+}
+
+.map-view-top-header {
+  position: absolute;
+  top: 0.5em;
+  right: 0.5rem;
+  z-index: 20;
+  width: 235px;
+  pointer-events: auto;
+}
+
+.map-view-top-header .panel-header {
+  margin-bottom: 0;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-.map-toggle-button {
-  padding: 4px 10px;
-  font-family: var(--font-display);
-  font-size: 0.75rem;
+.legend-sizing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.legend-sizing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 0.85rem;
+  color: var(--text-body);
+}
+
+.legend-grade-label {
   font-weight: 700;
-  letter-spacing: 0.05em;
+  font-family: var(--font-display);
+  width: 55px;
   text-transform: uppercase;
+}
+
+.dot-sample {
+  display: inline-block;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-arrow {
+  font-size: 0.65rem;
   color: var(--text-muted);
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  
 }
 
-.map-toggle-button:hover {
-  color: var(--link-hover);
-  background-color: var(--link-background-hover);
-}
-
-.map-toggle-button.active {
-  background-color: var(--bg-alt);
-  color: var(--text-heading);
-  border-bottom: 2px solid var(--border-panel);
-}
-
-/*///////////////////////////////////////////// GENERIC PANELS //////////////////////////////////////////////*/
-
-.dashboard-title .panel {
-  height: 100%;
-  padding: var(--space-s);
+.legend-range {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  width: 50px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
 }
 /*///////////////////////////////////////////// GENERIC PANELS //////////////////////////////////////////////*/
 

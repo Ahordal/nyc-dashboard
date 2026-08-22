@@ -1,0 +1,33 @@
+name: Tests
+
+# Runs the pipeline/*.test.mjs suite (node --test) so cache/normalize/scoring
+# regressions get caught automatically, instead of relying on someone running
+# the README's `node --test pipeline/` command by hand.
+#
+# Read-only: doesn't touch the `data` branch, LocationIQ, or Vercel, so no
+# secrets or write permissions are needed here.
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repo
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Run tests
+        run: npm test

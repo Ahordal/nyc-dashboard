@@ -1,4 +1,6 @@
-// RestaurantList.tsx
+//RestaurantList.tsx
+//
+//Displays a sorted and paginated list of restaurant inspection cards, automatically navigating to the page containing the selected restaurant.
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
@@ -161,6 +163,7 @@ export default function RestaurantList({
     return sortableList;
   }, [restaurants, sortField, sortDirection]);
 
+  // Option B: Automatically navigate pagination to page containing selectedRestaurantId
   useEffect(() => {
     const countChanged = prevRestaurantCountRef.current !== restaurants.length;
     const selectedChanged = prevSelectedIdRef.current !== selectedRestaurantId;
@@ -168,18 +171,19 @@ export default function RestaurantList({
     prevRestaurantCountRef.current = restaurants.length;
     prevSelectedIdRef.current = selectedRestaurantId;
 
-    if (selectedChanged && selectedRestaurantId && sorted.length > 0) {
+    if (selectedRestaurantId && sorted.length > 0) {
       const index = sorted.findIndex((r) => r.id === selectedRestaurantId);
       if (index !== -1) {
-        setPage(Math.floor(index / pageSize) + 1);
+        const targetPage = Math.floor(index / pageSize) + 1;
+        setPage(targetPage);
         return;
       }
     }
 
-    if (countChanged) {
+    if (countChanged && selectedChanged) {
       setPage(1);
     }
-  }, [restaurants.length, selectedRestaurantId, pageSize, sorted]);
+  }, [restaurants.length, selectedRestaurantId, pageSize, sorted, sortField, sortDirection]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
   const clampedPage = Math.min(page, totalPages);
@@ -208,7 +212,6 @@ export default function RestaurantList({
             options={SORT_FIELD_OPTIONS}
             onChange={(value) => {
               setSortField(value);
-              setPage(1);
             }}
             labelId="sort-field-label"
           />
@@ -220,7 +223,6 @@ export default function RestaurantList({
               setSortDirection((current) =>
                 current === "asc" ? "desc" : "asc",
               );
-              setPage(1);
             }}
             aria-label={`Sort ${sortDirection === "asc" ? "descending" : "ascending"}`}>
             <FontAwesomeIcon
@@ -231,7 +233,6 @@ export default function RestaurantList({
           </button>
         </div>
 
-        {/* Both Sort and Filter notices are anchored strictly to the card viewport */}
         <div ref={cardListRef} className="restaurant-card-list">
           {pageItems.map((restaurant) => (
             <RestaurantCard
@@ -248,7 +249,6 @@ export default function RestaurantList({
             </div>
           )}
 
-          {/* Sort Notice */}
           <NoticeOverlay
             triggerKey={`${sortField}-${sortDirection}`}
             durationMs={SORT_NOTICE_DURATION_MS}>
@@ -256,7 +256,6 @@ export default function RestaurantList({
             {sortDirection === "asc" ? "Ascending" : "Descending"}
           </NoticeOverlay>
 
-          {/* Filter Notice Passed Down */}
           {children}
         </div>
 

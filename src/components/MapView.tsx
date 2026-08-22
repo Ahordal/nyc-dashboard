@@ -1,12 +1,17 @@
-// src/components/MapView.tsx
+//MapView.tsx
+//
+//Displays the ArcGIS map view with localized dot weighting, spatial filtering, a compact top-right icon-only legend trigger, scale bar widget, and hover cards.
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
-import LabelClass from "@arcgis/core/layers/support/LabelClass";
 import FeatureEffect from "@arcgis/core/layers/support/FeatureEffect";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
+import ScaleBar from "@arcgis/core/widgets/ScaleBar";
+
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
 
 import esriConfig from "@arcgis/core/config";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
@@ -14,6 +19,8 @@ import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 import { CATEGORY_COLORS } from "../utils/gradeColours";
 import { getGradeCategory } from "../utils/gradeCategory";
+import PanelHeader from "./PanelHeader";
+import InfoPopupContent from "./InfoPopupContent";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
@@ -43,8 +50,6 @@ const gradeCategoryExpression = `
   return "C";
 `;
 
-// Calculate a score weight to drive size and opacity
-// Closed = highest weight (60), Pending = moderate (20)
 const scoreWeightExpression = `
   var status = $feature.current_status_code;
   if (status == "closed") {
@@ -110,52 +115,33 @@ const pointsRenderer = {
     },
   ],
   visualVariables: [
-    // Size weighted by score severity
     {
       type: "size",
       valueExpression: scoreWeightExpression,
       stops: [
-        { value: 0, size: 2.5 },   // Grade A baseline (3.5px)
-        { value: 13, size: 4.0 },  // Grade A ceiling (4.0px)
-        { value: 14, size: 4.0 },  // Grade B floor (4.0px)
-        { value: 27, size: 4.5 },  // Grade B ceiling (4.5px)
-        { value: 28, size: 5.0 },  // Grade C floor (5.0px)
-        { value: 45, size: 6.0 },  // Grade C high violations (6.0px)
-        { value: 60, size: 7.0 },  // Closed (7.0px)
+        { value: 0, size: 2.5 },
+        { value: 13, size: 4.0 },
+        { value: 14, size: 4.0 },
+        { value: 27, size: 4.5 },
+        { value: 28, size: 5.0 },
+        { value: 45, size: 6.0 },
+        { value: 60, size: 7.0 },
       ],
     },
-    // Opacity weighted by score severity
     {
       type: "opacity",
       valueExpression: scoreWeightExpression,
       stops: [
-        { value: 0, opacity: 0.7 },   // Grade A blends subtly into background
+        { value: 0, opacity: 0.7 },
         { value: 13, opacity: 0.75 },
-        { value: 28, opacity: 0.95 }, // C grades are crisp
-        { value: 50, opacity: 1.0 },  // Problem spots pop at 100% opacity
+        { value: 28, opacity: 0.95 },
+        { value: 50, opacity: 1.0 },
       ],
     },
   ],
 };
 
-const LABEL_MIN_SCALE = 2000;
-
-const labelClass = new LabelClass({
-labelExpressionInfo: { expression: "Upper($feature.name)" },
-  symbol: {
-    type: "text",
-    color: "#ffffff",
-    haloColor: "rgba(56, 57, 57, 0.75)",
-    haloSize: 4,
-    font: { size: 9, family: "Open Sans", weight: "bold" },
-    xoffset: 2,
-    yoffset: 2,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  } as any,
-  labelPlacement: "above-right",
-  minScale: LABEL_MIN_SCALE,
-  maxScale: 0,
-});
+const HOVER_CARD_MAX_SCALE = 15000;
 
 const NO_SELECTION_FILTER = new FeatureFilter({ objectIds: [-1] });
 
@@ -174,6 +160,98 @@ const EMPTY_GRADE_COUNTS: GradeCounts = {
   pending: 0,
   closed: 0,
 };
+
+type HoverCardState = {
+  x: number;
+  y: number;
+  name: string;
+  category: keyof typeof CATEGORY_COLORS;
+  gradeText: string;
+  scoreText: string;
+};
+
+const MAP_LEGEND_INFO_CONTENT = (
+  <InfoPopupContent
+    overview={
+      <p>
+        The map visualizes geocoded restaurant inspection locations across New York City, updating dynamically as you pan, zoom, or apply filters.
+      </p>
+    }
+    howToUse={
+      <ul>
+        <li>Click any restaurant marker on the map to load its inspection history, violations, and performance details.</li>
+        <li>Hover over markers to preview restaurant names, grades, and scores directly on the map canvas.</li>
+      </ul>
+    }
+    legend={
+      <table className="details-table legend-table">
+        <tbody>
+          <tr>
+            <td>
+              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.A }}>A</span>
+            </td>
+            <td>
+              <div className="legend-scale-visual">
+                <span className="dot-sample" style={{ width: "4px", height: "4px", backgroundColor: CATEGORY_COLORS.A }}></span>
+                <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
+                <span className="dot-sample" style={{ width: "7px", height: "7px", backgroundColor: CATEGORY_COLORS.A }}></span>
+              </div>
+            </td>
+            <td className="legend-score-text">0–13 pts</td>
+          </tr>
+          <tr>
+            <td>
+              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.B }}>B</span>
+            </td>
+            <td>
+              <div className="legend-scale-visual">
+                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.B }}></span>
+                <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
+                <span className="dot-sample" style={{ width: "8px", height: "8px", backgroundColor: CATEGORY_COLORS.B }}></span>
+              </div>
+            </td>
+            <td className="legend-score-text">14–27 pts</td>
+          </tr>
+          <tr>
+            <td>
+              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.C }}>C</span>
+            </td>
+            <td>
+              <div className="legend-scale-visual">
+                <span className="dot-sample" style={{ width: "8px", height: "8px", backgroundColor: CATEGORY_COLORS.C }}></span>
+                <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
+                <span className="dot-sample" style={{ width: "10px", height: "10px", backgroundColor: CATEGORY_COLORS.C }}></span>
+              </div>
+            </td>
+            <td className="legend-score-text">28+ pts</td>
+          </tr>
+          <tr>
+            <td>
+              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.pending }}>Pending</span>
+            </td>
+            <td>
+              <div className="legend-scale-visual single-dot-align">
+                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.pending }}></span>
+              </div>
+            </td>
+            <td className="legend-score-text">N / P / Z</td>
+          </tr>
+          <tr>
+            <td>
+              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.closed }}>Closed</span>
+            </td>
+            <td>
+              <div className="legend-scale-visual single-dot-align">
+                <span className="dot-sample" style={{ width: "10px", height: "10px", backgroundColor: CATEGORY_COLORS.closed }}></span>
+              </div>
+            </td>
+            <td className="legend-score-text"></td>
+          </tr>
+        </tbody>
+      </table>
+    }
+  />
+);
 
 type MapViewProps = {
   filters: Filters;
@@ -194,6 +272,8 @@ export default function InspectionMapView({
   onVisibleRestaurantsChange,
   onGradeCountsChange,
 }: MapViewProps) {
+  const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
+
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<GeoJSONLayer | null>(null);
   const viewRef = useRef<MapView | null>(null);
@@ -350,7 +430,6 @@ export default function InspectionMapView({
     [],
   );
 
-  // Sync highlight strictly on selection change
   useEffect(() => {
     void applyHighlightForId(selectedRestaurantId);
   }, [selectedRestaurantId, applyHighlightForId]);
@@ -364,9 +443,7 @@ export default function InspectionMapView({
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
       renderer: pointsRenderer as any,
       outFields: RESTAURANT_OUT_FIELDS,
-      copyright: "NYC DOHMH | Cartography: Alex Hordal",
-      labelingInfo: [labelClass],
-      labelsVisible: true,
+      copyright: "NYC DOHMH | Cartography: ALEX HORDAL",
     });
     layerRef.current = layer;
 
@@ -386,6 +463,13 @@ export default function InspectionMapView({
 
     view.popupEnabled = false;
 
+    // Add scale bar widget to the bottom-left corner
+    const scaleBar = new ScaleBar({
+      view: view,
+      unit: "dual",
+    });
+    view.ui.add(scaleBar, "bottom-left");
+
     view.when(() => {
       reportVisibleRestaurants(view, layer);
       void applyHighlightForId(selectedRestaurantIdRef.current);
@@ -401,6 +485,8 @@ export default function InspectionMapView({
     );
 
     const clickHandle = view.on("click", async (event) => {
+      setHoverCard(null);
+
       const response = await view.hitTest(event);
       await layer.load();
 
@@ -466,6 +552,26 @@ export default function InspectionMapView({
       } else {
         onHoverRestaurantRef.current?.(null);
       }
+
+      if (graphicHit && view.scale <= HOVER_CARD_MAX_SCALE) {
+        const attrs = graphicHit.graphic.attributes;
+        const category = getGradeCategory(
+          attrs.action,
+          attrs.grade,
+          attrs.score,
+        );
+
+        setHoverCard({
+          x: event.x,
+          y: event.y,
+          name: attrs.name,
+          category,
+          gradeText: category === "closed" ? "Closed" : (attrs.grade ?? "—"),
+          scoreText: attrs.score != null ? String(attrs.score) : "—",
+        });
+      } else {
+        setHoverCard(null);
+      }
     };
 
     const pointerMoveHandle = view.on("pointer-move", (event) => {
@@ -480,18 +586,33 @@ export default function InspectionMapView({
       }, POINTER_MOVE_THROTTLE_MS);
     });
 
+    const handlePointerLeaveContainer = () => {
+      setHoverCard(null);
+      if (view.container) {
+        view.container.style.cursor = "default";
+      }
+      onHoverRestaurantRef.current?.(null);
+    };
+    view.container?.addEventListener(
+      "mouseleave",
+      handlePointerLeaveContainer,
+    );
+
     return () => {
       clickHandle.remove();
       pointerMoveHandle.remove();
       if (pointerMoveTimeoutId !== null) {
         window.clearTimeout(pointerMoveTimeoutId);
       }
+      view.container?.removeEventListener(
+        "mouseleave",
+        handlePointerLeaveContainer,
+      );
       stationaryWatchHandle.remove();
       view.destroy();
     };
   }, [applyHighlightForId]);
 
-  // Camera pan/zoom on selection change
   useEffect(() => {
     const layer = layerRef.current;
     const view = viewRef.current;
@@ -636,7 +757,54 @@ export default function InspectionMapView({
 
   return (
     <div className="map-view-container">
-      <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
+      <div className="map-view-top-header">
+        <PanelHeader
+          title=""
+          infoContent={MAP_LEGEND_INFO_CONTENT}
+        />
+      </div>
+      <div className="map-canvas-wrapper">
+        <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
+
+        {hoverCard && (
+          <div
+            className="map-hover-card"
+            style={{
+              position: "absolute",
+              left: hoverCard.x + 12,
+              top: hoverCard.y + 12,
+              pointerEvents: "none",
+            }}
+          >
+            <span
+              className="map-hover-card-name"
+              style={{ color: CATEGORY_COLORS[hoverCard.category] }}
+            >
+              {hoverCard.name}
+            </span>
+            <div className="map-hover-card-stats">
+              <div className="badge-box">
+                <span className="badge-label">GRADE</span>
+                <span
+                  className="badge-val"
+                  style={{ color: CATEGORY_COLORS[hoverCard.category] }}
+                >
+                  {hoverCard.gradeText}
+                </span>
+              </div>
+              <div className="badge-box">
+                <span className="badge-label">SCORE</span>
+                <span
+                  className="badge-val"
+                  style={{ color: CATEGORY_COLORS[hoverCard.category] }}
+                >
+                  {hoverCard.scoreText}
+                </span>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }

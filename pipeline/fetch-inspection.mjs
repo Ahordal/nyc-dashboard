@@ -134,6 +134,7 @@ function stripDiacritics(text) {
 
 /**
  * Tokenizes text: strips punctuation/suffixes, preserves & as AND, and injects expansions.
+ * Applies diacritic stripping ONLY for search normalization, leaving display names untouched.
  */
 function normalizeToTokens(raw) {
   if (!raw) return [];

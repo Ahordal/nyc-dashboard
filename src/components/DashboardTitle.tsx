@@ -22,7 +22,7 @@ export default function DashboardTitle() {
               aria-hidden="true"
             /></span>
           <span className="h1-small">
-            Inspection Trends and Insights{" "}
+            Restaurant Inspection Trends and Insights{" "}
            
           </span>
         </h1>
