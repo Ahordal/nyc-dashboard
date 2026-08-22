@@ -57,7 +57,7 @@ export function GradeRangeInfo() {
             color: CATEGORY_COLORS.closed,
           }}
         >
-          Closed
+          CLOSED
         </strong>{" "}
         — Closed by DOHMH; violations
         requiring immediate action were
