@@ -132,7 +132,7 @@ test('runGeocodeBackfill processes normally when there is no rate limiting', asy
       const restaurants = Array.from({ length: 3 }, (_, i) => ({
         camis: `R${i}`,
         dba: `Restaurant ${i}`,
-        building: '1',
+        building: '35-01', // hyphenated so buildQueries fires both variants
         street: 'Main St',
         boro: 'Queens',
         zip: '11111',
@@ -148,7 +148,9 @@ test('runGeocodeBackfill processes normally when there is no rate limiting', asy
 
       // 3 restaurants x 2 queries each = 6 calls, all restaurants processed
       // (unverified, since 404 -> empty results -> no match -- but NOT
-      // stopped early, since this isn't a rate-limit situation).
+      // stopped early, since this isn't a rate-limit situation). Building
+      // numbers must be hyphenated for buildQueries to actually fire the
+      // second (no-hyphen) query -- see geocode.mjs.
       assert.equal(callCount, 6);
       assert.equal(result.skippedCount, 0);
     } finally {

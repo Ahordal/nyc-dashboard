@@ -8,6 +8,8 @@ An interactive map and analytics dashboard for exploring NYC DOHMH restaurant in
 
 ### Map & Visualization
 - **Interactive Web Map:** High-performance mapping of NYC restaurants, color-coded by official DOHMH inspection grades (A, B, C, N, P, Z) and operating status.
+- **Hover Cards:** At close-in zoom levels, hovering a restaurant point shows a lightweight card with its name, grade, and score, without needing to click into the full details panel.
+- **Restaurant Name Labels:** Zooming in further reveals persistent name labels directly on the map canvas.
 - **Dynamic KPIs & Mapview Statistics:** Real-time metrics panel calculating at-a-glance restaurant counts (Total, A, B, C, Pending, Closed) scoped directly to the current map bounding box.
 - **Grade Breakdown Chart:** Interactive Recharts-powered donut chart providing a visual proportional breakdown of graded restaurants within the active map view.
 - **Cross-Component Interactivity:** Synchronized hover states and selection indicators linking map points, list items, and chart data seamlessly.
@@ -16,6 +18,7 @@ An interactive map and analytics dashboard for exploring NYC DOHMH restaurant in
 - **Smart Dataset Search:** Custom client-side search index that supports queries by name, cuisine, or address, featuring automatic diacritic stripping, corporate suffix removal, and street abbreviation expansion (e.g., matching "St" to "Street").
 - **Viewport-Scoped List:** A dynamic Restaurant List panel that updates automatically as the map moves, showing name, address, cuisine type, last inspection date, and recent score/grade.
 - **Multi-Parameter Filtering & Sorting:** Quick-filter combinations by grade and borough (e.g., "Grade A, Brooklyn"), alongside robust list sorting (by date, name, cuisine, grade, or score in ascending/descending order).
+- **Shareable Views:** Active grade/borough filters, search query, and the selected restaurant are all synced to the URL, so a link can be copied or bookmarked straight back to that exact view.
 
 ### Details & History
 - **On-Demand Restaurant Profiles:** Lazy-loaded details panel that fetches individual historical data (like CAMIS and exact addresses) only when a restaurant is selected, keeping the initial application payload extremely lightweight. 
@@ -34,6 +37,8 @@ The project is split across two branches:
 
 - **`main`** — the dashboard app (this code). `public/data/` is generated fresh on every build and is not committed.
 - **`data`** — an orphan branch holding only the geocode cache (`pipeline/geocode-cache.json`) and related pipeline state. Kept separate so scheduled cache updates never conflict with in-progress dashboard work.
+
+The map view (`MapView.tsx`) is lazy-loaded via a dynamic `import()`, with a lightweight `MapViewSkeleton` shown while it loads — the ArcGIS SDK is the heaviest single dependency in the app, so this keeps it out of the initial bundle.
 
 ## Data Pipeline
 
@@ -90,15 +95,19 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 * Cache entries are stamped with a `RESOLVER_VERSION` (currently version 1). If the address matching rules are updated and this version is bumped, the system knows to invalidate the cache and automatically force a re-geocode.
 * To prevent silent data loss caused by overlapping remote states, a dedicated script handles a safe reconcile-then-push flow targeting the `data` branch.
 * This script resets the working tree to match the remote `data` branch, reads both the local and remote cache files, and merges them structurally at the JSON level. 
-* During this merge, finished cache entries take priority over pending ones, and newer timestamps win if both entries are finalized.
+* If a restaurant's status shifts more than 100 meters from its DOHMH-reported location, the entry is flagged and written to `suspicious-shifts.json` for manual review rather than silently accepted.
 
 **Testing and Validation**
 * The geocoding pipeline is rigorously verified using the native `node:test` runner to validate complex state changes without requiring external testing libraries.
 * **Cache Integrity:** Tests in `cache.test.mjs` execute against real temporary files on disk to confirm that atomic writes work safely and that corrupted JSON files do not crash the application.
-* **Merge Conflicts:** `merge.test.mjs` simulates overlapping dataset commits, verifying that final remote results are never overwritten by incomplete or pending local runs (a regression test for a known data loss incident).
+* **Merge Conflicts:** `merge.test.mjs` simulates overlapping dataset commits,
+  verifying that final remote results are never overwritten by incomplete or
+  pending local runs (a regression test for a known data loss incident).
+* **Rate Limiting:** `rate-limit.test.mjs` verifies that a 429 response is caught as a distinct `RateLimitedError` (never treated as a generic failure or an "unverified" match), and that it halts the entire backfill run immediately rather than continuing to burn quota on restaurants that would fail the same way.
 * **Scoring Logic:** Pure address scoring is tested deterministically using `fixtures.mjs`, which provides real, historically captured LocationIQ responses so logic can be tested in CI without exhausting live API quota.
 * **Anomaly Detection:** The pipeline actively checks for unusual coordinate movements during runs, flagging any verified match that has shifted more than 100 meters from its official health department coordinates and writing them to `suspicious-shifts.json` for review.
-* **Local Sandboxing:** A dedicated `backfill.mjs` script acts as a local test entry point, allowing developers to safely run the geocoding logic against a static JSON file of restaurants for manual regression testing.
+* **Local Sandboxing:** A dedicated `backfill.mjs` script acts as a local test entry point, allowing developers to safely run the geocoding logic against a static JSON file of restaurants (`real-test-restaurants.json`) for manual regression testing.
+* **Continuous Integration:** `.github/workflows/test.yml` runs the full `node --test` suite on every pull request and every push to `main`, so a regression in the pipeline logic is caught before it merges rather than relying on someone remembering to run it locally.
 
 ---
 
@@ -117,9 +126,14 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 | `normalize.mjs` | Address display formatting and search token normalization |
 | `merge-and-commit-cache.mjs` | Safely merges a backfill run's results into the `data` branch and pushes |
 | `violation-categories.csv` | Local mapping of violation codes to plain-text categories |
+| `reset-out-of-bounds-cache-entries.mjs` | One-off script resetting cache entries with out-of-bounds coordinates back to `pending` for re-resolution |
 | `cache.test.mjs` | Native unit tests verifying atomic file writing, corruption recovery, and status logic |
 | `merge.test.mjs` | Native unit tests verifying remote vs. local cache merge logic and conflict resolution |
+| `normalize.test.mjs` | Native unit tests verifying address matching and display-formatting logic |
+| `rate-limit.test.mjs` | Native unit tests verifying a 429 response halts the backfill run safely, without burning quota on further requests |
+| `scoring.test.mjs` | Native unit tests verifying geocode candidate scoring and match/reject decisions against real captured responses |
 | `fixtures.mjs` | Captured LocationIQ API responses used for deterministic, offline testing |
+| `real-test-restaurants.json` | Static sample dataset used by `backfill.mjs` for local manual testing |
 
 ## Tech Stack
 
@@ -131,7 +145,7 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 
 ### Data Pipeline & Automation
 - **Node.js:** Powers the custom build-time data fetching, coordinate validation, and pure-logic geocoding scripts.
-- **GitHub Actions:** Runs the daily LocationIQ geocoding backfill and handles safe, automated cache commits back to the repository; the Socrata data fetch itself runs as part of every Vercel build, not on a GitHub Actions schedule.
+- **GitHub Actions:** Runs the daily LocationIQ geocoding backfill and handles safe, automated cache commits back to the repository, plus a separate workflow running the pipeline's test suite on every pull request and push to `main`. The Socrata data fetch itself runs as part of every Vercel build, not on a GitHub Actions schedule.
 - **Data Sources:** [NYC DOHMH Restaurant Inspection Results](https://opendata.cityofnewyork.us/) via the Socrata API, with location verification powered by [LocationIQ](https://locationiq.com/).
 
 ### Hosting
@@ -165,19 +179,20 @@ Note: `import.meta.env` in Vite only exposes `VITE_`-prefixed vars by default �
 | `npm run dev` | Start the local development server |
 | `npm run build` | Run the data pipeline, then build the frontend for production |
 | `npm run preview` | Preview a production build locally|
-| `node --test pipeline/` | Run the native Node.js test suite for cache, merge, normalize, rate-limit, and scoring logic
-
+| `npm test` | Run the native Node.js test suite for cache, merge, normalize, rate-limit, and scoring logic — also run automatically in CI on every PR/push to `main`
+ah
 ## Deployment
 
 Running `npm run build` regenerates the `public/data/` directory directly from
 live DOHMH data on every build, ensuring no static dataset files ever need to be
 committed to the `main` branch.
 
-To keep the dashboard fresh, the scheduled `geocode-backfill` and `reset-out-of-bounds-cache` GitHub Actions automatically trigger Vercel rebuilds via a Deploy Hook (configured as a `VERCEL_DEPLOY_HOOK_URL` repository secret) whenever the cache is updated.
+To keep the dashboard fresh, the scheduled `geocode-backfill` Action (and `reset-out-of-bounds-cache`, when manually triggered) automatically triggers a Vercel rebuild via a Deploy Hook (configured as a `VERCEL_DEPLOY_HOOK_URL` repository secret) whenever the cache is updated.
 
 ## Known limitations
 
 - Aggregate stats are scoped to the current map view rather than an independent citywide/borough breakdown (achievable today via zoom/filters)
+- Map hover cards and name labels rely on mouse hover, with no touch equivalent yet; the dashboard is not currently optimized for mobile/touch devices
 
 ## Credits
 
