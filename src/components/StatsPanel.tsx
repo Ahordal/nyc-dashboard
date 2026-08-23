@@ -20,6 +20,7 @@ const CATEGORY_ORDER: { category: GradeCategory; label: string }[] = [
   { category: "B", label: "B" },
   { category: "C", label: "C" },
   { category: "pending", label: "Pending" },
+  { category: "uninspected", label: "Uninspected" },
   { category: "closed", label: "Closed" },
 ];
 
@@ -38,6 +39,7 @@ export default function StatsPanel({ restaurants }: StatsPanelProps) {
       B: 0,
       C: 0,
       pending: 0,
+      uninspected: 0,
       closed: 0,
     };
 

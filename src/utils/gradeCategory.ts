@@ -9,6 +9,13 @@ import type { GradeCategory } from "./gradeColours";
 export { CATEGORY_COLORS };
 export type { GradeCategory };
 
+// Sentinel grade value the pipeline assigns to restaurants that have
+// never actually been inspected (every DOHMH record for them is the
+// 1900-01-01 placeholder date). Never a real DOHMH grade, so it's safe
+// to use as a distinct marker. Mirrored in pipeline/fetch-inspection.mjs
+// -- keep both in sync if this ever changes.
+export const UNINSPECTED_GRADE = "U";
+
 // DOHMH closure actions take precedence over any letter grade.
 const CLOSED_ACTIONS = new Set([
   "Establishment re-closed by DOHMH",
@@ -33,6 +40,10 @@ export function getGradeCategory(
 ): GradeCategory {
   if (isClosedInspection(action)) {
     return "closed";
+  }
+
+  if (grade === UNINSPECTED_GRADE) {
+    return "uninspected";
   }
 
   if (

@@ -39,6 +39,9 @@ const gradeCategoryExpression = `
   }
 
   var g = $feature.grade;
+  if (g == "U") {
+    return "uninspected";
+  }
   if (g == "Z" || g == "P" || g == "N") {
     return "pending";
   }
@@ -103,6 +106,14 @@ const pointsRenderer = {
       },
     },
     {
+      value: "uninspected",
+      symbol: {
+        type: "simple-marker",
+        color: CATEGORY_COLORS.uninspected,
+        outline: { color: "rgba(26, 26, 26, 1)", width: 0.5 },
+      },
+    },
+    {
       value: "closed",
       symbol: {
         type: "simple-marker",
@@ -138,7 +149,7 @@ const pointsRenderer = {
   ],
 };
 
-const HOVER_CARD_MAX_SCALE = 15000;
+const HOVER_CARD_MAX_SCALE = 18056;
 
 const NO_SELECTION_FILTER = new FeatureFilter({ objectIds: [-1] });
 
@@ -146,7 +157,7 @@ const DEFAULT_CENTER: [number, number] = [-73.98, 40.7];
 const DEFAULT_ZOOM = 9.75;
 
 export type GradeCounts = Record<
-  "A" | "B" | "C" | "pending" | "closed",
+  "A" | "B" | "C" | "pending" | "uninspected" | "closed",
   number
 >;
 
@@ -155,6 +166,7 @@ const EMPTY_GRADE_COUNTS: GradeCounts = {
   B: 0,
   C: 0,
   pending: 0,
+  uninspected: 0,
   closed: 0,
 };
 
@@ -237,6 +249,17 @@ const MAP_LEGEND_INFO_CONTENT = (
               </div>
             </td>
             <td className="legend-score-text">N / P / Z</td>
+          </tr>
+          <tr>
+            <td>
+              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.uninspected }}>Uninspected</span>
+            </td>
+            <td>
+              <div className="legend-scale-visual single-dot-align">
+                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.uninspected, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+              </div>
+            </td>
+            <td className="legend-score-text">No scored inspection on record</td>
           </tr>
           <tr>
             <td>
@@ -392,17 +415,21 @@ export default function InspectionMapView({
         let category = "C";
         if (status === "closed") {
           category = "closed";
+        } else if (grade === "U") {
+          category = "uninspected";
         } else if (grade === "Z" || grade === "P" || grade === "N") {
           category = "pending";
-        } else if (score <= 13) {
+        } else if (score != null && score <= 13) {
           category = "A";
-        } else if (score <= 27) {
+        } else if (score != null && score <= 27) {
           category = "B";
         }
 
         if (activeGrades.includes("Closed") && category === "closed")
           return true;
         if (activeGrades.includes("Pending") && category === "pending")
+          return true;
+        if (activeGrades.includes("Uninspected") && category === "uninspected")
           return true;
         if (grade && activeGrades.includes(grade)) return true;
 

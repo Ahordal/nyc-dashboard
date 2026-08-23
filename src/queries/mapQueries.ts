@@ -82,6 +82,7 @@ export const CATEGORY_CLAUSES: Record<string, string> = {
   B: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score BETWEEN 14 AND 27`,
   C: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score >= 28`,
   Pending: `current_status_code <> 'closed' AND grade IN ('Z','P','N')`,
+  Uninspected: `current_status_code <> 'closed' AND grade = 'U'`,
   Closed: `current_status_code = 'closed'`,
 };
 

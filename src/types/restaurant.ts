@@ -73,7 +73,10 @@ export type RestaurantProperties = {
   neighbourhood: string | null;
   grade: string | null;
   grade_date: string | null;
-  score: number;
+  // Null for restaurants in the "Uninspected" category (see
+  // gradeCategory.ts's UNINSPECTED_GRADE) -- DOHMH has never recorded a
+  // real inspection for them, so there's no score to report.
+  score: number | null;
   inspection_date: string;
   inspection_type: string;
   action: string;

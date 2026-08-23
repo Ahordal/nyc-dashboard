@@ -10,7 +10,14 @@ import FilterSection from "./FiltersSection";
 import type { Filters, SetFilters } from "../types/filters";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
-const gradeCategories = ["A", "B", "C", "Pending", "Closed"] as const;
+const gradeCategories = [
+  "A",
+  "B",
+  "C",
+  "Pending",
+  "Uninspected",
+  "Closed",
+] as const;
 
 // Maps the displayed button labels to the corresponding
 // CATEGORY_COLORS keys ("Pending" → "pending", etc.).
@@ -20,6 +27,7 @@ const GRADE_FILTER_COLORS: Record<string, string> = {
   B: CATEGORY_COLORS.B,
   C: CATEGORY_COLORS.C,
   Pending: CATEGORY_COLORS.pending,
+  Uninspected: CATEGORY_COLORS.uninspected,
   Closed: CATEGORY_COLORS.closed,
 };
 

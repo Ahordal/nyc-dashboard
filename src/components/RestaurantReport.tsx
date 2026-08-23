@@ -20,7 +20,7 @@ import type {
   ViolationCodeLookup,
 } from "../types/restaurant";
 
-import { isClosedInspection } from "../utils/gradeCategory";
+import { isClosedInspection, UNINSPECTED_GRADE } from "../utils/gradeCategory";
 
 function parseViolations(raw: string): Violation[] {
   try {
@@ -184,7 +184,10 @@ export default function RestaurantReport({
         violations: parseViolations(restaurant.violations),
       };
 
-  const panelTitle = `Inspection Report - ${formatDate(displayed.date)}`;
+  const panelTitle =
+    displayed.grade === UNINSPECTED_GRADE
+      ? "Inspection Report - No Record on File"
+      : `Inspection Report - ${formatDate(displayed.date)}`;
 
   const currentIndex = selectedEvent
     ? history.findIndex((event) => event.id === selectedEvent.id)

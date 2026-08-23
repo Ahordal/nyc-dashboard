@@ -3,7 +3,13 @@
 // Single source for all grade/status colors used throughout the
 // dashboard, avoiding duplicated colour definitions.
 
-export type GradeCategory = "A" | "B" | "C" | "pending" | "closed";
+export type GradeCategory =
+  | "A"
+  | "B"
+  | "C"
+  | "pending"
+  | "closed"
+  | "uninspected";
 
 export const CATEGORY_COLORS: Record<GradeCategory, string> = {
   A: "#2E7BE4",
@@ -11,4 +17,5 @@ export const CATEGORY_COLORS: Record<GradeCategory, string> = {
   C: "#F58231",
   pending: "#E6007E",
   closed: "#8B0000",
+  uninspected: "#959595",
 };

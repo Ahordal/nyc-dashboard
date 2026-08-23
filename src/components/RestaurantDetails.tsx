@@ -16,7 +16,7 @@ import type {
   InspectionEvent,
 } from "../types/restaurant";
 
-import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";
+import { getGradeCategory, CATEGORY_COLORS, UNINSPECTED_GRADE } from "../utils/gradeCategory";
 import { formatPhoneNumber } from "../utils/formatPhoneNumber";
 import { toTitleCase } from "../utils/toTitleCase";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -109,6 +109,8 @@ const GRADE_PENDING_NOTES: Record<string, string> = {
   Z: "Grade pending official confirmation.",
   P: "Grade pending — reopened after a prior closure.",
   N: "Not yet graded — awaiting re-inspection after an initial visit.",
+  [UNINSPECTED_GRADE]:
+    "No scored inspection on record — DOHMH has no inspection date for this establishment.",
 };
 
 const RESTAURANT_INFO_CONTENT = (
@@ -250,7 +252,10 @@ export default function RestaurantDetails({
 
   const inspectionAge = yearsSince(restaurant.inspection_date);
 
-  const isStale = inspectionAge >= 2;
+  // The 1900-01-01 placeholder DOHMH uses for restaurants with no real
+  // inspection on record would otherwise compute as 100+ years stale,
+  // implying an inspection that never actually happened.
+  const isStale = category !== "uninspected" && inspectionAge >= 2;
 
   const historyDescending = [...history].reverse();
 
@@ -283,7 +288,9 @@ export default function RestaurantDetails({
                 style={{
                   color: categoryColor,
                 }}>
-                {restaurant.grade ?? "N/A"}
+                {restaurant.grade === UNINSPECTED_GRADE
+                  ? "—"
+                  : restaurant.grade ?? "N/A"}
               </span>
             </div>
 
@@ -295,7 +302,9 @@ export default function RestaurantDetails({
                 style={{
                   color: categoryColor,
                 }}>
-                {restaurant.score}
+                {restaurant.grade === UNINSPECTED_GRADE
+                  ? "—"
+                  : restaurant.score ?? "N/A"}
               </span>
             </div>
           </div>

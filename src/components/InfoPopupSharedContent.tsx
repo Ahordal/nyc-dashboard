@@ -109,6 +109,18 @@ export function GradeRangeInfo() {
         recorded; shown in the color of
         its score-based category.
       </li>
+
+      <li>
+        <strong
+          style={{
+            color: CATEGORY_COLORS.uninspected,
+          }}
+        >
+          Uninspected
+        </strong>{" "}
+        — No scored inspection on
+        record for this establishment
+      </li>
     </ul>
   );
 }

@@ -58,6 +58,7 @@ const GRADE_FILTER_COLORS: Record<string, string> = {
   B: CATEGORY_COLORS.B,
   C: CATEGORY_COLORS.C,
   Pending: CATEGORY_COLORS.pending,
+  Uninspected: CATEGORY_COLORS.uninspected,
   Closed: CATEGORY_COLORS.closed,
 };
 
@@ -66,6 +67,7 @@ const EMPTY_GRADE_COUNTS: GradeCounts = {
   B: 0,
   C: 0,
   pending: 0,
+  uninspected: 0,
   closed: 0,
 };
 

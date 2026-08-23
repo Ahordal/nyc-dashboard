@@ -3,7 +3,10 @@
 
 import type { RestaurantProperties } from "../types/restaurant";
 import InspectionBadges from "./InspectionBadges";
-import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";
+import {
+  getGradeCategory,
+  CATEGORY_COLORS,
+} from "../utils/gradeCategory";
 import { toTitleCase } from "../utils/toTitleCase";
 
 type RestaurantCardProps = {
@@ -55,7 +58,7 @@ export default function RestaurantCard({
     restaurant.score,
   );
   const categoryColor = CATEGORY_COLORS[category];
-  
+
   const name = toTitleCase(restaurant.name);
   const address = formatAddress(restaurant);
 
@@ -81,7 +84,9 @@ export default function RestaurantCard({
         )}
         <div className="card-meta">
           <span className="card-meta-label">Inspected:</span>{" "}
-          {formatDate(restaurant.inspection_date)}
+          {category === "uninspected"
+            ? "Not yet inspected"
+            : formatDate(restaurant.inspection_date)}
         </div>
       </div>
 

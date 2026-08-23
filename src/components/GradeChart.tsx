@@ -56,6 +56,9 @@ const GRADE_CHART_INFO_CONTENT = (
         <li>
           <strong style={{ color: CATEGORY_COLORS.pending }}>Pending</strong> — Grade not yet finalized (includes N, P, and Z)
         </li>
+        <li>
+          <strong style={{ color: CATEGORY_COLORS.uninspected }}>Uninspected</strong> — No scored inspection on record
+        </li>
       </ul>
     </div>
   </>
@@ -66,6 +69,7 @@ const SLICE_CONFIG = [
   { key: "B", label: "B", color: CATEGORY_COLORS.B },
   { key: "C", label: "C", color: CATEGORY_COLORS.C },
   { key: "pending", label: "Pending", color: CATEGORY_COLORS.pending },
+  { key: "uninspected", label: "Uninspected", color: CATEGORY_COLORS.uninspected },
   { key: "closed", label: "Closed", color: CATEGORY_COLORS.closed },
 ] as const;
 
@@ -187,7 +191,7 @@ export default function GradeChart({
     const active = hoveredDataObj || selectedDataObj;
 
     const total =
-      counts.A + counts.B + counts.C + counts.pending + counts.closed;
+      counts.A + counts.B + counts.C + counts.pending + counts.uninspected + counts.closed;
 
     return {
       data: chartData,
