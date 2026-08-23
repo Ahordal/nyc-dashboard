@@ -408,22 +408,11 @@ export default function InspectionMapView({
       const filteredRestaurants = restaurants.filter((r) => {
         if (activeGrades.length === 0) return true;
 
-        const status = r.current_status_code;
-        const grade = r.grade;
-        const score = r.score;
-
-        let category = "C";
-        if (status === "closed") {
-          category = "closed";
-        } else if (grade === "U") {
-          category = "uninspected";
-        } else if (grade === "Z" || grade === "P" || grade === "N") {
-          category = "pending";
-        } else if (score != null && score <= 13) {
-          category = "A";
-        } else if (score != null && score <= 27) {
-          category = "B";
-        }
+        // Reuse the exact same categorization getGradeCategory already
+        // computed for onGradeCountsChange above, instead of a second,
+        // independently-drifting re-implementation -- see the comment on
+        // CATEGORY_CLAUSES in mapQueries.ts for the bug this caused.
+        const category = getGradeCategory(r.action, r.grade, r.score);
 
         if (activeGrades.includes("Closed") && category === "closed")
           return true;
@@ -431,7 +420,7 @@ export default function InspectionMapView({
           return true;
         if (activeGrades.includes("Uninspected") && category === "uninspected")
           return true;
-        if (grade && activeGrades.includes(grade)) return true;
+        if (r.grade && activeGrades.includes(r.grade)) return true;
 
         return false;
       });

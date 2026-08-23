@@ -11,6 +11,11 @@ import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { loadCache } from "./cache.mjs";
 import { formatDisplayAddress, formatDisplayStreet } from "./normalize.mjs";
+import {
+  OPEN_ACTIONS,
+  CLOSED_ACTIONS,
+  UNINSPECTED_GRADE,
+} from "../shared/inspectionStatus.mjs";
 
 // Read-only geocode cache committed by scheduled backfill. If absent, falls back to raw DOHMH coords.
 const GEOCODE_CACHE_PATH = path.join(import.meta.dirname, "geocode-cache.json");
@@ -39,15 +44,6 @@ const BASE_RETRY_DELAY_MS = 1000; // Exponential backoff: 1s, 2s, 4s, 8s
 // Socrata default placeholder for uninspected entities; excluded from scored calculations.
 const NOT_YET_INSPECTED_DATE = "1900-01-01T00:00:00.000";
 
-// Sentinel grade value for restaurants whose every DOHMH record is the
-// 1900-01-01 placeholder above -- i.e. no inspection has ever actually
-// taken place. Never emitted by DOHMH itself (real grades are only
-// A/B/C/Z/P/N), so it's safe to use as a distinct marker throughout the
-// dashboard's grade-based filtering/coloring logic. Mirrored on the
-// frontend as UNINSPECTED_GRADE in src/utils/gradeCategory.ts -- keep
-// both in sync if this ever changes.
-const UNINSPECTED_GRADE = "U";
-
 // Bounding box filter to discard (0,0), inverted coordinates, or out-of-state bad data.
 const NYC_BOUNDS = {
   minLat: 40.4,
@@ -75,23 +71,18 @@ const BORO_DISPLAY_NAMES = {
 };
 
 // DOHMH status actions. Unrecognized values fall back to 'unknown' to avoid misrepresenting closures.
-const OPEN_ACTIONS = new Set([
-  "Violations were cited in the following area(s).",
-  "No violations were recorded at the time of this inspection.",
-  "Establishment re-opened by DOHMH",
-]);
-const CLOSED_ACTIONS = new Set([
-  "Establishment re-closed by DOHMH",
-  "Establishment Closed by DOHMH. Violations were cited in the following area(s) and those requiring immediate action were addressed.",
-]);
+// OPEN_ACTIONS/CLOSED_ACTIONS come from shared/inspectionStatus.mjs -- the
+// same source src/utils/gradeCategory.ts's CLOSED_ACTIONS reads from.
+const OPEN_ACTIONS_SET = new Set(OPEN_ACTIONS);
+const CLOSED_ACTIONS_SET = new Set(CLOSED_ACTIONS);
 
 /**
  * Derives operational status from latest ACTION text.
  * Consumers should filter on `code` rather than mutable UI `label` strings.
  */
 function deriveCurrentStatus(action) {
-  if (OPEN_ACTIONS.has(action)) return { code: "open", label: "Open" };
-  if (CLOSED_ACTIONS.has(action))
+  if (OPEN_ACTIONS_SET.has(action)) return { code: "open", label: "Open" };
+  if (CLOSED_ACTIONS_SET.has(action))
     return { code: "closed", label: "Closed by DOHMH" };
   return { code: "unknown", label: "Unknown" };
 }

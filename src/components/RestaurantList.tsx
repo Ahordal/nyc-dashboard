@@ -14,35 +14,36 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
 
 import type { RestaurantProperties } from "../types/restaurant";
+import { getGradeCategory } from "../utils/gradeCategory";
 
 const RESTAURANT_LIST_INFO_CONTENT = (
   <InfoPopupContent
     overview={
       <p>
         Shows restaurants currently visible in the map view, respecting any
-        active Grade and Borough filters and the search field above.
+        active Grade and Borough filters and the search field above[cite: 2].
       </p>
     }
     howToUse={
       <ul>
         <li>
           Select a restaurant card to display that restaurant&apos;s details and
-          inspection history, and to pan and zoom the map to its location.
+          inspection history, and to pan and zoom the map to its location[cite: 2].
         </li>
 
         <li>
           Use the sort field and direction controls to reorder the restaurant
-          results.
+          results[cite: 2].
         </li>
 
-        <li>Use the pagination controls to move between pages of results.</li>
+        <li>Use the pagination controls to move between pages of results[cite: 2].</li>
       </ul>
     }
     dataNotes={
       <ul>
         <li>
           The number of available results and pages updates as the map view,
-          active filters, or search results change.
+          active filters, or search results change[cite: 2].
         </li>
       </ul>
     }
@@ -137,17 +138,20 @@ export default function RestaurantList({
           break;
         }
         case "grade": {
-          const isPending = (r: RestaurantProperties) =>
-            !r.grade || r.grade === "N" || r.grade === "P" || r.grade === "Z";
-          const firstPending = isPending(first);
-          const secondPending = isPending(second);
+          const getRank = (r: RestaurantProperties) => {
+            const category = getGradeCategory(r.action, r.grade, r.score);
+            switch (category) {
+              case "A": return 0;
+              case "B": return 1;
+              case "C": return 2;
+              case "pending": return 3;
+              case "uninspected": return 4;
+              case "closed": return 5;
+              default: return 6;
+            }
+          };
 
-          if (firstPending !== secondPending) return firstPending ? 1 : -1;
-          if (!firstPending && !secondPending) {
-            const rank = (r: RestaurantProperties) =>
-              r.grade === "A" ? 0 : r.grade === "B" ? 1 : 2;
-            comparison = rank(first) - rank(second);
-          }
+          comparison = getRank(first) - getRank(second);
           break;
         }
         default:

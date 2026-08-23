@@ -5,22 +5,23 @@
 
 import { CATEGORY_COLORS } from "./gradeColours";
 import type { GradeCategory } from "./gradeColours";
+import {
+  CLOSED_ACTIONS as CLOSED_ACTIONS_LIST,
+  UNINSPECTED_GRADE,
+} from "../../shared/inspectionStatus.mjs";
 
 export { CATEGORY_COLORS };
 export type { GradeCategory };
 
-// Sentinel grade value the pipeline assigns to restaurants that have
-// never actually been inspected (every DOHMH record for them is the
-// 1900-01-01 placeholder date). Never a real DOHMH grade, so it's safe
-// to use as a distinct marker. Mirrored in pipeline/fetch-inspection.mjs
-// -- keep both in sync if this ever changes.
-export const UNINSPECTED_GRADE = "U";
+export { UNINSPECTED_GRADE };
 
-// DOHMH closure actions take precedence over any letter grade.
-const CLOSED_ACTIONS = new Set([
-  "Establishment re-closed by DOHMH",
-  "Establishment Closed by DOHMH. Violations were cited in the following area(s) and those requiring immediate action were addressed.",
-]);
+// DOHMH closure actions take precedence over any letter grade. Sourced
+// from shared/inspectionStatus.mjs. The same plain-JS module the Node
+// pipeline (pipeline/fetch-inspection.mjs) imports directly,  rather than
+// hand-copied here a second time. Exported as a Set (rather than the
+// shared module's array) so mapQueries.ts's SQL clause generator can
+// build its "closed" clause from it.
+export const CLOSED_ACTIONS = new Set(CLOSED_ACTIONS_LIST);
 
 // Returns whether a specific inspection action resulted in a DOHMH closure.
 //
@@ -33,6 +34,11 @@ export function isClosedInspection(
 }
 
 // Normalizes raw inspection data into the dashboard's display categories.
+// Single source of truth for this logic -- CATEGORY_CLAUSES in
+// mapQueries.ts builds SQL that mirrors this function's precedence exactly
+// (via the shared CLOSED_ACTIONS/UNINSPECTED_GRADE above), and MapView.tsx's
+// reportVisibleRestaurants calls this function directly rather than
+// re-implementing it a third time.
 export function getGradeCategory(
   action: string,
   grade: string | null,

@@ -16,6 +16,7 @@ import type Point from "@arcgis/core/geometry/Point";
 import Extent from "@arcgis/core/geometry/Extent";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
+import { CLOSED_ACTIONS, UNINSPECTED_GRADE } from "../utils/gradeCategory";
 
 // Fields actually read by the dashboard's components (restaurant list
 // cards, details panel, map filter logic). Deliberately excludes
@@ -77,13 +78,42 @@ export const RESTAURANT_DETAIL_OUT_FIELDS = [
   "violations",
 ];
 
+// Builds a SQL IN-list of the exact closure action strings
+// isClosedInspection() checks against, so this "closed" clause is
+// generated from the same set rather than a hand-copied duplicate --
+// see CLOSED_ACTIONS in gradeCategory.ts. Escaped the same way
+// escapeSqlString() below escapes user input.
+function buildClosedClause(): string {
+  const values = Array.from(CLOSED_ACTIONS)
+    .map((action) => `'${action.replace(/'/g, "''")}'`)
+    .join(",");
+  return `action IN (${values})`;
+}
+
+const CLOSED_CLAUSE = buildClosedClause();
+
+// Mirrors getGradeCategory()'s precedence exactly (see gradeCategory.ts):
+// a closure action wins over everything, then the Uninspected sentinel
+// grade, then administrative Pending grades, then score bands. Previously
+// this was a hand-copied re-implementation of that same logic, keyed on
+// current_status_code instead of action -- the two happened to agree in
+// practice, but nothing guaranteed it, and the A/B/C clauses didn't
+// exclude the Uninspected grade explicitly (only Z/P/N), relying on
+// score <= 13 to fail for a null score. That's true under standard SQL
+// null semantics but not guaranteed for every client-side query engine,
+// and was the root cause of Uninspected restaurants (score: null)
+// intermittently matching grade A/B/C map filters while being correctly
+// excluded from the Restaurant List's own (already explicit) JS check.
+// Each grade button filters independently (see buildGradeWhereClause), so
+// every clause below stays self-contained rather than relying on the
+// others having already excluded a restaurant.
 export const CATEGORY_CLAUSES: Record<string, string> = {
-  A: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score <= 13`,
-  B: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score BETWEEN 14 AND 27`,
-  C: `current_status_code <> 'closed' AND (grade IS NULL OR grade NOT IN ('Z','P','N')) AND score >= 28`,
-  Pending: `current_status_code <> 'closed' AND grade IN ('Z','P','N')`,
-  Uninspected: `current_status_code <> 'closed' AND grade = 'U'`,
-  Closed: `current_status_code = 'closed'`,
+  A: `NOT (${CLOSED_CLAUSE}) AND grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}') AND score <= 13`,
+  B: `NOT (${CLOSED_CLAUSE}) AND grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}') AND score BETWEEN 14 AND 27`,
+  C: `NOT (${CLOSED_CLAUSE}) AND grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}') AND score >= 28`,
+  Pending: `NOT (${CLOSED_CLAUSE}) AND (grade IN ('Z','P','N') OR (score IS NULL AND (grade IS NULL OR grade <> '${UNINSPECTED_GRADE}')))`,
+  Uninspected: `NOT (${CLOSED_CLAUSE}) AND grade = '${UNINSPECTED_GRADE}'`,
+  Closed: CLOSED_CLAUSE,
 };
 
 // Page size for querying visible restaurants. Kept safely under typical
