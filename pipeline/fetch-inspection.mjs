@@ -39,6 +39,15 @@ const BASE_RETRY_DELAY_MS = 1000; // Exponential backoff: 1s, 2s, 4s, 8s
 // Socrata default placeholder for uninspected entities; excluded from scored calculations.
 const NOT_YET_INSPECTED_DATE = "1900-01-01T00:00:00.000";
 
+// Sentinel grade value for restaurants whose every DOHMH record is the
+// 1900-01-01 placeholder above -- i.e. no inspection has ever actually
+// taken place. Never emitted by DOHMH itself (real grades are only
+// A/B/C/Z/P/N), so it's safe to use as a distinct marker throughout the
+// dashboard's grade-based filtering/coloring logic. Mirrored on the
+// frontend as UNINSPECTED_GRADE in src/utils/gradeCategory.ts -- keep
+// both in sync if this ever changes.
+const UNINSPECTED_GRADE = "U";
+
 // Bounding box filter to discard (0,0), inverted coordinates, or out-of-state bad data.
 const NYC_BOUNDS = {
   minLat: 40.4,
@@ -446,14 +455,26 @@ export function buildLatestInspectionsGeoJSON(
   const features = [];
 
   for (const [camis, events] of eventsByRestaurant) {
-    // Only map restaurants with at least one historical scored event.
     const scoredEvents = events.filter(
       (event) =>
         event.primary.score != null && event.date !== NOT_YET_INSPECTED_DATE,
     );
-    if (scoredEvents.length === 0) continue;
 
-    const latest = scoredEvents[scoredEvents.length - 1];
+    // Restaurants with zero scored events have never received an actual
+    // DOHMH inspection -- every record on file is the 1900-01-01
+    // placeholder. These used to be dropped from the dataset entirely;
+    // now they're surfaced as a distinct "Uninspected" category instead
+    // (grade forced to UNINSPECTED_GRADE below) rather than silently
+    // omitted. A restaurant with legally-operating-before-inspection
+    // status doesn't necessarily mean it's still open -- see grade/copy
+    // handling below, which stays neutral rather than asserting either way.
+    const isUninspected = scoredEvents.length === 0;
+    const latest = isUninspected
+      ? events[events.length - 1]
+      : scoredEvents[scoredEvents.length - 1];
+
+    if (!latest) continue;
+
     const { primary, violations } = latest;
 
     const dohmhLatRaw = parseFloat(primary.latitude);
@@ -533,9 +554,9 @@ export function buildLatestInspectionsGeoJSON(
         dohmh_longitude: roundedDohmhLon,
         location_status: locationStatus,
         neighbourhood,
-        grade: primary.grade || null,
-        grade_date: primary.grade_date ?? null,
-        score: Number(primary.score),
+        grade: isUninspected ? UNINSPECTED_GRADE : primary.grade || null,
+        grade_date: isUninspected ? null : (primary.grade_date ?? null),
+        score: isUninspected ? null : Number(primary.score),
         inspection_date: latest.date,
         inspection_type: primary.inspection_type ?? "",
         action: primary.action ?? "",
