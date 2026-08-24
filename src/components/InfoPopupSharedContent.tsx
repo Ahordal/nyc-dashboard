@@ -107,7 +107,7 @@ export function GradeRangeInfo() {
       <li>
         <strong>N/A</strong> — No grade
         recorded; shown in the color of
-        its score-based category.
+        its score-based category
       </li>
 
       <li>
@@ -116,7 +116,7 @@ export function GradeRangeInfo() {
             color: CATEGORY_COLORS.uninspected,
           }}
         >
-          Uninspected
+          UNINSPECTED
         </strong>{" "}
         — No scored inspection on
         record for this establishment

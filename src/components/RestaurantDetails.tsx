@@ -6,6 +6,8 @@
 // history list. Hovering or focusing a history row previews its chart point.
 // Activating a row opens that inspection's full report.
 
+import { useState } from "react";
+
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
 import Badge from "./Badge";
@@ -223,13 +225,33 @@ export default function RestaurantDetails({
   onSelectInspection,
   onHoverInspection,
 }: RestaurantDetailsProps) {
+  const [showInfo, setShowInfo] = useState(false);
+
+  const header = (
+    <PanelHeader
+      title="Restaurant Details"
+      infoContent={RESTAURANT_INFO_CONTENT}
+      onInfoClick={() => {
+        setShowInfo((currentValue) => !currentValue);
+      }}
+      isInfoOpen={showInfo}
+    />
+  );
+
+  if (showInfo) {
+    return (
+      <section className="panel restaurant-details-panel">
+        {header}
+
+        <div className="panel-scroll-content">{RESTAURANT_INFO_CONTENT}</div>
+      </section>
+    );
+  }
+
   if (!restaurant) {
     return (
       <section className="panel restaurant-details-panel">
-        <PanelHeader
-          title="Restaurant Details"
-          infoContent={RESTAURANT_INFO_CONTENT}
-        />
+        {header}
 
         <div className="panel-scroll-content">
           <p className="details-empty">
@@ -261,10 +283,7 @@ export default function RestaurantDetails({
 
   return (
     <section className="panel restaurant-details-panel">
-      <PanelHeader
-        title="Restaurant Details"
-        infoContent={RESTAURANT_INFO_CONTENT}
-      />
+      {header}
 
       <div className="panel-scroll-content">
         <div className="details-hero-header">

@@ -6,6 +6,8 @@
 // History list. It also includes newer/older navigation for browsing between
 // inspections without leaving the Report tab.
 
+import { useState } from "react";
+
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
 
@@ -135,12 +137,35 @@ export default function RestaurantReport({
   violationCodes,
   onSelectInspection,
 }: RestaurantReportProps) {
+  const [showInfo, setShowInfo] = useState(false);
+
+  const handleInfoClick = () => {
+    setShowInfo((currentValue) => !currentValue);
+  };
+
+  if (showInfo) {
+    return (
+      <section className="panel restaurant-report-panel">
+        <PanelHeader
+          title="Inspection Report"
+          infoContent={REPORT_INFO_CONTENT}
+          onInfoClick={handleInfoClick}
+          isInfoOpen={showInfo}
+        />
+
+        <div className="panel-scroll-content">{REPORT_INFO_CONTENT}</div>
+      </section>
+    );
+  }
+
   if (!restaurant) {
     return (
       <section className="panel restaurant-report-panel">
         <PanelHeader
           title="Inspection Report"
           infoContent={REPORT_INFO_CONTENT}
+          onInfoClick={handleInfoClick}
+          isInfoOpen={showInfo}
         />
 
         <div className="panel-scroll-content">
@@ -206,7 +231,12 @@ export default function RestaurantReport({
 
   return (
     <section className="panel restaurant-report-panel">
-      <PanelHeader title={panelTitle} infoContent={REPORT_INFO_CONTENT} />
+      <PanelHeader
+        title={panelTitle}
+        infoContent={REPORT_INFO_CONTENT}
+        onInfoClick={handleInfoClick}
+        isInfoOpen={showInfo}
+      />
 
       <div className="panel-scroll-content">
         <RestaurantHeroHeader

@@ -189,7 +189,7 @@ const MAP_LEGEND_INFO_CONTENT = (
     howToUse={
       <ul>
         <li>Click any restaurant marker on the map to load its inspection history, violations, and performance details.</li>
-        <li>Hover over markers to preview restaurant names, grades, and scores directly on the map canvas (active when scale is 1:15,000 or larger).</li>
+        <li>Hover over markers to preview restaurant names, grades, and scores directly on the map canvas (active when scale is 1:18,056 or larger — the same zoom level a selected restaurant zooms to).</li>
         <li>
           Click the <span className="map-control-button" style={{ display: "inline" }}>Map Scale</span> or <span className="map-control-button" style={{ display: "inline" }}>Zoom Lvl</span> indicators at the bottom left to manually type and jump to a specific map view.
         </li>
@@ -393,6 +393,13 @@ export default function InspectionMapView({
       const restaurants = await queryVisibleRestaurants(view, layer);
       if (requestId !== queryRequestIdRef.current) return;
 
+      // GradeChart intentionally tallies `restaurants` (pre-grade-filter --
+      // extent + borough/search only) so it always shows the full
+      // distribution for the map area, regardless of the active grade
+      // filter; the chart highlights/explodes the filtered slice(s) instead
+      // of only showing them. RestaurantList and StatsPanel, by contrast,
+      // should reflect the actually-filtered set, so they're derived from
+      // filteredRestaurants below.
       if (onGradeCountsChange) {
         const counts: GradeCounts = { ...EMPTY_GRADE_COUNTS };
         for (const r of restaurants) {
@@ -408,10 +415,6 @@ export default function InspectionMapView({
       const filteredRestaurants = restaurants.filter((r) => {
         if (activeGrades.length === 0) return true;
 
-        // Reuse the exact same categorization getGradeCategory already
-        // computed for onGradeCountsChange above, instead of a second,
-        // independently-drifting re-implementation -- see the comment on
-        // CATEGORY_CLAUSES in mapQueries.ts for the bug this caused.
         const category = getGradeCategory(r.action, r.grade, r.score);
 
         if (activeGrades.includes("Closed") && category === "closed")
@@ -420,7 +423,13 @@ export default function InspectionMapView({
           return true;
         if (activeGrades.includes("Uninspected") && category === "uninspected")
           return true;
-        if (r.grade && activeGrades.includes(r.grade)) return true;
+        // Match A/B/C against the computed category, not the raw grade
+        // field -- grade is often null in the source data even when score
+        // is populated, which was silently dropping those restaurants here
+        // while the chart (via getGradeCategory) still counted them as
+        // A/B/C.
+        if (["A", "B", "C"].includes(category) && activeGrades.includes(category))
+          return true;
 
         return false;
       });

@@ -180,7 +180,7 @@ Note: `import.meta.env` in Vite only exposes `VITE_`-prefixed vars by default â€
 | `npm run build` | Run the data pipeline, then build the frontend for production |
 | `npm run preview` | Preview a production build locally|
 | `npm test` | Run the native Node.js test suite for cache, merge, normalize, rate-limit, and scoring logic â€” also run automatically in CI on every PR/push to `main`
-ah
+
 ## Deployment
 
 Running `npm run build` regenerates the `public/data/` directory directly from

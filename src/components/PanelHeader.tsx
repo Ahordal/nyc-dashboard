@@ -19,7 +19,7 @@ import type {
 import { createPortal } from "react-dom";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCircleInfo } from "@fortawesome/free-solid-svg-icons";
+import { faCircleInfo, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 type InfoPlacement = "up" | "down" | "auto";
 type ResolvedPlacement = "up" | "down";
@@ -28,6 +28,15 @@ type PanelHeaderProps = {
   title?: string;
   infoContent?: ReactNode;
   infoPlacement?: InfoPlacement;
+  // When provided, the info button no longer opens PanelHeader's own
+  // anchored popup -- it just calls this instead, and isInfoOpen drives
+  // the button's expanded/close-icon state. Used by panels that swap
+  // infoContent in for their own body content inline rather than
+  // showing it in a floating popup (see RestaurantDetails,
+  // RestaurantReport, GradeChart). infoContent is still passed in this
+  // mode purely to decide whether the info button renders at all.
+  onInfoClick?: () => void;
+  isInfoOpen?: boolean;
 };
 
 const POPUP_MAX_WIDTH = 450;
@@ -52,6 +61,8 @@ export default function PanelHeader({
   title,
   infoContent,
   infoPlacement = "down",
+  onInfoClick,
+  isInfoOpen = false,
 }: PanelHeaderProps) {
   const popupId = useId();
 
@@ -320,6 +331,11 @@ export default function PanelHeader({
             type="button"
             className="panel-header-info-button"
             onClick={() => {
+              if (onInfoClick) {
+                onInfoClick();
+                return;
+              }
+
               if (!showInfo) {
                 setPopupStyle(HIDDEN_POPUP_STYLE);
               }
@@ -327,14 +343,16 @@ export default function PanelHeader({
               setShowInfo((currentValue) => !currentValue);
             }}
             aria-label={`About ${title ?? "panel"}`}
-            aria-expanded={showInfo}
+            aria-expanded={onInfoClick ? isInfoOpen : showInfo}
             aria-controls={
-              showInfo
+              !onInfoClick && showInfo
                 ? popupId
                 : undefined
             }
           >
-            <FontAwesomeIcon icon={faCircleInfo} />
+            <FontAwesomeIcon
+              icon={onInfoClick && isInfoOpen ? faXmark : faCircleInfo}
+            />
           </button>
         )}
       </div>

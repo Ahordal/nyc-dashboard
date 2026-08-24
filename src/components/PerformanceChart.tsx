@@ -24,6 +24,7 @@ import {
 } from "recharts";
 
 import PanelHeader from "./PanelHeader";
+import InfoPopupContent from "./InfoPopupContent";
 import PerformanceDot from "./PerformanceDot";
 import PerformanceTooltip from "./PerformanceTooltip";
 
@@ -75,42 +76,26 @@ const GRADE_BAND_MINS = [
 ];
 
 const PERFORMANCE_CHART_INFO_CONTENT = (
-  <>
-    <div className="info-popup-section">
-      <h4 className="section-header">What This Chart Shows</h4>
-      <ul>
-        <li>
-          Shows the selected restaurant&apos;s scored inspections over time.
-        </li>
-        <li>Lower scores generally indicate fewer food-safety violations.</li>
-        <li>Each point represents one inspection report.</li>
-      </ul>
-    </div>
-
-    <div className="info-popup-section">
-      <h4 className="section-header">Grade Ranges</h4>
-      <ul>
-        <li>
-          <strong style={{ color: CATEGORY_COLORS.A }}>A</strong> — 0 to 13
-          points
-        </li>
-        <li>
-          <strong style={{ color: CATEGORY_COLORS.B }}>B</strong> — 14 to 27
-          points
-        </li>
-        <li>
-          <strong style={{ color: CATEGORY_COLORS.C }}>C</strong> — 28 or more
-          points
-        </li>
-        <li>
-          Background bands show where each inspection falls relative to those
-          grade thresholds.
-        </li>
-      </ul>
-    </div>
-
-    <div className="info-popup-section">
-      <h4 className="section-header">Interaction</h4>
+  <InfoPopupContent
+    overview={
+      <>
+        <ul>
+          <li>
+            Shows the selected restaurant&apos;s scored inspections over time.
+          </li>
+          <li>Lower scores generally indicate fewer food-safety violations.</li>
+          <li>Each point represents one inspection report.</li>
+        </ul>
+        <p>
+          The background bands mark each inspection&apos;s score against the
+          same thresholds used elsewhere on the dashboard:{" "}
+          <strong style={{ color: CATEGORY_COLORS.A }}>A</strong> (0–13),{" "}
+          <strong style={{ color: CATEGORY_COLORS.B }}>B</strong> (14–27), and{" "}
+          <strong style={{ color: CATEGORY_COLORS.C }}>C</strong> (28+).
+        </p>
+      </>
+    }
+    howToUse={
       <ul>
         <li>
           Hover over a chart point or Inspection History row in the restaurant
@@ -125,18 +110,9 @@ const PERFORMANCE_CHART_INFO_CONTENT = (
           Space to open the selected report.
         </li>
       </ul>
-    </div>
-
-    <div className="info-popup-section">
-      <h4 className="section-header">Data Notes</h4>
+    }
+    statuses={
       <ul>
-        <li>
-          Inspections without a numerical score are excluded from the timeline.
-        </li>
-        <li>
-          A single point without a line means only one scored inspection is
-          available.
-        </li>
         <li>
           <span className="violation-tag status-flag status-closed">
             Closed by DOHMH
@@ -146,9 +122,19 @@ const PERFORMANCE_CHART_INFO_CONTENT = (
           status.
         </li>
       </ul>
-    </div>
-  </>
-);
+    }
+    dataNotes={
+      <ul>
+        <li>
+          Inspections without a numerical score are excluded from the timeline.
+        </li>
+        <li>
+          A single point without a line means only one scored inspection is
+          available.
+        </li>
+      </ul>
+    }
+  />);
 
 const AXIS_TITLE_STYLE = {
   fill: "var(--text-muted)",

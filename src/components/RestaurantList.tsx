@@ -21,29 +21,29 @@ const RESTAURANT_LIST_INFO_CONTENT = (
     overview={
       <p>
         Shows restaurants currently visible in the map view, respecting any
-        active Grade and Borough filters and the search field above[cite: 2].
+        active Grade and Borough filters and the search field above.
       </p>
     }
     howToUse={
       <ul>
         <li>
           Select a restaurant card to display that restaurant&apos;s details and
-          inspection history, and to pan and zoom the map to its location[cite: 2].
+          inspection history, and to pan and zoom the map to its location.
         </li>
 
         <li>
           Use the sort field and direction controls to reorder the restaurant
-          results[cite: 2].
+          results.
         </li>
 
-        <li>Use the pagination controls to move between pages of results[cite: 2].</li>
+        <li>Use the pagination controls to move between pages of results.</li>
       </ul>
     }
     dataNotes={
       <ul>
         <li>
           The number of available results and pages updates as the map view,
-          active filters, or search results change[cite: 2].
+          active filters, or search results change.
         </li>
       </ul>
     }
@@ -80,6 +80,7 @@ export default function RestaurantList({
   onSelectRestaurant,
   children,
 }: RestaurantListProps) {
+  const [showInfo, setShowInfo] = useState(false);
   const [sortField, setSortField] = useState<SortField>("inspection_date");
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
@@ -203,74 +204,84 @@ export default function RestaurantList({
       <PanelHeader
         title="Restaurant List"
         infoContent={RESTAURANT_LIST_INFO_CONTENT}
+        onInfoClick={() => {
+          setShowInfo((currentValue) => !currentValue);
+        }}
+        isInfoOpen={showInfo}
       />
 
-      <div ref={containerRef} className="restaurant-list-container">
-        <div className="restaurant-list-sort-bar">
-          <span id="sort-field-label" className="sort-label">
-            Sort Results by:
-          </span>
+      {showInfo ? (
+        <div className="panel-scroll-content">
+          {RESTAURANT_LIST_INFO_CONTENT}
+        </div>
+      ) : (
+        <div ref={containerRef} className="restaurant-list-container">
+          <div className="restaurant-list-sort-bar">
+            <span id="sort-field-label" className="sort-label">
+              Sort Results by:
+            </span>
 
-          <SortDropdown
-            value={sortField}
-            options={SORT_FIELD_OPTIONS}
-            onChange={(value) => {
-              setSortField(value);
-            }}
-            labelId="sort-field-label"
+            <SortDropdown
+              value={sortField}
+              options={SORT_FIELD_OPTIONS}
+              onChange={(value) => {
+                setSortField(value);
+              }}
+              labelId="sort-field-label"
+            />
+
+            <button
+              type="button"
+              className="sort-direction-toggle"
+              onClick={() => {
+                setSortDirection((current) =>
+                  current === "asc" ? "desc" : "asc",
+                );
+              }}
+              aria-label={`Sort ${sortDirection === "asc" ? "descending" : "ascending"}`}>
+              <FontAwesomeIcon
+                icon={faArrowUp}
+                className={`sort-direction-arrow ${sortDirection === "desc" ? "flipped" : ""}`}
+              />
+              <span>{sortDirection === "asc" ? "Ascending" : "Descending"}</span>
+            </button>
+          </div>
+
+          <div ref={cardListRef} className="restaurant-card-list">
+            {pageItems.map((restaurant) => (
+              <RestaurantCard
+                key={restaurant.id}
+                restaurant={restaurant}
+                isSelected={restaurant.id === selectedRestaurantId}
+                onClick={(selected) => onSelectRestaurant?.(selected)}
+              />
+            ))}
+
+            {pageItems.length === 0 && (
+              <div className="restaurant-list-empty">
+                No restaurants match the current view, filters or search results.
+              </div>
+            )}
+
+            <NoticeOverlay
+              triggerKey={`${sortField}-${sortDirection}`}
+              durationMs={SORT_NOTICE_DURATION_MS}>
+              Sorted by {currentSortLabel} —{" "}
+              {sortDirection === "asc" ? "Ascending" : "Descending"}
+            </NoticeOverlay>
+
+            {children}
+          </div>
+
+          <PaginationBar
+            currentPage={clampedPage}
+            totalPages={totalPages}
+            totalItems={sorted.length}
+            onPageChange={setPage}
+            itemName="restaurants"
           />
-
-          <button
-            type="button"
-            className="sort-direction-toggle"
-            onClick={() => {
-              setSortDirection((current) =>
-                current === "asc" ? "desc" : "asc",
-              );
-            }}
-            aria-label={`Sort ${sortDirection === "asc" ? "descending" : "ascending"}`}>
-            <FontAwesomeIcon
-              icon={faArrowUp}
-              className={`sort-direction-arrow ${sortDirection === "desc" ? "flipped" : ""}`}
-            />
-            <span>{sortDirection === "asc" ? "Ascending" : "Descending"}</span>
-          </button>
         </div>
-
-        <div ref={cardListRef} className="restaurant-card-list">
-          {pageItems.map((restaurant) => (
-            <RestaurantCard
-              key={restaurant.id}
-              restaurant={restaurant}
-              isSelected={restaurant.id === selectedRestaurantId}
-              onClick={(selected) => onSelectRestaurant?.(selected)}
-            />
-          ))}
-
-          {pageItems.length === 0 && (
-            <div className="restaurant-list-empty">
-              No restaurants match the current view, filters or search results.
-            </div>
-          )}
-
-          <NoticeOverlay
-            triggerKey={`${sortField}-${sortDirection}`}
-            durationMs={SORT_NOTICE_DURATION_MS}>
-            Sorted by {currentSortLabel} —{" "}
-            {sortDirection === "asc" ? "Ascending" : "Descending"}
-          </NoticeOverlay>
-
-          {children}
-        </div>
-
-        <PaginationBar
-          currentPage={clampedPage}
-          totalPages={totalPages}
-          totalItems={sorted.length}
-          onPageChange={setPage}
-          itemName="restaurants"
-        />
-      </div>
+      )}
     </section>
   );
 }

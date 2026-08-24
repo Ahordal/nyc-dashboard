@@ -53,10 +53,16 @@ export default function InfoPopupContent({
   resources,
 }: InfoPopupContentProps) {
   return (
-    <>
+    <div className="info-popup-content">
       {overview && (
         <InfoPopupSection title="Overview">
           {overview}
+        </InfoPopupSection>
+      )}
+
+      {legend && (
+        <InfoPopupSection title="Legend">
+          {legend}
         </InfoPopupSection>
       )}
 
@@ -67,7 +73,7 @@ export default function InfoPopupContent({
       )}
 
       {howToUse && (
-        <InfoPopupSection title="How to Use">
+        <InfoPopupSection title="Interaction">
           {howToUse}
         </InfoPopupSection>
       )}
@@ -102,17 +108,11 @@ export default function InfoPopupContent({
         </InfoPopupSection>
       )}
 
-      {legend && (
-        <InfoPopupSection title="Legend">
-          {legend}
-        </InfoPopupSection>
-      )}
-
       {resources && (
         <InfoPopupSection title="NYC Health Resources">
           {resources}
         </InfoPopupSection>
       )}
-    </>
+    </div>
   );
 }

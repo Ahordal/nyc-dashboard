@@ -346,6 +346,22 @@ a:focus-visible {
   padding-left: 1.2rem;
 }
 
+/* Shared typography for InfoPopupContent's sections, wherever it's
+   rendered -- an anchored popup, the centered modal, or inline in a
+   panel body (see PanelHeader's onInfoClick / RestaurantDetails,
+   RestaurantReport, GradeChart). Keeps the content itself looking the
+   same regardless of container, instead of relying on each container
+   class to happen to set matching font-size/line-height/list rules. */
+.info-popup-content {
+  font-size: 0.875rem;
+  line-height: 1.6;
+}
+
+.info-popup-content ul {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+}
+
 .info-popup-section {
   margin-bottom: var(--space-s);
 }
