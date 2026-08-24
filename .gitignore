@@ -30,6 +30,9 @@ pnpm-debug.log*
 # Dashboard TO-DOs
 NYC_Dashboard_TO-DOs.txt
 
+# Claude Code guidance file -- local only, README covers this for humans
+CLAUDE.md
+
 #Pipeline data not in the main branch
 pipeline/geocode-cache.json
 pipeline/suspicious-shifts.json
