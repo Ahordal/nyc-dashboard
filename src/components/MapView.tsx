@@ -20,6 +20,8 @@ import { CATEGORY_COLORS } from "../utils/gradeColours";
 import { getGradeCategory } from "../utils/gradeCategory";
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
+import MapScaleBar from "./MapScaleBar";
+import MapScaleZoomControls from "./MapScaleZoomControls";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
@@ -310,14 +312,7 @@ export default function InspectionMapView({
   onGradeCountsChange,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
-  const [currentScale, setCurrentScale] = useState<number>(DEFAULT_ZOOM);
-  const [currentZoom, setCurrentZoom] = useState<number>(DEFAULT_ZOOM);
-
-  const [isEditingZoom, setIsEditingZoom] = useState(false);
-  const [zoomInputVal, setZoomInputVal] = useState("");
-
-  const [isEditingScale, setIsEditingScale] = useState(false);
-  const [scaleInputVal, setScaleInputVal] = useState("");
+  const [mapView, setMapView] = useState<MapView | null>(null);
 
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<GeoJSONLayer | null>(null);
@@ -360,28 +355,6 @@ export default function InspectionMapView({
   useEffect(() => {
     onGradeCountsChangeRef.current = onGradeCountsChange;
   }, [onGradeCountsChange]);
-
-  const handleZoomInputSubmit = () => {
-    setIsEditingZoom(false);
-    const parsedZoom = parseFloat(zoomInputVal);
-    const view = viewRef.current;
-
-    if (!Number.isNaN(parsedZoom) && view) {
-      const clampedZoom = Math.max(1, Math.min(20, parsedZoom));
-      view.goTo({ zoom: clampedZoom }, { duration: 400 });
-    }
-  };
-
-  const handleScaleInputSubmit = () => {
-    setIsEditingScale(false);
-    const cleaned = scaleInputVal.replace(/,/g, "");
-    const parsedScale = parseFloat(cleaned);
-    const view = viewRef.current;
-
-    if (!Number.isNaN(parsedScale) && parsedScale > 0 && view) {
-      view.goTo({ scale: parsedScale }, { duration: 400 });
-    }
-  };
 
   async function reportVisibleRestaurants(view: MapView, layer: GeoJSONLayer) {
     const onVisibleRestaurantsChange = onVisibleRestaurantsChangeRef.current;
@@ -536,29 +509,14 @@ export default function InspectionMapView({
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
       constraints: { snapToZoom: false },
+      // Zoom in/out is handled by the custom MapScaleZoomControls chip instead;
+      // attribution isn't part of the toggleable component list, so it stays.
+      ui: { components: [] },
     });
     viewRef.current = view;
+    setMapView(view);
 
     view.popupEnabled = false;
-
-    // Set initial scale and zoom values
-    setCurrentScale(Math.round(view.scale));
-    setCurrentZoom(Math.round(view.zoom * 10) / 10);
-
-    // Watch view scale and zoom reactively
-    const scaleWatchHandle = reactiveUtils.watch(
-      () => view.scale,
-      (scale) => {
-        setCurrentScale(Math.round(scale));
-      }
-    );
-
-    const zoomWatchHandle = reactiveUtils.watch(
-      () => view.zoom,
-      (zoom) => {
-        setCurrentZoom(Math.round(zoom * 10) / 10);
-      }
-    );
 
     view.when(() => {
       reportVisibleRestaurants(view, layer);
@@ -710,10 +668,9 @@ export default function InspectionMapView({
         "mouseleave",
         handlePointerLeaveContainer,
       );
-      scaleWatchHandle.remove();
-      zoomWatchHandle.remove();
       stationaryWatchHandle.remove();
       view.destroy();
+      setMapView(null);
     };
   }, [applyHighlightForId]);
 
@@ -870,70 +827,8 @@ export default function InspectionMapView({
       <div className="map-canvas-wrapper">
         <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
 
-        <div className="map-bottom-controls">
-          <div className="map-control-label">
-            <span>MAP SCALE: 1:</span>
-            {isEditingScale ? (
-              <input
-                type="text"
-                autoFocus
-                value={scaleInputVal}
-                onChange={(e) => setScaleInputVal(e.target.value)}
-                onBlur={handleScaleInputSubmit}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleScaleInputSubmit();
-                  if (e.key === "Escape") setIsEditingScale(false);
-                }}
-                className="map-control-input scale-input"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setScaleInputVal(String(currentScale));
-                  setIsEditingScale(true);
-                }}
-                title="Click to type a map scale denominator"
-                className="map-control-button"
-              >
-                {currentScale.toLocaleString()}
-              </button>
-            )}
-          </div>
-
-          <div className="map-control-label">
-            <span>Zoom Lvl:</span>
-            {isEditingZoom ? (
-              <input
-                type="number"
-                step="0.1"
-                min="1"
-                max="20"
-                autoFocus
-                value={zoomInputVal}
-                onChange={(e) => setZoomInputVal(e.target.value)}
-                onBlur={handleZoomInputSubmit}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") handleZoomInputSubmit();
-                  if (e.key === "Escape") setIsEditingZoom(false);
-                }}
-                className="map-control-input zoom-input"
-              />
-            ) : (
-              <button
-                type="button"
-                onClick={() => {
-                  setZoomInputVal(String(currentZoom));
-                  setIsEditingZoom(true);
-                }}
-                title="Click to type a zoom level"
-                className="map-control-button"
-              >
-                {currentZoom}
-              </button>
-            )}
-          </div>
-        </div>
+        <MapScaleZoomControls view={mapView} />
+        <MapScaleBar view={mapView} />
 
         {hoverCard && (
           <div

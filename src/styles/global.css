@@ -1986,7 +1986,7 @@ a:focus-visible {
 .map-bottom-controls {
   position: absolute;
   bottom: 1.5rem;
-  left: 1rem;
+  left: 0.5rem;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -2057,6 +2057,92 @@ a:focus-visible {
 
 .map-control-input.zoom-input {
   width: 48px;
+}
+
+.map-zoom-buttons-container {
+  position: absolute;
+  top: 0.5rem;
+  left: 0.5rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-zoom-buttons-chip {
+  display: flex;
+  flex-direction: column;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.map-zoom-button {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-panel);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 700;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.map-zoom-button:last-child {
+  border-bottom: none;
+}
+
+.map-zoom-button:hover:not(:disabled) {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+.map-zoom-button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.map-scale-bar-container {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.map-scale-bar-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: 0.25rem 0.5rem;
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  box-sizing: border-box;
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.map-scale-bar-graphic {
+  height: 6px;
+  border-left: 2px solid var(--text-body);
+  border-right: 2px solid var(--text-body);
+  border-bottom: 2px solid var(--text-body);
+  box-sizing: border-box;
+  transition: width 0.15s ease;
+}
+
+.map-scale-bar-text {
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+  white-space: nowrap;
 }
 
 /* 15.4 ESRI OVERRIDES & SKELETONS */

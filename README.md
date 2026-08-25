@@ -14,6 +14,11 @@ An interactive map and analytics dashboard for exploring NYC DOHMH restaurant in
   directly to the current map bounding box.
 - **Grade Breakdown Chart:** Interactive Recharts-powered donut chart providing a visual proportional breakdown of graded restaurants within the active map view.
 - **Cross-Component Interactivity:** Synchronized hover states and selection indicators linking map points, list items, and chart data seamlessly.
+- **Map Scale:** Bottom-left readout of the current scale denominator (1:x) that doubles as a text input — click it to type a scale and jump straight there.
+- **Zoom Level:** Bottom-left readout of the current zoom level, also click-to-type for jumping to a specific level.
+- **Zoom Buttons:** Top-left +/- buttons for stepping the zoom level in/out, replacing Esri's default `Zoom` widget so it matches the dashboard's own control styling.
+- **Scale Bar:** Bottom-right graphical bar showing ground distance in feet/miles, snapping to round values (10, 20, 50 ft ... 1, 2, 5 mi) and correcting for Web Mercator distortion via `resolution × cos(latitude)`.
+- Map Scale, Zoom Level, and Zoom Buttons are custom React components built directly against `view.scale`/`view.zoom`; the Scale Bar is likewise custom rather than Esri's `esri/widgets/ScaleBar`, which is deprecated.
 
 ### Search & Filtering
 - **Smart Dataset Search:** Custom client-side search index that supports queries by name, cuisine, or address, featuring automatic diacritic stripping, corporate suffix removal, and street abbreviation expansion (e.g., matching "St" to "Street").
