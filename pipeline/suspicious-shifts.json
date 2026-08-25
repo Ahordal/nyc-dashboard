@@ -7474,5 +7474,17 @@
     "distanceMeters": 148.07399886073188,
     "matchType": "house+street",
     "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "50191192",
+    "dba": "VIJAY SHAHA",
+    "address": "655 ROSSVILLE AVENUE, Staten Island 10309",
+    "dohmhLat": 40.542592288455,
+    "dohmhLon": -74.208331211757,
+    "resolvedLat": 40.542877,
+    "resolvedLon": -74.206683,
+    "distanceMeters": 142.82577158237487,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
   }
 ]
