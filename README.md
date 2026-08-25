@@ -9,8 +9,9 @@ An interactive map and analytics dashboard for exploring NYC DOHMH restaurant in
 ### Map & Visualization
 - **Interactive Web Map:** High-performance mapping of NYC restaurants, color-coded by official DOHMH inspection grades (A, B, C, N, P, Z) and operating status.
 - **Hover Cards:** At close-in zoom levels, hovering a restaurant point shows a lightweight card with its name, grade, and score, without needing to click into the full details panel.
-- **Restaurant Name Labels:** Zooming in further reveals persistent name labels directly on the map canvas.
-- **Dynamic KPIs & Mapview Statistics:** Real-time metrics panel calculating at-a-glance restaurant counts (Total, A, B, C, Pending, Closed) scoped directly to the current map bounding box.
+- **Dynamic KPIs & Mapview Statistics:** Real-time metrics panel calculating
+  at-a-glance restaurant counts (Total, A, B, C, Pending, Uninspected, Closed) scoped
+  directly to the current map bounding box.
 - **Grade Breakdown Chart:** Interactive Recharts-powered donut chart providing a visual proportional breakdown of graded restaurants within the active map view.
 - **Cross-Component Interactivity:** Synchronized hover states and selection indicators linking map points, list items, and chart data seamlessly.
 
@@ -201,10 +202,12 @@ Note: `import.meta.env` in Vite only exposes `VITE_`-prefixed vars by default â€
 | Command | Action |
 |---|---|
 | `npm run dev` | Start the local development server |
-| `npm run build` | Run the data pipeline, then build the frontend for production |
+| `npm run build` | Runs `prebuild` automatically, then the data pipeline, then builds the frontend for production |
 | `npm run preview` | Preview a production build locally|
 
 See [Testing](#testing) for the `npm test` / `npm run test:frontend` scripts.
+
+`prebuild` (runs automatically before `build`, not meant to be invoked directly) pulls `pipeline/geocode-cache.json` and `pipeline/counts-snapshot.json` down from the `data` branch via `curl` before `fetch-inspection.mjs` runs, since that's how the pipeline gets the committed geocode cache locally rather than checking out the branch itself.
 
 ## Deployment
 

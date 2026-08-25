@@ -634,7 +634,7 @@ export default function PerformanceChart({
                 value: "Score",
                 angle: -90,
                 position: "insideLeft",
-                dx: -10,
+                dx: -4,
                 style: {
                   ...AXIS_TITLE_STYLE,
                   textAnchor: "middle",

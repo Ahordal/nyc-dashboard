@@ -1139,6 +1139,7 @@ a:focus-visible {
 
 .details-empty {
   color: var(--text-muted);
+  font-style: italic;
   margin-top: var(--space-s);
 }
 
