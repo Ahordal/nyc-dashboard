@@ -142,12 +142,14 @@ The geocoding pipeline is rigorously verified using Node's native `node:test` ru
 
 ### Frontend (Vitest)
 
-Frontend logic is tested with Vitest, colocated with the source it covers (`src/**/*.test.{ts,tsx}`). Coverage so far is limited to pure logic — grade categorization and the ArcGIS query/where-clause builders — since those are exactly where a hand-mirrored SQL twin of the same precedence logic (`CATEGORY_CLAUSES` in `mapQueries.ts` vs. `getGradeCategory()`) can silently drift out of sync. Component, hook, and integration tests (e.g. `MapView.tsx`, `useUrlSync`) aren't set up yet — they'd need mocking the ArcGIS SDK.
+Frontend logic is tested with Vitest, colocated with the source it covers (`src/**/*.test.{ts,tsx}`). Pure logic (grade categorization, the ArcGIS query/where-clause builders) runs under Vitest's default `node` environment; the two chart hooks below drive real DOM (SVG refs, focus/keyboard events) via `@testing-library/react`'s `renderHook`, so those two files opt into `jsdom` per-file with a `// @vitest-environment jsdom` docblock rather than paying that cost project-wide. Component/integration tests against `MapView.tsx` and `useUrlSync` aren't set up yet — they'd need mocking the ArcGIS SDK.
 
 | File | Purpose |
 |---|---|
 | `src/utils/gradeCategory.test.ts` | Verifies grade-category precedence: closures win over grade, the uninspected sentinel, administrative Z/P/N grades, null-score handling, and the A/B/C score-band boundaries |
 | `src/queries/mapQueries.test.ts` | Verifies search-query normalization/escaping, borough+search `definitionExpression` combination, and that the grade `WHERE`-clause builders match `CATEGORY_CLAUSES` |
+| `src/hooks/useChartKeyboardNav.test.ts` | Verifies arrow/Home/End navigation and clamping, Enter/Space selection, Tab passthrough, focus/blur keyboard-mode transitions, and resets on new chart data or a newly selected report |
+| `src/hooks/useTooltipPriority.test.ts` | Verifies the tooltip priority order (pointer hover > history preview > keyboard point > pinned selection), dot-ref registration/lookup against rendered `cx`/`cy`, and resets on new chart data |
 
 ### Scripts
 
