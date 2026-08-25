@@ -97,18 +97,6 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 * This script resets the working tree to match the remote `data` branch, reads both the local and remote cache files, and merges them structurally at the JSON level. 
 * If a restaurant's status shifts more than 100 meters from its DOHMH-reported location, the entry is flagged and written to `suspicious-shifts.json` for manual review rather than silently accepted.
 
-**Testing and Validation**
-* The geocoding pipeline is rigorously verified using the native `node:test` runner to validate complex state changes without requiring external testing libraries.
-* **Cache Integrity:** Tests in `cache.test.mjs` execute against real temporary files on disk to confirm that atomic writes work safely and that corrupted JSON files do not crash the application.
-* **Merge Conflicts:** `merge.test.mjs` simulates overlapping dataset commits,
-  verifying that final remote results are never overwritten by incomplete or
-  pending local runs (a regression test for a known data loss incident).
-* **Rate Limiting:** `rate-limit.test.mjs` verifies that a 429 response is caught as a distinct `RateLimitedError` (never treated as a generic failure or an "unverified" match), and that it halts the entire backfill run immediately rather than continuing to burn quota on restaurants that would fail the same way.
-* **Scoring Logic:** Pure address scoring is tested deterministically using `fixtures.mjs`, which provides real, historically captured LocationIQ responses so logic can be tested in CI without exhausting live API quota.
-* **Anomaly Detection:** The pipeline actively checks for unusual coordinate movements during runs, flagging any verified match that has shifted more than 100 meters from its official health department coordinates and writing them to `suspicious-shifts.json` for review.
-* **Local Sandboxing:** A dedicated `backfill.mjs` script acts as a local test entry point, allowing developers to safely run the geocoding logic against a static JSON file of restaurants (`real-test-restaurants.json`) for manual regression testing.
-* **Continuous Integration:** `.github/workflows/test.yml` runs the full `node --test` suite on every pull request and every push to `main`, so a regression in the pipeline logic is caught before it merges rather than relying on someone remembering to run it locally.
-
 ---
 
 ### Key Pipeline Files
@@ -127,6 +115,23 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 | `merge-and-commit-cache.mjs` | Safely merges a backfill run's results into the `data` branch and pushes |
 | `violation-categories.csv` | Local mapping of violation codes to plain-text categories |
 | `reset-out-of-bounds-cache-entries.mjs` | One-off script resetting cache entries with out-of-bounds coordinates back to `pending` for re-resolution |
+
+## Testing
+
+Two independent suites, run separately and both wired into `.github/workflows/test.yml` on every pull request and push to `main`.
+
+### Pipeline (`node:test`)
+
+The geocoding pipeline is rigorously verified using Node's native `node:test` runner, with no external testing library.
+
+* **Cache Integrity:** Tests in `cache.test.mjs` execute against real temporary files on disk to confirm that atomic writes work safely and that corrupted JSON files do not crash the application.
+* **Merge Conflicts:** `merge.test.mjs` simulates overlapping dataset commits, verifying that final remote results are never overwritten by incomplete or pending local runs (a regression test for a known data loss incident).
+* **Rate Limiting:** `rate-limit.test.mjs` verifies that a 429 response is caught as a distinct `RateLimitedError` (never treated as a generic failure or an "unverified" match), and that it halts the entire backfill run immediately rather than continuing to burn quota on restaurants that would fail the same way.
+* **Scoring Logic:** Pure address scoring is tested deterministically using `fixtures.mjs`, which provides real, historically captured LocationIQ responses so logic can be tested in CI without exhausting live API quota.
+* **Local Sandboxing:** A dedicated `backfill.mjs` script (see Key Pipeline Files above) allows developers to safely run the geocoding logic against a static JSON file of restaurants (`real-test-restaurants.json`) for manual regression testing, separately from the automated suite below.
+
+| File | Purpose |
+|---|---|
 | `cache.test.mjs` | Native unit tests verifying atomic file writing, corruption recovery, and status logic |
 | `merge.test.mjs` | Native unit tests verifying remote vs. local cache merge logic and conflict resolution |
 | `normalize.test.mjs` | Native unit tests verifying address matching and display-formatting logic |
@@ -135,6 +140,23 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 | `fixtures.mjs` | Captured LocationIQ API responses used for deterministic, offline testing |
 | `real-test-restaurants.json` | Static sample dataset used by `backfill.mjs` for local manual testing |
 
+### Frontend (Vitest)
+
+Frontend logic is tested with Vitest, colocated with the source it covers (`src/**/*.test.{ts,tsx}`). Coverage so far is limited to pure logic — grade categorization and the ArcGIS query/where-clause builders — since those are exactly where a hand-mirrored SQL twin of the same precedence logic (`CATEGORY_CLAUSES` in `mapQueries.ts` vs. `getGradeCategory()`) can silently drift out of sync. Component, hook, and integration tests (e.g. `MapView.tsx`, `useUrlSync`) aren't set up yet — they'd need mocking the ArcGIS SDK.
+
+| File | Purpose |
+|---|---|
+| `src/utils/gradeCategory.test.ts` | Verifies grade-category precedence: closures win over grade, the uninspected sentinel, administrative Z/P/N grades, null-score handling, and the A/B/C score-band boundaries |
+| `src/queries/mapQueries.test.ts` | Verifies search-query normalization/escaping, borough+search `definitionExpression` combination, and that the grade `WHERE`-clause builders match `CATEGORY_CLAUSES` |
+
+### Scripts
+
+| Command | Action |
+|---|---|
+| `npm test` | Run the pipeline test suite (`node --test pipeline/*.test.mjs`) |
+| `npm run test:frontend` | Run the frontend test suite (`vitest run`) |
+| `npm run test:frontend:watch` | Run the frontend test suite in watch mode |
+
 ## Tech Stack
 
 ### Frontend
@@ -142,11 +164,10 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 - **[ArcGIS Maps SDK for JavaScript](https://developers.arcgis.com/javascript/):** High-performance rendering for the interactive restaurant map.
 - **[Recharts](https://recharts.org/):** Data visualization library powering the grade breakdown donut chart and historical score time-series.
 - **[Font Awesome](https://fontawesome.com/):** UI iconography.
-- **[Vitest](https://vitest.dev/):** Unit tests for frontend logic (grade categorization, ArcGIS query/where-clause builders), colocated with the source they cover and run in CI alongside the pipeline's test suite.
 
 ### Data Pipeline & Automation
 - **Node.js:** Powers the custom build-time data fetching, coordinate validation, and pure-logic geocoding scripts.
-- **GitHub Actions:** Runs the daily LocationIQ geocoding backfill and handles safe, automated cache commits back to the repository, plus a separate workflow running both the pipeline and frontend test suites on every pull request and push to `main`. The Socrata data fetch itself runs as part of every Vercel build, not on a GitHub Actions schedule.
+- **GitHub Actions:** Runs the daily LocationIQ geocoding backfill and handles safe, automated cache commits back to the repository. The Socrata data fetch itself runs as part of every Vercel build, not on a GitHub Actions schedule.
 - **Data Sources:** [NYC DOHMH Restaurant Inspection Results](https://opendata.cityofnewyork.us/) via the Socrata API, with location verification powered by [LocationIQ](https://locationiq.com/).
 
 ### Hosting
@@ -180,9 +201,8 @@ Note: `import.meta.env` in Vite only exposes `VITE_`-prefixed vars by default �
 | `npm run dev` | Start the local development server |
 | `npm run build` | Run the data pipeline, then build the frontend for production |
 | `npm run preview` | Preview a production build locally|
-| `npm test` | Run the native Node.js test suite for cache, merge, normalize, rate-limit, and scoring logic — also run automatically in CI on every PR/push to `main`
-| `npm run test:frontend` | Run the Vitest suite for frontend logic (`src/**/*.test.{ts,tsx}`, colocated with the code it covers) — also run automatically in CI on every PR/push to `main`
-| `npm run test:frontend:watch` | Run the Vitest suite in watch mode |
+
+See [Testing](#testing) for the `npm test` / `npm run test:frontend` scripts.
 
 ## Deployment
 
