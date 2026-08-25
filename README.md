@@ -142,10 +142,11 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 - **[ArcGIS Maps SDK for JavaScript](https://developers.arcgis.com/javascript/):** High-performance rendering for the interactive restaurant map.
 - **[Recharts](https://recharts.org/):** Data visualization library powering the grade breakdown donut chart and historical score time-series.
 - **[Font Awesome](https://fontawesome.com/):** UI iconography.
+- **[Vitest](https://vitest.dev/):** Unit tests for frontend logic (grade categorization, ArcGIS query/where-clause builders), colocated with the source they cover and run in CI alongside the pipeline's test suite.
 
 ### Data Pipeline & Automation
 - **Node.js:** Powers the custom build-time data fetching, coordinate validation, and pure-logic geocoding scripts.
-- **GitHub Actions:** Runs the daily LocationIQ geocoding backfill and handles safe, automated cache commits back to the repository, plus a separate workflow running the pipeline's test suite on every pull request and push to `main`. The Socrata data fetch itself runs as part of every Vercel build, not on a GitHub Actions schedule.
+- **GitHub Actions:** Runs the daily LocationIQ geocoding backfill and handles safe, automated cache commits back to the repository, plus a separate workflow running both the pipeline and frontend test suites on every pull request and push to `main`. The Socrata data fetch itself runs as part of every Vercel build, not on a GitHub Actions schedule.
 - **Data Sources:** [NYC DOHMH Restaurant Inspection Results](https://opendata.cityofnewyork.us/) via the Socrata API, with location verification powered by [LocationIQ](https://locationiq.com/).
 
 ### Hosting
@@ -180,6 +181,8 @@ Note: `import.meta.env` in Vite only exposes `VITE_`-prefixed vars by default �
 | `npm run build` | Run the data pipeline, then build the frontend for production |
 | `npm run preview` | Preview a production build locally|
 | `npm test` | Run the native Node.js test suite for cache, merge, normalize, rate-limit, and scoring logic — also run automatically in CI on every PR/push to `main`
+| `npm run test:frontend` | Run the Vitest suite for frontend logic (`src/**/*.test.{ts,tsx}`, colocated with the code it covers) — also run automatically in CI on every PR/push to `main`
+| `npm run test:frontend:watch` | Run the Vitest suite in watch mode |
 
 ## Deployment
 

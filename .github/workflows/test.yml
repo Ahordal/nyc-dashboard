@@ -1,8 +1,9 @@
 name: Tests
 
-# Runs the pipeline/*.test.mjs suite (node --test) so cache/normalize/scoring
-# regressions get caught automatically, instead of relying on someone running
-# the README's `node --test pipeline/` command by hand.
+# Runs the pipeline/*.test.mjs suite (node --test) and the src/**/*.test.ts
+# suite (Vitest) so cache/normalize/scoring and frontend query/grade logic
+# regressions get caught automatically, instead of relying on someone
+# running these by hand.
 #
 # Read-only: doesn't touch the `data` branch, LocationIQ, or Vercel, so no
 # secrets or write permissions are needed here.
@@ -29,5 +30,8 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      - name: Run tests
+      - name: Run pipeline tests
         run: npm test
+
+      - name: Run frontend tests
+        run: npm run test:frontend

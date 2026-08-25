@@ -11,7 +11,9 @@
     "build": "node pipeline/fetch-inspection.mjs && npx vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "node --test pipeline/*.test.mjs"
+    "test": "node --test pipeline/*.test.mjs",
+    "test:frontend": "vitest run",
+    "test:frontend:watch": "vitest"
   },
   "dependencies": {
     "@arcgis/core": "^5.1.0",
@@ -35,6 +37,7 @@
     "globals": "^17.11.0",
     "typescript": "^5.7.0",
     "typescript-eslint": "^8.67.0",
-    "vite": "^8.1.5"
+    "vite": "^8.1.5",
+    "vitest": "^4.1.11"
   }
 }
