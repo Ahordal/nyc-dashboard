@@ -449,9 +449,18 @@ export default function InspectionMapView({
       const view = viewRef.current;
       if (!layer || !view) return;
 
-      await layer.load();
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const layerView = (await view.whenLayerView(layer)) as any;
+      let layerView: any;
+      try {
+        await layer.load();
+        layerView = await view.whenLayerView(layer);
+      } catch (err) {
+        console.error(
+          "MapView: failed to load layer view for highlight effect",
+          err,
+        );
+        return;
+      }
 
       if (!featureEffectRef.current) {
         featureEffectRef.current = new FeatureEffect({
@@ -568,8 +577,14 @@ export default function InspectionMapView({
     const clickHandle = view.on("click", async (event) => {
       setHoverCard(null);
 
-      const response = await view.hitTest(event);
-      await layer.load();
+      let response;
+      try {
+        response = await view.hitTest(event);
+        await layer.load();
+      } catch (err) {
+        console.error("MapView: failed to hit-test click", err);
+        return;
+      }
 
       const graphicHit = response.results.find(
         (result) =>
@@ -615,7 +630,13 @@ export default function InspectionMapView({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const runHitTest = async (event: any) => {
       const token = ++latestHitTestToken;
-      const response = await view.hitTest(event);
+      let response;
+      try {
+        response = await view.hitTest(event);
+      } catch (err) {
+        console.error("MapView: failed to hit-test pointer move", err);
+        return;
+      }
       if (token !== latestHitTestToken) return;
 
       const graphicHit = response.results.find(
