@@ -7486,5 +7486,17 @@
     "distanceMeters": 142.82577158237487,
     "matchType": "house+street",
     "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "50191263",
+    "dba": "SABOR DE MI TIERRA 593 CORP",
+    "address": "101-11 NORTHERN BLVD, Queens 11368",
+    "dohmhLat": 40.757462215154,
+    "dohmhLon": -73.867268393831,
+    "resolvedLat": 40.7577574,
+    "resolvedLon": -73.8628204,
+    "distanceMeters": 376.0795614852166,
+    "matchType": "house+street",
+    "resolvedVia": "no-hyphen"
   }
 ]
