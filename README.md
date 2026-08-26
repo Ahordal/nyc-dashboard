@@ -163,7 +163,7 @@ Frontend logic is tested with Vitest, colocated with the source it covers (`src/
 
 | Command | Action |
 |---|---|
-| `npm test` | Run the pipeline test suite (`node --test pipeline/*.test.mjs`) |
+| `npm run test:pipeline` | Run the pipeline test suite (`node --test pipeline/*.test.mjs`) |
 | `npm run test:frontend` | Run the frontend test suite (`vitest run`) |
 | `npm run test:frontend:watch` | Run the frontend test suite in watch mode |
 
@@ -212,7 +212,7 @@ Note: `import.meta.env` in Vite only exposes `VITE_`-prefixed vars by default â€
 | `npm run build` | Runs `prebuild` automatically, then the data pipeline, then builds the frontend for production |
 | `npm run preview` | Preview a production build locally|
 
-See [Testing](#testing) for the `npm test` / `npm run test:frontend` scripts.
+See [Testing](#testing) for the `npm run test:pipeline` / `npm run test:frontend` scripts.
 
 `prebuild` (runs automatically before `build`, not meant to be invoked directly) pulls `pipeline/geocode-cache.json` and `pipeline/counts-snapshot.json` down from the `data` branch via `curl` before `fetch-inspection.mjs` runs, since that's how the pipeline gets the committed geocode cache locally rather than checking out the branch itself.
 

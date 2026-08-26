@@ -11,7 +11,7 @@
     "build": "node pipeline/fetch-inspection.mjs && npx vite build",
     "preview": "vite preview",
     "lint": "eslint .",
-    "test": "node --test pipeline/*.test.mjs",
+    "test:pipeline": "node --test pipeline/*.test.mjs",
     "test:frontend": "vitest run",
     "test:frontend:watch": "vitest"
   },
