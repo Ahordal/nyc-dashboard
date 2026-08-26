@@ -13,6 +13,7 @@ type RestaurantCardProps = {
   restaurant: RestaurantProperties;
   isSelected: boolean;
   onClick: (restaurant: RestaurantProperties) => void;
+  onHover?: (restaurant: RestaurantProperties | null) => void;
 };
 
 // Local formatting helpers
@@ -51,6 +52,7 @@ export default function RestaurantCard({
   restaurant,
   isSelected,
   onClick,
+  onHover,
 }: RestaurantCardProps) {
   const category = getGradeCategory(
     restaurant.action,
@@ -71,7 +73,9 @@ export default function RestaurantCard({
           ...(isSelected ? { borderColor: categoryColor } : {}),
         } as React.CSSProperties
       }
-      onClick={() => onClick(restaurant)}>
+      onClick={() => onClick(restaurant)}
+      onMouseEnter={() => onHover?.(restaurant)}
+      onMouseLeave={() => onHover?.(null)}>
       <div className="card-main">
         <div className="card-title" style={{ color: categoryColor }} title={name}>
           {name}

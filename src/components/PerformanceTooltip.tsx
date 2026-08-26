@@ -24,8 +24,10 @@ type PerformanceTooltipProps = {
 // Padding kept from the chart edges
 const EDGE_PADDING = 8;
 
-// Clearance from the center of the dot (includes dot radius + gap)
-const DOT_CLEARANCE = 14;
+// Clearance from the center of the dot. Covers the active dot's radius,
+// stroke, and hover glow (drop-shadow), plus a small gap, so the tooltip
+// never sits on top of the dot even when the highlighted/active style applies.
+const DOT_CLEARANCE = 20;
 
 export default function PerformanceTooltip({
   hoveredPoint,
@@ -54,24 +56,22 @@ export default function PerformanceTooltip({
     const containerWidth = container.clientWidth;
     const containerHeight = container.clientHeight;
 
-    // Check if there is enough vertical space above the dot
-    const spaceAbove = cy - DOT_CLEARANCE;
-    const fitsAbove = spaceAbove >= tooltipHeight + EDGE_PADDING;
+    // Space available on each side of the dot's clearance zone.
+    const spaceAbove = cy - DOT_CLEARANCE - EDGE_PADDING;
+    const spaceBelow = containerHeight - EDGE_PADDING - (cy + DOT_CLEARANCE);
 
-    let targetTop: number;
+    // Prefer whichever side actually fits the tooltip; if neither does,
+    // pick whichever side has more room. Either way, the tooltip's near
+    // edge is always pinned exactly DOT_CLEARANCE away from the dot's
+    // center and is never pulled back across that line — so it may spill
+    // past the chart's own edge in a tight corner, but it can never cover
+    // the dot itself.
+    const placeAbove =
+      spaceAbove >= tooltipHeight || spaceAbove >= spaceBelow;
 
-    if (fitsAbove) {
-      // Position above the dot
-      targetTop = cy - DOT_CLEARANCE - tooltipHeight;
-    } else {
-      // Position below the dot with guaranteed clearance
-      targetTop = cy + DOT_CLEARANCE;
-
-      // If it would overflow the bottom edge, clamp it within container
-      if (targetTop + tooltipHeight > containerHeight - EDGE_PADDING) {
-        targetTop = containerHeight - tooltipHeight - EDGE_PADDING;
-      }
-    }
+    const targetTop = placeAbove
+      ? cy - DOT_CLEARANCE - tooltipHeight
+      : cy + DOT_CLEARANCE;
 
     // Clamp horizontally so it stays within chart container edges
     const halfWidth = tooltipWidth / 2;

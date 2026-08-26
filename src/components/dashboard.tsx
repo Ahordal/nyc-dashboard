@@ -110,6 +110,10 @@ export default function Dashboard() {
     null,
   );
 
+  const [hoveredListRestaurantId, setHoveredListRestaurantId] = useState<
+    string | null
+  >(null);
+
   const historyCache = useRef<Map<string, InspectionEvent[]>>(new Map());
 
   const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>({});
@@ -282,6 +286,8 @@ export default function Dashboard() {
   function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
     setHoveredInspectionId(null);
 
+    setHoveredListRestaurantId(null);
+
     setSelectedRestaurant(restaurant);
 
     if (restaurant) {
@@ -303,8 +309,16 @@ export default function Dashboard() {
     setHoveredInspectionId(inspectionId);
   }
 
+  function handleHoverRestaurantInList(
+    restaurant: RestaurantProperties | null,
+  ) {
+    setHoveredListRestaurantId(restaurant?.id ?? null);
+  }
+
   function handleExplorerTabChange(tab: ExplorerTab) {
     setHoveredInspectionId(null);
+
+    setHoveredListRestaurantId(null);
 
     setActiveExplorerTab(tab);
   }
@@ -353,7 +367,8 @@ export default function Dashboard() {
                 filters={filters}
                 searchQuery={searchQuery}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
-                onSelectRestaurant={handleSelectRestaurant}                
+                hoveredRestaurantId={hoveredListRestaurantId}
+                onSelectRestaurant={handleSelectRestaurant}
                 onVisibleRestaurantsChange={setVisibleRestaurants}
                 onGradeCountsChange={setGradeCounts}
               />
@@ -415,7 +430,8 @@ export default function Dashboard() {
               <RestaurantList
                 restaurants={visibleRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
-                onSelectRestaurant={handleSelectRestaurant}>
+                onSelectRestaurant={handleSelectRestaurant}
+                onHoverRestaurant={handleHoverRestaurantInList}>
                 <NoticeOverlay
                   triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}`}
                   durationMs={FILTER_NOTICE_DURATION_MS}>

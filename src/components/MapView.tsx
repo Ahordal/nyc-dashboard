@@ -23,6 +23,7 @@ import InfoPopupContent from "./InfoPopupContent";
 import MapScaleBar from "./MapScaleBar";
 import MapScaleZoomControls from "./MapScaleZoomControls";
 import MapBasemapToggle from "./MapBasemapToggle";
+import MapCompass from "./MapCompass";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
@@ -196,6 +197,7 @@ const MAP_LEGEND_INFO_CONTENT = (
         <li>
           Click the <span className="map-control-button" style={{ display: "inline" }}>Map Scale</span> or <span className="map-control-button" style={{ display: "inline" }}>Zoom Lvl</span> indicators at the bottom left to manually type and jump to a specific map view, or use the zoom buttons in the top-left corner.
         </li>
+        <li>Click and hold the right mouse button to rotate the map; click the compass icon below the zoom buttons to reorient to north.</li>
         <li>Click the satellite/map icon in the top-right corner to toggle between the default map and satellite imagery.</li>
         <li>The scale bar in the bottom-right corner shows the current map scale as a ruler.</li>
       </ul>
@@ -299,6 +301,7 @@ type MapViewProps = {
   filters: Filters;
   searchQuery?: string;
   selectedRestaurantId?: string | null;
+  hoveredRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties | null) => void;
   onHoverRestaurant?: (restaurant: RestaurantProperties | null) => void;
   onVisibleRestaurantsChange?: (restaurants: RestaurantProperties[]) => void;
@@ -309,6 +312,7 @@ export default function InspectionMapView({
   filters,
   searchQuery = "",
   selectedRestaurantId = null,
+  hoveredRestaurantId = null,
   onSelectRestaurant,
   onHoverRestaurant,
   onVisibleRestaurantsChange,
@@ -334,6 +338,10 @@ export default function InspectionMapView({
 
   const queryRequestIdRef = useRef(0);
   const clickRequestIdRef = useRef(0);
+  const hoverHighlightRequestIdRef = useRef(0);
+
+  const selectedObjectIdRef = useRef<number | null>(null);
+  const hoveredObjectIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     selectedRestaurantIdRef.current = selectedRestaurantId;
@@ -416,53 +424,85 @@ export default function InspectionMapView({
     }
   }
 
+  // Both the click-selected restaurant and the restaurant currently
+  // hovered in the list panel share one glowing FeatureEffect -- ArcGIS
+  // only supports a single featureEffect per layer view, so the two
+  // object IDs are tracked separately in refs and merged into one filter
+  // any time either changes.
+  const ensureFeatureEffect = useCallback(async () => {
+    const layer = layerRef.current;
+    const view = viewRef.current;
+    if (!layer || !view) return null;
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    let layerView: any;
+    try {
+      await layer.load();
+      layerView = await view.whenLayerView(layer);
+    } catch (err) {
+      console.error(
+        "MapView: failed to load layer view for highlight effect",
+        err,
+      );
+      return null;
+    }
+
+    if (!featureEffectRef.current) {
+      featureEffectRef.current = new FeatureEffect({
+        filter: NO_SELECTION_FILTER,
+        includedEffect:
+          "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)",
+        excludedLabelsVisible: true,
+      });
+    }
+
+    if (layerView.featureEffect !== featureEffectRef.current) {
+      layerView.featureEffect = featureEffectRef.current;
+    }
+
+    return featureEffectRef.current;
+  }, []);
+
+  const applyCombinedHighlight = useCallback(() => {
+    const effect = featureEffectRef.current;
+    if (!effect) return;
+
+    const objectIds = Array.from(
+      new Set(
+        [selectedObjectIdRef.current, hoveredObjectIdRef.current].filter(
+          (id): id is number => id !== null,
+        ),
+      ),
+    );
+
+    effect.filter =
+      objectIds.length > 0
+        ? new FeatureFilter({ objectIds })
+        : NO_SELECTION_FILTER;
+  }, []);
+
   const applyHighlightForId = useCallback(
     async (
       restaurantId: string | null,
       knownObjectId?: number | null,
     ) => {
-      const layer = layerRef.current;
-      const view = viewRef.current;
-      if (!layer || !view) return;
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      let layerView: any;
-      try {
-        await layer.load();
-        layerView = await view.whenLayerView(layer);
-      } catch (err) {
-        console.error(
-          "MapView: failed to load layer view for highlight effect",
-          err,
-        );
-        return;
-      }
-
-      if (!featureEffectRef.current) {
-        featureEffectRef.current = new FeatureEffect({
-          filter: NO_SELECTION_FILTER,
-          includedEffect:
-            "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)",
-          excludedLabelsVisible: true,
-        });
-      }
-
-      if (layerView.featureEffect !== featureEffectRef.current) {
-        layerView.featureEffect = featureEffectRef.current;
-      }
+      const effect = await ensureFeatureEffect();
+      if (!effect) return;
 
       if (!restaurantId) {
-        featureEffectRef.current.filter = NO_SELECTION_FILTER;
+        selectedObjectIdRef.current = null;
+        applyCombinedHighlight();
         return;
       }
 
       if (knownObjectId !== undefined) {
-        featureEffectRef.current.filter =
-          knownObjectId !== null
-            ? new FeatureFilter({ objectIds: [knownObjectId] })
-            : NO_SELECTION_FILTER;
+        selectedObjectIdRef.current = knownObjectId;
+        applyCombinedHighlight();
         return;
       }
+
+      const layer = layerRef.current;
+      if (!layer) return;
 
       try {
         const { objectId } = await checkSelectionAgainstFilters(
@@ -470,10 +510,8 @@ export default function InspectionMapView({
           restaurantId,
           layer.definitionExpression ?? "",
         );
-        featureEffectRef.current.filter =
-          objectId !== null
-            ? new FeatureFilter({ objectIds: [objectId] })
-            : NO_SELECTION_FILTER;
+        selectedObjectIdRef.current = objectId;
+        applyCombinedHighlight();
       } catch (err) {
         console.error(
           "MapView: failed to query feature for highlight effect",
@@ -481,12 +519,50 @@ export default function InspectionMapView({
         );
       }
     },
-    [],
+    [ensureFeatureEffect, applyCombinedHighlight],
+  );
+
+  const applyHoverHighlightForId = useCallback(
+    async (restaurantId: string | null) => {
+      const effect = await ensureFeatureEffect();
+      if (!effect) return;
+
+      if (!restaurantId) {
+        hoveredObjectIdRef.current = null;
+        applyCombinedHighlight();
+        return;
+      }
+
+      const layer = layerRef.current;
+      if (!layer) return;
+
+      const requestId = ++hoverHighlightRequestIdRef.current;
+      try {
+        const { objectId } = await checkSelectionAgainstFilters(
+          layer,
+          restaurantId,
+          layer.definitionExpression ?? "",
+        );
+        if (requestId !== hoverHighlightRequestIdRef.current) return;
+        hoveredObjectIdRef.current = objectId;
+        applyCombinedHighlight();
+      } catch (err) {
+        console.error(
+          "MapView: failed to query feature for hover highlight effect",
+          err,
+        );
+      }
+    },
+    [ensureFeatureEffect, applyCombinedHighlight],
   );
 
   useEffect(() => {
     void applyHighlightForId(selectedRestaurantId);
   }, [selectedRestaurantId, applyHighlightForId]);
+
+  useEffect(() => {
+    void applyHoverHighlightForId(hoveredRestaurantId);
+  }, [hoveredRestaurantId, applyHoverHighlightForId]);
 
   useEffect(() => {
     if (!mapDivRef.current) return;
@@ -502,7 +578,7 @@ export default function InspectionMapView({
     layerRef.current = layer;
 
     const map = new Map({
-      basemap: "arcgis/dark-gray",
+      basemap: "arcgis/dark-gray/base",
       layers: [layer],
     });
 
@@ -831,6 +907,7 @@ export default function InspectionMapView({
         <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
 
         <MapScaleZoomControls view={mapView} />
+        <MapCompass view={mapView} />
         <MapScaleBar view={mapView} />
         <MapBasemapToggle view={mapView} />
 

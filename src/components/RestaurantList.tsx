@@ -71,6 +71,7 @@ type RestaurantListProps = {
   restaurants: RestaurantProperties[];
   selectedRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties) => void;
+  onHoverRestaurant?: (restaurant: RestaurantProperties | null) => void;
   children?: React.ReactNode; // Slot for external filter notice overlay
 };
 
@@ -78,6 +79,7 @@ export default function RestaurantList({
   restaurants,
   selectedRestaurantId = null,
   onSelectRestaurant,
+  onHoverRestaurant,
   children,
 }: RestaurantListProps) {
   const [showInfo, setShowInfo] = useState(false);
@@ -254,6 +256,7 @@ export default function RestaurantList({
                 restaurant={restaurant}
                 isSelected={restaurant.id === selectedRestaurantId}
                 onClick={(selected) => onSelectRestaurant?.(selected)}
+                onHover={onHoverRestaurant}
               />
             ))}
 
