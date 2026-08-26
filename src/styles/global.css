@@ -2,7 +2,7 @@
 
 /* 1.1 IMPORTS & BOX SIZING */
 
-@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Archivo:wght@600;700;800&family=IBM+Plex+Mono:wght@500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Archivo:wght@600;700;800&display=swap');
 
 *,
 *::before,
@@ -106,6 +106,9 @@ a:focus-visible {
   --link-background-hover: #424242;
   --link-selected: #ffffff;
   --accent-blue: #0066cc;
+
+  --highlight-border: rgba(255, 255, 255, 0.2);
+  --highlight-glow: rgba(255, 255, 255, 0.6);
 }
 
 /*///////////////////////////////////////////// 3. APP & GRID LAYOUT //////////////////////////////////////////////*/
@@ -1121,7 +1124,7 @@ a:focus-visible {
 }
 
 .badge-val {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.95rem;
   line-height: 1;
@@ -1232,11 +1235,12 @@ a:focus-visible {
 }
 
 .details-pending-note {
-  text-align: center;
+  display: block;
+  text-align: left;
   font-size: 0.8rem;
-  color: var(--text-muted);
-  margin-top: -0.5rem;
-  margin-bottom: var(--space-s);
+  color: var(--text-body);
+  margin-top: 0;
+  margin-bottom: 0;
 }
 
 .details-loading {
@@ -1271,13 +1275,6 @@ a:focus-visible {
   gap: 0.2rem;
 }
 
-.details-pending-note {
-  display: block;
-  text-align: left;
-  margin-top: 0;
-  margin-bottom: 0;
-  color:var(--text-body);
-}
 /* 11.2 INSPECTION REPORTS NAVIGATION */
 
 .restaurant-report-panel {
@@ -1417,7 +1414,7 @@ a:focus-visible {
 }
 
 .violation-tag.severity-tag {
-  border: 0.5px solid rgba(255, 255, 255, 0.2);
+  border: 0.5px solid var(--highlight-border);
 }
 
 .violation-tag.violation-code-tag {
@@ -1486,14 +1483,14 @@ a:focus-visible {
 }
 
 .inspection-row-grade {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 700;
   width: 2rem;
   text-align: center;
 }
 
 .inspection-row-score {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   width: 2rem;
   text-align: right;
   color: var(--text-muted);
@@ -1532,7 +1529,7 @@ a:focus-visible {
 }
 
 .violation-count-val {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.8rem;
   color: var(--text-body);
@@ -1587,7 +1584,7 @@ a:focus-visible {
 }
 
 .performance-tooltip-score span {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 600;
   color: var(--text-heading);
 }
@@ -1598,7 +1595,7 @@ a:focus-visible {
 
 .chart-dot-hovered {
   transition: all 0.2s ease-in-out;
-  filter: drop-shadow(0 0 6px rgba(255, 255, 255, 0.6));
+  filter: drop-shadow(0 0 6px var(--highlight-glow));
   z-index: 10;
 }
 
@@ -1789,8 +1786,8 @@ a:focus-visible {
 
 .map-view-top-header {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
+  top: 1rem;
+  right: 1rem;
   z-index: 20;
   width: max-content !important;
   pointer-events: auto;
@@ -1808,8 +1805,8 @@ a:focus-visible {
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
   box-shadow: 0 4px 12px var(--shadow-overlay);
-  width: 36px !important;
-  height: 36px !important;
+  width: 32px !important;
+  height: 32px !important;
   padding: 0 !important;
 }
 
@@ -1912,7 +1909,7 @@ a:focus-visible {
 }
 
 .legend-range {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-size: 0.75rem;
   color: var(--text-muted);
   width: 50px;
@@ -1976,7 +1973,7 @@ a:focus-visible {
 }
 
 .map-hover-card .badge-val {
-  font-family: var(--font-mono);
+  font-family: var(--font-body);
   font-weight: 700;
   font-size: 0.95rem;
   line-height: 1;
@@ -1986,7 +1983,7 @@ a:focus-visible {
 .map-bottom-controls {
   position: absolute;
   bottom: 1.5rem;
-  left: 0.5rem;
+  left: 1rem;
   z-index: 10;
   display: flex;
   align-items: center;
@@ -2000,7 +1997,8 @@ a:focus-visible {
 .map-control-label {
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
-  padding: 0.25rem 0.5rem;
+  padding: 0 0.5rem;
+  height: 32px;
   display: flex;
   align-items: center;
   gap: 6px;
@@ -2061,8 +2059,8 @@ a:focus-visible {
 
 .map-zoom-buttons-container {
   position: absolute;
-  top: 0.5rem;
-  left: 0.5rem;
+  top: 1rem;
+  left: 1rem;
   z-index: 10;
   pointer-events: auto;
 }
@@ -2074,7 +2072,6 @@ a:focus-visible {
   border: 1px solid var(--border-panel);
   box-shadow: 0 2px 4px var(--shadow-controls);
   box-sizing: border-box;
-  overflow: hidden;
 }
 
 .map-zoom-button {
@@ -2106,6 +2103,84 @@ a:focus-visible {
 .map-zoom-button:disabled {
   color: var(--text-muted);
   cursor: not-allowed;
+}
+
+.map-basemap-toggle-container {
+  position: absolute;
+  top: calc(1rem + 40px);
+  right: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-basemap-toggle-button {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.map-basemap-toggle-button:hover {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+/* Styled tooltip for map icon buttons, replacing the native title attribute. */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0 8px;
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 30;
+}
+
+[data-tooltip]:hover::after,
+[data-tooltip]:focus-visible::after {
+  opacity: 1;
+}
+
+[data-tooltip].tooltip-right::after {
+  left: calc(100% + 0.5rem);
+}
+
+/* map-control-button sits inside map-control-label's own 0.5rem right
+   padding, which would otherwise absorb the gap above before it reaches
+   the label's visible border. */
+.map-control-button.tooltip-right::after {
+  left: calc(100% + 1rem);
+}
+
+[data-tooltip].tooltip-left::after {
+  right: calc(100% + 0.5rem);
 }
 
 .map-scale-bar-container {
@@ -2158,7 +2233,10 @@ a:focus-visible {
   font-family: var(--font-display) !important;
   text-transform: uppercase !important;
   font-size: 0.75rem !important;
-  padding: 4px 8px !important;
+  /* Horizontal padding is 0 because .esri-attribution__sources and
+     .esri-attribution__powered-by already carry their own 16px (1rem)
+     outer padding; adding more here would stack on top of that. */
+  padding: 4px 0 !important;
 }
 
 .esri-attribution__sources {
@@ -2214,7 +2292,6 @@ a:focus-visible {
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
-  color: var(--font-body);
 }
 
 @keyframes filterNoticeFade {

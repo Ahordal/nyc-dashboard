@@ -82,9 +82,9 @@ export default function MapScaleZoomControls({
             type="button"
             onClick={() => stepZoom(1)}
             disabled={currentZoom >= MAX_ZOOM}
-            title="Zoom in"
+            data-tooltip="Zoom in"
             aria-label="Zoom in"
-            className="map-zoom-button"
+            className="map-zoom-button tooltip-right"
           >
             +
           </button>
@@ -92,9 +92,9 @@ export default function MapScaleZoomControls({
             type="button"
             onClick={() => stepZoom(-1)}
             disabled={currentZoom <= MIN_ZOOM}
-            title="Zoom out"
+            data-tooltip="Zoom out"
             aria-label="Zoom out"
-            className="map-zoom-button"
+            className="map-zoom-button tooltip-right"
           >
             &minus;
           </button>
@@ -124,8 +124,8 @@ export default function MapScaleZoomControls({
                 setScaleInputVal(String(currentScale));
                 setIsEditingScale(true);
               }}
-              title="Click to type a map scale denominator"
-              className="map-control-button"
+              data-tooltip="Click to type a map scale denominator"
+              className="map-control-button tooltip-right"
             >
               {currentScale.toLocaleString()}
             </button>
@@ -157,8 +157,8 @@ export default function MapScaleZoomControls({
                 setZoomInputVal(String(currentZoom));
                 setIsEditingZoom(true);
               }}
-              title="Click to type a zoom level"
-              className="map-control-button"
+              data-tooltip="Click to type a zoom level"
+              className="map-control-button tooltip-right"
             >
               {currentZoom}
             </button>

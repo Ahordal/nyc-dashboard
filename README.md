@@ -18,6 +18,7 @@ An interactive map and analytics dashboard for exploring NYC DOHMH restaurant in
 - **Zoom Level:** Bottom-left readout of the current zoom level, also click-to-type for jumping to a specific level.
 - **Zoom Buttons:** Top-left +/- buttons for stepping the zoom level in/out, replacing Esri's default `Zoom` widget so it matches the dashboard's own control styling.
 - **Scale Bar:** Bottom-right graphical bar showing ground distance in feet/miles, snapping to round values (10, 20, 50 ft ... 1, 2, 5 mi) and correcting for Web Mercator distortion via `resolution × cos(latitude)`.
+- **Satellite Toggle:** Top-right button switching the basemap between the default dark-gray map and dimmed satellite imagery (`arcgis/imagery/standard`), with a separate labels layer added to `map.layers` below the restaurant markers rather than relying on Esri's composited hybrid styles, whose reference/label layers always render above every operational layer.
 - Map Scale, Zoom Level, and Zoom Buttons are custom React components built directly against `view.scale`/`view.zoom`; the Scale Bar is likewise custom rather than Esri's `esri/widgets/ScaleBar`, which is deprecated.
 
 ### Search & Filtering

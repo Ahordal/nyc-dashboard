@@ -22,6 +22,7 @@ import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
 import MapScaleBar from "./MapScaleBar";
 import MapScaleZoomControls from "./MapScaleZoomControls";
+import MapBasemapToggle from "./MapBasemapToggle";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
@@ -191,10 +192,12 @@ const MAP_LEGEND_INFO_CONTENT = (
     howToUse={
       <ul>
         <li>Click any restaurant marker on the map to load its inspection history, violations, and performance details.</li>
-        <li>Hover over markers to preview restaurant names, grades, and scores directly on the map canvas (active when scale is 1:18,056 or larger — the same zoom level a selected restaurant zooms to).</li>
+        <li>Hover over markers to preview restaurant names, grades, and scores directly on the map canvas (active when scale is 1:18,056 or larger).</li>
         <li>
-          Click the <span className="map-control-button" style={{ display: "inline" }}>Map Scale</span> or <span className="map-control-button" style={{ display: "inline" }}>Zoom Lvl</span> indicators at the bottom left to manually type and jump to a specific map view.
+          Click the <span className="map-control-button" style={{ display: "inline" }}>Map Scale</span> or <span className="map-control-button" style={{ display: "inline" }}>Zoom Lvl</span> indicators at the bottom left to manually type and jump to a specific map view, or use the zoom buttons in the top-left corner.
         </li>
+        <li>Click the satellite/map icon in the top-right corner to toggle between the default map and satellite imagery.</li>
+        <li>The scale bar in the bottom-right corner shows the current map scale as a ruler.</li>
       </ul>
     }
     legend={
@@ -250,7 +253,7 @@ const MAP_LEGEND_INFO_CONTENT = (
                 <span className="dot-sample" style={{ width: "11px", height: "11px", backgroundColor: CATEGORY_COLORS.pending, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
               </div>
             </td>
-            <td className="legend-score-text">N / P / Z</td>
+            <td className="legend-score-text">N / P / Z (score varies)</td>
           </tr>
           <tr>
             <td>
@@ -829,6 +832,7 @@ export default function InspectionMapView({
 
         <MapScaleZoomControls view={mapView} />
         <MapScaleBar view={mapView} />
+        <MapBasemapToggle view={mapView} />
 
         {hoverCard && (
           <div
