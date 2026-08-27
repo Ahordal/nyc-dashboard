@@ -7498,5 +7498,17 @@
     "distanceMeters": 376.0795614852166,
     "matchType": "house+street",
     "resolvedVia": "no-hyphen"
+  },
+  {
+    "camis": "50191384",
+    "dba": "NENNEN LIN",
+    "address": "2655 RICHMOND AVE, Staten Island 10314",
+    "dohmhLat": 40.582297419955,
+    "dohmhLon": -74.169052592685,
+    "resolvedLat": 40.581811,
+    "resolvedLon": -74.166455,
+    "distanceMeters": 225.9357152883453,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
   }
 ]
