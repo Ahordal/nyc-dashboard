@@ -61,6 +61,52 @@ a:focus-visible {
   color: var(--link-hover);
 }
 
+/* 1.4 FOCUS INDICATOR & SCREEN-READER UTILITIES */
+
+/* One consistent keyboard-focus ring for every interactive element,
+   including the role-based custom controls (cards, tabs, listbox
+   options). Pointer focus stays ring-free via :focus-visible. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="option"]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Visually hidden but exposed to assistive tech (labels, live-region
+   text, offscreen instructions). */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 1.5 REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
 /* .panel-header-popup p,
 .panel-header-popup li,
 .info-modal-content p,
@@ -114,6 +160,7 @@ a:focus-visible {
   --link-background-hover: #424242;
   --link-selected: #ffffff;
   --accent-blue: #0066cc;
+  --focus-ring: #5aa2ff;
 
   --highlight-border: rgba(255, 255, 255, 0.2);
   --highlight-glow: rgba(255, 255, 255, 0.6);
@@ -316,9 +363,13 @@ a:focus-visible {
   padding-bottom: 0.25rem;
 }
 
-.panel-header-title {
+/* Rendered as an <h2> when it carries a real title (see PanelHeader);
+   the compound selector keeps these values ahead of the .panel h2 rule. */
+.panel-header .panel-header-title {
+  margin: 0;
   color: var(--text-muted);
   font-size: 0.85rem;
+  line-height: 1.5;
   text-transform: uppercase;
   font-weight: 700;
   font-family: var(--font-display);
@@ -720,7 +771,6 @@ a:focus-visible {
 }
 
 .search-input:focus {
-  outline: none;
   border-color: var(--accent-blue);
 }
 
@@ -1027,6 +1077,13 @@ a:focus-visible {
   padding: 0;
 }
 
+/* The listbox takes programmatic focus so the arrow keys reach it;
+   the active option is shown via .active, so the container itself
+   doesn't need a ring. */
+.sort-dropdown-menu:focus {
+  outline: none;
+}
+
 .sort-dropdown-option {
   padding: 0.45rem 0.6rem;
   color: var(--text-body);
@@ -1035,6 +1092,7 @@ a:focus-visible {
 }
 
 .sort-dropdown-option:hover,
+.sort-dropdown-option.active,
 .sort-dropdown-option.selected {
   background-color: var(--link-background-hover);
   color: var(--link-hover);
@@ -2078,7 +2136,6 @@ a:focus-visible {
   font-family: inherit;
   font-size: inherit;
   padding: 2px 4px;
-  outline: none;
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
   -moz-appearance: textfield;
@@ -2472,8 +2529,11 @@ a:focus-visible {
   text-transform: uppercase !important;
 }
 
-.map-view :focus,
-.map-view :focus-visible {
+/* Suppress the focus outline only on the ArcGIS view internals (the
+   keyboard-pannable canvas surface and esri widgets). The custom map
+   control buttons sit outside .esri-view and keep the global ring. */
+.map-view .esri-view :focus,
+.map-view .esri-view :focus-visible {
   outline: none;
 }
 

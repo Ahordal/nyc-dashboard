@@ -31,13 +31,16 @@ export default function PanelInfoModal({
   const titleId = useId();
 
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
+  const dialogRef = useRef<HTMLDivElement | null>(null);
 
-  // Focus the close button on open, and lock body scrolling while the
-  // modal is up.
+  // Focus the close button on open, restore focus to the trigger on
+  // close, and lock body scrolling while the modal is up.
   useEffect(() => {
     if (!isOpen) {
       return;
     }
+
+    const previouslyFocused = document.activeElement as HTMLElement | null;
 
     closeButtonRef.current?.focus();
 
@@ -47,10 +50,11 @@ export default function PanelInfoModal({
 
     return () => {
       document.body.style.overflow = previousOverflow;
+      previouslyFocused?.focus?.();
     };
   }, [isOpen]);
 
-  // Close on Escape while open.
+  // Close on Escape, and keep Tab focus cycling inside the dialog.
   useEffect(() => {
     if (!isOpen) {
       return;
@@ -59,6 +63,31 @@ export default function PanelInfoModal({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         onClose();
+        return;
+      }
+
+      if (event.key !== "Tab" || !dialogRef.current) {
+        return;
+      }
+
+      const focusable = dialogRef.current.querySelectorAll<HTMLElement>(
+        'a[href], button:not([disabled]), textarea, input, select, [tabindex]:not([tabindex="-1"])',
+      );
+
+      if (focusable.length === 0) {
+        return;
+      }
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement;
+
+      if (event.shiftKey && (active === first || !dialogRef.current.contains(active))) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && active === last) {
+        event.preventDefault();
+        first.focus();
       }
     }
 
@@ -79,6 +108,7 @@ export default function PanelInfoModal({
       onClick={onClose}
     >
       <div
+        ref={dialogRef}
         className="info-modal"
         role="dialog"
         aria-modal="true"

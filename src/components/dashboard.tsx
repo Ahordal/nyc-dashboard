@@ -26,6 +26,12 @@ import PerformanceChart from "./PerformanceChart";
 import DashboardFooter from "./DashboardFooter";
 import NoticeOverlay from "./NoticeOverlay";
 import MapViewSkeleton from "./MapViewSkeleton";
+import ExplorerTabs from "./ExplorerTabs";
+import {
+  tabButtonId,
+  tabPanelId,
+  type ExplorerTab,
+} from "../utils/explorerTabs";
 
 import { useUrlSync } from "../hooks/useUrlSync";
 import type { InitialUrlState, InitialRadiusState } from "../hooks/useUrlSync";
@@ -46,8 +52,6 @@ import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 const MapView = lazy(() => import("./MapView"));
-
-type ExplorerTab = "list" | "details" | "report";
 
 const FILTER_NOTICE_DURATION_MS = 1300;
 
@@ -404,49 +408,16 @@ export default function Dashboard() {
         </div>
 
         <div className="explorer">
-          <div className="explorer-tabs">
-            <button
-              type="button"
-              className={
-                activeExplorerTab === "list"
-                  ? "explorer-tab active"
-                  : "explorer-tab"
-              }
-              onClick={() => {
-                handleExplorerTabChange("list");
-              }}>
-              Restaurant List
-            </button>
-
-            <button
-              type="button"
-              className={
-                activeExplorerTab === "details"
-                  ? "explorer-tab active"
-                  : "explorer-tab"
-              }
-              onClick={() => {
-                handleExplorerTabChange("details");
-              }}>
-              Restaurant Details
-            </button>
-
-            <button
-              type="button"
-              className={
-                activeExplorerTab === "report"
-                  ? "explorer-tab active"
-                  : "explorer-tab"
-              }
-              onClick={() => {
-                handleExplorerTabChange("report");
-              }}>
-              Inspection Reports
-            </button>
-          </div>
+          <ExplorerTabs
+            activeTab={activeExplorerTab}
+            onTabChange={handleExplorerTabChange}
+          />
 
           <div className="explorer-content">
             <div
+              id={tabPanelId("list")}
+              role="tabpanel"
+              aria-labelledby={tabButtonId("list")}
               className={`restaurant-list ${
                 activeExplorerTab === "list" ? "" : "explorer-pane-hidden"
               }`}>
@@ -531,6 +502,9 @@ export default function Dashboard() {
             </div>
 
             <div
+              id={tabPanelId("details")}
+              role="tabpanel"
+              aria-labelledby={tabButtonId("details")}
               className={`restaurant-details ${
                 activeExplorerTab === "details" ? "" : "explorer-pane-hidden"
               }`}>
@@ -545,6 +519,9 @@ export default function Dashboard() {
             </div>
 
             <div
+              id={tabPanelId("report")}
+              role="tabpanel"
+              aria-labelledby={tabButtonId("report")}
               className={`restaurant-report ${
                 activeExplorerTab === "report" ? "" : "explorer-pane-hidden"
               }`}>

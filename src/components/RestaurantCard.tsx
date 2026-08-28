@@ -86,11 +86,32 @@ export default function RestaurantCard({
         })
       : null;
 
+  const gradeLabel =
+    category === "uninspected"
+      ? "not yet inspected"
+      : `grade ${restaurant.grade ?? "not assigned"}, score ${
+          restaurant.score ?? "not available"
+        }`;
+
+  const ariaLabel = [
+    name,
+    gradeLabel,
+    address && `at ${address}`,
+    restaurant.cuisine && `${restaurant.cuisine} cuisine`,
+    distanceMiles != null && `${distanceMiles.toFixed(2)} miles from centre`,
+  ]
+    .filter(Boolean)
+    .join(", ");
+
   return (
     <div
       className={`restaurant-card ${isSelected ? "selected" : ""} ${
         isHovered ? "hovered" : ""
       }`}
+      role="button"
+      tabIndex={0}
+      aria-label={ariaLabel}
+      aria-current={isSelected ? "true" : undefined}
       style={
         {
           "--card-grade-color": categoryColor,
@@ -99,7 +120,15 @@ export default function RestaurantCard({
       }
       onClick={() => onClick(restaurant)}
       onMouseEnter={() => onHover?.(restaurant)}
-      onMouseLeave={() => onHover?.(null)}>
+      onMouseLeave={() => onHover?.(null)}
+      onFocus={() => onHover?.(restaurant)}
+      onBlur={() => onHover?.(null)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          onClick(restaurant);
+        }
+      }}>
       <div className="card-main">
         <div className="card-title" style={{ color: categoryColor }} title={name}>
           {name}

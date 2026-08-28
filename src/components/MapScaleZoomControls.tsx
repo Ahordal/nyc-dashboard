@@ -109,6 +109,7 @@ export default function MapScaleZoomControls({
             <input
               type="text"
               autoFocus
+              aria-label="Map scale denominator"
               value={scaleInputVal}
               onChange={(e) => setScaleInputVal(e.target.value)}
               onBlur={handleScaleInputSubmit}
@@ -126,6 +127,7 @@ export default function MapScaleZoomControls({
                 setIsEditingScale(true);
               }}
               data-tooltip="Click to type a map scale denominator"
+              aria-label={`Map scale 1 to ${currentScale.toLocaleString()}. Activate to type a value.`}
               className="map-control-button tooltip-right"
             >
               {currentScale.toLocaleString()}
@@ -142,6 +144,7 @@ export default function MapScaleZoomControls({
               min={MIN_ZOOM}
               max={MAX_ZOOM}
               autoFocus
+              aria-label="Zoom level"
               value={zoomInputVal}
               onChange={(e) => setZoomInputVal(e.target.value)}
               onBlur={handleZoomInputSubmit}
@@ -159,6 +162,7 @@ export default function MapScaleZoomControls({
                 setIsEditingZoom(true);
               }}
               data-tooltip="Click to type a zoom level"
+              aria-label={`Zoom level ${currentZoom}. Activate to type a value.`}
               className="map-control-button tooltip-right"
             >
               {currentZoom}

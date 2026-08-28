@@ -41,6 +41,7 @@ export default function ExplorerSearch({
           <input
             type="text"
             className="search-input"
+            aria-label="Search restaurants by name or cuisine"
             placeholder="Search restaurants by name, or cuisine"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}

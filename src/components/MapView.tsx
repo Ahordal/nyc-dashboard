@@ -498,7 +498,11 @@ export default function InspectionMapView({
   return (
     <div className="map-view-container">
       <div className="map-view-top-header">
-        <PanelHeader title="" infoContent={MAP_LEGEND_INFO_CONTENT} />
+        <PanelHeader
+          title=""
+          titleText="Map Legend"
+          infoContent={MAP_LEGEND_INFO_CONTENT}
+        />
       </div>
       <div className="map-canvas-wrapper">
         <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />

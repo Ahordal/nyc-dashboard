@@ -329,9 +329,13 @@ export default function PanelHeader({
         ref={headerRef}
         className="panel-header"
       >
-        <span className="panel-header-title">
-          {title || "\u00A0"}
-        </span>
+        {title ? (
+          <h2 className="panel-header-title">{title}</h2>
+        ) : (
+          <span className="panel-header-title" aria-hidden="true">
+            {"\u00A0"}
+          </span>
+        )}
 
         {infoContent && (
           <button

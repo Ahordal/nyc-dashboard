@@ -212,6 +212,18 @@ export default function GradeChart({
     };
   }, [counts, filters.grades]);
 
+  const chartAriaLabel = useMemo(() => {
+    if (data.length === 0) {
+      return `Grade breakdown, ${scopeText.toLowerCase()}: no data for the current view.`;
+    }
+
+    const parts = data
+      .map((item) => `${item.label} ${item.value.toLocaleString()}`)
+      .join(", ");
+
+    return `Grade breakdown, ${scopeText.toLowerCase()}: ${parts}. ${totalCount.toLocaleString()} restaurants total.`;
+  }, [data, scopeText, totalCount]);
+
   return (
     <section className="panel grade-chart-panel">
       <style>{`
@@ -248,6 +260,8 @@ export default function GradeChart({
           }}>
           <div
             className="grade-chart-svg-wrap"
+            role="img"
+            aria-label={chartAriaLabel}
             style={{
               flex: 1,
               minHeight: 0,

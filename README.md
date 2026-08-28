@@ -49,6 +49,18 @@ The project is split across two branches:
 
 The map view (`MapView.tsx`) is lazy-loaded via a dynamic `import()`, with a lightweight `MapViewSkeleton` shown while it loads — the ArcGIS SDK is the heaviest single dependency in the app, so this keeps it out of the initial bundle.
 
+### Accessibility
+
+The dashboard is built to be operable by keyboard and screen reader:
+
+- **Focus system** — one shared `--focus-ring` token drives a `:focus-visible` outline on every interactive element (native controls plus the `role="button"` / `role="tab"` / `role="option"` custom ones). The outline is suppressed only on the ArcGIS view internals (`.map-view .esri-view`), never on the custom map control buttons.
+- **Restaurant explorer** is a proper ARIA tab set (`ExplorerTabs` + `src/utils/explorerTabs.ts`): `role="tablist"`/`tab`/`tabpanel`, roving `tabindex`, and Arrow/Home/End moving between tabs with wraparound (`nextTabIndex`, unit-tested).
+- **Restaurant list cards** are `role="button"` with `tabindex`, an `aria-label` summary (name, grade, score, address, distance), `aria-current` for the selected card, and Enter/Space activation; keyboard focus previews the card on the map, matching the mouse-hover behaviour.
+- **Sort dropdown** (`SortDropdown`) follows the APG listbox model — the open menu takes focus, Arrow/Home/End move the active option, Enter/Space commit, Escape cancels, focus returns to the trigger.
+- **Info modal** (`PanelInfoModal`) traps Tab within the dialog and restores focus to the trigger on close; the score-history chart (`useChartKeyboardNav`) has full arrow-key navigation.
+- Panel titles render as `<h2>`; the search field, icon-only map controls, and the grade-breakdown donut (`role="img"` with a text summary) carry accessible names; filter/sort notices announce via a polite live region.
+- A `prefers-reduced-motion` media query neutralises CSS transitions and animations.
+
 ## Data Pipeline
 
 `pipeline/fetch-inspection.mjs` runs as part of every build (`npm run build`) — whenever `main` is pushed, not on a fixed schedule — and pulls the full NYC DOHMH Restaurant Inspection Results dataset from the Socrata API, producing:
@@ -165,6 +177,7 @@ Frontend logic is tested with Vitest, colocated with the source it covers (`src/
 | `src/utils/searchRadiusRings.test.ts` | Verifies the ring-graphics builder: one ring + one label per radius option plus a centre pin, fills drawn largest-first, the heavier outline and bold label on the active ring only, label text/placement north of the centre |
 | `src/utils/restaurantSort.test.ts` | Verifies the two-level list sort: numeric vs `localeCompare` ordering, grade-category ranking, nulls always last in both directions, the distance key (inert without a point), secondary-key tie-breaking sharing one direction, and the name-then-id stable fallback |
 | `src/hooks/useUrlSync.test.ts` | Verifies the URL parse/serialize helpers: `?radius=<lat>,<lng>,<miles>` parsing with range/arity/value guards, comma-list and `id`/`camis` handling, 5-dp coordinate rounding on write, and a placed-radius round-trip |
+| `src/utils/explorerTabs.test.ts` | Verifies the Explorer tab helpers: the button/panel id builders and `nextTabIndex`'s Arrow/Home/End index resolution with wraparound and a null for unhandled keys |
 
 ### Scripts
 

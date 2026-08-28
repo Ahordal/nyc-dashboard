@@ -55,7 +55,11 @@ export default function NoticeOverlay({
   if (!visible) return null;
 
   return (
-    <div className="filter-notice-overlay">
+    <div
+      className="filter-notice-overlay"
+      role="status"
+      aria-live="polite"
+      aria-atomic="true">
       <div className="filter-notice-text">{children}</div>
     </div>
   );

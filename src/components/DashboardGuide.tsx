@@ -79,9 +79,9 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
   return (
     <section className="panel dashboard-guide-panel">
       <div className="panel-header">
-        <span className="panel-header-title">
+        <h2 className="panel-header-title">
           Dashboard Information
-        </span>
+        </h2>
 
         <button
           type="button"
