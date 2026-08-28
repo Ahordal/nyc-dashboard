@@ -43,7 +43,7 @@ import type {
 } from "../types/restaurant";
 
 import type { DashboardMeta } from "../types/dashboardMeta";
-import type { GradeCounts } from "./MapView";
+import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
@@ -62,15 +62,6 @@ const GRADE_FILTER_COLORS: Record<string, string> = {
   Pending: CATEGORY_COLORS.pending,
   Uninspected: CATEGORY_COLORS.uninspected,
   Closed: CATEGORY_COLORS.closed,
-};
-
-const EMPTY_GRADE_COUNTS: GradeCounts = {
-  A: 0,
-  B: 0,
-  C: 0,
-  pending: 0,
-  uninspected: 0,
-  closed: 0,
 };
 
 export default function Dashboard() {

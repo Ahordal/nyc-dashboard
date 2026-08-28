@@ -12,7 +12,7 @@ import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
 
 import type { Filters, SetFilters } from "../types/filters";
-import type { GradeCounts } from "./MapView";
+import type { GradeCounts } from "../types/gradeCounts";
 import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
 import type { SearchRadiusMiles } from "../types/searchRadius";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
