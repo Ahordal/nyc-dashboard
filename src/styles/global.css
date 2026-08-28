@@ -1086,7 +1086,8 @@ a:focus-visible {
   height: 100px;
 }
 
-.restaurant-card:hover {
+.restaurant-card:hover,
+.restaurant-card.hovered {
   background: var(--bg-alt);
   border-color: var(--card-grade-color);
   opacity: 1;

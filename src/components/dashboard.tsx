@@ -115,7 +115,7 @@ export default function Dashboard() {
     null,
   );
 
-  const [hoveredListRestaurantId, setHoveredListRestaurantId] = useState<
+  const [hoveredRestaurantId, setHoveredRestaurantId] = useState<
     string | null
   >(null);
 
@@ -301,7 +301,7 @@ export default function Dashboard() {
   function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
     setHoveredInspectionId(null);
 
-    setHoveredListRestaurantId(null);
+    setHoveredRestaurantId(null);
 
     setSelectedRestaurant(restaurant);
 
@@ -324,16 +324,16 @@ export default function Dashboard() {
     setHoveredInspectionId(inspectionId);
   }
 
-  function handleHoverRestaurantInList(
+  function handleHoverRestaurant(
     restaurant: RestaurantProperties | null,
   ) {
-    setHoveredListRestaurantId(restaurant?.id ?? null);
+    setHoveredRestaurantId(restaurant?.id ?? null);
   }
 
   function handleExplorerTabChange(tab: ExplorerTab) {
     setHoveredInspectionId(null);
 
-    setHoveredListRestaurantId(null);
+    setHoveredRestaurantId(null);
 
     setActiveExplorerTab(tab);
   }
@@ -386,8 +386,9 @@ export default function Dashboard() {
                 filters={filters}
                 searchQuery={searchQuery}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
-                hoveredRestaurantId={hoveredListRestaurantId}
+                hoveredRestaurantId={hoveredRestaurantId}
                 onSelectRestaurant={handleSelectRestaurant}
+                onHoverRestaurant={handleHoverRestaurant}
                 onVisibleRestaurantsChange={setVisibleRestaurants}
                 onGradeCountsChange={setGradeCounts}
                 onSearchRadiusChange={(point, radius) => {
@@ -454,8 +455,9 @@ export default function Dashboard() {
               <RestaurantList
                 restaurants={visibleRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
+                hoveredRestaurantId={hoveredRestaurantId}
                 onSelectRestaurant={handleSelectRestaurant}
-                onHoverRestaurant={handleHoverRestaurantInList}
+                onHoverRestaurant={handleHoverRestaurant}
                 searchRadiusPoint={searchRadiusPoint}>
                 <NoticeOverlay
                   triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}-${radiusKey}`}

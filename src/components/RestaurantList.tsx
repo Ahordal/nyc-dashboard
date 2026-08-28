@@ -81,6 +81,9 @@ const MIN_PAGE_SIZE = 4;
 type RestaurantListProps = {
   restaurants: RestaurantProperties[];
   selectedRestaurantId?: string | null;
+  // Highlights the matching card, whether the hover came from the list
+  // itself or from a restaurant dot on the map.
+  hoveredRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties) => void;
   onHoverRestaurant?: (restaurant: RestaurantProperties | null) => void;
   // Present when the Search Radius tool is active. The `restaurants` prop
@@ -93,6 +96,7 @@ type RestaurantListProps = {
 export default function RestaurantList({
   restaurants,
   selectedRestaurantId = null,
+  hoveredRestaurantId = null,
   onSelectRestaurant,
   onHoverRestaurant,
   searchRadiusPoint = null,
@@ -337,6 +341,7 @@ export default function RestaurantList({
                 key={restaurant.id}
                 restaurant={restaurant}
                 isSelected={restaurant.id === selectedRestaurantId}
+                isHovered={restaurant.id === hoveredRestaurantId}
                 onClick={(selected) => onSelectRestaurant?.(selected)}
                 onHover={onHoverRestaurant}
                 searchRadiusPoint={searchRadiusPoint}

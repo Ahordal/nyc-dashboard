@@ -14,6 +14,9 @@ import { toTitleCase } from "../utils/toTitleCase";
 type RestaurantCardProps = {
   restaurant: RestaurantProperties;
   isSelected: boolean;
+  // Driven by hover from the list itself or from a map dot -- styled the
+  // same as the CSS :hover state.
+  isHovered?: boolean;
   onClick: (restaurant: RestaurantProperties) => void;
   onHover?: (restaurant: RestaurantProperties | null) => void;
   // When a Search Radius point is active, the card shows the restaurant's
@@ -56,6 +59,7 @@ function formatAddress(restaurant: RestaurantProperties): string {
 export default function RestaurantCard({
   restaurant,
   isSelected,
+  isHovered = false,
   onClick,
   onHover,
   searchRadiusPoint = null,
@@ -82,7 +86,9 @@ export default function RestaurantCard({
 
   return (
     <div
-      className={`restaurant-card ${isSelected ? "selected" : ""}`}
+      className={`restaurant-card ${isSelected ? "selected" : ""} ${
+        isHovered ? "hovered" : ""
+      }`}
       style={
         {
           "--card-grade-color": categoryColor,
