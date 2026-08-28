@@ -27,6 +27,10 @@ const FRAMING_PADDING = 1.4;
 export function useSearchRadiusTool(
   view: MapView | null,
   ringsLayer: GraphicsLayer | null,
+  // A radius restored from the URL. Applied exactly once, as soon as the
+  // view and rings layer are both ready; ignored afterwards so it never
+  // fights the user's own placement.
+  initialRadius?: { point: SearchRadiusPoint; miles: SearchRadiusMiles } | null,
 ) {
   const [isPlacingPoint, setIsPlacingPoint] = useState(false);
   const [searchRadiusPoint, setSearchRadiusPoint] =
@@ -106,6 +110,32 @@ export function useSearchRadiusTool(
     },
     [],
   );
+
+  // One-shot restore of a radius carried in on the URL. Waits for both
+  // the view and rings layer, then re-places the point, redraws the
+  // rings, and frames the circle once the view has a size (goTo needs
+  // view.width/height). The didRestore guard keeps it from re-firing if
+  // `initialRadius`'s identity changes or the view remounts.
+  const didRestoreRef = useRef(false);
+  useEffect(() => {
+    if (didRestoreRef.current) return;
+    if (!initialRadius || !view || !ringsLayer) return;
+
+    didRestoreRef.current = true;
+
+    const { point, miles } = initialRadius;
+    searchRadiusPointRef.current = point;
+    setSearchRadiusPoint(point);
+    activeRadiusMilesRef.current = miles;
+    setActiveRadiusMiles(miles);
+    drawRings(point, miles);
+
+    view
+      .when(() => frameRadiusCircle(point, miles))
+      .catch(() => {
+        // View was destroyed before it became ready -- nothing to frame.
+      });
+  }, [view, ringsLayer, initialRadius, drawRings, frameRadiusCircle]);
 
   const handleActivate = useCallback(() => {
     isPlacingPointRef.current = true;

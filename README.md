@@ -27,7 +27,7 @@ An interactive map and analytics dashboard for exploring NYC DOHMH restaurant in
 - **Smart Dataset Search:** Custom client-side search index that supports queries by name, cuisine, or address, featuring automatic diacritic stripping, corporate suffix removal, and street abbreviation expansion (e.g., matching "St" to "Street").
 - **Viewport-Scoped List:** A dynamic Restaurant List panel that updates automatically as the map moves, showing name, address, cuisine type, last inspection date, and recent score/grade.
 - **Multi-Parameter Filtering & Sorting:** Quick-filter combinations by grade and borough (e.g., "Grade A, Brooklyn"), alongside robust list sorting (by date, name, cuisine, grade, score, or — when a Search Radius point is set — distance, in ascending/descending order).
-- **Shareable Views:** Active grade/borough filters, search query, and the selected restaurant are all synced to the URL, so a link can be copied or bookmarked straight back to that exact view.
+- **Shareable Views:** Active grade/borough filters, search query, the selected restaurant, and a placed Search Radius (centre + distance, as `?radius=<lat>,<lng>,<miles>`) are all synced to the URL, so a link can be copied or bookmarked straight back to that exact view — reloading re-drops the radius pin, redraws the rings, and re-frames the map.
 
 ### Details & History
 - **On-Demand Restaurant Profiles:** Lazy-loaded details panel that fetches individual historical data (like CAMIS and exact addresses) only when a restaurant is selected, keeping the initial application payload extremely lightweight. 
@@ -151,15 +151,18 @@ The geocoding pipeline is rigorously verified using Node's native `node:test` ru
 
 ### Frontend (Vitest)
 
-Frontend logic is tested with Vitest, colocated with the source it covers (`src/**/*.test.{ts,tsx}`). Pure logic (grade categorization, the ArcGIS query/where-clause builders, the Search Radius haversine helper) runs under Vitest's default `node` environment; the two chart hooks below drive real DOM (SVG refs, focus/keyboard events) via `@testing-library/react`'s `renderHook`, so those two files opt into `jsdom` per-file with a `// @vitest-environment jsdom` docblock rather than paying that cost project-wide. Component/integration tests against `MapView.tsx` and `useUrlSync` aren't set up yet — they'd need mocking the ArcGIS SDK.
+Frontend logic is tested with Vitest, colocated with the source it covers (`src/**/*.test.{ts,tsx}`). Pure logic (grade categorization, the ArcGIS query/where-clause builders, the visible-restaurants query shape, the Restaurant List's two-level sort, the Search Radius haversine helper and ring-graphics builder, and `useUrlSync`'s URL parse/serialize helpers) runs under Vitest's default `node` environment; the two chart hooks below drive real DOM (SVG refs, focus/keyboard events) via `@testing-library/react`'s `renderHook`, so those two files opt into `jsdom` per-file with a `// @vitest-environment jsdom` docblock rather than paying that cost project-wide. Full component/integration tests against `MapView.tsx` (and the effect side of `useUrlSync`) aren't set up yet — they'd need mocking the ArcGIS SDK.
 
 | File | Purpose |
 |---|---|
 | `src/utils/gradeCategory.test.ts` | Verifies grade-category precedence: closures win over grade, the uninspected sentinel, administrative Z/P/N grades, null-score handling, and the A/B/C score-band boundaries |
-| `src/queries/mapQueries.test.ts` | Verifies search-query normalization/escaping, borough+search `definitionExpression` combination, and that the grade `WHERE`-clause builders match `CATEGORY_CLAUSES` |
+| `src/queries/mapQueries.test.ts` | Verifies search-query normalization/escaping, borough+search `definitionExpression` combination, that the grade `WHERE`-clause builders match `CATEGORY_CLAUSES`, and that `queryVisibleRestaurants` shapes its query as extent-vs-point+distance and pages until `exceededTransferLimit` clears |
 | `src/hooks/useChartKeyboardNav.test.ts` | Verifies arrow/Home/End navigation and clamping, Enter/Space selection, Tab passthrough, focus/blur keyboard-mode transitions, and resets on new chart data or a newly selected report |
 | `src/hooks/useTooltipPriority.test.ts` | Verifies the tooltip priority order (pointer hover > history preview > keyboard point > pinned selection), dot-ref registration/lookup against rendered `cx`/`cy`, and resets on new chart data |
 | `src/utils/distance.test.ts` | Verifies the Search Radius haversine helper: zero distance for a point against itself, symmetry, exact along-meridian distance, and that points just inside/outside a 0.25 mi radius land on the correct side of the cutoff |
+| `src/utils/searchRadiusRings.test.ts` | Verifies the ring-graphics builder: one ring + one label per radius option plus a centre pin, fills drawn largest-first, the heavier outline and bold label on the active ring only, label text/placement north of the centre |
+| `src/utils/restaurantSort.test.ts` | Verifies the two-level list sort: numeric vs `localeCompare` ordering, grade-category ranking, nulls always last in both directions, the distance key (inert without a point), secondary-key tie-breaking sharing one direction, and the name-then-id stable fallback |
+| `src/hooks/useUrlSync.test.ts` | Verifies the URL parse/serialize helpers: `?radius=<lat>,<lng>,<miles>` parsing with range/arity/value guards, comma-list and `id`/`camis` handling, 5-dp coordinate rounding on write, and a placed-radius round-trip |
 
 ### Scripts
 
@@ -230,7 +233,6 @@ To keep the dashboard fresh, the scheduled `geocode-backfill` Action (and `reset
 
 - Aggregate stats are scoped to the current map view (or the active Search Radius ring) rather than an independent citywide/borough breakdown (achievable today via zoom/filters)
 - Map hover cards and name labels rely on mouse hover, with no touch equivalent yet; the dashboard is not currently optimized for mobile/touch devices
-- An active Search Radius point and distance are not synced to the URL, so a shared link restores grade/borough filters, search, and selection but not a placed radius
 
 ## Credits
 

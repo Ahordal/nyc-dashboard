@@ -442,6 +442,12 @@ type MapViewProps = {
     point: SearchRadiusPoint | null,
     radiusMiles: SearchRadiusMiles,
   ) => void;
+  // A Search Radius restored from the URL on first load -- placed once
+  // the map view and rings layer are ready. Null in normal use.
+  initialSearchRadius?: {
+    point: SearchRadiusPoint;
+    miles: SearchRadiusMiles;
+  } | null;
 };
 
 export default function InspectionMapView({
@@ -454,6 +460,7 @@ export default function InspectionMapView({
   onVisibleRestaurantsChange,
   onGradeCountsChange,
   onSearchRadiusChange,
+  initialSearchRadius = null,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
@@ -467,7 +474,11 @@ export default function InspectionMapView({
   const layerViewRef = useRef<any>(null);
   const ringsLayerRef = useRef<GraphicsLayer | null>(null);
 
-  const searchRadius = useSearchRadiusTool(mapView, ringsLayerRef.current);
+  const searchRadius = useSearchRadiusTool(
+    mapView,
+    ringsLayerRef.current,
+    initialSearchRadius,
+  );
 
   const selectedRestaurantIdRef = useRef<string | null>(selectedRestaurantId);
   const onSelectRestaurantRef = useRef(onSelectRestaurant);

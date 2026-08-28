@@ -30,7 +30,7 @@ import NoticeOverlay from "./NoticeOverlay";
 import MapViewSkeleton from "./MapViewSkeleton";
 
 import { useUrlSync } from "../hooks/useUrlSync";
-import type { InitialUrlState } from "../hooks/useUrlSync";
+import type { InitialUrlState, InitialRadiusState } from "../hooks/useUrlSync";
 
 import type { Filters } from "../types/filters";
 import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
@@ -106,6 +106,12 @@ export default function Dashboard() {
   const [activeRadiusMiles, setActiveRadiusMiles] =
     useState<SearchRadiusMiles>(0.25);
 
+  // A radius restored from the URL on first load. Passed to MapView so
+  // its Search Radius hook can re-place the point, redraw the rings, and
+  // re-frame the map; null unless the initial URL carried a ?radius.
+  const [initialSearchRadius, setInitialSearchRadius] =
+    useState<InitialRadiusState | null>(null);
+
   const [history, setHistory] = useState<InspectionEvent[]>([]);
 
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -158,6 +164,12 @@ export default function Dashboard() {
     if (initial.camis) {
       setPendingCamisFromUrl(initial.camis);
     }
+
+    if (initial.radius) {
+      setSearchRadiusPoint(initial.radius.point);
+      setActiveRadiusMiles(initial.radius.miles);
+      setInitialSearchRadius(initial.radius);
+    }
   }, []);
 
   // Sync state back to URL parameters
@@ -167,6 +179,8 @@ export default function Dashboard() {
       boroughs: filters.boroughs,
       searchQuery,
       selectedRestaurantCamis: selectedRestaurant?.camis ?? null,
+      searchRadiusPoint,
+      searchRadiusMiles: activeRadiusMiles,
     },
     handleInitialUrlState,
   );
@@ -389,6 +403,7 @@ export default function Dashboard() {
                   setSearchRadiusPoint(point);
                   setActiveRadiusMiles(radius);
                 }}
+                initialSearchRadius={initialSearchRadius}
               />
             </Suspense>
           </div>

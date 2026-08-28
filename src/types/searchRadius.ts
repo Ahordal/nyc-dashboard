@@ -19,3 +19,10 @@ export const SEARCH_RADIUS_LABELS: Record<SearchRadiusMiles, string> = {
   0.5: "0.50 mi",
   1: "1 mi",
 };
+
+// Narrows an arbitrary number to one of the fixed radius options -- used
+// when rehydrating a radius from an untrusted source (the URL) so a
+// hand-edited ?radius=...,<miles> can't smuggle in an unsupported value.
+export function isSearchRadiusMiles(value: number): value is SearchRadiusMiles {
+  return (SEARCH_RADIUS_OPTIONS_MILES as readonly number[]).includes(value);
+}
