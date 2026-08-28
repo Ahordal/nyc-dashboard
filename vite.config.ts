@@ -13,6 +13,13 @@ export default defineConfig({
   // MapView.tsx) uses a PUBLIC_ prefix instead, so it's added here
   // explicitly to keep it exposed.
   envPrefix: ["VITE_", "PUBLIC_"],
+  build: {
+    // Emit source maps for the production bundle. They aren't downloaded
+    // by browsers unless devtools is open, so there's no user-facing
+    // cost, but they make production stack traces and Lighthouse's
+    // bundle analysis usable.
+    sourcemap: true,
+  },
   test: {
     // Scoped to src/ only; pipeline/*.test.mjs is its own suite, run
     // separately via `npm test` (node:test), not picked up here.

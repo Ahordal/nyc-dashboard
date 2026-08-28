@@ -47,7 +47,7 @@ The project is split across two branches:
 - **`main`** — the dashboard app (this code). `public/data/` is generated fresh on every build and is not committed.
 - **`data`** — an orphan branch holding only the geocode cache (`pipeline/geocode-cache.json`) and related pipeline state. Kept separate so scheduled cache updates never conflict with in-progress dashboard work.
 
-The map view (`MapView.tsx`) is lazy-loaded via a dynamic `import()`, with a lightweight `MapViewSkeleton` shown while it loads — the ArcGIS SDK is the heaviest single dependency in the app, so this keeps it out of the initial bundle.
+The map view (`MapView.tsx`) is lazy-loaded via a dynamic `import()`, with a lightweight `MapViewSkeleton` shown while it loads — the ArcGIS SDK is the heaviest single dependency in the app, so this keeps it out of the initial bundle. The ArcGIS Esri theme CSS is imported from `MapView.tsx` (not the entry) for the same reason. The two Recharts-backed panels (`GradeChart`, `PerformanceChart`) are lazy-loaded the same way, behind a `ChartSkeleton`, so Recharts and its d3 dependencies stay off the critical path.
 
 ### Accessibility
 

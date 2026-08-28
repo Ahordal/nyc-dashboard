@@ -13,6 +13,10 @@ import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 
 import esriConfig from "@arcgis/core/config";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
+
+// Imported here rather than in main.tsx so it rides along with this lazy
+// chunk instead of blocking first paint in the entry stylesheet.
+import "@arcgis/core/assets/esri/themes/dark/main.css";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 import type {

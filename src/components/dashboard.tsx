@@ -17,15 +17,14 @@ import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
 import StatsPanel from "./StatsPanel";
 import DashboardGuide from "./DashboardGuide";
-import GradeChart from "./GradeChart";
 import ExplorerSearch from "./ExplorerSearch";
 import RestaurantList from "./RestaurantList";
 import RestaurantDetails from "./RestaurantDetails";
 import RestaurantReport from "./RestaurantReport";
-import PerformanceChart from "./PerformanceChart";
 import DashboardFooter from "./DashboardFooter";
 import NoticeOverlay from "./NoticeOverlay";
 import MapViewSkeleton from "./MapViewSkeleton";
+import ChartSkeleton from "./ChartSkeleton";
 import ExplorerTabs from "./ExplorerTabs";
 import {
   tabButtonId,
@@ -52,6 +51,14 @@ import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 const MapView = lazy(() => import("./MapView"));
+
+// GradeChart and PerformanceChart both pull in Recharts (+ its d3
+// dependency tree), which was landing in the render-blocking entry
+// chunk. Loading them lazily keeps that weight off the critical path;
+// their layout areas are grid-sized, so the skeleton fallback causes no
+// layout shift.
+const GradeChart = lazy(() => import("./GradeChart"));
+const PerformanceChart = lazy(() => import("./PerformanceChart"));
 
 const FILTER_NOTICE_DURATION_MS = 1300;
 
@@ -353,12 +360,14 @@ export default function Dashboard() {
           </div>
 
           <div className="grade-chart">
-            <GradeChart
-              counts={gradeCounts}
-              filters={filters}
-              setFilters={setFilters}
-              searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
-            />
+            <Suspense fallback={<ChartSkeleton label="Loading grade breakdown…" />}>
+              <GradeChart
+                counts={gradeCounts}
+                filters={filters}
+                setFilters={setFilters}
+                searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
+              />
+            </Suspense>
           </div>
         </div>
 
@@ -537,14 +546,16 @@ export default function Dashboard() {
         </div>
 
         <div className="performance-chart">
-          <PerformanceChart
-            restaurant={selectedRestaurant}
-            history={history}
-            isLoadingHistory={isLoadingHistory}
-            onSelectInspection={handleSelectInspection}
-            hoveredInspectionId={hoveredInspectionId}
-            selectedInspectionId={reportInspectionId}
-          />
+          <Suspense fallback={<ChartSkeleton label="Loading score history…" />}>
+            <PerformanceChart
+              restaurant={selectedRestaurant}
+              history={history}
+              isLoadingHistory={isLoadingHistory}
+              onSelectInspection={handleSelectInspection}
+              hoveredInspectionId={hoveredInspectionId}
+              selectedInspectionId={reportInspectionId}
+            />
+          </Suspense>
         </div>
 
         <div className="dashboard-footer">
