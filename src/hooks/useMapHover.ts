@@ -50,12 +50,12 @@ export function useMapHover({
     if (!view || !layer) return;
 
     let pointerMoveTimeoutId: number | null = null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let latestPointerMoveEvent: any = null;
+    // Only the screen coordinates are read here and passed to hitTest --
+    // the full ArcGIS pointer-move event assigns cleanly to this subset.
+    let latestPointerMoveEvent: { x: number; y: number } | null = null;
     let latestHitTestToken = 0;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const runHitTest = async (event: any) => {
+    const runHitTest = async (event: { x: number; y: number }) => {
       if (isPlacingPointRef.current) return;
 
       const token = ++latestHitTestToken;

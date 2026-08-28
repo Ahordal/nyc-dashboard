@@ -12,6 +12,7 @@
 import type GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
 import type MapView from "@arcgis/core/views/MapView";
 import type Graphic from "@arcgis/core/Graphic";
+import type { ViewHit } from "@arcgis/core/views/types";
 import Point from "@arcgis/core/geometry/Point";
 import Extent from "@arcgis/core/geometry/Extent";
 import type { Filters } from "../types/filters";
@@ -512,15 +513,14 @@ export type RestaurantGraphicHit = {
 // Picks the restaurant-layer graphic out of a view.hitTest() result,
 // ignoring hits on any other layer (the Search Radius rings, basemap
 // labels). Returns undefined when the click or hover landed on no
-// restaurant dot.
+// restaurant dot. The final assertion narrows Graphic.attributes (typed
+// `any` by ArcGIS) to our known layer schema.
 export function findRestaurantGraphicHit(
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  hitTestResponse: { results: any[] },
+  hitTestResponse: { results: ViewHit[] },
   layer: GeoJSONLayer,
 ): RestaurantGraphicHit | undefined {
-  return hitTestResponse.results.find(
-    (result) =>
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      "graphic" in result && (result as any).graphic.layer === layer,
-  ) as RestaurantGraphicHit | undefined;
+  const hit = hitTestResponse.results.find(
+    (result) => result.type === "graphic" && result.graphic.layer === layer,
+  );
+  return hit as RestaurantGraphicHit | undefined;
 }

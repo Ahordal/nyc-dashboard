@@ -17,6 +17,7 @@
 import { useCallback, useEffect, useRef } from "react";
 import type { RefObject } from "react";
 import type GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
+import type GeoJSONLayerView from "@arcgis/core/views/layers/GeoJSONLayerView";
 import type MapView from "@arcgis/core/views/MapView";
 import FeatureEffect from "@arcgis/core/layers/support/FeatureEffect";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
@@ -44,8 +45,7 @@ export function useSelectionHighlight({
   // Builds the glow FeatureEffect once with a fixed included effect
   // string; only `.filter` is mutated afterwards.
   const glowEffectRef = useRef<FeatureEffect | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const layerViewRef = useRef<any>(null);
+  const layerViewRef = useRef<GeoJSONLayerView | null>(null);
   const hoverHighlightRequestIdRef = useRef(0);
 
   const selectedObjectIdRef = useRef<number | null>(null);
@@ -60,11 +60,10 @@ export function useSelectionHighlight({
     const view = viewRef.current;
     if (!layer || !view) return null;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let layerView: any;
+    let layerView: GeoJSONLayerView;
     try {
       await layer.load();
-      layerView = await view.whenLayerView(layer);
+      layerView = (await view.whenLayerView(layer)) as GeoJSONLayerView;
     } catch (err) {
       console.error(
         "MapView: failed to load layer view for highlight effect",

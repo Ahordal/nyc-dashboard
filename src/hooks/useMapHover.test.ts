@@ -51,7 +51,9 @@ function setup(opts: SetupOpts = {}) {
       return new Promise((res) => hitResolvers.push(res));
     }
     return Promise.resolve({
-      results: hit ? [{ graphic: { layer, attributes: makeAttrs() } }] : [],
+      results: hit
+        ? [{ type: "graphic", graphic: { layer, attributes: makeAttrs() } }]
+        : [],
     });
   });
 
@@ -192,7 +194,9 @@ describe("useMapHover", () => {
 
     // Older response (A) settles later and must be dropped.
     hitResolvers[0]({
-      results: [{ graphic: { layer: layerA, attributes: makeAttrs() } }],
+      results: [
+        { type: "graphic", graphic: { layer: layerA, attributes: makeAttrs() } },
+      ],
     });
     await flush();
     expect(setHoverCard.mock.calls.length).toBe(callsAfterB);

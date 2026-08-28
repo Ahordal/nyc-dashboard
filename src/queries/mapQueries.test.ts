@@ -265,38 +265,47 @@ describe("findRestaurantGraphicHit", () => {
   const layer = { id: "restaurants" };
   const otherLayer = { id: "rings" };
 
+  // Only `type`, `graphic.layer`, and `graphic.attributes` are read.
+  const response = (
+    results: unknown[],
+  ): Parameters<typeof findRestaurantGraphicHit>[0] =>
+    ({ results }) as Parameters<typeof findRestaurantGraphicHit>[0];
+  const graphicHit = (hitLayer: unknown, attributes: unknown) => ({
+    type: "graphic",
+    graphic: { layer: hitLayer, attributes },
+  });
+  const asLayer = layer as unknown as Parameters<
+    typeof findRestaurantGraphicHit
+  >[1];
+
   it("returns the hit whose graphic belongs to the given layer", () => {
-    const response = {
-      results: [
-        { graphic: { layer: otherLayer, attributes: { id: "ring" } } },
-        { graphic: { layer, attributes: { id: "42" } } },
-      ],
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const hit = findRestaurantGraphicHit(response, layer as any);
+    const hit = findRestaurantGraphicHit(
+      response([
+        graphicHit(otherLayer, { id: "ring" }),
+        graphicHit(layer, { id: "42" }),
+      ]),
+      asLayer,
+    );
     expect(hit?.graphic.attributes).toEqual({ id: "42" });
   });
 
   it("returns undefined when no result hit the restaurant layer", () => {
-    const response = {
-      results: [
-        { graphic: { layer: otherLayer } },
-        { something: "not a graphic hit" },
-      ],
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    expect(findRestaurantGraphicHit(response, layer as any)).toBeUndefined();
+    expect(
+      findRestaurantGraphicHit(
+        response([graphicHit(otherLayer, {}), { type: "media" }]),
+        asLayer,
+      ),
+    ).toBeUndefined();
   });
 
   it("returns the first match when several graphics belong to the layer", () => {
-    const response = {
-      results: [
-        { graphic: { layer, attributes: { id: "first" } } },
-        { graphic: { layer, attributes: { id: "second" } } },
-      ],
-    };
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const hit = findRestaurantGraphicHit(response, layer as any);
+    const hit = findRestaurantGraphicHit(
+      response([
+        graphicHit(layer, { id: "first" }),
+        graphicHit(layer, { id: "second" }),
+      ]),
+      asLayer,
+    );
     expect(hit?.graphic.attributes).toEqual({ id: "first" });
   });
 });
