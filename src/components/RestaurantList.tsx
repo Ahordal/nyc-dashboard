@@ -83,6 +83,11 @@ const MIN_PAGE_SIZE = 4;
 type RestaurantListProps = {
   restaurants: RestaurantProperties[];
   selectedRestaurantId?: string | null;
+  // The full record for selectedRestaurantId. Folded into the list when
+  // the map-view query doesn't (yet) contain it - e.g. selection came
+  // from a map click and the extent re-query hasn't landed - so the
+  // selected restaurant always has a card to highlight and page to.
+  selectedRestaurant?: RestaurantProperties | null;
   // Highlights the matching card, whether the hover came from the list
   // itself or from a restaurant dot on the map.
   hoveredRestaurantId?: string | null;
@@ -98,6 +103,7 @@ type RestaurantListProps = {
 export default function RestaurantList({
   restaurants,
   selectedRestaurantId = null,
+  selectedRestaurant = null,
   hoveredRestaurantId = null,
   onSelectRestaurant,
   onHoverRestaurant,
@@ -116,10 +122,23 @@ export default function RestaurantList({
     ? CARD_HEIGHT_WITH_DISTANCE
     : CARD_HEIGHT;
 
+  // The map-view query is the list's source, plus the selected restaurant
+  // if that query doesn't carry it. Everything below (sort, pagination,
+  // navigate-to-selection) works off this so a map-click selection always
+  // resolves to a real card even before the extent re-query catches up.
+  const listRestaurants = useMemo(() => {
+    if (!selectedRestaurant) return restaurants;
+    const alreadyListed = restaurants.some(
+      (r) => r.id === selectedRestaurant.id,
+    );
+    return alreadyListed ? restaurants : [...restaurants, selectedRestaurant];
+  }, [restaurants, selectedRestaurant]);
+
   const containerRef = useRef<HTMLDivElement | null>(null);
   const cardListRef = useRef<HTMLDivElement | null>(null);
-  const prevRestaurantCountRef = useRef(restaurants.length);
+  const prevRestaurantCountRef = useRef(listRestaurants.length);
   const prevSelectedIdRef = useRef<string | null>(selectedRestaurantId);
+  const prevSortRef = useRef({ primarySort, secondarySort, sortDirection });
   const preRadiusPrimarySortRef = useRef<SortKeyId>(primarySort);
 
   useEffect(() => {
@@ -151,13 +170,19 @@ export default function RestaurantList({
 
   const sorted = useMemo(
     () =>
-      sortRestaurants(restaurants, {
+      sortRestaurants(listRestaurants, {
         primary: primarySort,
         secondary: secondarySort,
         direction: sortDirection,
         point: searchRadiusPoint,
       }),
-    [restaurants, primarySort, secondarySort, sortDirection, searchRadiusPoint],
+    [
+      listRestaurants,
+      primarySort,
+      secondarySort,
+      sortDirection,
+      searchRadiusPoint,
+    ],
   );
 
   // Distance only makes sense with a Search Radius point set. Remember
@@ -192,11 +217,29 @@ export default function RestaurantList({
   // Automatically navigate pagination to the page holding
   // selectedRestaurantId.
   useEffect(() => {
-    const countChanged = prevRestaurantCountRef.current !== restaurants.length;
+    const countChanged =
+      prevRestaurantCountRef.current !== listRestaurants.length;
     const selectedChanged = prevSelectedIdRef.current !== selectedRestaurantId;
+    const prevSort = prevSortRef.current;
+    const sortChanged =
+      prevSort.primarySort !== primarySort ||
+      prevSort.secondarySort !== secondarySort ||
+      prevSort.sortDirection !== sortDirection;
 
-    prevRestaurantCountRef.current = restaurants.length;
+    prevRestaurantCountRef.current = listRestaurants.length;
     prevSelectedIdRef.current = selectedRestaurantId;
+    prevSortRef.current = { primarySort, secondarySort, sortDirection };
+
+    // With no restaurant selected, the list's page is always the top of
+    // the current ordering - never stranded on wherever a since-cleared
+    // selection last pushed it. Clearing the selection, or changing the
+    // sort while nothing is selected, returns to page 1. With a
+    // restaurant selected, fall through and track that card's page so it
+    // stays in view across sort changes.
+    if (!selectedRestaurantId && (selectedChanged || sortChanged)) {
+      setPage(1);
+      return;
+    }
 
     if (selectedRestaurantId && sorted.length > 0) {
       const index = sorted.findIndex((r) => r.id === selectedRestaurantId);
@@ -211,7 +254,7 @@ export default function RestaurantList({
       setPage(1);
     }
   }, [
-    restaurants.length,
+    listRestaurants.length,
     selectedRestaurantId,
     pageSize,
     sorted,

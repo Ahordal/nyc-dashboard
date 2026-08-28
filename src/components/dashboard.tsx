@@ -433,6 +433,7 @@ export default function Dashboard() {
               <RestaurantList
                 restaurants={visibleRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
+                selectedRestaurant={selectedRestaurant}
                 hoveredRestaurantId={hoveredRestaurantId}
                 onSelectRestaurant={handleSelectRestaurant}
                 onHoverRestaurant={handleHoverRestaurant}
