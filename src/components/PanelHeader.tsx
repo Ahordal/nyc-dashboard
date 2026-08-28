@@ -25,7 +25,11 @@ type InfoPlacement = "up" | "down" | "auto";
 type ResolvedPlacement = "up" | "down";
 
 type PanelHeaderProps = {
-  title?: string;
+  title?: ReactNode;
+  // Plain-text form of `title` for aria labels, needed when `title` is
+  // passed as markup (e.g. to keep a "mi" unit lowercase inside the
+  // otherwise-uppercased title).
+  titleText?: string;
   infoContent?: ReactNode;
   infoPlacement?: InfoPlacement;
   // When provided, the info button no longer opens PanelHeader's own
@@ -59,12 +63,16 @@ const HIDDEN_POPUP_STYLE: CSSProperties = {
 
 export default function PanelHeader({
   title,
+  titleText,
   infoContent,
   infoPlacement = "down",
   onInfoClick,
   isInfoOpen = false,
 }: PanelHeaderProps) {
   const popupId = useId();
+
+  const titleForLabel =
+    titleText ?? (typeof title === "string" ? title : "panel");
 
   const [showInfo, setShowInfo] = useState(false);
   const [resolvedPlacement, setResolvedPlacement] =
@@ -306,7 +314,7 @@ export default function PanelHeader({
             ].join(" ")}
             data-placement={resolvedPlacement}
             role="region"
-            aria-label={`About ${title ?? "panel"}`}
+            aria-label={`About ${titleForLabel}`}
             style={popupStyle}
           >
             {infoContent}
@@ -342,7 +350,7 @@ export default function PanelHeader({
 
               setShowInfo((currentValue) => !currentValue);
             }}
-            aria-label={`About ${title ?? "panel"}`}
+            aria-label={`About ${titleForLabel}`}
             aria-expanded={onInfoClick ? isInfoOpen : showInfo}
             aria-controls={
               !onInfoClick && showInfo

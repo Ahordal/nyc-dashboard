@@ -1,12 +1,15 @@
 // StatsPanel.tsx
 //
-// One-line summary of the restaurants currently visible in the map view:
-// total count plus a breakdown by grade category. 
+// One-line summary of the restaurants in scope -- the current map view,
+// or the Search Radius circle when that tool is active: total count plus
+// a breakdown by grade category.
 
 import { useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUtensils } from "@fortawesome/free-solid-svg-icons";
 import type { RestaurantProperties } from "../types/restaurant";
+import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
+import type { SearchRadiusMiles } from "../types/searchRadius";
 import {
   getGradeCategory,
   CATEGORY_COLORS,
@@ -30,9 +33,15 @@ const CATEGORY_ORDER: { category: GradeCategory; label: string }[] = [
 
 type StatsPanelProps = {
   restaurants: RestaurantProperties[];
+  // Set while the Search Radius tool is active -- switches the total's
+  // label from "in map view" to "within <distance>".
+  searchRadiusMiles?: SearchRadiusMiles | null;
 };
 
-export default function StatsPanel({ restaurants }: StatsPanelProps) {
+export default function StatsPanel({
+  restaurants,
+  searchRadiusMiles = null,
+}: StatsPanelProps) {
   const counts = useMemo(() => {
     const tally: Record<GradeCategory, number> = {
       A: 0,
@@ -68,7 +77,18 @@ export default function StatsPanel({ restaurants }: StatsPanelProps) {
           <span className="stats-total-count">
             {restaurants.length.toLocaleString()}
           </span>
-          <span className="stats-total-label">restaurants in map view</span>
+          <span className="stats-total-label">
+            {searchRadiusMiles != null ? (
+              <>
+                restaurants within{" "}
+                <span className="unit-mi">
+                  {SEARCH_RADIUS_LABELS[searchRadiusMiles]}
+                </span>
+              </>
+            ) : (
+              "restaurants in map view"
+            )}
+          </span>
         </span>
 
         <span className="stats-breakdown">

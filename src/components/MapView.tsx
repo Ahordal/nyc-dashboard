@@ -6,6 +6,7 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
+import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import FeatureEffect from "@arcgis/core/layers/support/FeatureEffect";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 
@@ -16,14 +17,20 @@ import esriConfig from "@arcgis/core/config";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
+import type {
+  SearchRadiusPoint,
+  SearchRadiusMiles,
+} from "../types/searchRadius";
 import { CATEGORY_COLORS } from "../utils/gradeColours";
 import { getGradeCategory } from "../utils/gradeCategory";
+import { useSearchRadiusTool } from "../hooks/useSearchRadiusTool";
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
 import MapScaleBar from "./MapScaleBar";
 import MapScaleZoomControls from "./MapScaleZoomControls";
 import MapBasemapToggle from "./MapBasemapToggle";
 import MapCompass from "./MapCompass";
+import MapSearchRadiusControl from "./MapSearchRadiusControl";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
@@ -157,6 +164,9 @@ const HOVER_CARD_MAX_SCALE = 18056;
 
 const NO_SELECTION_FILTER = new FeatureFilter({ objectIds: [-1] });
 
+const SELECTION_GLOW_EFFECT =
+  "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)";
+
 const DEFAULT_CENTER: [number, number] = [-73.98, 40.7];
 const DEFAULT_ZOOM = 9.75;
 
@@ -187,19 +197,44 @@ const MAP_LEGEND_INFO_CONTENT = (
   <InfoPopupContent
     overview={
       <p>
-        The map visualizes geocoded restaurant inspection locations across New York City, updating dynamically as you pan, zoom, or apply filters.
+        The map visualizes geocoded restaurant inspection locations across New
+        York City, updating dynamically as you pan, zoom, or apply filters.
       </p>
     }
     howToUse={
       <ul>
-        <li>Click any restaurant marker on the map to load its inspection history, violations, and performance details.</li>
-        <li>Hover over markers to preview restaurant names, grades, and scores directly on the map canvas (active when scale is 1:18,056 or larger).</li>
         <li>
-          Click the <span className="map-control-button" style={{ display: "inline" }}>Map Scale</span> or <span className="map-control-button" style={{ display: "inline" }}>Zoom Lvl</span> indicators at the bottom left to manually type and jump to a specific map view, or use the zoom buttons in the top-left corner.
+          Click any restaurant marker on the map to load its inspection history,
+          violations, and performance details.
         </li>
-        <li>Click and hold the right mouse button to rotate the map; click the compass icon below the zoom buttons to reorient to north.</li>
-        <li>Click the satellite/map icon in the top-right corner to toggle between the default map and satellite imagery.</li>
-        <li>The scale bar in the bottom-right corner shows the current map scale as a ruler.</li>
+        <li>
+          Hover over markers to preview restaurant names, grades, and scores
+          directly on the map canvas (active when scale is 1:18,056 or larger).
+        </li>
+        <li>
+          Click the{" "}
+          <span className="map-control-button" style={{ display: "inline" }}>
+            Map Scale
+          </span>{" "}
+          or{" "}
+          <span className="map-control-button" style={{ display: "inline" }}>
+            Zoom Lvl
+          </span>{" "}
+          indicators at the bottom left to manually type and jump to a specific
+          map view, or use the zoom buttons in the top-left corner.
+        </li>
+        <li>
+          Click and hold the right mouse button to rotate the map; click the
+          compass icon below the zoom buttons to reorient to north.
+        </li>
+        <li>
+          Click the satellite/map icon in the top-right corner to toggle between
+          the default map and satellite imagery.
+        </li>
+        <li>
+          The scale bar in the bottom-right corner shows the current map scale
+          as a ruler.
+        </li>
       </ul>
     }
     legend={
@@ -207,74 +242,170 @@ const MAP_LEGEND_INFO_CONTENT = (
         <tbody>
           <tr>
             <td>
-              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.A }}>A</span>
+              <span
+                className="legend-grade-text"
+                style={{ color: CATEGORY_COLORS.A }}>
+                A
+              </span>
             </td>
             <td>
               <div className="legend-scale-visual">
-                <span className="dot-sample" style={{ width: "4px", height: "4px", backgroundColor: CATEGORY_COLORS.A, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "4px",
+                    height: "4px",
+                    backgroundColor: CATEGORY_COLORS.A,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
                 <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
-                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.A, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    backgroundColor: CATEGORY_COLORS.A,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
               </div>
             </td>
             <td className="legend-score-text">0–13 pts</td>
           </tr>
           <tr>
             <td>
-              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.B }}>B</span>
+              <span
+                className="legend-grade-text"
+                style={{ color: CATEGORY_COLORS.B }}>
+                B
+              </span>
             </td>
             <td>
               <div className="legend-scale-visual">
-                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.B, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    backgroundColor: CATEGORY_COLORS.B,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
                 <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
-                <span className="dot-sample" style={{ width: "8px", height: "8px", backgroundColor: CATEGORY_COLORS.B, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    backgroundColor: CATEGORY_COLORS.B,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
               </div>
             </td>
             <td className="legend-score-text">14–27 pts</td>
           </tr>
           <tr>
             <td>
-              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.C }}>C</span>
+              <span
+                className="legend-grade-text"
+                style={{ color: CATEGORY_COLORS.C }}>
+                C
+              </span>
             </td>
             <td>
               <div className="legend-scale-visual">
-                <span className="dot-sample" style={{ width: "8px", height: "8px", backgroundColor: CATEGORY_COLORS.C, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "8px",
+                    height: "8px",
+                    backgroundColor: CATEGORY_COLORS.C,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
                 <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
-                <span className="dot-sample" style={{ width: "11px", height: "11px", backgroundColor: CATEGORY_COLORS.C, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "11px",
+                    height: "11px",
+                    backgroundColor: CATEGORY_COLORS.C,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
               </div>
             </td>
             <td className="legend-score-text">28+ pts</td>
           </tr>
           <tr>
             <td>
-              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.pending }}>Pending</span>
+              <span
+                className="legend-grade-text"
+                style={{ color: CATEGORY_COLORS.pending }}>
+                Pending
+              </span>
             </td>
             <td>
               <div className="legend-scale-visual">
-                <span className="dot-sample" style={{ width: "4px", height: "4px", backgroundColor: CATEGORY_COLORS.pending, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "4px",
+                    height: "4px",
+                    backgroundColor: CATEGORY_COLORS.pending,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
                 <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
-                <span className="dot-sample" style={{ width: "11px", height: "11px", backgroundColor: CATEGORY_COLORS.pending, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "11px",
+                    height: "11px",
+                    backgroundColor: CATEGORY_COLORS.pending,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
               </div>
             </td>
             <td className="legend-score-text">N / P / Z (score varies)</td>
           </tr>
           <tr>
             <td>
-              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.uninspected }}>Uninspected</span>
+              <span
+                className="legend-grade-text"
+                style={{ color: CATEGORY_COLORS.uninspected }}>
+                Uninspected
+              </span>
             </td>
             <td>
               <div className="legend-scale-visual single-dot-align">
-                <span className="dot-sample" style={{ width: "6px", height: "6px", backgroundColor: CATEGORY_COLORS.uninspected, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "6px",
+                    height: "6px",
+                    backgroundColor: CATEGORY_COLORS.uninspected,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
               </div>
             </td>
-            <td className="legend-score-text">No scored inspection on record</td>
+            <td className="legend-score-text">
+              No scored inspection on record
+            </td>
           </tr>
           <tr>
             <td>
-              <span className="legend-grade-text" style={{ color: CATEGORY_COLORS.closed }}>Closed</span>
+              <span
+                className="legend-grade-text"
+                style={{ color: CATEGORY_COLORS.closed }}>
+                Closed
+              </span>
             </td>
             <td>
               <div className="legend-scale-visual single-dot-align">
-                <span className="dot-sample" style={{ width: "11px", height: "11px", backgroundColor: CATEGORY_COLORS.closed, border: "0.5px solid rgba(26, 26, 26, 1)" }}></span>
+                <span
+                  className="dot-sample"
+                  style={{
+                    width: "11px",
+                    height: "11px",
+                    backgroundColor: CATEGORY_COLORS.closed,
+                    border: "0.5px solid rgba(26, 26, 26, 1)",
+                  }}></span>
               </div>
             </td>
             <td className="legend-score-text"></td>
@@ -290,7 +421,8 @@ const MAP_LEGEND_INFO_CONTENT = (
           circle color represents the inspection grade.
         </li>
         <li>
-          Use the restaurant listing panel to browse and inspect individual establishments when multiple locations share overlapping points.
+          Use the restaurant listing panel to browse and inspect individual
+          establishments when multiple locations share overlapping points.
         </li>
       </ul>
     }
@@ -306,6 +438,10 @@ type MapViewProps = {
   onHoverRestaurant?: (restaurant: RestaurantProperties | null) => void;
   onVisibleRestaurantsChange?: (restaurants: RestaurantProperties[]) => void;
   onGradeCountsChange?: (counts: GradeCounts) => void;
+  onSearchRadiusChange?: (
+    point: SearchRadiusPoint | null,
+    radiusMiles: SearchRadiusMiles,
+  ) => void;
 };
 
 export default function InspectionMapView({
@@ -317,6 +453,7 @@ export default function InspectionMapView({
   onHoverRestaurant,
   onVisibleRestaurantsChange,
   onGradeCountsChange,
+  onSearchRadiusChange,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
@@ -324,7 +461,13 @@ export default function InspectionMapView({
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<GeoJSONLayer | null>(null);
   const viewRef = useRef<MapView | null>(null);
-  const featureEffectRef = useRef<FeatureEffect | null>(null);
+  // Builds the glow FeatureEffect once with a fixed included effect string, as ArcGIS does not reliably update reassignments on live instances—only `.filter` mutates cleanly.
+  const glowEffectRef = useRef<FeatureEffect | null>(null);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const layerViewRef = useRef<any>(null);
+  const ringsLayerRef = useRef<GraphicsLayer | null>(null);
+
+  const searchRadius = useSearchRadiusTool(mapView, ringsLayerRef.current);
 
   const selectedRestaurantIdRef = useRef<string | null>(selectedRestaurantId);
   const onSelectRestaurantRef = useRef(onSelectRestaurant);
@@ -332,6 +475,7 @@ export default function InspectionMapView({
   const filtersRef = useRef(filters);
   const onVisibleRestaurantsChangeRef = useRef(onVisibleRestaurantsChange);
   const onGradeCountsChangeRef = useRef(onGradeCountsChange);
+  const onSearchRadiusChangeRef = useRef(onSearchRadiusChange);
 
   const prevBoroughsRef = useRef<string[]>(filters.boroughs);
   const prevSearchRef = useRef<string>(searchQuery);
@@ -367,23 +511,40 @@ export default function InspectionMapView({
     onGradeCountsChangeRef.current = onGradeCountsChange;
   }, [onGradeCountsChange]);
 
+  useEffect(() => {
+    onSearchRadiusChangeRef.current = onSearchRadiusChange;
+  }, [onSearchRadiusChange]);
+
+  useEffect(() => {
+    onSearchRadiusChangeRef.current?.(
+      searchRadius.searchRadiusPoint,
+      searchRadius.activeRadiusMiles,
+    );
+    // Re-runs the query whenever the search radius point or distance changes, falling back to the map extent when the point is cleared.
+    const view = viewRef.current;
+    const layer = layerRef.current;
+    if (view && layer) void reportVisibleRestaurants(view, layer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [searchRadius.searchRadiusPoint, searchRadius.activeRadiusMiles]);
+
   async function reportVisibleRestaurants(view: MapView, layer: GeoJSONLayer) {
     const onVisibleRestaurantsChange = onVisibleRestaurantsChangeRef.current;
     const onGradeCountsChange = onGradeCountsChangeRef.current;
 
     if (!onVisibleRestaurantsChange && !onGradeCountsChange) return;
     const requestId = ++queryRequestIdRef.current;
+
+    // When a Search Radius point is set, query scope restricts to the circle rather than the map extent, decoupling panel data from map panning and zooming.
+    const radiusPoint = searchRadius.searchRadiusPointRef.current;
+    const radius = radiusPoint
+      ? { point: radiusPoint, miles: searchRadius.activeRadiusMilesRef.current }
+      : null;
+
     try {
-      const restaurants = await queryVisibleRestaurants(view, layer);
+      const restaurants = await queryVisibleRestaurants(view, layer, radius);
       if (requestId !== queryRequestIdRef.current) return;
 
-      // GradeChart intentionally tallies `restaurants` (pre-grade-filter --
-      // extent + borough/search only) so it always shows the full
-      // distribution for the map area, regardless of the active grade
-      // filter; the chart highlights/explodes the filtered slice(s) instead
-      // of only showing them. RestaurantList and StatsPanel, by contrast,
-      // should reflect the actually-filtered set, so they're derived from
-      // filteredRestaurants below.
+      // GradeChart tallies pre-grade-filter restaurants to show the full map area distribution rather than filtering out unselected grades; matching slices are highlighted instead. (RestaurantList and StatsPanel use filteredRestaurants for the active subset).
       if (onGradeCountsChange) {
         const counts: GradeCounts = { ...EMPTY_GRADE_COUNTS };
         for (const r of restaurants) {
@@ -407,12 +568,11 @@ export default function InspectionMapView({
           return true;
         if (activeGrades.includes("Uninspected") && category === "uninspected")
           return true;
-        // Match A/B/C against the computed category, not the raw grade
-        // field -- grade is often null in the source data even when score
-        // is populated, which was silently dropping those restaurants here
-        // while the chart (via getGradeCategory) still counted them as
-        // A/B/C.
-        if (["A", "B", "C"].includes(category) && activeGrades.includes(category))
+        // Matches A/B/C against computed categories rather than raw grade fields to prevent dropping data where grades are null but scores are populated.
+        if (
+          ["A", "B", "C"].includes(category) &&
+          activeGrades.includes(category)
+        )
           return true;
 
         return false;
@@ -424,12 +584,10 @@ export default function InspectionMapView({
     }
   }
 
-  // Both the click-selected restaurant and the restaurant currently
-  // hovered in the list panel share one glowing FeatureEffect -- ArcGIS
-  // only supports a single featureEffect per layer view, so the two
-  // object IDs are tracked separately in refs and merged into one filter
-  // any time either changes.
-  const ensureFeatureEffect = useCallback(async () => {
+  // Resolves and caches the layer view, lazily building the shared glow FeatureEffect (combining click-selected and list-hovered object ID refs, as ArcGIS supports only one active feature effect per layer view).
+  const ensureLayerView = useCallback(async () => {
+    if (layerViewRef.current) return layerViewRef.current;
+
     const layer = layerRef.current;
     const view = viewRef.current;
     if (!layer || !view) return null;
@@ -447,25 +605,25 @@ export default function InspectionMapView({
       return null;
     }
 
-    if (!featureEffectRef.current) {
-      featureEffectRef.current = new FeatureEffect({
+    if (!glowEffectRef.current) {
+      glowEffectRef.current = new FeatureEffect({
         filter: NO_SELECTION_FILTER,
-        includedEffect:
-          "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)",
+        includedEffect: SELECTION_GLOW_EFFECT,
         excludedLabelsVisible: true,
       });
     }
 
-    if (layerView.featureEffect !== featureEffectRef.current) {
-      layerView.featureEffect = featureEffectRef.current;
-    }
-
-    return featureEffectRef.current;
+    layerViewRef.current = layerView;
+    return layerView;
   }, []);
 
+  // Installs the glow FeatureEffect on the layer view and updates its
+  // object ID filter to the union of the click-selected and list-hovered
+  // restaurants, mutating `.filter` without changing the effect string.
   const applyCombinedHighlight = useCallback(() => {
-    const effect = featureEffectRef.current;
-    if (!effect) return;
+    const layerView = layerViewRef.current;
+    const glowEffect = glowEffectRef.current;
+    if (!layerView || !glowEffect) return;
 
     const objectIds = Array.from(
       new Set(
@@ -475,19 +633,19 @@ export default function InspectionMapView({
       ),
     );
 
-    effect.filter =
+    glowEffect.filter =
       objectIds.length > 0
         ? new FeatureFilter({ objectIds })
         : NO_SELECTION_FILTER;
+    if (layerView.featureEffect !== glowEffect) {
+      layerView.featureEffect = glowEffect;
+    }
   }, []);
 
   const applyHighlightForId = useCallback(
-    async (
-      restaurantId: string | null,
-      knownObjectId?: number | null,
-    ) => {
-      const effect = await ensureFeatureEffect();
-      if (!effect) return;
+    async (restaurantId: string | null, knownObjectId?: number | null) => {
+      const layerView = await ensureLayerView();
+      if (!layerView) return;
 
       if (!restaurantId) {
         selectedObjectIdRef.current = null;
@@ -519,13 +677,13 @@ export default function InspectionMapView({
         );
       }
     },
-    [ensureFeatureEffect, applyCombinedHighlight],
+    [ensureLayerView, applyCombinedHighlight],
   );
 
   const applyHoverHighlightForId = useCallback(
     async (restaurantId: string | null) => {
-      const effect = await ensureFeatureEffect();
-      if (!effect) return;
+      const layerView = await ensureLayerView();
+      if (!layerView) return;
 
       if (!restaurantId) {
         hoveredObjectIdRef.current = null;
@@ -553,7 +711,7 @@ export default function InspectionMapView({
         );
       }
     },
-    [ensureFeatureEffect, applyCombinedHighlight],
+    [ensureLayerView, applyCombinedHighlight],
   );
 
   useEffect(() => {
@@ -577,9 +735,15 @@ export default function InspectionMapView({
     });
     layerRef.current = layer;
 
+    const ringsLayer = new GraphicsLayer({ title: "Search Radius Rings" });
+    ringsLayerRef.current = ringsLayer;
+
     const map = new Map({
       basemap: "arcgis/dark-gray/base",
-      layers: [layer],
+      // ringsLayer first -- ArcGIS layer order is bottom-to-top by array
+      // position, so this keeps the Search Radius rings under every
+      // restaurant point/highlight.
+      layers: [ringsLayer, layer],
     });
 
     const view = new MapView({
@@ -605,7 +769,10 @@ export default function InspectionMapView({
     const stationaryWatchHandle = reactiveUtils.watch(
       () => view.stationary,
       (isStationary) => {
-        if (isStationary) {
+        // While a Search Radius point is set the scope is the circle, not
+        // the viewport, so pan/zoom shouldn't re-query. Radius changes go
+        // through their own effect below.
+        if (isStationary && !searchRadius.searchRadiusPointRef.current) {
           reportVisibleRestaurants(view, layer);
         }
       },
@@ -613,6 +780,14 @@ export default function InspectionMapView({
 
     const clickHandle = view.on("click", async (event) => {
       setHoverCard(null);
+
+      if (searchRadius.isPlacingPointRef.current) {
+        const { longitude, latitude } = event.mapPoint;
+        if (longitude != null && latitude != null) {
+          searchRadius.placePointAt({ longitude, latitude });
+        }
+        return;
+      }
 
       let response;
       try {
@@ -666,6 +841,8 @@ export default function InspectionMapView({
     let latestHitTestToken = 0;
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const runHitTest = async (event: any) => {
+      if (searchRadius.isPlacingPointRef.current) return;
+
       const token = ++latestHitTestToken;
       let response;
       try {
@@ -727,15 +904,13 @@ export default function InspectionMapView({
 
     const handlePointerLeaveContainer = () => {
       setHoverCard(null);
-      if (view.container) {
+      // Prevents corner control hover events from clearing the placement crosshair cursor.
+      if (view.container && !searchRadius.isPlacingPointRef.current) {
         view.container.style.cursor = "default";
       }
       onHoverRestaurantRef.current?.(null);
     };
-    view.container?.addEventListener(
-      "mouseleave",
-      handlePointerLeaveContainer,
-    );
+    view.container?.addEventListener("mouseleave", handlePointerLeaveContainer);
 
     return () => {
       clickHandle.remove();
@@ -751,6 +926,8 @@ export default function InspectionMapView({
       view.destroy();
       setMapView(null);
     };
+    // Excluded from dependency array to prevent tearing down and recreating the map on every render; the click handler safely reads stable refs and callbacks from the searchRadius hook.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyHighlightForId]);
 
   useEffect(() => {
@@ -859,7 +1036,10 @@ export default function InspectionMapView({
 
       let cameraWillMove = false;
 
-      if (cameraTrigger && view) {
+      // Freezes map extent tracking while a Search Radius point is active to prevent overriding the circle view. The underlying query still re-runs so linked panels and charts reflect the active circle scope.
+      const radiusActive = searchRadius.searchRadiusPointRef.current !== null;
+
+      if (cameraTrigger && view && !radiusActive) {
         if (newDefinitionExpression) {
           try {
             const { count, extent, isDegenerate } = await queryFilterExtent(
@@ -893,15 +1073,23 @@ export default function InspectionMapView({
     }
 
     syncSelectionAndZoom();
-  }, [filters, searchQuery, onVisibleRestaurantsChange, onGradeCountsChange, applyHighlightForId]);
+    // reportVisibleRestaurants is a per-render function and
+    // searchRadius.searchRadiusPointRef is a stable ref -- neither
+    // belongs in the dep array (listing the function would re-run this on
+    // every render).
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    filters,
+    searchQuery,
+    onVisibleRestaurantsChange,
+    onGradeCountsChange,
+    applyHighlightForId,
+  ]);
 
   return (
     <div className="map-view-container">
       <div className="map-view-top-header">
-        <PanelHeader
-          title=""
-          infoContent={MAP_LEGEND_INFO_CONTENT}
-        />
+        <PanelHeader title="" infoContent={MAP_LEGEND_INFO_CONTENT} />
       </div>
       <div className="map-canvas-wrapper">
         <div ref={mapDivRef} style={{ width: "100%", height: "100%" }} />
@@ -910,6 +1098,25 @@ export default function InspectionMapView({
         <MapCompass view={mapView} />
         <MapScaleBar view={mapView} />
         <MapBasemapToggle view={mapView} />
+        <MapSearchRadiusControl
+          isPlacingPoint={searchRadius.isPlacingPoint}
+          hasPoint={searchRadius.searchRadiusPoint !== null}
+          activeRadiusMiles={searchRadius.activeRadiusMiles}
+          onActivate={searchRadius.handleActivate}
+          onCancelPlacement={searchRadius.handleCancelPlacement}
+          onDismiss={searchRadius.handleDismiss}
+          onRadiusChange={searchRadius.handleRadiusChange}
+        />
+
+        {searchRadius.isPlacingPoint && (
+          <div className="map-placement-hint-anchor">
+            <div className="filter-notice-overlay">
+              <div className="filter-notice-text">
+                Click the map to find restaurants nearby
+              </div>
+            </div>
+          </div>
+        )}
 
         {hoverCard && (
           <div
@@ -919,12 +1126,10 @@ export default function InspectionMapView({
               left: hoverCard.x + 12,
               top: hoverCard.y + 12,
               pointerEvents: "none",
-            }}
-          >
+            }}>
             <span
               className="map-hover-card-name"
-              style={{ color: CATEGORY_COLORS[hoverCard.category] }}
-            >
+              style={{ color: CATEGORY_COLORS[hoverCard.category] }}>
               {hoverCard.name}
             </span>
             <div className="map-hover-card-stats">
@@ -932,8 +1137,7 @@ export default function InspectionMapView({
                 <span className="badge-label">GRADE</span>
                 <span
                   className="badge-val"
-                  style={{ color: CATEGORY_COLORS[hoverCard.category] }}
-                >
+                  style={{ color: CATEGORY_COLORS[hoverCard.category] }}>
                   {hoverCard.gradeText}
                 </span>
               </div>
@@ -941,8 +1145,7 @@ export default function InspectionMapView({
                 <span className="badge-label">SCORE</span>
                 <span
                   className="badge-val"
-                  style={{ color: CATEGORY_COLORS[hoverCard.category] }}
-                >
+                  style={{ color: CATEGORY_COLORS[hoverCard.category] }}>
                   {hoverCard.scoreText}
                 </span>
               </div>

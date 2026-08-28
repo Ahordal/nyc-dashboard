@@ -2,11 +2,13 @@
 // Renders an individual restaurant card for the list view, including its name, address, and badges.
 
 import type { RestaurantProperties } from "../types/restaurant";
+import type { SearchRadiusPoint } from "../types/searchRadius";
 import InspectionBadges from "./InspectionBadges";
 import {
   getGradeCategory,
   CATEGORY_COLORS,
 } from "../utils/gradeCategory";
+import { haversineDistanceMiles } from "../utils/distance";
 import { toTitleCase } from "../utils/toTitleCase";
 
 type RestaurantCardProps = {
@@ -14,6 +16,9 @@ type RestaurantCardProps = {
   isSelected: boolean;
   onClick: (restaurant: RestaurantProperties) => void;
   onHover?: (restaurant: RestaurantProperties | null) => void;
+  // When a Search Radius point is active, the card shows the restaurant's
+  // distance from it. Null/undefined hides the Distance line entirely.
+  searchRadiusPoint?: SearchRadiusPoint | null;
 };
 
 // Local formatting helpers
@@ -53,6 +58,7 @@ export default function RestaurantCard({
   isSelected,
   onClick,
   onHover,
+  searchRadiusPoint = null,
 }: RestaurantCardProps) {
   const category = getGradeCategory(
     restaurant.action,
@@ -63,6 +69,16 @@ export default function RestaurantCard({
 
   const name = toTitleCase(restaurant.name);
   const address = formatAddress(restaurant);
+
+  const distanceMiles =
+    searchRadiusPoint &&
+    restaurant.latitude != null &&
+    restaurant.longitude != null
+      ? haversineDistanceMiles(searchRadiusPoint, {
+          latitude: restaurant.latitude,
+          longitude: restaurant.longitude,
+        })
+      : null;
 
   return (
     <div
@@ -92,6 +108,12 @@ export default function RestaurantCard({
             ? "Not yet inspected"
             : formatDate(restaurant.inspection_date)}
         </div>
+        {distanceMiles != null && (
+          <div className="card-meta">
+            <span className="card-meta-label">Distance:</span>{" "}
+            {distanceMiles.toFixed(2)} mi
+          </div>
+        )}
       </div>
 
       <InspectionBadges

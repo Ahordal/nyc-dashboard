@@ -1,11 +1,9 @@
 // GradeChart.tsx
 //
-// Read-only donut chart showing the full restaurant grade/status
-// distribution for the current map view (extent + borough/search filters),
-// regardless of the active grade filter. Slice(s) matching the active grade
-// filter (set via the GradeFilters buttons) are exploded/highlighted here,
-// but the chart itself never filters anything -- see the comment on
-// gradeCounts in MapView.tsx.
+// Read-only donut chart showing the full restaurant grade distribution for
+// the current scope (map view or search radius circle, minus active filters).
+// Slices matching the active grade filter are highlighted, but the chart
+// itself is non-filtering.
 
 import { useMemo, useState } from "react";
 import { PieChart, Pie, ResponsiveContainer, Sector } from "recharts";
@@ -15,30 +13,36 @@ import InfoPopupContent from "./InfoPopupContent";
 
 import type { Filters, SetFilters } from "../types/filters";
 import type { GradeCounts } from "./MapView";
+import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
+import type { SearchRadiusMiles } from "../types/searchRadius";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
-const GRADE_CHART_INFO_CONTENT = (
-  <InfoPopupContent
-    overview={
-      <p>
-        Shows the full breakdown of restaurant grades and statuses within the
-        current map view. This total isn't affected by the active grade filter,
-        so you can always see the complete picture alongside whatever you've
-        selected.
-      </p>
-    }
-    howToUse={
-      <ul>
-        <li>
-          This chart is read-only. When a grade or status filter is active, the
-          matching slice(s) are exploded to show their share of the full map
-          view, the center count updates to their combined total, and the
-          remaining labels dim.
-        </li>
-      </ul>
-    }
-  />
-);
+function gradeChartInfoContent(withinRadius: boolean) {
+  return (
+    <InfoPopupContent
+      overview={
+        <p>
+          Shows the full breakdown of restaurant grades and statuses{" "}
+          {withinRadius
+            ? "within the active Search Radius"
+            : "within the current map view"}
+          . This total isn't affected by the active grade filter, so you can
+          always see the complete picture alongside whatever you've selected.
+        </p>
+      }
+      howToUse={
+        <ul>
+          <li>
+            This chart is read-only. When a grade or status filter is active,
+            the matching slice(s) are exploded to show their share of the
+            total, the center count updates to their combined total, and the
+            remaining labels dim.
+          </li>
+        </ul>
+      }
+    />
+  );
+}
 
 const SLICE_CONFIG = [
   { key: "A", label: "A", color: CATEGORY_COLORS.A },
@@ -62,6 +66,9 @@ type GradeChartProps = {
   counts: GradeCounts;
   filters: Filters;
   setFilters: SetFilters;
+  // Set while the Search Radius tool is active -- switches the panel
+  // title (and info copy) from "Map View" to "Within <distance>".
+  searchRadiusMiles?: SearchRadiusMiles | null;
 };
 
 type ChartDataItem = {
@@ -122,13 +129,39 @@ const renderCustomizedShape = (props: any) => {
   );
 };
 
-export default function GradeChart({ counts, filters }: GradeChartProps) {
+export default function GradeChart({
+  counts,
+  filters,
+  searchRadiusMiles = null,
+}: GradeChartProps) {
   // setFilters is no longer used -- this chart is a pure display of the
-  // full map view (see the comment on gradeCounts in MapView.tsx), not an
+  // current scope (see the comment on gradeCounts in MapView.tsx), not an
   // input. Left in GradeChartProps since the parent still passes it and
   // other consumers of this type may rely on it.
 
   const [showInfo, setShowInfo] = useState(false);
+
+  const scopeText =
+    searchRadiusMiles != null
+      ? `Within ${SEARCH_RADIUS_LABELS[searchRadiusMiles]}`
+      : "Map View";
+
+  const title =
+    searchRadiusMiles != null ? (
+      <>
+        Grade Breakdown — Within{" "}
+        <span className="unit-mi">
+          {SEARCH_RADIUS_LABELS[searchRadiusMiles]}
+        </span>
+      </>
+    ) : (
+      "Grade Breakdown — Map View"
+    );
+
+  const infoContent = useMemo(
+    () => gradeChartInfoContent(searchRadiusMiles != null),
+    [searchRadiusMiles],
+  );
 
   const { data, totalCount, activeLabels, activeValue, activeColor } = useMemo<{
     data: ChartDataItem[];
@@ -189,8 +222,9 @@ export default function GradeChart({ counts, filters }: GradeChartProps) {
       `}</style>
 
       <PanelHeader
-        title="Grade Breakdown — Full Map View"
-        infoContent={GRADE_CHART_INFO_CONTENT}
+        title={title}
+        titleText={`Grade Breakdown — ${scopeText}`}
+        infoContent={infoContent}
         onInfoClick={() => {
           setShowInfo((currentValue) => !currentValue);
         }}
@@ -198,7 +232,7 @@ export default function GradeChart({ counts, filters }: GradeChartProps) {
       />
 
       {showInfo ? (
-        <div className="panel-scroll-content">{GRADE_CHART_INFO_CONTENT}</div>
+        <div className="panel-scroll-content">{infoContent}</div>
       ) : (
         <div
           className="panel-scroll-content"

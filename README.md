@@ -21,11 +21,12 @@ An interactive map and analytics dashboard for exploring NYC DOHMH restaurant in
 - **Scale Bar:** Bottom-right graphical bar showing ground distance in feet/miles, snapping to round values (10, 20, 50 ft ... 1, 2, 5 mi) and correcting for Web Mercator distortion via `resolution × cos(latitude)`.
 - **Satellite Toggle:** Top-right button that overlays dimmed Esri World Imagery (a keyless `WebTileLayer` off `services.arcgisonline.com`, kept as the bottom operational layer) on top of the permanent dark-gray basemap, rather than swapping `map.basemap` — the basemap-styles `arcgis/imagery/*` variants need an entitlement this app's key lacks and `Basemap.fromId("satellite")` fails once `esriConfig.apiKey` is set. Each mode's labels come from its labels style split into street-name (below the restaurant markers) and place-name (above) `VectorTileLayer`s, rather than relying on Esri's composited hybrid styles, whose reference/label layers always render above every operational layer.
 - Map Scale, Zoom Level, and Zoom Buttons are custom React components built directly against `view.scale`/`view.zoom`; the Scale Bar is likewise custom rather than Esri's `esri/widgets/ScaleBar`, which is deprecated.
+- **Search Radius:** Top-right crosshair tool for scoping to a walkable area instead of the map viewport. Activate it, click the map to drop a center point, and concentric 0.25 / 0.50 / 1 mi rings are drawn as a `GraphicsLayer` (so the restaurant points are never spatially filtered — every dot stays visible); a segmented picker switches the active ring and the view auto-frames to it, clamped so hover cards stay live. While a point is set, the Restaurant List, KPI panel, and Grade Breakdown chart re-scope from "what's in view" to "what's inside the active ring" — computed client-side with a haversine distance against the list the sidebar already holds in memory — and map pan/zoom stops re-running the viewport query. The list gains a **Distance** column and sort field (closest-first, auto-selected while the radius is active, reverting to the previous sort field when the point is cleared), and the KPI panel's scope label switches from "in map view" to "within 0.25 mi".
 
 ### Search & Filtering
 - **Smart Dataset Search:** Custom client-side search index that supports queries by name, cuisine, or address, featuring automatic diacritic stripping, corporate suffix removal, and street abbreviation expansion (e.g., matching "St" to "Street").
 - **Viewport-Scoped List:** A dynamic Restaurant List panel that updates automatically as the map moves, showing name, address, cuisine type, last inspection date, and recent score/grade.
-- **Multi-Parameter Filtering & Sorting:** Quick-filter combinations by grade and borough (e.g., "Grade A, Brooklyn"), alongside robust list sorting (by date, name, cuisine, grade, or score in ascending/descending order).
+- **Multi-Parameter Filtering & Sorting:** Quick-filter combinations by grade and borough (e.g., "Grade A, Brooklyn"), alongside robust list sorting (by date, name, cuisine, grade, score, or — when a Search Radius point is set — distance, in ascending/descending order).
 - **Shareable Views:** Active grade/borough filters, search query, and the selected restaurant are all synced to the URL, so a link can be copied or bookmarked straight back to that exact view.
 
 ### Details & History
@@ -150,7 +151,7 @@ The geocoding pipeline is rigorously verified using Node's native `node:test` ru
 
 ### Frontend (Vitest)
 
-Frontend logic is tested with Vitest, colocated with the source it covers (`src/**/*.test.{ts,tsx}`). Pure logic (grade categorization, the ArcGIS query/where-clause builders) runs under Vitest's default `node` environment; the two chart hooks below drive real DOM (SVG refs, focus/keyboard events) via `@testing-library/react`'s `renderHook`, so those two files opt into `jsdom` per-file with a `// @vitest-environment jsdom` docblock rather than paying that cost project-wide. Component/integration tests against `MapView.tsx` and `useUrlSync` aren't set up yet — they'd need mocking the ArcGIS SDK.
+Frontend logic is tested with Vitest, colocated with the source it covers (`src/**/*.test.{ts,tsx}`). Pure logic (grade categorization, the ArcGIS query/where-clause builders, the Search Radius haversine helper) runs under Vitest's default `node` environment; the two chart hooks below drive real DOM (SVG refs, focus/keyboard events) via `@testing-library/react`'s `renderHook`, so those two files opt into `jsdom` per-file with a `// @vitest-environment jsdom` docblock rather than paying that cost project-wide. Component/integration tests against `MapView.tsx` and `useUrlSync` aren't set up yet — they'd need mocking the ArcGIS SDK.
 
 | File | Purpose |
 |---|---|
@@ -158,6 +159,7 @@ Frontend logic is tested with Vitest, colocated with the source it covers (`src/
 | `src/queries/mapQueries.test.ts` | Verifies search-query normalization/escaping, borough+search `definitionExpression` combination, and that the grade `WHERE`-clause builders match `CATEGORY_CLAUSES` |
 | `src/hooks/useChartKeyboardNav.test.ts` | Verifies arrow/Home/End navigation and clamping, Enter/Space selection, Tab passthrough, focus/blur keyboard-mode transitions, and resets on new chart data or a newly selected report |
 | `src/hooks/useTooltipPriority.test.ts` | Verifies the tooltip priority order (pointer hover > history preview > keyboard point > pinned selection), dot-ref registration/lookup against rendered `cx`/`cy`, and resets on new chart data |
+| `src/utils/distance.test.ts` | Verifies the Search Radius haversine helper: zero distance for a point against itself, symmetry, exact along-meridian distance, and that points just inside/outside a 0.25 mi radius land on the correct side of the cutoff |
 
 ### Scripts
 
@@ -226,8 +228,9 @@ To keep the dashboard fresh, the scheduled `geocode-backfill` Action (and `reset
 
 ## Known limitations
 
-- Aggregate stats are scoped to the current map view rather than an independent citywide/borough breakdown (achievable today via zoom/filters)
+- Aggregate stats are scoped to the current map view (or the active Search Radius ring) rather than an independent citywide/borough breakdown (achievable today via zoom/filters)
 - Map hover cards and name labels rely on mouse hover, with no touch equivalent yet; the dashboard is not currently optimized for mobile/touch devices
+- An active Search Radius point and distance are not synced to the URL, so a shared link restores grade/borough filters, search, and selection but not a placed radius
 
 ## Credits
 

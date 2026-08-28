@@ -12,10 +12,11 @@
 import type GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
 import type MapView from "@arcgis/core/views/MapView";
 import type Graphic from "@arcgis/core/Graphic";
-import type Point from "@arcgis/core/geometry/Point";
+import Point from "@arcgis/core/geometry/Point";
 import Extent from "@arcgis/core/geometry/Extent";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
+import type { SearchRadiusPoint } from "../types/searchRadius";
 import { CLOSED_ACTIONS, UNINSPECTED_GRADE } from "../utils/gradeCategory";
 
 // Fields actually read by the dashboard's components (restaurant list
@@ -230,23 +231,37 @@ export function buildGradeWhereClause(grades: string[]): string | null {
   return gradeClause ? `(${gradeClause})` : null;
 }
 
-// Queries ALL restaurants intersecting the current map extent, not just
-// the first page. A single queryFeatures() call is capped by the
-// layer's maxRecordCount -- if more restaurants are in view than that
-// limit, the server (or GeoJSONLayer's client-side query engine)
-// silently truncates the result and sets exceededTransferLimit instead
-// of erroring. Looping with start/num until exceededTransferLimit is
-// false ensures downstream consumers (like RestaurantList's sort)
-// always operate on the complete set of restaurants actually in view,
-// not a partial slice.
+// Queries ALL restaurants in scope, not just the first page. A single
+// queryFeatures() call is capped by the layer's maxRecordCount -- if more
+// restaurants are in scope than that limit, the server (or GeoJSONLayer's
+// client-side query engine) silently truncates the result and sets
+// exceededTransferLimit instead of erroring. Looping with start/num until
+// exceededTransferLimit is false ensures downstream consumers (the
+// RestaurantList, StatsPanel, and GradeChart, all fed from one result)
+// always operate on the complete set, not a partial slice.
+//
+// Scope is normally the current map extent. When a `radius` is passed
+// (the Search Radius tool is active) the scope is instead everything
+// within `radius.miles` of `radius.point` -- so the list/KPI/chart
+// describe the circle and stop changing as the user pans or zooms.
 export async function queryVisibleRestaurants(
   view: MapView,
   layer: GeoJSONLayer,
+  radius?: { point: SearchRadiusPoint; miles: number } | null,
 ): Promise<RestaurantProperties[]> {
   await layer.load();
 
   const baseQuery = layer.createQuery();
-  baseQuery.geometry = view.extent;
+  if (radius) {
+    baseQuery.geometry = new Point({
+      longitude: radius.point.longitude,
+      latitude: radius.point.latitude,
+    });
+    baseQuery.distance = radius.miles;
+    baseQuery.units = "miles";
+  } else {
+    baseQuery.geometry = view.extent;
+  }
   baseQuery.spatialRelationship = "intersects";
   baseQuery.where = layer.definitionExpression ?? "1=1";
   baseQuery.outFields = RESTAURANT_OUT_FIELDS;

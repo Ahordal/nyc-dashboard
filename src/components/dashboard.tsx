@@ -33,6 +33,8 @@ import { useUrlSync } from "../hooks/useUrlSync";
 import type { InitialUrlState } from "../hooks/useUrlSync";
 
 import type { Filters } from "../types/filters";
+import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
+import type { SearchRadiusPoint, SearchRadiusMiles } from "../types/searchRadius";
 
 import type {
   RestaurantProperties,
@@ -98,6 +100,12 @@ export default function Dashboard() {
   const [gradeCounts, setGradeCounts] =
     useState<GradeCounts>(EMPTY_GRADE_COUNTS);
 
+  const [searchRadiusPoint, setSearchRadiusPoint] =
+    useState<SearchRadiusPoint | null>(null);
+
+  const [activeRadiusMiles, setActiveRadiusMiles] =
+    useState<SearchRadiusMiles>(0.25);
+
   const [history, setHistory] = useState<InspectionEvent[]>([]);
 
   const [isLoadingHistory, setIsLoadingHistory] = useState(false);
@@ -125,6 +133,8 @@ export default function Dashboard() {
   const gradesKey = filters.grades.join(",");
 
   const boroughsKey = filters.boroughs.join(",");
+
+  const radiusKey = searchRadiusPoint ? `radius-${activeRadiusMiles}` : "";
 
   const reportInspectionId =
     selectedInspectionId !== null &&
@@ -340,6 +350,7 @@ export default function Dashboard() {
               counts={gradeCounts}
               filters={filters}
               setFilters={setFilters}
+              searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
             />
           </div>
         </div>
@@ -357,7 +368,10 @@ export default function Dashboard() {
             </div>
 
             <div className="map-stats">
-              <StatsPanel restaurants={visibleRestaurants} />
+              <StatsPanel
+                restaurants={visibleRestaurants}
+                searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
+              />
             </div>
           </div>
 
@@ -371,6 +385,10 @@ export default function Dashboard() {
                 onSelectRestaurant={handleSelectRestaurant}
                 onVisibleRestaurantsChange={setVisibleRestaurants}
                 onGradeCountsChange={setGradeCounts}
+                onSearchRadiusChange={(point, radius) => {
+                  setSearchRadiusPoint(point);
+                  setActiveRadiusMiles(radius);
+                }}
               />
             </Suspense>
           </div>
@@ -431,9 +449,10 @@ export default function Dashboard() {
                 restaurants={visibleRestaurants}
                 selectedRestaurantId={selectedRestaurant?.id ?? null}
                 onSelectRestaurant={handleSelectRestaurant}
-                onHoverRestaurant={handleHoverRestaurantInList}>
+                onHoverRestaurant={handleHoverRestaurantInList}
+                searchRadiusPoint={searchRadiusPoint}>
                 <NoticeOverlay
-                  triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}`}
+                  triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}-${radiusKey}`}
                   durationMs={FILTER_NOTICE_DURATION_MS}>
                   {filters.grades.length > 0 && (
                     <span className="filter-notice-group">
@@ -476,9 +495,27 @@ export default function Dashboard() {
                     </span>
                   )}
 
+                  {(filters.grades.length > 0 ||
+                    filters.boroughs.length > 0 ||
+                    searchQuery) &&
+                    searchRadiusPoint && (
+                      <span className="filter-notice-separator">, </span>
+                    )}
+
+                  {searchRadiusPoint && (
+                    <span className="filter-notice-group">
+                      Restaurants within{" "}
+                      <span className="unit-mi">
+                        {SEARCH_RADIUS_LABELS[activeRadiusMiles]}
+                      </span>{" "}
+                      of centre
+                    </span>
+                  )}
+
                   {filters.grades.length === 0 &&
                     filters.boroughs.length === 0 &&
-                    !searchQuery && (
+                    !searchQuery &&
+                    !searchRadiusPoint && (
                       <span className="filter-notice-group">
                         All Restaurants
                       </span>

@@ -86,7 +86,7 @@ a:focus-visible {
   --status-delta-positive: #66bb6a;
   --status-delta-negative: #ef5350;
 
-  --badge-bg: rgba(0, 0, 0, 0.25);
+  --badge-bg: rgba(0, 0, 0, 0.10);
   --shadow-overlay: rgba(0, 0, 0, 0.4);
   --shadow-modal: rgba(0, 0, 0, 0.6);
   --shadow-controls: rgba(0, 0, 0, 0.3);
@@ -315,6 +315,12 @@ a:focus-visible {
   font-weight: 700;
   font-family: var(--font-display);
   padding-left: 0.4rem;
+}
+
+/* Keeps the "mi" unit lowercase inside otherwise-uppercased text
+   (panel titles, the stats line, the map filter notice). */
+.unit-mi {
+  text-transform: none;
 }
 
 .panel-header-info-button {
@@ -909,16 +915,36 @@ a:focus-visible {
 .restaurant-list-sort-bar {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  row-gap: 0.35rem;
   padding: 0.25rem 0.5rem 0.5rem;
   font-size: 0.85rem;
   flex-shrink: 0;
 }
 
-.sort-label {
+.sort-label,
+.sort-then-label {
   color: var(--text-muted);
   font-weight: 600;
   font-size: 0.9rem;
+}
+
+.sort-then-label {
+  font-weight: 500;
+}
+
+/* Two field dropdowns have to fit on one row -- tighter than the
+   stand-alone default. */
+.restaurant-list-sort-bar .sort-dropdown-trigger {
+  min-width: 118px;
+}
+
+/* Direction toggle is icon-only here (label moved to a tooltip). */
+.sort-direction-toggle-icon {
+  width: 2.25rem;
+  padding: 0;
+  gap: 0;
 }
 
 .sort-select,
@@ -1051,6 +1077,13 @@ a:focus-visible {
   min-width: 0;
   width: 100%;
   opacity: 0.85;
+}
+
+/* While the Search Radius tool is active each card carries an extra
+   Distance line -- give it the room. Keep in sync with
+   CARD_HEIGHT_WITH_DISTANCE in RestaurantList.tsx. */
+.restaurant-list-container.with-distance .restaurant-card {
+  height: 100px;
 }
 
 .restaurant-card:hover {
@@ -2168,6 +2201,155 @@ a:focus-visible {
 .map-basemap-toggle-button:hover {
   color: var(--link-hover);
   background-color: var(--link-background-hover);
+}
+
+.map-search-radius-container {
+  position: absolute;
+  top: calc(1rem + 40px + 32px + 8px);
+  right: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-search-radius-button {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.map-search-radius-button.active {
+  color: var(--text-body);
+}
+
+.map-search-radius-button:hover {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+/* Once placing or a point is set, the idle [data-tooltip] hover pill is
+   replaced by this panel, positioned the exact same way (tooltip-left's
+   right: calc(100% + 0.5rem) mechanism) so the header label sits where
+   the tooltip did -- to the button's left, same gap, same vertical
+   position (both start at top: 0, and the header label is 32px tall
+   like the button, so they land aligned without needing to center
+   anything). The radius picker stacks below the header label only --
+   the icon button itself stays a standalone square, nothing renders
+   under it. Column flex + stretch is what keeps the header label and
+   the picker row the same total width -- the panel auto-sizes to
+   whichever is naturally wider, and stretch fills the narrower one out
+   to match, with no width hardcoded either way. */
+.map-search-radius-panel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 0.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  z-index: 30;
+}
+
+.map-search-radius-header-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  box-sizing: border-box;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+.search-radius-picker {
+  display: flex;
+  gap: 4px;
+}
+
+.search-radius-picker .filter-button {
+  flex: 1;
+  height: 32px;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-panel);
+  color: var(--text-muted);
+  /* Labels are "0.25 mi" etc -- keep the unit lowercase rather than
+     inheriting .filter-button's uppercase. */
+  text-transform: none;
+}
+
+/* Overrides the shared .filter-button.active color -- this one should
+   read as "selected" via brightened text-body, not the link-hover color
+   used for grade/borough filter toggles elsewhere. Also swaps the shared
+   rule's border-bottom for an inset box-shadow: border-bottom adds to
+   the box's height, which (with align-items: center) shifts the text up
+   by half the border width to stay centered in the now-taller box --
+   box-shadow paints the same line without affecting layout at all, so
+   height and text position stay exactly constant. */
+.search-radius-picker .filter-button.active {
+  color: var(--text-body);
+  border-bottom: none;
+  box-shadow: inset 0 -2px 0 0 var(--border-panel);
+}
+
+/* Positioning context for the placement hint. The overrides below take
+   the default fill-the-ancestor .filter-notice-overlay (inset: 0, solid
+   --bg-alt panel, self-dismissing fade) down to a content-hugging chip
+   that stays put -- it's rendered only while the user is placing a
+   point, so it should persist until they click the map rather than
+   time out. */
+.map-placement-hint-anchor {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Style the placement hint to match the Search Radius header chip
+   (.map-search-radius-header-label) rather than the full-panel
+   filter-notice treatment used on the list/stats panels. */
+.map-placement-hint-anchor .filter-notice-overlay {
+  position: static;
+  inset: auto;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  animation: placementHintFadeIn 0.2s ease forwards;
+}
+
+@keyframes placementHintFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.map-placement-hint-anchor .filter-notice-text {
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: 0.7rem;
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
 }
 
 /* Styled tooltip for map icon buttons, replacing the native title attribute. */

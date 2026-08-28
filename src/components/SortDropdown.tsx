@@ -1,7 +1,7 @@
 // SortDropdown.tsx
 //
 // Custom dropdown replacing a native <select>, used for the Restaurant
-// List's "Sort Results by" control.
+// List's "Sort by" controls.
 
 import { useEffect, useRef, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
