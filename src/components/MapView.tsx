@@ -349,6 +349,9 @@ export default function InspectionMapView({
     const handleCameraMove = async () => {
       if (selectedRestaurantId) {
         try {
+          // checkSelectionAgainstFilters queries the layer directly and
+          // doesn't load it itself; match the other call sites.
+          await layer.load();
           const { geometry } = await checkSelectionAgainstFilters(
             layer,
             selectedRestaurantId,

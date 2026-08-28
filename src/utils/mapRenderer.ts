@@ -5,6 +5,14 @@
 // dot size and opacity (a closed restaurant is weighted like a very high
 // score so it always reads large). Pulled out of MapView.tsx to keep
 // that file scannable; nothing here changes at runtime.
+//
+// gradeCategoryExpression is an Arcade re-statement of
+// getGradeCategory()'s precedence (see gradeCategory.ts), the third
+// mirror alongside CATEGORY_CLAUSES in mapQueries.ts. It reads
+// current_status_code == "closed" (pipeline-derived from the same
+// CLOSED_ACTIONS set) and grade == "U" (UNINSPECTED_GRADE). Keep the
+// closed -> uninspected -> pending -> A/B/C order in step with the other
+// two if any of them changes.
 
 import { CATEGORY_COLORS } from "./gradeColours";
 
@@ -23,6 +31,11 @@ const gradeCategoryExpression = `
   }
 
   var s = $feature.score;
+  // Mirror getGradeCategory(): a missing/negative score is treated as
+  // Pending, not silently bucketed into "C" by the comparisons below.
+  if (IsEmpty(s) || s < 0) {
+    return "pending";
+  }
   if (s <= 13) return "A";
   if (s <= 27) return "B";
   return "C";
