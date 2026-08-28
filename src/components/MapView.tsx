@@ -2,12 +2,11 @@
 //
 //Displays the ArcGIS map view with localized dot weighting, spatial filtering, a compact top-right icon-only legend trigger, interactive custom scale/zoom controllers, and hover cards.
 
-import { useEffect, useRef, useCallback, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Map from "@arcgis/core/Map";
 import MapView from "@arcgis/core/views/MapView";
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
-import FeatureEffect from "@arcgis/core/layers/support/FeatureEffect";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
 
 import esriConfig from "@arcgis/core/config";
@@ -22,6 +21,7 @@ import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 import { getGradeCategory } from "../utils/gradeCategory";
 import { pointsRenderer } from "../utils/mapRenderer";
 import { useSearchRadiusTool } from "../hooks/useSearchRadiusTool";
+import { useSelectionHighlight } from "../hooks/useSelectionHighlight";
 import PanelHeader from "./PanelHeader";
 import MapHoverCard, { type HoverCardState } from "./MapHoverCard";
 import MAP_LEGEND_INFO_CONTENT from "./MapLegendInfoContent";
@@ -45,11 +45,6 @@ import {
 esriConfig.apiKey = import.meta.env.PUBLIC_ARCGIS_API_KEY;
 
 const HOVER_CARD_MAX_SCALE = 18056;
-
-const NO_SELECTION_FILTER = new FeatureFilter({ objectIds: [-1] });
-
-const SELECTION_GLOW_EFFECT =
-  "drop-shadow(0px, 0px, 8px, #ffffff) bloom(2, 0.5px, 0%)";
 
 const DEFAULT_CENTER: [number, number] = [-73.98, 40.7];
 const DEFAULT_ZOOM = 9.75;
@@ -93,10 +88,6 @@ export default function InspectionMapView({
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<GeoJSONLayer | null>(null);
   const viewRef = useRef<MapView | null>(null);
-  // Builds the glow FeatureEffect once with a fixed included effect string, as ArcGIS does not reliably update reassignments on live instances—only `.filter` mutates cleanly.
-  const glowEffectRef = useRef<FeatureEffect | null>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const layerViewRef = useRef<any>(null);
   const ringsLayerRef = useRef<GraphicsLayer | null>(null);
 
   const searchRadius = useSearchRadiusTool(
@@ -104,6 +95,16 @@ export default function InspectionMapView({
     ringsLayerRef.current,
     initialSearchRadius,
   );
+
+  // The selected/hovered glow effect and its object-ID plumbing live in
+  // this hook; applyHighlightForId is also called from the mount effect
+  // and the filter/search sync effect below.
+  const { applyHighlightForId } = useSelectionHighlight({
+    layerRef,
+    viewRef,
+    selectedRestaurantId,
+    hoveredRestaurantId,
+  });
 
   const selectedRestaurantIdRef = useRef<string | null>(selectedRestaurantId);
   const onSelectRestaurantRef = useRef(onSelectRestaurant);
@@ -118,10 +119,6 @@ export default function InspectionMapView({
 
   const queryRequestIdRef = useRef(0);
   const clickRequestIdRef = useRef(0);
-  const hoverHighlightRequestIdRef = useRef(0);
-
-  const selectedObjectIdRef = useRef<number | null>(null);
-  const hoveredObjectIdRef = useRef<number | null>(null);
 
   useEffect(() => {
     selectedRestaurantIdRef.current = selectedRestaurantId;
@@ -202,144 +199,6 @@ export default function InspectionMapView({
       console.error("MapView: failed to query visible restaurants", err);
     }
   }
-
-  // Resolves and caches the layer view, lazily building the shared glow FeatureEffect (combining click-selected and list-hovered object ID refs, as ArcGIS supports only one active feature effect per layer view).
-  const ensureLayerView = useCallback(async () => {
-    if (layerViewRef.current) return layerViewRef.current;
-
-    const layer = layerRef.current;
-    const view = viewRef.current;
-    if (!layer || !view) return null;
-
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let layerView: any;
-    try {
-      await layer.load();
-      layerView = await view.whenLayerView(layer);
-    } catch (err) {
-      console.error(
-        "MapView: failed to load layer view for highlight effect",
-        err,
-      );
-      return null;
-    }
-
-    if (!glowEffectRef.current) {
-      glowEffectRef.current = new FeatureEffect({
-        filter: NO_SELECTION_FILTER,
-        includedEffect: SELECTION_GLOW_EFFECT,
-        excludedLabelsVisible: true,
-      });
-    }
-
-    layerViewRef.current = layerView;
-    return layerView;
-  }, []);
-
-  // Installs the glow FeatureEffect on the layer view and updates its
-  // object ID filter to the union of the click-selected and list-hovered
-  // restaurants, mutating `.filter` without changing the effect string.
-  const applyCombinedHighlight = useCallback(() => {
-    const layerView = layerViewRef.current;
-    const glowEffect = glowEffectRef.current;
-    if (!layerView || !glowEffect) return;
-
-    const objectIds = Array.from(
-      new Set(
-        [selectedObjectIdRef.current, hoveredObjectIdRef.current].filter(
-          (id): id is number => id !== null,
-        ),
-      ),
-    );
-
-    glowEffect.filter =
-      objectIds.length > 0
-        ? new FeatureFilter({ objectIds })
-        : NO_SELECTION_FILTER;
-    if (layerView.featureEffect !== glowEffect) {
-      layerView.featureEffect = glowEffect;
-    }
-  }, []);
-
-  const applyHighlightForId = useCallback(
-    async (restaurantId: string | null, knownObjectId?: number | null) => {
-      const layerView = await ensureLayerView();
-      if (!layerView) return;
-
-      if (!restaurantId) {
-        selectedObjectIdRef.current = null;
-        applyCombinedHighlight();
-        return;
-      }
-
-      if (knownObjectId !== undefined) {
-        selectedObjectIdRef.current = knownObjectId;
-        applyCombinedHighlight();
-        return;
-      }
-
-      const layer = layerRef.current;
-      if (!layer) return;
-
-      try {
-        const { objectId } = await checkSelectionAgainstFilters(
-          layer,
-          restaurantId,
-          layer.definitionExpression ?? "",
-        );
-        selectedObjectIdRef.current = objectId;
-        applyCombinedHighlight();
-      } catch (err) {
-        console.error(
-          "MapView: failed to query feature for highlight effect",
-          err,
-        );
-      }
-    },
-    [ensureLayerView, applyCombinedHighlight],
-  );
-
-  const applyHoverHighlightForId = useCallback(
-    async (restaurantId: string | null) => {
-      const layerView = await ensureLayerView();
-      if (!layerView) return;
-
-      if (!restaurantId) {
-        hoveredObjectIdRef.current = null;
-        applyCombinedHighlight();
-        return;
-      }
-
-      const layer = layerRef.current;
-      if (!layer) return;
-
-      const requestId = ++hoverHighlightRequestIdRef.current;
-      try {
-        const { objectId } = await checkSelectionAgainstFilters(
-          layer,
-          restaurantId,
-          layer.definitionExpression ?? "",
-        );
-        if (requestId !== hoverHighlightRequestIdRef.current) return;
-        hoveredObjectIdRef.current = objectId;
-        applyCombinedHighlight();
-      } catch (err) {
-        console.error(
-          "MapView: failed to query feature for hover highlight effect",
-          err,
-        );
-      }
-    },
-    [ensureLayerView, applyCombinedHighlight],
-  );
-
-  useEffect(() => {
-    void applyHighlightForId(selectedRestaurantId);
-  }, [selectedRestaurantId, applyHighlightForId]);
-
-  useEffect(() => {
-    void applyHoverHighlightForId(hoveredRestaurantId);
-  }, [hoveredRestaurantId, applyHoverHighlightForId]);
 
   useEffect(() => {
     if (!mapDivRef.current) return;
