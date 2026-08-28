@@ -22,9 +22,10 @@
 //   4. Merge local + remote at the DATA level (cache.mjs's mergeCaches /
 //      mergeSuspiciousShifts) -- never a raw git text merge, which risks
 //      corrupting the JSON or silently picking one side's version wholesale.
-//   5. Write the merged result, add counts-snapshot.json (carried through
-//      as-is -- it's a fresh per-run snapshot, not something to merge),
-//      commit, push. Because the commit's parent is now exactly
+//   5. Write the merged result, restore counts-snapshot.json (this run's
+//      fresh snapshot, captured in step 1 and re-written here because the
+//      step-2 reset reverts it to the committed version -- it's tracked on
+//      `data`), commit, push. Because the commit's parent is now exactly
 //      origin/<branch>, the push is guaranteed to succeed (nothing else
 //      can have moved origin between step 2 and step 5, since this script
 //      does not await anything network-bound in between).
@@ -59,6 +60,10 @@ async function main() {
   // Step 1: capture this run's own results before touching git at all.
   const localCache = await readJsonOrDefault(CACHE_PATH, {});
   const localShifts = await readJsonOrDefault(LOG_PATH, []);
+  // counts-snapshot.json is tracked on `data`, so the step-2 reset below
+  // reverts the copy run-geocode-backfill.mjs just wrote back to the
+  // committed version. Hold this run's in memory so step 5 can restore it.
+  const localSnapshot = await readJsonOrDefault(COUNTS_SNAPSHOT_PATH, null);
 
   console.log(`Local run: ${Object.keys(localCache).length} cache entries, ${localShifts.length} suspicious shifts.`);
 
@@ -80,14 +85,17 @@ async function main() {
 
   console.log(`Merged: ${Object.keys(mergedCache).length} cache entries, ${mergedShifts.length} suspicious shifts.`);
 
-  // Step 5: write the merged cache/shifts, then add whichever of the three
-  // files exist (counts-snapshot.json isn't merged -- it's this run's own
-  // fresh snapshot, written earlier by run-geocode-backfill.mjs and left
-  // untouched by the reset above since it's untracked on `main`). A missing
-  // file here means an earlier step failed partway through; that shouldn't
-  // block committing whatever did make it.
+  // Step 5: write the merged cache/shifts and restore this run's snapshot
+  // (step-2's `git reset --hard` reverted the on-disk copy to the committed
+  // version -- counts-snapshot.json isn't merged, it's just this run's own
+  // fresh per-run snapshot). Then add whichever of the three files exist; a
+  // missing file means an earlier step failed partway through, which
+  // shouldn't block committing whatever did make it.
   await writeFile(CACHE_PATH, JSON.stringify(mergedCache, null, 2), 'utf-8');
   await writeFile(LOG_PATH, JSON.stringify(mergedShifts, null, 2), 'utf-8');
+  if (localSnapshot?.restaurantCount != null) {
+    await writeFile(COUNTS_SNAPSHOT_PATH, JSON.stringify(localSnapshot, null, 2), 'utf-8');
+  }
 
   for (const path of [CACHE_PATH, LOG_PATH, COUNTS_SNAPSHOT_PATH]) {
     try {
@@ -98,10 +106,11 @@ async function main() {
     }
   }
 
-  // counts-snapshot.json carries a fresh generatedAt timestamp every run,
-  // so this is almost always non-empty by design -- it's kept as a safety
-  // net rather than a real gate, since diff --quiet across all three still
-  // correctly no-ops the rare case where literally nothing changed.
+  // A successful run restores a snapshot with a fresh generatedAt above, so
+  // this is almost always non-empty by design -- it's kept as a safety net
+  // rather than a real gate, since diff --quiet across all three still
+  // correctly no-ops the case where an earlier step failed and nothing
+  // actually changed.
   let hasChanges = false;
   try {
     run('git diff --cached --quiet');

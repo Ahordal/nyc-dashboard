@@ -78,8 +78,8 @@ Geocoding (via LocationIQ, with a house-number-match filter against DOHMH's own 
 * Text fields undergo deep normalization for the search index, which includes stripping diacritics, dropping corporate suffixes (like "INC" or "LLC"), and explicitly expanding abbreviations (e.g., expanding "ST" to both "STREET" and "SAINT").
 
 **Dynamic Delta-Tracking**
-* `dashboard-meta.json` calculates `restaurantDelta` and `inspectionDelta` metrics by diffing current processing totals against the `counts-snapshot.json` baseline committed daily by the geocode backfill workflow.
-* If no baseline snapshot exists yet, the delta values gracefully return as `null` rather than displaying inaccurate zero-change metrics.
+* Each daily geocode-backfill run records its restaurant/inspection totals to `counts-snapshot.json` on the `data` branch, along with `restaurantDelta` / `inspectionDelta` — the change from the run before it. `dashboard-meta.json` passes those five figures straight through, so the Dashboard Information panel always reflects the last daily refresh; site rebuilds from `main` pushes in between never move the numbers.
+* If no prior snapshot exists yet, the deltas return as `null` (and the build falls back to its own live totals) rather than displaying an inaccurate zero-change metric.
 
 **Error Handling and Fallbacks**
 * Network requests to the Socrata API utilize an exponential backoff strategy, automatically retrying up to four times for transient server errors (429, 500, 502, 503, and 504 status codes).

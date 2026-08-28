@@ -55,6 +55,9 @@ jobs:
           git fetch origin data
           git show origin/data:pipeline/geocode-cache.json > pipeline/geocode-cache.json 2>/dev/null || echo '{}' > pipeline/geocode-cache.json
           git show origin/data:pipeline/suspicious-shifts.json > pipeline/suspicious-shifts.json 2>/dev/null || echo '[]' > pipeline/suspicious-shifts.json
+          # Previous daily run's totals -- run-geocode-backfill.mjs diffs this
+          # run's counts against it to produce the Dashboard Information deltas.
+          git show origin/data:pipeline/counts-snapshot.json > pipeline/counts-snapshot.json 2>/dev/null || echo '{}' > pipeline/counts-snapshot.json
 
       - name: Run geocode backfill
         working-directory: pipeline

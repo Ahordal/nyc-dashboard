@@ -4,13 +4,15 @@
 // underlying inspection dataset.
 
 export type DashboardMeta = {
+  // All five fields describe the last daily geocode-backfill run, not the
+  // build that generated dashboard-meta.json. Site rebuilds from `main`
+  // pushes between daily runs leave these untouched.
   lastUpdated: string | null;
   restaurantCount: number | null;
   inspectionCount: number | null;
-  // Change vs. the previous day's counts-snapshot.json baseline. null
-  // means there's no previous run to compare against yet (e.g. before
-  // the first geocode-backfill run has ever committed a snapshot) --
-  // distinct from an actual zero-change day, which is 0, not null.
+  // Change from the daily run before this one. null means there's no prior
+  // run to compare against yet (before the first geocode-backfill run has
+  // committed a snapshot) -- distinct from a zero-change day, which is 0.
   restaurantDelta: number | null;
   inspectionDelta: number | null;
 };

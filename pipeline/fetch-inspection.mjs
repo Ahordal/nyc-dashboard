@@ -595,29 +595,35 @@ export function buildInspectionHistory(eventsByRestaurant, generatedAt) {
   };
 }
 
-export function buildDashboardMeta(generatedAt, restaurantCount, historyRestaurants, baselineSnapshot) {
+export function buildDashboardMeta(generatedAt, restaurantCount, historyRestaurants, countsSnapshot) {
   const inspectionCount = Object.values(historyRestaurants).reduce(
     (total, points) => total + points.length,
     0,
   );
 
-  // Null indicates missing baseline (first run) to distinguish from true zero-change delta.
-  const restaurantDelta =
-    baselineSnapshot?.restaurantCount != null
-      ? restaurantCount - baselineSnapshot.restaurantCount
-      : null;
-
-  const inspectionDelta =
-    baselineSnapshot?.inspectionCount != null
-      ? inspectionCount - baselineSnapshot.inspectionCount
-      : null;
+  // The Dashboard Information panel reports the state of the last daily
+  // geocode-backfill run, not this build. `main` is pushed (and the site
+  // rebuilt) many times a day; the deltas must only ever compare one daily
+  // refresh to the one before it, so run-geocode-backfill.mjs computes and
+  // freezes both the totals and the deltas in counts-snapshot.json, and this
+  // build passes them straight through. Until the first snapshot has been
+  // committed, fall back to this build's own live totals with no deltas.
+  if (countsSnapshot?.restaurantCount != null) {
+    return {
+      lastUpdated: countsSnapshot.generatedAt ?? generatedAt,
+      restaurantCount: countsSnapshot.restaurantCount,
+      inspectionCount: countsSnapshot.inspectionCount ?? inspectionCount,
+      restaurantDelta: countsSnapshot.restaurantDelta ?? null,
+      inspectionDelta: countsSnapshot.inspectionDelta ?? null,
+    };
+  }
 
   return {
     lastUpdated: generatedAt,
     restaurantCount,
     inspectionCount,
-    restaurantDelta,
-    inspectionDelta,
+    restaurantDelta: null,
+    inspectionDelta: null,
   };
 }
 
@@ -673,7 +679,7 @@ async function main() {
   }
 
   const geocodeCache = await loadCache(GEOCODE_CACHE_PATH);
-  const baselineSnapshot = await loadCountsSnapshot(COUNTS_SNAPSHOT_PATH);
+  const countsSnapshot = await loadCountsSnapshot(COUNTS_SNAPSHOT_PATH);
 
   let latestGeoJSON, history, violationCodes, dashboardMeta;
   try {
@@ -694,7 +700,7 @@ async function main() {
       generatedAt,
       latestGeoJSON.features.length,
       history.restaurants,
-      baselineSnapshot,
+      countsSnapshot,
     );
   } catch (err) {
     throw new Error(`Failed while building output data: ${err.message}`, {

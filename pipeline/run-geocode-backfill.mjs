@@ -16,7 +16,7 @@ import dotenv from 'dotenv';
 // there since no .env file exists in that environment.
 dotenv.config({ path: '../.env' });
 
-import { writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import {
   fetchAllRows,
   groupByCamis,
@@ -72,16 +72,48 @@ async function main() {
     (total, points) => total + points.length,
     0,
   );
+  const restaurantCount = latestGeoJSON.features.length;
+
+  // Diff against the PREVIOUS daily run's snapshot (seeded from the `data`
+  // branch by the workflow before this script runs). Nothing else writes
+  // counts-snapshot.json, so this is strictly (this daily refresh) minus
+  // (the previous daily refresh) -- site rebuilds from `main` pushes in
+  // between never touch it. null (not 0) when there's no prior run yet.
+  const previousSnapshot = await readSnapshotOrNull(COUNTS_SNAPSHOT_PATH);
+  const restaurantDelta =
+    previousSnapshot?.restaurantCount != null ? restaurantCount - previousSnapshot.restaurantCount : null;
+  const inspectionDelta =
+    previousSnapshot?.inspectionCount != null ? inspectionCount - previousSnapshot.inspectionCount : null;
 
   const snapshot = {
     generatedAt: new Date().toISOString(),
-    restaurantCount: latestGeoJSON.features.length,
+    restaurantCount,
     inspectionCount,
+    restaurantDelta,
+    inspectionDelta,
   };
   await writeFile(COUNTS_SNAPSHOT_PATH, JSON.stringify(snapshot, null, 2), 'utf-8');
   console.log(
-    `Wrote counts-snapshot.json (${snapshot.restaurantCount} restaurants, ${snapshot.inspectionCount} inspections).`,
+    `Wrote counts-snapshot.json (${restaurantCount} restaurants [${formatDelta(restaurantDelta)}], ` +
+      `${inspectionCount} inspections [${formatDelta(inspectionDelta)}]).`,
   );
+}
+
+// Returns null on missing/corrupt/empty file so the first-ever run (or a run
+// whose seed step found nothing on `data`) reports null deltas rather than
+// crashing or inventing a zero-change day.
+async function readSnapshotOrNull(path) {
+  try {
+    const parsed = JSON.parse(await readFile(path, 'utf-8'));
+    return parsed && typeof parsed === 'object' ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+function formatDelta(delta) {
+  if (delta == null) return 'no baseline';
+  return delta >= 0 ? `+${delta}` : `${delta}`;
 }
 
 main().catch((err) => {
