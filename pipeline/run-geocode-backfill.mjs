@@ -17,6 +17,7 @@ import dotenv from 'dotenv';
 dotenv.config({ path: '../.env' });
 
 import { readFile, writeFile } from 'node:fs/promises';
+import { pathToFileURL } from 'node:url';
 import {
   fetchAllRows,
   groupByCamis,
@@ -80,10 +81,10 @@ async function main() {
   // (the previous daily refresh) -- site rebuilds from `main` pushes in
   // between never touch it. null (not 0) when there's no prior run yet.
   const previousSnapshot = await readSnapshotOrNull(COUNTS_SNAPSHOT_PATH);
-  const restaurantDelta =
-    previousSnapshot?.restaurantCount != null ? restaurantCount - previousSnapshot.restaurantCount : null;
-  const inspectionDelta =
-    previousSnapshot?.inspectionCount != null ? inspectionCount - previousSnapshot.inspectionCount : null;
+  const { restaurantDelta, inspectionDelta } = computeCountDeltas(
+    { restaurantCount, inspectionCount },
+    previousSnapshot,
+  );
 
   const snapshot = {
     generatedAt: new Date().toISOString(),
@@ -102,7 +103,7 @@ async function main() {
 // Returns null on missing/corrupt/empty file so the first-ever run (or a run
 // whose seed step found nothing on `data`) reports null deltas rather than
 // crashing or inventing a zero-change day.
-async function readSnapshotOrNull(path) {
+export async function readSnapshotOrNull(path) {
   try {
     const parsed = JSON.parse(await readFile(path, 'utf-8'));
     return parsed && typeof parsed === 'object' ? parsed : null;
@@ -111,12 +112,36 @@ async function readSnapshotOrNull(path) {
   }
 }
 
-function formatDelta(delta) {
+// (this daily refresh) minus (the previous daily refresh). A field is null
+// -- never 0 -- when the previous snapshot has no comparable count, so the
+// dashboard can tell "no prior run to compare" apart from "genuinely no
+// change since yesterday".
+export function computeCountDeltas(
+  { restaurantCount, inspectionCount },
+  previousSnapshot,
+) {
+  return {
+    restaurantDelta:
+      previousSnapshot?.restaurantCount != null
+        ? restaurantCount - previousSnapshot.restaurantCount
+        : null,
+    inspectionDelta:
+      previousSnapshot?.inspectionCount != null
+        ? inspectionCount - previousSnapshot.inspectionCount
+        : null,
+  };
+}
+
+export function formatDelta(delta) {
   if (delta == null) return 'no baseline';
   return delta >= 0 ? `+${delta}` : `${delta}`;
 }
 
-main().catch((err) => {
-  console.error('Geocode backfill run failed:', err);
-  process.exit(1);
-});
+// Only run the backfill when invoked directly (node run-geocode-backfill.mjs),
+// not when imported by a test -- mirrors fetch-inspection.mjs.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    console.error('Geocode backfill run failed:', err);
+    process.exit(1);
+  });
+}
