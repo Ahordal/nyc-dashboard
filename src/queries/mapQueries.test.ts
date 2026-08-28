@@ -4,6 +4,8 @@ import {
   buildDefinitionExpression,
   buildGradeWhereClause,
   queryVisibleRestaurants,
+  filterRestaurantsByGradeCategory,
+  findRestaurantGraphicHit,
   CATEGORY_CLAUSES,
 } from "./mapQueries";
 import type { Filters } from "../types/filters";
@@ -209,5 +211,92 @@ describe("CATEGORY_CLAUSES", () => {
     for (const key of ["A", "B", "C"] as const) {
       expect(CATEGORY_CLAUSES[key]).toContain("'U'");
     }
+  });
+});
+
+describe("filterRestaurantsByGradeCategory", () => {
+  // Minimal stand-ins -- only action/grade/score are read, via getGradeCategory.
+  const CITED = "Violations were cited in the following area(s).";
+  const A = { action: CITED, grade: "A", score: 10 };
+  const C = { action: CITED, grade: "C", score: 40 };
+  const PENDING = { action: CITED, grade: "P", score: null };
+  const UNINSPECTED = { action: CITED, grade: "U", score: null };
+  const CLOSED = {
+    action:
+      "Establishment Closed by DOHMH. Violations were cited in the following area(s) and those requiring immediate action were addressed.",
+    grade: "A",
+    score: 5,
+  };
+  // Null grade but a real score -- still an A by the score band.
+  const NULL_GRADE_A = { action: CITED, grade: null, score: 8 };
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const all = [A, C, PENDING, UNINSPECTED, CLOSED, NULL_GRADE_A] as any;
+
+  it("returns the same array untouched when no grades are active", () => {
+    expect(filterRestaurantsByGradeCategory(all, [])).toBe(all);
+  });
+
+  it("keeps only the restaurants whose computed category matches", () => {
+    expect(filterRestaurantsByGradeCategory(all, ["A"])).toEqual([
+      A,
+      NULL_GRADE_A,
+    ]);
+    expect(filterRestaurantsByGradeCategory(all, ["C"])).toEqual([C]);
+  });
+
+  it("routes the Closed / Pending / Uninspected labels to their categories", () => {
+    expect(filterRestaurantsByGradeCategory(all, ["Closed"])).toEqual([CLOSED]);
+    expect(filterRestaurantsByGradeCategory(all, ["Pending"])).toEqual([PENDING]);
+    expect(filterRestaurantsByGradeCategory(all, ["Uninspected"])).toEqual([
+      UNINSPECTED,
+    ]);
+  });
+
+  it("unions multiple active labels", () => {
+    expect(filterRestaurantsByGradeCategory(all, ["C", "Closed"])).toEqual([
+      C,
+      CLOSED,
+    ]);
+  });
+});
+
+describe("findRestaurantGraphicHit", () => {
+  const layer = { id: "restaurants" };
+  const otherLayer = { id: "rings" };
+
+  it("returns the hit whose graphic belongs to the given layer", () => {
+    const response = {
+      results: [
+        { graphic: { layer: otherLayer, attributes: { id: "ring" } } },
+        { graphic: { layer, attributes: { id: "42" } } },
+      ],
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hit = findRestaurantGraphicHit(response, layer as any);
+    expect(hit?.graphic.attributes).toEqual({ id: "42" });
+  });
+
+  it("returns undefined when no result hit the restaurant layer", () => {
+    const response = {
+      results: [
+        { graphic: { layer: otherLayer } },
+        { something: "not a graphic hit" },
+      ],
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    expect(findRestaurantGraphicHit(response, layer as any)).toBeUndefined();
+  });
+
+  it("returns the first match when several graphics belong to the layer", () => {
+    const response = {
+      results: [
+        { graphic: { layer, attributes: { id: "first" } } },
+        { graphic: { layer, attributes: { id: "second" } } },
+      ],
+    };
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const hit = findRestaurantGraphicHit(response, layer as any);
+    expect(hit?.graphic.attributes).toEqual({ id: "first" });
   });
 });

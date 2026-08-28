@@ -37,6 +37,8 @@ import {
   fetchRestaurantDetail,
   checkSelectionAgainstFilters,
   queryFilterExtent,
+  filterRestaurantsByGradeCategory,
+  findRestaurantGraphicHit,
   RESTAURANT_OUT_FIELDS,
 } from "../queries/mapQueries";
 
@@ -190,27 +192,10 @@ export default function InspectionMapView({
         onGradeCountsChange(counts);
       }
 
-      const activeGrades = filtersRef.current.grades;
-      const filteredRestaurants = restaurants.filter((r) => {
-        if (activeGrades.length === 0) return true;
-
-        const category = getGradeCategory(r.action, r.grade, r.score);
-
-        if (activeGrades.includes("Closed") && category === "closed")
-          return true;
-        if (activeGrades.includes("Pending") && category === "pending")
-          return true;
-        if (activeGrades.includes("Uninspected") && category === "uninspected")
-          return true;
-        // Matches A/B/C against computed categories rather than raw grade fields to prevent dropping data where grades are null but scores are populated.
-        if (
-          ["A", "B", "C"].includes(category) &&
-          activeGrades.includes(category)
-        )
-          return true;
-
-        return false;
-      });
+      const filteredRestaurants = filterRestaurantsByGradeCategory(
+        restaurants,
+        filtersRef.current.grades,
+      );
 
       onVisibleRestaurantsChange?.(filteredRestaurants);
     } catch (err) {
@@ -432,11 +417,7 @@ export default function InspectionMapView({
         return;
       }
 
-      const graphicHit = response.results.find(
-        (result) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          "graphic" in result && (result as any).graphic.layer === layer,
-      ) as { graphic: { attributes: RestaurantProperties } } | undefined;
+      const graphicHit = findRestaurantGraphicHit(response, layer);
 
       const requestId = ++clickRequestIdRef.current;
 
@@ -487,11 +468,7 @@ export default function InspectionMapView({
       }
       if (token !== latestHitTestToken) return;
 
-      const graphicHit = response.results.find(
-        (result) =>
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          "graphic" in result && (result as any).graphic.layer === layer,
-      ) as { graphic: { attributes: RestaurantProperties } } | undefined;
+      const graphicHit = findRestaurantGraphicHit(response, layer);
 
       if (view.container) {
         view.container.style.cursor = graphicHit ? "pointer" : "default";

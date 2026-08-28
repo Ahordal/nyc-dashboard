@@ -17,7 +17,11 @@ import Extent from "@arcgis/core/geometry/Extent";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 import type { SearchRadiusPoint } from "../types/searchRadius";
-import { CLOSED_ACTIONS, UNINSPECTED_GRADE } from "../utils/gradeCategory";
+import {
+  CLOSED_ACTIONS,
+  UNINSPECTED_GRADE,
+  getGradeCategory,
+} from "../utils/gradeCategory";
 
 // Fields actually read by the dashboard's components (restaurant list
 // cards, details panel, map filter logic). Deliberately excludes
@@ -229,6 +233,35 @@ export function buildGradeWhereClause(grades: string[]): string | null {
     .join(" OR ");
 
   return gradeClause ? `(${gradeClause})` : null;
+}
+
+// The client-side twin of buildGradeWhereClause: given an already-fetched
+// list and the active grade filter labels, keeps only the restaurants
+// whose *computed* category (getGradeCategory, not the raw grade field)
+// matches one of them. An empty filter keeps everything (returns the same
+// array). A/B/C are matched on the computed category on purpose -- a row
+// with a null grade but a real score still has an A/B/C category and
+// shouldn't be dropped.
+export function filterRestaurantsByGradeCategory(
+  restaurants: RestaurantProperties[],
+  activeGrades: string[],
+): RestaurantProperties[] {
+  if (activeGrades.length === 0) return restaurants;
+
+  const wanted = new Set(activeGrades);
+  return restaurants.filter((r) => {
+    const category = getGradeCategory(r.action, r.grade, r.score);
+    if (wanted.has("Closed") && category === "closed") return true;
+    if (wanted.has("Pending") && category === "pending") return true;
+    if (wanted.has("Uninspected") && category === "uninspected") return true;
+    if (
+      (category === "A" || category === "B" || category === "C") &&
+      wanted.has(category)
+    ) {
+      return true;
+    }
+    return false;
+  });
 }
 
 // Queries ALL restaurants in scope, not just the first page. A single
@@ -470,4 +503,24 @@ export async function queryFilterExtent(
   const isDegenerate = maxX - minX < 0.0005 && maxY - minY < 0.0005;
 
   return { count: points.length, extent, isDegenerate };
+}
+
+export type RestaurantGraphicHit = {
+  graphic: { attributes: RestaurantProperties };
+};
+
+// Picks the restaurant-layer graphic out of a view.hitTest() result,
+// ignoring hits on any other layer (the Search Radius rings, basemap
+// labels). Returns undefined when the click or hover landed on no
+// restaurant dot.
+export function findRestaurantGraphicHit(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  hitTestResponse: { results: any[] },
+  layer: GeoJSONLayer,
+): RestaurantGraphicHit | undefined {
+  return hitTestResponse.results.find(
+    (result) =>
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      "graphic" in result && (result as any).graphic.layer === layer,
+  ) as RestaurantGraphicHit | undefined;
 }
