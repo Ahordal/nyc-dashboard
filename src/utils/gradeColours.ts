@@ -1,7 +1,6 @@
-// utils/gradeColors.ts
+// gradeColours.ts
 //
-// Single source for all grade/status colors used throughout the
-// dashboard, avoiding duplicated colour definitions.
+// Single source for the grade/status colours used across the dashboard.
 
 export type GradeCategory =
   | "A"

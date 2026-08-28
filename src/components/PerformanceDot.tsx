@@ -1,12 +1,10 @@
 // PerformanceDot.tsx
 //
-// Custom interactive point for the Recharts performance chart.
-//
-// The invisible hit circle stays the same size at all times. The visible dot
-// can grow on hover without changing the pointer target, preventing hover from
-// jumping between nearby points as the SVG rerenders.
-//
-// Keyboard interaction is handled by PerformanceChart's stable HTML wrapper.
+// Custom interactive point for the Recharts performance chart. The
+// invisible hit circle stays a fixed size while the visible dot grows on
+// hover, so the pointer target never moves and hover doesn't jump
+// between nearby points as the SVG rerenders. Keyboard interaction is
+// handled by PerformanceChart's stable HTML wrapper.
 
 import type {
   MouseEvent,

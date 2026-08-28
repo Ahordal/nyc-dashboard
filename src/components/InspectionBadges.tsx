@@ -1,7 +1,7 @@
 // InspectionBadges.tsx
 //
-// Renders restaurant grade and score badge pairs with category-based styling 
-// and fallbacks for missing values.
+// Renders the grade and score badge pair with category-based colour and
+// fallbacks for missing values.
 
 import type { CSSProperties } from "react";
 import {

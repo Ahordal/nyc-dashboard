@@ -1,9 +1,7 @@
 // GradeFilters.tsx
 //
-// Configures the dashboard's grade filter.
-//
-// Supplies the available grade categories, display colors, and state
-// bindings for the reusable FilterSection component.
+// Supplies the grade categories, display colours, and state bindings for
+// the reusable FilterSection.
 
 import { faGraduationCap } from "@fortawesome/free-solid-svg-icons";
 import FilterSection from "./FiltersSection";
@@ -19,9 +17,8 @@ const gradeCategories = [
   "Closed",
 ] as const;
 
-// Maps the displayed button labels to the corresponding
-// CATEGORY_COLORS keys ("Pending" → "pending", etc.).
-
+// Maps the displayed button labels to the corresponding CATEGORY_COLORS
+// keys ("Pending" to "pending", and so on).
 const GRADE_FILTER_COLORS: Record<string, string> = {
   A: CATEGORY_COLORS.A,
   B: CATEGORY_COLORS.B,

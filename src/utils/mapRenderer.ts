@@ -4,7 +4,7 @@
 // MapView: inspection grade drives dot colour, inspection score drives
 // dot size and opacity (a closed restaurant is weighted like a very high
 // score so it always reads large). Pulled out of MapView.tsx to keep
-// that file scannable -- nothing here changes at runtime.
+// that file scannable; nothing here changes at runtime.
 
 import { CATEGORY_COLORS } from "./gradeColours";
 

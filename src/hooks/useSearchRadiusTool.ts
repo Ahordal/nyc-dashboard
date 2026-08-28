@@ -15,7 +15,8 @@ import { buildSearchRadiusGraphics } from "../utils/searchRadiusRings";
 
 const DEFAULT_RADIUS_MILES: SearchRadiusMiles = 0.25;
 
-// Clamps the target view scale to HOVER_CARD_MAX_SCALE upfront to prevent zooming out past the restaurant hover threshold when fitting larger rings.
+// Clamp the framing zoom to this scale so fitting a larger ring never
+// zooms out past the restaurant hover threshold (HOVER_CARD_MAX_SCALE).
 const FRAMING_MAX_SCALE = 18056;
 
 const METERS_PER_MILE = 1609.344;
@@ -74,7 +75,10 @@ export function useSearchRadiusTool(
     [],
   );
 
- // Pans and zooms the map to frame the circle for the selected distance (clamped to FRAMING_MAX_SCALE). Runs on placement and distance changes so the view matches the panel scope, while leaving manual pan/zoom untouched.
+  // Pans and zooms to frame the circle for the selected distance (capped
+  // at FRAMING_MAX_SCALE). Runs on placement and on distance changes so
+  // the view matches the panel's scope, without disturbing a manual
+  // pan/zoom.
   const frameRadiusCircle = useCallback(
     (point: SearchRadiusPoint, miles: SearchRadiusMiles) => {
       const view = viewRef.current;
@@ -88,7 +92,7 @@ export function useSearchRadiusTool(
         }),
       ) as Point;
 
-      // Circle radius in *projected* (Web Mercator) metres -- Mercator
+      // Circle radius in *projected* (Web Mercator) metres: Mercator
       // inflates ground distance by 1 / cos(latitude), and ArcGIS `scale`
       // is defined against projected metres per pixel.
       const latRadians = (point.latitude * Math.PI) / 180;
@@ -105,7 +109,7 @@ export function useSearchRadiusTool(
           { duration: 600 },
         )
         .catch(() => {
-          // goTo rejects if the user interrupts the animation -- ignore.
+          // goTo rejects if the user interrupts the animation; ignore.
         });
     },
     [],
@@ -114,7 +118,7 @@ export function useSearchRadiusTool(
   // One-shot restore of a radius carried in on the URL. Waits for both
   // the view and rings layer, then re-places the point, redraws the
   // rings, and frames the circle once the view has a size (goTo needs
-  // view.width/height). The didRestore guard keeps it from re-firing if
+  // view.width/height). The didRestore guard keeps it from re-firing when
   // `initialRadius`'s identity changes or the view remounts.
   const didRestoreRef = useRef(false);
   useEffect(() => {
@@ -133,7 +137,7 @@ export function useSearchRadiusTool(
     view
       .when(() => frameRadiusCircle(point, miles))
       .catch(() => {
-        // View was destroyed before it became ready -- nothing to frame.
+        // View was destroyed before it became ready; nothing to frame.
       });
   }, [view, ringsLayer, initialRadius, drawRings, frameRadiusCircle]);
 
@@ -145,7 +149,8 @@ export function useSearchRadiusTool(
     }
   }, []);
 
- // Exits placement mode without clearing an existing search radius point (used when cancelling relocation mid-placement).
+  // Exits placement mode without clearing an existing point (used when a
+  // relocation is cancelled mid-placement).
   const handleCancelPlacement = useCallback(() => {
     isPlacingPointRef.current = false;
     setIsPlacingPoint(false);
@@ -159,8 +164,8 @@ export function useSearchRadiusTool(
     setIsPlacingPoint(false);
     searchRadiusPointRef.current = null;
     setSearchRadiusPoint(null);
-    // Closing the tool resets the radius -- reopening always starts at
-    // the default rather than remembering the last-picked distance.
+    // Closing the tool resets the radius, so reopening always starts at
+    // the default rather than the last-picked distance.
     activeRadiusMilesRef.current = DEFAULT_RADIUS_MILES;
     setActiveRadiusMiles(DEFAULT_RADIUS_MILES);
     ringsLayerRef.current?.removeAll();
@@ -182,8 +187,8 @@ export function useSearchRadiusTool(
     [drawRings, frameRadiusCircle],
   );
 
-  // Called from MapView's click handler when isPlacingPointRef.current is
-  // true -- see the note above on why this reads everything via refs.
+  // Called from MapView's click handler while isPlacingPointRef.current
+  // is true; see the note above on why this reads everything via refs.
   const placePointAt = useCallback(
     (mapPoint: { longitude: number; latitude: number }) => {
       const point: SearchRadiusPoint = {

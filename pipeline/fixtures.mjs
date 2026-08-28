@@ -1,7 +1,8 @@
 // fixtures.mjs
-// Real LocationIQ responses captured earlier during manual testing.
-// Used as regression fixtures so scoring logic can be verified without
-// hitting the live API (saves quota, is deterministic, runs in CI).
+//
+// Real LocationIQ responses captured during manual testing, used as
+// regression fixtures so scoring logic can be verified without hitting
+// the live API (saves quota, deterministic, runs in CI).
 
 export const kitchen79 = {
   input: {
@@ -101,10 +102,10 @@ export const buffaloWildWingsGo = {
     street: 'Main Street',
     boro: 'Queens',
     zip: '11367',
-    // Real DOHMH coordinate wasn't captured during manual testing — using the
-    // confirmed-correct Google location as a stand-in so the distance check
-    // still exercises realistically. Replace with the actual DOHMH value
-    // when wiring real data through this path.
+    // Real DOHMH coordinate wasn't captured during manual testing; using
+    // the confirmed-correct Google location as a stand-in so the distance
+    // check still exercises realistically. Replace with the actual DOHMH
+    // value when wiring real data through this path.
     dohmhLat: 40.7183086,
     dohmhLon: -73.8167019,
   },
@@ -149,7 +150,7 @@ export const xinXing88 = {
     street: 'Jamaica Avenue',
     boro: 'Queens',
     zip: '11423',
-    // Same caveat as above — stand-in DOHMH coordinate from confirmed Google location.
+    // Same caveat as above: stand-in DOHMH coordinate from confirmed Google location.
     dohmhLat: 40.7112702,
     dohmhLon: -73.7705501,
   },

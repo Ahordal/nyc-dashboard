@@ -1,8 +1,9 @@
 // scoring.test.mjs
-// Tests the pure scoring/selection logic against real captured LocationIQ
-// responses (see fixtures.mjs). No network calls — deterministic, fast,
-// and doubles as a regression test: if the scoring logic changes and one
-// of these known cases stops behaving correctly, this will catch it.
+//
+// Tests the pure scoring/selection logic against real captured
+// LocationIQ responses (see fixtures.mjs). No network calls:
+// deterministic, fast, and doubles as a regression test if the scoring
+// logic changes and one of these known cases stops behaving correctly.
 //
 // Run with: node --test scoring.test.mjs
 
@@ -15,7 +16,7 @@ function toEntries(results, queryLabel) {
   return results.map((candidate) => ({ candidate, queryLabel }));
 }
 
-// --- distanceMeters sanity check -----------------------------------------
+// distanceMeters sanity check
 
 test('distanceMeters returns ~0 for identical points', () => {
   assert.ok(distanceMeters(40.7, -73.9, 40.7, -73.9) < 1);
@@ -27,7 +28,7 @@ test('distanceMeters returns a sensible value for two known points', () => {
   assert.ok(d > 1000 && d < 3000);
 });
 
-// --- Kitchen 79: should resolve via the no-hyphen query -------------------
+// Kitchen 79: should resolve via the no-hyphen query
 
 test('Kitchen 79: hyphenated query alone does not produce an acceptable match on its own merits beyond the correct candidate', () => {
   const entries = toEntries(kitchen79.hyphenatedResults, 'hyphenated');
@@ -65,7 +66,7 @@ test('Kitchen 79: rejected candidates all fail on house number or street mismatc
   }
 });
 
-// --- Buffalo Wild Wings Go: should be REJECTED (wrong branch) -------------
+// Buffalo Wild Wings Go: should be REJECTED (wrong branch)
 
 test('Buffalo Wild Wings Go: the only candidate is correctly rejected (wrong branch, house number mismatch)', () => {
   const candidate = buffaloWildWingsGo.hyphenatedResults[0];
@@ -83,7 +84,7 @@ test('Buffalo Wild Wings Go: selectBestMatch returns null across both query vari
   assert.equal(best, null); // must NOT silently accept the wrong branch
 });
 
-// --- Xin Xing 88: should resolve via the hyphenated query -----------------
+// Xin Xing 88: should resolve via the hyphenated query
 
 test('Xin Xing 88: hyphenated query candidate is accepted', () => {
   const candidate = xinXing88.hyphenatedResults[0];
@@ -110,7 +111,7 @@ test('Xin Xing 88: none of the no-hyphen candidates (missing house_number) are e
   assert.ok(scored.every((s) => !s.accepted));
 });
 
-// --- General scoring behavior ----------------------------------------------
+// General scoring behaviour
 
 test('scoreCandidate rejects a candidate beyond the distance cap even with house+street match', () => {
   const candidate = {

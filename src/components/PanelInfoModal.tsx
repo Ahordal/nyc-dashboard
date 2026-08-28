@@ -1,10 +1,8 @@
 // PanelInfoModal.tsx
 //
-// Centered, full-detail information modal for dashboard panels.
-//
-// Unlike PanelHeader's anchored popup, this modal is displayed in the
-// center of the screen over the entire dashboard, for panels whose
-// information content is too long for a small anchored popup.
+// Centred, full-detail information modal for dashboard panels whose info
+// content is too long for PanelHeader's small anchored popup. Renders
+// over the whole dashboard rather than anchored to the panel.
 
 import {
   useEffect,

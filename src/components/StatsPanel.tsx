@@ -1,8 +1,8 @@
 // StatsPanel.tsx
 //
-// One-line summary of the restaurants in scope -- the current map view,
-// or the Search Radius circle when that tool is active: total count plus
-// a breakdown by grade category.
+// One-line summary of the restaurants in scope (the current map view, or
+// the Search Radius circle when that tool is active): total count plus a
+// breakdown by grade category.
 
 import { useMemo } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -16,8 +16,8 @@ import {
   type GradeCategory,
 } from "../utils/gradeCategory";
 
-// Display order and labels for the breakdown -- mirrors GRADE_FILTER_COLORS'
-// key order in Dashboard.tsx (A, B, C, Pending, Closed).
+// Display order and labels for the breakdown, mirroring
+// GRADE_FILTER_COLORS' key order in Dashboard.tsx (A, B, C, Pending, Closed).
 const CATEGORY_ORDER: { category: GradeCategory; label: string }[] = [
   { category: "A", label: "A" },
   { category: "B", label: "B" },
@@ -33,7 +33,7 @@ const CATEGORY_ORDER: { category: GradeCategory; label: string }[] = [
 
 type StatsPanelProps = {
   restaurants: RestaurantProperties[];
-  // Set while the Search Radius tool is active -- switches the total's
+  // Set while the Search Radius tool is active; switches the total's
   // label from "in map view" to "within <distance>".
   searchRadiusMiles?: SearchRadiusMiles | null;
 };

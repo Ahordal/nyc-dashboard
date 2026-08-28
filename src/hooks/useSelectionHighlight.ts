@@ -3,14 +3,14 @@
 // Owns the white glow drawn around the click-selected and list-hovered
 // restaurant on the map. ArcGIS allows only one FeatureEffect per layer
 // view, so a single effect is shared and its `.filter` is mutated to the
-// union of the two object IDs -- the effect string itself is never
+// union of the two object IDs. The effect string itself is never
 // reassigned, because ArcGIS doesn't reliably pick up a replaced effect
 // on a live layer view.
 //
 // MapView creates the layer and view in its mount effect and passes
 // their refs in; this hook reads `.current` lazily, only when a
 // highlight is actually applied. `applyHighlightForId` is returned
-// because MapView also calls it from two other places -- the view.when()
+// because MapView also calls it from two other places: the view.when()
 // bootstrap, and the filter/search sync effect (which already knows the
 // object ID and passes it in to skip the lookup).
 

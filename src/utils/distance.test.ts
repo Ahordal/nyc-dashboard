@@ -1,3 +1,9 @@
+// distance.test.ts
+//
+// Unit tests for haversineDistanceMiles: identity, symmetry, exact
+// along-meridian distance, and the just-inside/just-outside behaviour
+// at a radius cutoff.
+
 import { describe, it, expect } from "vitest";
 import { haversineDistanceMiles } from "./distance";
 

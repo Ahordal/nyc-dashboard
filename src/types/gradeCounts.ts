@@ -2,7 +2,7 @@
 //
 // The per-category tally of restaurants in the current map scope.
 // MapView produces it from the visible/in-radius query, the dashboard
-// holds it in state, and GradeChart renders it -- so the type and the
+// holds it in state, and GradeChart renders it, so the type and the
 // zero value live here rather than in any one of those files.
 
 export type GradeCounts = Record<

@@ -1,5 +1,7 @@
 // RestaurantCard.tsx
-// Renders an individual restaurant card for the list view, including its name, address, and badges.
+//
+// One restaurant card for the list view: name, address, cuisine, last
+// inspection, optional distance, and inspection badges.
 
 import type { RestaurantProperties } from "../types/restaurant";
 import type { SearchRadiusPoint } from "../types/searchRadius";
@@ -14,7 +16,7 @@ import { toTitleCase } from "../utils/toTitleCase";
 type RestaurantCardProps = {
   restaurant: RestaurantProperties;
   isSelected: boolean;
-  // Driven by hover from the list itself or from a map dot -- styled the
+  // Driven by hover from the list itself or from a map dot; styled the
   // same as the CSS :hover state.
   isHovered?: boolean;
   onClick: (restaurant: RestaurantProperties) => void;
@@ -35,8 +37,8 @@ function formatDate(raw: string | null): string {
 function formatAddress(restaurant: RestaurantProperties): string {
   // Uses the pipeline's pre-formatted display_street (ordinal suffixes,
   // e.g. "5th Street" instead of "5 Street") rather than reconstructing
-  // that logic here -- keeps street-number formatting correct in exactly
-  // one place. Falls back to the raw street name (title-cased) only if
+  // that logic here, keeping street-number formatting in exactly one
+  // place. Falls back to the raw street name (title-cased) only if
   // display_street is somehow missing, e.g. stale cached data from
   // before this field existed.
   const formattedStreet =
@@ -48,8 +50,8 @@ function formatAddress(restaurant: RestaurantProperties): string {
   );
   const street = streetParts.join(" ");
 
-  // boro is already correctly cased by the pipeline (normalizeBoro()) --
-  // "Queens", "Staten Island", etc. -- so it's used as-is, not re-title-cased.
+  // boro is already correctly cased by the pipeline (normalizeBoro()),
+  // e.g. "Queens", "Staten Island", so it's used as-is, not re-title-cased.
   const boro = restaurant.boro?.trim();
 
   if (street && boro) return `${street}, ${boro}`;

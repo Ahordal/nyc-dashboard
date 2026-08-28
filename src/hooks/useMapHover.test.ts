@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
 
+// useMapHover.test.ts
+//
+// Unit tests for useMapHover: coalescing a burst of pointer-move events
+// into one trailing hit test, hover-card visibility around the max
+// scale, cursor changes, skipping while placing a Search Radius point,
+// mouseleave cleanup, and dropping a stale hit-test response.
+
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
@@ -12,7 +19,7 @@ import { useMapHover } from "./useMapHover";
 
 const HOVER_CARD_MAX_SCALE = 18056;
 
-// Two microtask hops -- enough to let an awaited hitTest promise settle
+// Two microtask hops, enough to let an awaited hitTest promise settle
 // and runHitTest run to completion.
 const flush = async () => {
   await Promise.resolve();

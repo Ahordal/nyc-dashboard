@@ -1,3 +1,7 @@
+// main.tsx
+//
+// Application entry point: mounts the Dashboard into #root.
+
 import { createRoot } from "react-dom/client";
 import Dashboard from "./components/dashboard";
 import "./styles/global.css";

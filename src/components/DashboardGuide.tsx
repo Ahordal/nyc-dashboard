@@ -1,7 +1,7 @@
 // DashboardGuide.tsx
 //
-// Displays dataset metadata stats (last updated, total restaurants, inspection count) 
-// and provides a modal trigger for the full dashboard reference guide.
+// Shows dataset metadata (last updated, restaurant count, inspection
+// count) and a modal trigger for the full dashboard reference guide.
 
 import { useState } from "react";
 

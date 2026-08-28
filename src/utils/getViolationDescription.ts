@@ -1,10 +1,8 @@
-// utils/getViolationDescription.ts
+// getViolationDescription.ts
 //
-// Resolves a ViolationCodeLookup entry (which can be either a plain
-// string, or an object carrying description + category) down to a
-// single displayable string. Centralizes this so ViolationCard.tsx and
-// ViolationList.tsx don't each maintain their own copy of the same
-// string/object handling.
+// Resolves a violation-code entry (a plain string, or an object with
+// description + category) to a single displayable string, so
+// ViolationCard and ViolationList don't each repeat the handling.
 
 import type { ViolationCodeDetails } from "../types/restaurant";
 

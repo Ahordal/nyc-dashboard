@@ -1,11 +1,10 @@
 // distance.ts
 //
 // Pure haversine great-circle distance helper for the map's Search Radius
-// tool. Deliberately client-side rather than an ArcGIS query.distance /
-// query.units server query: RestaurantProperties.latitude/.longitude are
-// already present in the in-memory restaurant list the sidebar already
-// has, and the map itself is never spatially filtered by radius, so a
-// server-side spatial query would have nothing to buy here.
+// tool. Client-side on purpose: the sidebar's in-memory list already
+// carries each restaurant's latitude/longitude, and the map is never
+// spatially filtered by radius, so a server-side ArcGIS spatial query
+// would buy nothing here.
 
 const EARTH_RADIUS_MILES = 3958.8;
 

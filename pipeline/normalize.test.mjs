@@ -1,7 +1,8 @@
 // normalize.test.mjs
+//
 // Unit tests for normalize.mjs, using Node's built-in test runner.
 // Run with: node --test normalize.test.mjs
-// (No dependencies needed — node:test and node:assert are built into Node.)
+// (No dependencies: node:test and node:assert are built into Node.)
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
@@ -15,7 +16,7 @@ import {
   addressHash,
 } from './normalize.mjs';
 
-// --- House number normalization ---------------------------------------
+// House number normalization
 
 test('normalizeHouseNumber strips hyphens for the normalized form', () => {
   const result = normalizeHouseNumber('37-70');
@@ -32,8 +33,8 @@ test('normalizeHouseNumber handles plain numbers with no hyphen', () => {
 });
 
 test('normalizeHouseNumber strips letters (e.g. unit suffixes)', () => {
-  // "123A" -> "123" — a known limitation worth being aware of, not a bug:
-  // house-number-only matching can't distinguish 123 from 123A. Street +
+  // "123A" -> "123": a known limitation to be aware of, not a bug.
+  // House-number-only matching can't distinguish 123 from 123A; street +
   // proximity checks are what catch a genuinely wrong match in that case.
   assert.equal(normalizeHouseNumber('123A').normalized, '123');
 });
@@ -52,7 +53,7 @@ test('houseNumbersMatch rejects when either side is empty', () => {
   assert.ok(!houseNumbersMatch('123', ''));
 });
 
-// --- Street name normalization ------------------------------------------
+// Street name normalization
 
 test('normalizeStreetName expands common abbreviations', () => {
   assert.equal(normalizeStreetName('79 St'), '79 street');
@@ -85,7 +86,7 @@ test('streetNamesMatch works with mixed abbreviation styles', () => {
   assert.ok(!streetNamesMatch('79 St', '80th Street'));
 });
 
-// --- Display formatting (should NEVER affect matching) -------------------
+// Display formatting (should NEVER affect matching)
 
 test('formatDisplayStreet adds ordinal suffixes', () => {
   assert.equal(formatDisplayStreet('79 STREET'), '79th Street');
@@ -117,7 +118,7 @@ test('formatDisplayAddress includes neighbourhood only when provided', () => {
   assert.equal(withoutNeighbourhood, '37-70 79th Street');
 });
 
-// --- Address hashing (must use NORMALIZED inputs, not display strings) ---
+// Address hashing (must use NORMALIZED inputs, not display strings)
 
 test('addressHash is stable across cosmetic formatting differences', () => {
   const h1 = addressHash({ camis: '123', building: '79-01', street: '79 St', boro: 'Queens', zip: '11372' });

@@ -1,3 +1,10 @@
+// useUrlSync.test.ts
+//
+// Unit tests for the pure URL helpers in useUrlSync: isSearchRadiusMiles
+// validation, parseRadiusParam parsing and range checks,
+// parseInitialUrlState query decoding, and buildUrlQuery serialization
+// plus a parse/build round-trip.
+
 import { describe, it, expect } from "vitest";
 import {
   parseRadiusParam,

@@ -1,17 +1,18 @@
 // cache.mjs
-// This file manages a local cache for restaurant geocoding results, keyed by their 
-// unique CAMIS ID. It ensures safe data loading, prevents file corruption during crashes 
-// using atomic writes, automatically forces updates if a restaurant's address changes 
-// or the mapping rules are updated, and provides tools to merge overlapping data runs.
+//
+// Local cache for restaurant geocoding results, keyed by CAMIS ID.
+// Handles safe loading, atomic writes (no corruption on a crash),
+// automatic invalidation when a restaurant's address or the matching
+// rules change, and merging of overlapping runs.
 
 import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
 
-// Bumping this version forces the app to re-geocode everything if the address 
-// matching rules change in the future.
+// Bumping this version forces a re-geocode of everything if the address
+// matching rules change in future.
 export const RESOLVER_VERSION = 1;
 
-// --- Loading ---------------------------------------------------------------
+// Loading
 
 /**
  * Loads the existing cache file from disk. If the file is missing or corrupted 
@@ -29,12 +30,12 @@ export async function loadCache(filePath) {
     if (err.code === 'ENOENT') {
       return {}; // Returns empty cache on the very first run
     }
-    console.warn(`Cache at ${filePath} could not be read (${err.message}) — starting fresh.`);
+    console.warn(`Cache at ${filePath} could not be read (${err.message}); starting fresh.`);
     return {};
   }
 }
 
-// --- Saving (atomic) ---------------------------------------------------------
+// Saving (atomic)
 
 /**
  * Saves the cache safely by writing it to a temporary file first, then instantly 
@@ -51,7 +52,7 @@ export async function saveCacheAtomic(filePath, cache) {
   await rename(tempPath, filePath);
 }
 
-// --- Cache entry construction ------------------------------------------------
+// Cache entry construction
 
 /**
  * Creates a standardized cache record from a restaurant's geocoding result, 
@@ -79,7 +80,7 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
   };
 }
 
-// --- Invalidation logic -------------------------------------------------------
+// Invalidation logic
 
 /**
  * Checks whether a restaurant needs to be geocoded again. It returns true if 
@@ -112,7 +113,7 @@ export function upsertCacheEntry(cache, entry) {
   return { ...cache, [entry.camis]: entry };
 }
 
-// --- Merging (for reconciling concurrent/overlapping runs) -----------------
+// Merging (reconciling concurrent/overlapping runs)
 
 /**
  * Helper function to check if a cache entry is finished and final (not pending).

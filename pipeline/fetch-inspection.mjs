@@ -1,10 +1,13 @@
-// fetch-inspections.mjs
+// fetch-inspection.mjs
 //
-// Fetches NYC DOHMH inspection records from SODA API and compiles 4 static assets:
-// 1. latest-inspections.geojson: Most recent scored inspection per restaurant (powers map/KPIs).
-// 2. history/{camis}.json: Individual time-series files per CAMIS for on-demand score charts.
-// 3. violation-codes.json: Code-to-description/category lookup to prevent text duplication.
-// 4. dashboard-meta.json: Summary counts and daily baseline deltas.
+// Fetches NYC DOHMH inspection records from the SODA API and compiles
+// four static assets:
+// 1. latest-inspections.geojson: most recent scored inspection per
+//    restaurant (powers the map and KPIs).
+// 2. history/{camis}.json: per-CAMIS time series for on-demand score charts.
+// 3. violation-codes.json: code-to-description/category lookup, so
+//    description text isn't repeated across files.
+// 4. dashboard-meta.json: summary counts and daily baseline deltas.
 
 import { writeFile, readFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
@@ -70,9 +73,10 @@ const BORO_DISPLAY_NAMES = {
   "STATEN ISLAND": "Staten Island",
 };
 
-// DOHMH status actions. Unrecognized values fall back to 'unknown' to avoid misrepresenting closures.
-// OPEN_ACTIONS/CLOSED_ACTIONS come from shared/inspectionStatus.mjs -- the
-// same source src/utils/gradeCategory.ts's CLOSED_ACTIONS reads from.
+// DOHMH status actions. Unrecognized values fall back to 'unknown' to
+// avoid misrepresenting closures. OPEN_ACTIONS/CLOSED_ACTIONS come from
+// shared/inspectionStatus.mjs, the same source
+// src/utils/gradeCategory.ts's CLOSED_ACTIONS reads from.
 const OPEN_ACTIONS_SET = new Set(OPEN_ACTIONS);
 const CLOSED_ACTIONS_SET = new Set(CLOSED_ACTIONS);
 
@@ -452,13 +456,13 @@ export function buildLatestInspectionsGeoJSON(
     );
 
     // Restaurants with zero scored events have never received an actual
-    // DOHMH inspection -- every record on file is the 1900-01-01
+    // DOHMH inspection; every record on file is the 1900-01-01
     // placeholder. These used to be dropped from the dataset entirely;
-    // now they're surfaced as a distinct "Uninspected" category instead
-    // (grade forced to UNINSPECTED_GRADE below) rather than silently
-    // omitted. A restaurant with legally-operating-before-inspection
-    // status doesn't necessarily mean it's still open -- see grade/copy
-    // handling below, which stays neutral rather than asserting either way.
+    // now they're surfaced as a distinct "Uninspected" category (grade
+    // forced to UNINSPECTED_GRADE below) rather than silently omitted. A
+    // legally-operating-before-inspection status doesn't necessarily mean
+    // the restaurant is still open; see the grade/copy handling below,
+    // which stays neutral rather than asserting either way.
     const isUninspected = scoredEvents.length === 0;
     const latest = isUninspected
       ? events[events.length - 1]
@@ -637,7 +641,7 @@ async function loadCountsSnapshot(filePath) {
       return null;
     }
     console.warn(
-      `Counts snapshot at ${filePath} could not be read (${err.message}) — omitting deltas.`,
+      `Counts snapshot at ${filePath} could not be read (${err.message}); omitting deltas.`,
     );
     return null;
   }

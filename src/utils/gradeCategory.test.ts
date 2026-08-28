@@ -1,3 +1,9 @@
+// gradeCategory.test.ts
+//
+// Unit tests for getGradeCategory and isClosedInspection: closure
+// precedence over any grade, the uninspected sentinel, administrative
+// pending grades, null-score handling, and the A/B/C score-band edges.
+
 import { describe, it, expect } from "vitest";
 import { getGradeCategory, isClosedInspection, UNINSPECTED_GRADE } from "./gradeCategory";
 import { CLOSED_ACTIONS } from "../../shared/inspectionStatus.mjs";

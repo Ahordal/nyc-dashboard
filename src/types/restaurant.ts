@@ -1,9 +1,7 @@
 // restaurant.ts
 //
-// Shared data models for restaurant inspection data.
-//
-// Defines the TypeScript types used throughout the dashboard for
-// restaurants, inspection history, violations, and related lookup data.
+// Shared TypeScript models for restaurants, inspection history,
+// violations, and related lookup data, used throughout the dashboard.
 
 // Status types
 
@@ -42,7 +40,7 @@ export type RestaurantProperties = {
   building: string;
   street: string;
   // Just the street name, formatted for display (ordinal suffixes,
-  // expanded abbreviations -- e.g. "5 STREET" -> "5th Street"). No
+  // expanded abbreviations, e.g. "5 STREET" becomes "5th Street"). No
   // neighbourhood included; compose with `boro` or `neighbourhood`
   // separately as needed. See normalize.mjs's formatDisplayStreet().
   display_street: string;
@@ -55,32 +53,32 @@ export type RestaurantProperties = {
   cuisine: string;
   // The DOHMH-supplied coordinate, preserved separately and untouched by
   // geocoding. Null when DOHMH's own data was unusable (missing or
-  // outside the NYC bounding box) -- this can happen even when
+  // outside the NYC bounding box); this can happen even when
   // latitude/longitude above ARE present, if a verified geocoder
   // resolution is what's actually being displayed instead.
   dohmh_latitude: number | null;
   dohmh_longitude: number | null;
-  // "verified"   -- an independent geocoder confirmed this location;
-  //                 latitude/longitude above come from that resolution.
-  // "unverified" -- geocoding ran and found no acceptable match;
-  //                 latitude/longitude fall back to DOHMH's own.
-  // "pending"    -- not yet attempted, or a prior attempt hit a
-  //                 transient error and will be retried on a future run.
+  // "verified":   an independent geocoder confirmed this location;
+  //               latitude/longitude above come from that resolution.
+  // "unverified": geocoding ran and found no acceptable match;
+  //               latitude/longitude fall back to DOHMH's own.
+  // "pending":    not yet attempted, or a prior attempt hit a transient
+  //               error and will be retried on a future run.
   location_status: LocationStatus;
-  // Only populated when location_status is "verified" -- the geocoder's
+  // Only populated when location_status is "verified": the geocoder's
   // reported neighbourhood (e.g. "Jackson Heights"). Enrichment only, not
-  // authoritative DOHMH data -- geocoder neighbourhood labels can be fuzzy.
+  // authoritative DOHMH data; geocoder neighbourhood labels can be fuzzy.
   neighbourhood: string | null;
   grade: string | null;
   grade_date: string | null;
   // Null for restaurants in the "Uninspected" category (see
-  // gradeCategory.ts's UNINSPECTED_GRADE) -- DOHMH has never recorded a
+  // gradeCategory.ts's UNINSPECTED_GRADE): DOHMH has never recorded a
   // real inspection for them, so there's no score to report.
   score: number | null;
   inspection_date: string;
   inspection_type: string;
   action: string;
-  violations: string; // JSON-stringified -- GeoJSONLayer limitation, see pipeline notes
+  violations: string; // JSON-stringified; GeoJSONLayer limitation, see pipeline notes
   current_status_code: CurrentStatus;
   current_status_label: string;
   record_date: string | null;
@@ -97,9 +95,9 @@ export type RestaurantProperties = {
 export type InspectionEvent = {
   id: string;
   date: string;
-  // Administrative grades (N - Not Yet Graded in particular) often have
+  // Administrative grades (N, Not Yet Graded, in particular) often have
   // no computed score. The pipeline can emit `null` or omit the key
-  // entirely for these, so this is genuinely nullable -- consumers must
+  // entirely for these, so this is genuinely nullable; consumers must
   // check before using it numerically (see PerformanceChart.tsx).
   score: number | null;
   grade: string | null;
@@ -111,6 +109,6 @@ export type ChartPoint = {
   id: string;
   timestamp: number;
   score: number;
-  grade: string | null; 
+  grade: string | null;
   action: string | null;
 };

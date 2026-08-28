@@ -7,7 +7,7 @@
 //
 // MapView passes the `view` (once it exists), the layer ref, and the
 // stable refs/setter this needs. Listeners attach when `view` becomes
-// non-null and detach on unmount -- one render tick later than the map's
+// non-null and detach on unmount, one render tick later than the map's
 // own mount effect, which is harmless since the map isn't interactive
 // until it settles anyway.
 
@@ -50,7 +50,7 @@ export function useMapHover({
     if (!view || !layer) return;
 
     let pointerMoveTimeoutId: number | null = null;
-    // Only the screen coordinates are read here and passed to hitTest --
+    // Only the screen coordinates are read here and passed to hitTest;
     // the full ArcGIS pointer-move event assigns cleanly to this subset.
     let latestPointerMoveEvent: { x: number; y: number } | null = null;
     let latestHitTestToken = 0;

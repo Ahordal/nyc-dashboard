@@ -1,5 +1,6 @@
 // PaginationBar.tsx
-// Reusable pagination controls for navigating large datasets.
+//
+// Reusable pagination controls for navigating large lists.
 
 type PaginationBarProps = {
   currentPage: number;

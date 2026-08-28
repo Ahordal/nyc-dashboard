@@ -1,6 +1,7 @@
 // backfill.mjs
-// This script acts as a local test entry point, allowing you to run the geocoding 
-// pipeline against a static JSON file of restaurants for manual regression testing.
+//
+// Local test entry point: runs the geocoding pipeline against a static
+// JSON file of restaurants for manual regression testing.
 //
 // Usage:
 //   node backfill.mjs path/to/restaurants.json

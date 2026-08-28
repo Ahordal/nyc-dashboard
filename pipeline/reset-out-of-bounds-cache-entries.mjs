@@ -3,14 +3,14 @@
 // ONE-OFF cleanup script. Run once after deploying the scoring.mjs fix.
 //
 // Scans geocode-cache.json for entries marked "verified" whose resolved
-// coordinate falls outside the NYC bounding box -- these were accepted
+// coordinate falls outside the NYC bounding box. These were accepted
 // under the old scoring logic, which skipped the distance-from-DOHMH
 // sanity check entirely whenever DOHMH's own coordinate was missing or
 // invalid (see scoring.mjs history). Resets each one to "pending" so
 // run-geocode-backfill.mjs's normal needsResolution() check picks them
 // up and re-geocodes them under the corrected scoring logic on its next
-// scheduled run -- without needing to reprocess the entire cache (and
-// burn the whole daily LocationIQ quota) via a RESOLVER_VERSION bump.
+// scheduled run, without reprocessing the entire cache (and burning the
+// whole daily LocationIQ quota) via a RESOLVER_VERSION bump.
 //
 // Usage: node reset-out-of-bounds-cache-entries.mjs [path-to-geocode-cache.json]
 
@@ -29,7 +29,7 @@ async function main() {
 
   if (camisIds.length === 0) {
     console.log(
-      "Cache is empty or the file wasn't found at this path -- nothing to check. " +
+      "Cache is empty or the file wasn't found at this path; nothing to check. " +
         "If you expected entries here, confirm you're running this from the right " +
         "directory and that your local branch is up to date (git pull).",
     );

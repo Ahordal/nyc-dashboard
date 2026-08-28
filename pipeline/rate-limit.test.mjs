@@ -1,13 +1,14 @@
 // rate-limit.test.mjs
-// Verifies the rate-limit early-exit behavior end-to-end using a mocked
-// global.fetch — no real LocationIQ calls, no real quota consumed.
+//
+// Verifies the rate-limit early-exit behaviour end-to-end using a mocked
+// global.fetch: no real LocationIQ calls, no real quota consumed.
 //
 // Confirms:
 //   1. A 429 response is caught as RateLimitedError, not a generic error.
-//   2. resolveRestaurant() marks it { status: 'pending', reason: 'rate_limited',
-//      rateLimited: true } — never 'unverified'.
-//   3. runGeocodeBackfill() STOPS entirely on the first rate-limited response,
-//      rather than continuing to grind through the rest of the restaurant list.
+//   2. resolveRestaurant() marks it { status: 'pending', reason:
+//      'rate_limited', rateLimited: true }, never 'unverified'.
+//   3. runGeocodeBackfill() STOPS entirely on the first rate-limited
+//      response rather than grinding through the rest of the list.
 //
 // Run with: node --test rate-limit.test.mjs
 
@@ -37,7 +38,7 @@ function mockFetch429() {
   });
 }
 
-// --- fetchGeocode throws RateLimitedError on 429 ---------------------------
+// fetchGeocode throws RateLimitedError on 429
 
 test('fetchGeocode throws RateLimitedError specifically on HTTP 429', async () => {
   const originalFetch = global.fetch;
@@ -52,7 +53,7 @@ test('fetchGeocode throws RateLimitedError specifically on HTTP 429', async () =
   }
 });
 
-// --- resolveRestaurant marks rate-limited correctly -------------------------
+// resolveRestaurant marks rate-limited correctly
 
 test('resolveRestaurant returns pending/rate_limited with rateLimited:true on 429', async () => {
   const originalFetch = global.fetch;
@@ -79,7 +80,7 @@ test('resolveRestaurant returns pending/rate_limited with rateLimited:true on 42
   }
 });
 
-// --- runGeocodeBackfill stops the ENTIRE run on first rate limit -----------
+// runGeocodeBackfill stops the ENTIRE run on first rate limit
 
 test('runGeocodeBackfill stops processing remaining restaurants after a 429', async () => {
   await withTempDir(async (dir) => {
@@ -108,9 +109,9 @@ test('runGeocodeBackfill stops processing remaining restaurants after a 429', as
         logPath: join(dir, 'shifts.json'),
       });
 
-      // Should have stopped after the FIRST restaurant's first request hit
-      // the 429 — not ground through all 10 restaurants (which would be up
-      // to 20 calls, one per query variant each).
+      // Should have stopped after the FIRST restaurant's first request
+      // hit the 429, not ground through all 10 restaurants (which would
+      // be up to 20 calls, one per query variant each).
       assert.equal(callCount, 1, 'should stop immediately on first 429, not keep calling');
       assert.equal(result.resolvedCount, 0);
     } finally {
@@ -146,11 +147,11 @@ test('runGeocodeBackfill processes normally when there is no rate limiting', asy
         logPath: join(dir, 'shifts.json'),
       });
 
-      // 3 restaurants x 2 queries each = 6 calls, all restaurants processed
-      // (unverified, since 404 -> empty results -> no match -- but NOT
-      // stopped early, since this isn't a rate-limit situation). Building
-      // numbers must be hyphenated for buildQueries to actually fire the
-      // second (no-hyphen) query -- see geocode.mjs.
+      // 3 restaurants x 2 queries each = 6 calls, all restaurants
+      // processed (unverified, since 404 gives empty results and no
+      // match, but NOT stopped early, since this isn't a rate-limit
+      // situation). Building numbers must be hyphenated for buildQueries
+      // to fire the second (no-hyphen) query; see geocode.mjs.
       assert.equal(callCount, 6);
       assert.equal(result.skippedCount, 0);
     } finally {

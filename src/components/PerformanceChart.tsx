@@ -1,13 +1,12 @@
 // PerformanceChart.tsx
 //
-// Main line chart component tracking NYC restaurant inspection scores over time.
+// Line chart of a restaurant's inspection scores over time. Uses custom
+// point-only tooltips instead of Recharts' built-in Tooltip, with direct
+// pointer hover, history-row preview, keyboard navigation, and pinned
+// report selection tracked independently.
 //
-// Uses custom point-only tooltips rather than Recharts' built-in Tooltip.
-// Direct pointer hover, history-row preview, keyboard navigation, and pinned
-// report selection are maintained independently.
-//
-// Tooltip-priority logic lives in useTooltipPriority; keyboard navigation
-// lives in useChartKeyboardNav. This component wires chart-data derivation,
+// Tooltip priority lives in useTooltipPriority; keyboard navigation in
+// useChartKeyboardNav. This component wires chart-data derivation,
 // sizing, and rendering, plus the one bit of cross-hook coordination: a
 // pointer hover cancels keyboard mode.
 

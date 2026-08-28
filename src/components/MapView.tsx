@@ -1,6 +1,8 @@
-//MapView.tsx
+// MapView.tsx
 //
-//Displays the ArcGIS map view with localized dot weighting, spatial filtering, a compact top-right icon-only legend trigger, interactive custom scale/zoom controllers, and hover cards.
+// The ArcGIS map view: score-weighted dots, spatial filtering, a compact
+// top-right legend trigger, custom scale/zoom/compass controls, the
+// Search Radius tool, and hover cards.
 
 import { useEffect, useRef, useState } from "react";
 import Map from "@arcgis/core/Map";
@@ -61,8 +63,8 @@ type MapViewProps = {
     point: SearchRadiusPoint | null,
     radiusMiles: SearchRadiusMiles,
   ) => void;
-  // A Search Radius restored from the URL on first load -- placed once
-  // the map view and rings layer are ready. Null in normal use.
+  // A Search Radius restored from the URL on first load, placed once the
+  // map view and rings layer are ready. Null in normal use.
   initialSearchRadius?: {
     point: SearchRadiusPoint;
     miles: SearchRadiusMiles;
@@ -163,7 +165,8 @@ export default function InspectionMapView({
       searchRadius.searchRadiusPoint,
       searchRadius.activeRadiusMiles,
     );
-    // Re-runs the query whenever the search radius point or distance changes, falling back to the map extent when the point is cleared.
+    // Re-run the query whenever the search radius point or distance
+    // changes, falling back to the map extent when the point is cleared.
     const view = viewRef.current;
     const layer = layerRef.current;
     if (view && layer) void reportVisibleRestaurants(view, layer);
@@ -177,7 +180,8 @@ export default function InspectionMapView({
     if (!onVisibleRestaurantsChange && !onGradeCountsChange) return;
     const requestId = ++queryRequestIdRef.current;
 
-    // When a Search Radius point is set, query scope restricts to the circle rather than the map extent, decoupling panel data from map panning and zooming.
+    // When a Search Radius point is set, the query scope is the circle
+    // rather than the map extent, so panel data stops tracking pan/zoom.
     const radiusPoint = searchRadius.searchRadiusPointRef.current;
     const radius = radiusPoint
       ? { point: radiusPoint, miles: searchRadius.activeRadiusMilesRef.current }
@@ -187,7 +191,10 @@ export default function InspectionMapView({
       const restaurants = await queryVisibleRestaurants(view, layer, radius);
       if (requestId !== queryRequestIdRef.current) return;
 
-      // GradeChart tallies pre-grade-filter restaurants to show the full map area distribution rather than filtering out unselected grades; matching slices are highlighted instead. (RestaurantList and StatsPanel use filteredRestaurants for the active subset).
+      // GradeChart tallies restaurants before the grade filter so it can
+      // show the full distribution for the area (matching slices are
+      // highlighted instead of removed). RestaurantList and StatsPanel
+      // use filteredRestaurants for the active subset.
       if (onGradeCountsChange) {
         const counts: GradeCounts = { ...EMPTY_GRADE_COUNTS };
         for (const r of restaurants) {
@@ -228,9 +235,9 @@ export default function InspectionMapView({
 
     const map = new Map({
       basemap: "arcgis/dark-gray/base",
-      // ringsLayer first -- ArcGIS layer order is bottom-to-top by array
-      // position, so this keeps the Search Radius rings under every
-      // restaurant point/highlight.
+      // ringsLayer first: ArcGIS draws array order bottom-to-top, so this
+      // keeps the Search Radius rings under every restaurant
+      // point/highlight.
       layers: [ringsLayer, layer],
     });
 
@@ -324,7 +331,9 @@ export default function InspectionMapView({
       view.destroy();
       setMapView(null);
     };
-    // Excluded from dependency array to prevent tearing down and recreating the map on every render; the click handler safely reads stable refs and callbacks from the searchRadius hook.
+    // Excluded from the dependency array so the map isn't torn down and
+    // recreated on every render; the click handler safely reads stable
+    // refs and callbacks from the searchRadius hook.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyHighlightForId]);
 
@@ -434,7 +443,9 @@ export default function InspectionMapView({
 
       let cameraWillMove = false;
 
-      // Freezes map extent tracking while a Search Radius point is active to prevent overriding the circle view. The underlying query still re-runs so linked panels and charts reflect the active circle scope.
+      // Freeze map-extent tracking while a Search Radius point is active
+      // so it doesn't override the circle view. The query still re-runs
+      // so linked panels and charts reflect the circle scope.
       const radiusActive = searchRadius.searchRadiusPointRef.current !== null;
 
       if (cameraTrigger && view && !radiusActive) {
@@ -472,9 +483,9 @@ export default function InspectionMapView({
 
     syncSelectionAndZoom();
     // reportVisibleRestaurants is a per-render function and
-    // searchRadius.searchRadiusPointRef is a stable ref -- neither
-    // belongs in the dep array (listing the function would re-run this on
-    // every render).
+    // searchRadius.searchRadiusPointRef is a stable ref; neither belongs
+    // in the dep array (listing the function would re-run this every
+    // render).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     filters,

@@ -1,10 +1,9 @@
 // SearchRadiusPicker.tsx
 //
 // Single-select 3-button segmented control for the Search Radius tool's
-// flyout panel. Built directly on FilterButton rather than FilterSection
-// -- FilterSection is a multi-select array-toggle contract (selected:
-// string[], onChange(next: string[])), which doesn't fit a single active
-// radius value.
+// flyout panel. Built directly on FilterButton rather than FilterSection,
+// whose multi-select array-toggle contract (selected: string[],
+// onChange(next: string[])) doesn't fit a single active radius value.
 
 import FilterButton from "./FilterButton";
 import {

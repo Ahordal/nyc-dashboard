@@ -1,10 +1,9 @@
 // RestaurantDetails.tsx
 //
-// Displays overview information for the currently selected restaurant.
-//
-// Shows restaurant metadata, geographical information, and the inspection
-// history list. Hovering or focusing a history row previews its chart point.
-// Activating a row opens that inspection's full report.
+// Overview panel for the selected restaurant: metadata, location, contact
+// info, and the inspection-history list. Hovering or focusing a history
+// row previews its chart point; activating one opens that inspection's
+// full report.
 
 import { useState } from "react";
 

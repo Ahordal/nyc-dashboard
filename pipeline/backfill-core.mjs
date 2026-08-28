@@ -1,7 +1,8 @@
 // backfill-core.mjs
-// This file runs the main geocoding loop across a list of restaurants. It checks 
-// the cache to avoid unnecessary work, tracks daily API quotas, saves progress 
-// incrementally, and flags any unusual coordinate jumps for review.
+//
+// Runs the main geocoding loop over a list of restaurants: checks the
+// cache to skip unnecessary work, tracks the daily API quota, saves
+// progress incrementally, and flags unusual coordinate jumps for review.
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { addressHash } from './normalize.mjs';
@@ -65,7 +66,7 @@ export async function runGeocodeBackfill(restaurants, opts) {
 
     // Stop processing if we've hit our daily request limit.
     if (quota.remaining() <= 0) {
-      console.log(`Daily quota reached (${quota.used()} requests). Stopping — remainder picks up next run.`);
+      console.log(`Daily quota reached (${quota.used()} requests). Stopping; remainder picks up next run.`);
       break;
     }
 
@@ -105,7 +106,7 @@ export async function runGeocodeBackfill(restaurants, opts) {
 
     // Stop immediately if we get rate-limited so we don't waste the rest of the run on guaranteed errors.
     if (resolution.rateLimited) {
-      console.log('LocationIQ rate limit hit — stopping this run early. Remainder picks up next run.');
+      console.log('LocationIQ rate limit hit; stopping this run early. Remainder picks up next run.');
       await saveCacheAtomic(cachePath, cache);
       break;
     }

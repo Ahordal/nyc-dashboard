@@ -94,10 +94,10 @@ export const SORT_KEY_ORDER: SortKeyId[] = [
   "distance",
 ];
 
-// The direction that puts the "best"/most useful rows first for each
-// field -- applied whenever the primary field changes, so picking Grade
-// starts with A's, Distance with the closest, etc. The user can still
-// flip it with the direction toggle.
+// The direction that puts the most useful rows first for each field,
+// applied whenever the primary field changes so picking Grade starts
+// with A's, Distance with the closest, and so on. The direction toggle
+// can still flip it.
 export const NATURAL_DIRECTION: Record<SortKeyId, SortDirection> = {
   inspection_date: "desc", // most recent first
   name: "asc", // A–Z
@@ -112,8 +112,8 @@ export type SortOptions = {
   secondary: SortKeyId | null;
   direction: SortDirection;
   // The active Search Radius centre, needed by the "distance" key. Null
-  // when the tool is inactive -- "distance" then keys every row as null
-  // and drops out to the name/id tiebreak.
+  // when the tool is inactive, in which case "distance" keys every row
+  // as null and falls through to the name/id tiebreak.
   point: SearchRadiusPoint | null;
 };
 
@@ -137,7 +137,7 @@ export function sortRestaurants(
       if (firstKey === null || secondKey === null) {
         if (firstKey === null && secondKey !== null) return 1;
         if (secondKey === null && firstKey !== null) return -1;
-        continue; // both missing at this level -- try the next key
+        continue; // both missing at this level; try the next key
       }
 
       const comparison =

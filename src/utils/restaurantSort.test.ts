@@ -1,3 +1,9 @@
+// restaurantSort.test.ts
+//
+// Unit tests for sortRestaurants and its sort-key metadata: single- and
+// two-level ordering, per-field key semantics, null values always last,
+// the radius-only distance key, and the tiebreak fallback to name then id.
+
 import { describe, it, expect } from "vitest";
 import {
   sortRestaurants,
@@ -8,7 +14,7 @@ import {
 import type { SortOptions } from "./restaurantSort";
 import type { RestaurantProperties } from "../types/restaurant";
 
-// Minimal restaurant factory -- only the fields the sort keys read.
+// Minimal restaurant factory: only the fields the sort keys read.
 function mk(
   id: string,
   overrides: Partial<RestaurantProperties> = {},

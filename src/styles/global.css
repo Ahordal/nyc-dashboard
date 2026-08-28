@@ -1,3 +1,11 @@
+/*
+ * global.css
+ *
+ * Every style for the dashboard: design tokens, layout grid, panels, the
+ * restaurant explorer, charts, and the map view and its controls.
+ * Organized into the numbered sections below.
+ */
+
 /*///////////////////////////////////////////// 1. RESET & GLOBAL FOUNDATIONS //////////////////////////////////////////////*/
 
 /* 1.1 IMPORTS & BOX SIZING */
@@ -934,7 +942,7 @@ a:focus-visible {
   font-weight: 500;
 }
 
-/* Two field dropdowns have to fit on one row -- tighter than the
+/* Two field dropdowns have to fit on one row, tighter than the
    stand-alone default. */
 .restaurant-list-sort-bar .sort-dropdown-trigger {
   min-width: 118px;
@@ -2291,17 +2299,17 @@ a:focus-visible {
   justify-content: center;
   background-color: var(--bg-panel);
   color: var(--text-muted);
-  /* Labels are "0.25 mi" etc -- keep the unit lowercase rather than
-     inheriting .filter-button's uppercase. */
+  /* Labels are "0.25 mi" and similar; keep the unit lowercase rather
+     than inheriting .filter-button's uppercase. */
   text-transform: none;
 }
 
-/* Overrides the shared .filter-button.active color -- this one should
+/* Overrides the shared .filter-button.active color; this one should
    read as "selected" via brightened text-body, not the link-hover color
    used for grade/borough filter toggles elsewhere. Also swaps the shared
    rule's border-bottom for an inset box-shadow: border-bottom adds to
    the box's height, which (with align-items: center) shifts the text up
-   by half the border width to stay centered in the now-taller box --
+   by half the border width to stay centered in the now-taller box;
    box-shadow paints the same line without affecting layout at all, so
    height and text position stay exactly constant. */
 .search-radius-picker .filter-button.active {

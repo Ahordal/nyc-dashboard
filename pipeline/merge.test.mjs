@@ -1,7 +1,8 @@
 // merge.test.mjs
-// Tests mergeCaches() and mergeSuspiciousShifts() — the logic that
+//
+// Tests mergeCaches() and mergeSuspiciousShifts(), the logic that
 // reconciles a run's local results against whatever landed on the remote
-// in the meantime (e.g. an overlapping run, or any other commit to main).
+// in the meantime (an overlapping run, or any other commit to main).
 //
 // Run with: node --test merge.test.mjs
 
@@ -91,7 +92,7 @@ test('mergeCaches: a large realistic merge preserves entries from both sides', (
   assert.equal(merged.C.status, 'verified');
 });
 
-// --- mergeSuspiciousShifts ---------------------------------------------------
+// mergeSuspiciousShifts
 
 test('mergeSuspiciousShifts unions entries from both sides', () => {
   const local = [{ camis: 'A', distanceMeters: 150 }];

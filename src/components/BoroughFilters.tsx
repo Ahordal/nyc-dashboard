@@ -1,7 +1,8 @@
 // BoroughFilters.tsx
-// 
-// Renders a filter section for selecting NYC boroughs (Bronx, Brooklyn, 
-// Manhattan, Queens, Staten Island) and synchronizes changes with dashboard filter state.
+//
+// Filter section for selecting NYC boroughs, synced to dashboard filter
+// state.
+
 import { faCity } from "@fortawesome/free-solid-svg-icons";
 import FilterSection from "./FiltersSection";
 import type { Filters, SetFilters } from "../types/filters";

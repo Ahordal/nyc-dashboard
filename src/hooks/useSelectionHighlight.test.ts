@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
 
+// useSelectionHighlight.test.ts
+//
+// Unit tests for useSelectionHighlight: installs the glow effect with the
+// no-selection sentinel, resolves a selected restaurant's object id,
+// unions the selected and hovered ids into one filter, and restores the
+// sentinel when the selection is cleared.
+
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { renderHook, waitFor } from "@testing-library/react";
 import type { RefObject } from "react";
@@ -10,7 +17,7 @@ const { checkSelectionMock } = vi.hoisted(() => ({
   checkSelectionMock: vi.fn(),
 }));
 
-// The hook only touches these two ArcGIS constructors -- stub them with
+// The hook only touches these two ArcGIS constructors; stub them with
 // plain classes that copy their options through so tests can read the
 // resulting `.filter` off the layer view.
 vi.mock("@arcgis/core/layers/support/FeatureEffect", () => ({

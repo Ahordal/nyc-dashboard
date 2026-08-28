@@ -1,11 +1,9 @@
-// shared/inspectionStatus.mjs
+// inspectionStatus.mjs
 //
-// Single source of truth for the raw DOHMH action-text and grade values
-// used to derive a restaurant's operating status, shared between the data
-// pipeline (pipeline/fetch-inspection.mjs, a standalone Node script with no
-// build step of its own) and the frontend (src/utils/gradeCategory.ts,
-// bundled by Vite). 
-
+// Single source of truth for the raw DOHMH action text and grade values
+// used to derive a restaurant's operating status. Shared between the
+// data pipeline (pipeline/fetch-inspection.mjs, a standalone Node script)
+// and the frontend (src/utils/gradeCategory.ts, bundled by Vite).
 
 export const OPEN_ACTIONS = [
   "Violations were cited in the following area(s).",

@@ -1,9 +1,7 @@
-// Dashboard.tsx
+// dashboard.tsx
 //
-// Top-level dashboard component.
-//
-// Owns the dashboard's shared state, assembles the application layout,
-// and coordinates data flow between the dashboard's child components.
+// Top-level dashboard component. Owns the shared state, assembles the
+// layout, and coordinates data flow between the child panels.
 
 import {
   lazy,

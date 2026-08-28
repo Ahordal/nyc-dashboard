@@ -1,7 +1,6 @@
 // DashboardTitle.tsx
 //
-// Renders the dashboard's top-level header panel, displaying the main application 
-// title ("NYC Dining Under the Microscope: Inspection Trends and Insights").
+// The dashboard's top-level header panel with the application title.
 
 import PanelHeader from "./PanelHeader";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

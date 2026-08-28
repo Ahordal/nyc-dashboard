@@ -1,6 +1,8 @@
-//RestaurantList.tsx
+// RestaurantList.tsx
 //
-//Displays a sorted and paginated list of restaurant inspection cards, automatically navigating to the page containing the selected restaurant.
+// Sorted, paginated list of restaurant inspection cards. Auto-navigates
+// to the page holding the selected restaurant.
+
 import { useEffect, useMemo, useRef, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
@@ -71,9 +73,9 @@ const NO_SECONDARY = "none";
 const SORT_NOTICE_DURATION_MS = 1300;
 
 const CARD_GAP = 8;
-// .restaurant-card height + CARD_GAP. The card grows by one line (and the
-// .with-distance CSS rule) while a Search Radius point is active, so the
-// Distance line has room -- keep these in sync with global.css.
+// .restaurant-card height + CARD_GAP. The card grows by one line (via
+// the .with-distance CSS rule) while a Search Radius point is active so
+// the Distance line has room; keep these in sync with global.css.
 const CARD_HEIGHT = 80 + CARD_GAP;
 const CARD_HEIGHT_WITH_DISTANCE = 100 + CARD_GAP;
 const MIN_PAGE_SIZE = 4;
@@ -127,10 +129,10 @@ export default function RestaurantList({
     const recomputePageSize = () => {
       const availableHeight = cardList.clientHeight;
       // On an inactive explorer tab this pane is display:none, so
-      // clientHeight is 0 -- and ResizeObserver still fires for that
+      // clientHeight is 0, and ResizeObserver still fires for that
       // transition. Bail on non-positive heights so the page size keeps
       // its last good value instead of collapsing to MIN_PAGE_SIZE every
-      // time the user visits another tab and comes back.
+      // time the user leaves the tab and comes back.
       if (availableHeight <= 0) return;
       // + CARD_GAP: the last card on a page has no trailing gap, so a
       // page fits one more than availableHeight / row height.
@@ -144,7 +146,7 @@ export default function RestaurantList({
 
     return () => resizeObserver.disconnect();
     // rowHeight changes when the Search Radius tool toggles the taller
-    // .with-distance cards -- re-measure so pagination stays correct.
+    // .with-distance cards; re-measure so pagination stays correct.
   }, [rowHeight]);
 
   const sorted = useMemo(
@@ -187,7 +189,8 @@ export default function RestaurantList({
     }
   }, [primarySort, secondarySort]);
 
-  // Option B: Automatically navigate pagination to page containing selectedRestaurantId
+  // Automatically navigate pagination to the page holding
+  // selectedRestaurantId.
   useEffect(() => {
     const countChanged = prevRestaurantCountRef.current !== restaurants.length;
     const selectedChanged = prevSelectedIdRef.current !== selectedRestaurantId;
@@ -232,7 +235,7 @@ export default function RestaurantList({
   const pageItems = sorted.slice(pageStart, pageStart + pageSize);
 
   // Distance only appears as a sort field once a search radius point is
-  // active -- it's meaningless otherwise.
+  // active; it's meaningless otherwise.
   const availableSortKeys = useMemo<SortKeyId[]>(
     () =>
       SORT_KEY_ORDER.filter(

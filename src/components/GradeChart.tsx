@@ -60,14 +60,14 @@ const SLICE_CONFIG = [
 type GradeChartProps = {
   // Grade/status tally for the current map view, pre-computed in MapView
   // (see reportVisibleRestaurants there). This used to be a full
-  // RestaurantProperties[] array -- up to ~27,000 objects at city zoom
-  // -- but this component only ever needed the five counts derived from
-  // it, so MapView now computes and passes just that instead.
+  // RestaurantProperties[] array, up to ~27,000 objects at city zoom, but
+  // this component only ever needed the five counts derived from it, so
+  // MapView now computes and passes just that instead.
   counts: GradeCounts;
   filters: Filters;
   setFilters: SetFilters;
-  // Set while the Search Radius tool is active -- switches the panel
-  // title (and info copy) from "Map View" to "Within <distance>".
+  // Set while the Search Radius tool is active; switches the panel title
+  // (and info copy) from "Map View" to "Within <distance>".
   searchRadiusMiles?: SearchRadiusMiles | null;
 };
 
@@ -134,7 +134,7 @@ export default function GradeChart({
   filters,
   searchRadiusMiles = null,
 }: GradeChartProps) {
-  // setFilters is no longer used -- this chart is a pure display of the
+  // setFilters is no longer used: this chart is a pure display of the
   // current scope (see the comment on gradeCounts in MapView.tsx), not an
   // input. Left in GradeChartProps since the parent still passes it and
   // other consumers of this type may rely on it.
@@ -166,9 +166,9 @@ export default function GradeChart({
   const { data, totalCount, activeLabels, activeValue, activeColor } = useMemo<{
     data: ChartDataItem[];
     totalCount: number;
-    // Labels currently exploded in the pie and highlighted in the center
-    // summary -- every slice matching the active grade filter (there can
-    // be more than one, since the grade filter is multi-select).
+    // Labels currently exploded in the pie and highlighted in the centre
+    // summary: every slice matching the active grade filter (there can be
+    // more than one, since the grade filter is multi-select).
     activeLabels: Set<string>;
     activeValue: number;
     activeColor: string;

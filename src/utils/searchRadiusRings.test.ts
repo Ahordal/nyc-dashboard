@@ -1,3 +1,9 @@
+// searchRadiusRings.test.ts
+//
+// Unit tests for buildSearchRadiusGraphics: one ring and label per
+// radius option plus a centre pin, largest-ring-first draw order,
+// active-ring styling, and label placement north of the centre.
+
 import { describe, it, expect } from "vitest";
 import { buildSearchRadiusGraphics } from "./searchRadiusRings";
 import {

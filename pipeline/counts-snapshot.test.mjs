@@ -1,7 +1,9 @@
 // counts-snapshot.test.mjs
-// The delta plumbing in run-geocode-backfill.mjs: computeCountDeltas() does
-// the once-a-day subtraction, readSnapshotOrNull() tolerates a missing or
-// junk previous snapshot, and formatDelta() renders the console line.
+//
+// The delta plumbing in run-geocode-backfill.mjs: computeCountDeltas()
+// does the once-a-day subtraction, readSnapshotOrNull() tolerates a
+// missing or junk previous snapshot, and formatDelta() renders the
+// console line.
 //
 // Run with: node --test counts-snapshot.test.mjs
 

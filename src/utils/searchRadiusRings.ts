@@ -1,7 +1,8 @@
 // searchRadiusRings.ts
 //
-// Pure graphics builder for the Search Radius tool. Given a center point 
-// and radius, returns the ring, label, and pin graphics. Decoupled from MapView.
+// Pure graphics builder for the Search Radius tool: given a centre point
+// and the active radius, returns the ring, label, and centre-pin
+// graphics. Decoupled from MapView.
 
 import Graphic from "@arcgis/core/Graphic";
 import Circle from "@arcgis/core/geometry/Circle";
@@ -90,7 +91,7 @@ export function buildSearchRadiusGraphics(
     );
   }
 
-  // Add the center point pin graphic.
+  // Add the centre-point pin graphic.
   graphics.push(
     new Graphic({
       geometry: new Point({

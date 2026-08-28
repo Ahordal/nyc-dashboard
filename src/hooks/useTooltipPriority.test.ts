@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
 
+// useTooltipPriority.test.ts
+//
+// Unit tests for useTooltipPriority: priority order across pointer hover,
+// history preview, keyboard-nav point, and pinned selection; dot-ref
+// registration and rendered-coordinate resolution; and reset on data
+// change.
+
 import { describe, it, expect } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
@@ -41,9 +48,9 @@ describe("useTooltipPriority", () => {
 
   it("syncs the pinned selection once its dot is registered and a dependency changes", () => {
     const p1 = makePoint("1");
-    // Hoisted outside the render callback -- chartData is one of the reset
-    // effect's dependencies (by reference), so a fresh array literal inside
-    // the callback would look like a change on every single rerender and
+    // Hoisted outside the render callback: chartData is one of the reset
+    // effect's dependencies (by reference), so a fresh array literal
+    // inside the callback would look like a change on every rerender and
     // wipe the sync this test is trying to observe.
     const chartData = [p1];
     const { result, rerender } = renderHook(
@@ -64,7 +71,7 @@ describe("useTooltipPriority", () => {
     expect(result.current.activeTooltipPoint).toBeNull();
 
     act(() => result.current.registerDotRef(p1.id, makeDot(5, 6)));
-    // registerDotRef is imperative -- the sync effect only re-reads it once
+    // registerDotRef is imperative; the sync effect only re-reads it once
     // one of its own dependencies (here, chartSize) actually changes.
     rerender({ chartSize: { width: 101, height: 100 } });
 
@@ -116,8 +123,9 @@ describe("useTooltipPriority", () => {
     );
 
     act(() => result.current.registerDotRef(p2.id, makeDot(3, 4)));
-    // historyPreviewChartPoint is itself the sync effect's dependency here,
-    // so changing it is enough to force a re-read -- no chartSize bump needed.
+    // historyPreviewChartPoint is itself the sync effect's dependency
+    // here, so changing it is enough to force a re-read; no chartSize
+    // bump needed.
     rerender({ historyPreviewChartPoint: p2 });
 
     expect(result.current.activeTooltipPoint).toEqual({ cx: 3, cy: 4, payload: p2 });
@@ -222,8 +230,8 @@ describe("useTooltipPriority", () => {
       "http://www.w3.org/2000/svg",
       "circle",
     ) as SVGCircleElement;
-    // Number(null) is 0 (finite) -- an unset attribute wouldn't exercise the
-    // guard. An explicitly non-numeric attribute does.
+    // Number(null) is 0 (finite), which wouldn't exercise the guard. An
+    // explicitly non-numeric attribute does.
     dot.setAttribute("cx", "not-a-number");
     dot.setAttribute("cy", "also-not-a-number");
 

@@ -1,5 +1,7 @@
 // ViolationList.tsx
-// Renders a sorted list of violations for a given inspection, complete with colored severity tags and official categories.
+//
+// Renders an inspection's violations sorted critical-first, each with its
+// severity tag and official category.
 
 import type { Violation, ViolationCodeLookup } from "../types/restaurant";
 

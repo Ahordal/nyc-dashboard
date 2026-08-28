@@ -1,12 +1,10 @@
-/// MapSearchRadiusControl.tsx
+// MapSearchRadiusControl.tsx
 //
-// Map-corner tool chip for the Search Radius feature. Controlled by
-// useSearchRadiusTool and passed via props.
-//
-// The 32x32 icon button remains static, toggling its icon (crosshair/X)
-// and behavior. When active, the hover tooltip transitions into a
-// persistent label to the button's left, with the radius picker
-// stacked beneath it.
+// Map-corner tool chip for the Search Radius feature, controlled by
+// useSearchRadiusTool via props. The 32x32 icon button stays put,
+// swapping its icon (crosshair/X) and behaviour; when active, the hover
+// tooltip becomes a persistent label to its left with the radius picker
+// stacked beneath.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faLocationCrosshairs, faXmark } from "@fortawesome/free-solid-svg-icons";

@@ -1,8 +1,9 @@
 // scoring.mjs
-// Pure scoring/selection logic for geocoding candidates. No network calls —
-// everything here takes already-fetched candidate data and decides whether
-// it's an acceptable match. This is deliberately separate from the LocationIQ
-// API wrapper so it can be unit tested against fixture data.
+//
+// Pure scoring/selection logic for geocoding candidates. No network
+// calls: everything here takes already-fetched candidate data and
+// decides whether it's an acceptable match. Separate from the LocationIQ
+// wrapper so it can be unit-tested against fixtures.
 
 import { houseNumbersMatch, streetNamesMatch, isWithinNYC } from './normalize.mjs';
 
@@ -19,10 +20,10 @@ export function distanceMeters(lat1, lon1, lat2, lon2) {
   return R * c;
 }
 
-// Sanity cap: a candidate this far from the DOHMH point is rejected outright,
-// regardless of house/street agreement. This is a backstop against gross
-// errors, NOT proof of correctness — house+street match is still the actual
-// test for acceptance.
+// Sanity cap: a candidate this far from the DOHMH point is rejected
+// outright, regardless of house/street agreement. A backstop against
+// gross errors, NOT proof of correctness; house+street match is still
+// the actual test for acceptance.
 const MAX_ACCEPTABLE_DISTANCE_METERS = 2000;
 
 function normalizeBoro(boro) {
@@ -33,12 +34,12 @@ function normalizeZip(zip) {
   return (zip || '').toString().trim().slice(0, 5); // compare 5-digit prefix
 }
 
-// Scores a single LocationIQ candidate against the restaurant's input data.
-// Returns { accepted, score, matchType, distanceFromDohmh, reasons }.
+// Scores a single LocationIQ candidate against the restaurant's input
+// data. Returns { accepted, score, matchType, distanceFromDohmh, reasons }.
 //
-// Acceptance requires: house number match AND street name match.
-// Borough and ZIP agreement are weighted bonuses, not requirements — LocationIQ's
-// borough/city fields don't always map cleanly onto DOHMH's borough field.
+// Acceptance requires a house number match AND a street name match.
+// Borough and ZIP agreement are weighted bonuses, not requirements;
+// LocationIQ's borough/city fields don't always map cleanly onto DOHMH's.
 export function scoreCandidate(candidate, input) {
   const candLat = parseFloat(candidate.lat);
   const candLon = parseFloat(candidate.lon);
@@ -56,19 +57,20 @@ export function scoreCandidate(candidate, input) {
   if (!houseMatch) reasons.push('house_number_mismatch');
   if (!streetMatch) reasons.push('street_name_mismatch');
 
-  // Required checks — both must pass to even be considered.
+  // Required checks: both must pass to even be considered.
   const passesRequired = houseMatch && streetMatch;
 
-  // Unconditional geographic sanity check on the candidate itself -- unlike
-  // the distance-from-DOHMH cap below, this doesn't depend on DOHMH's own
-  // coordinate being present or valid. Without this, a restaurant with a
-  // missing/invalid DOHMH coordinate could have a house+street match
-  // anywhere in the country accepted as "verified" (e.g. a real "25 Madison
-  // Avenue" in Glen Cove, NY, well outside the five boroughs).
+  // Unconditional geographic sanity check on the candidate itself.
+  // Unlike the distance-from-DOHMH cap below, this doesn't depend on
+  // DOHMH's own coordinate being present or valid. Without it, a
+  // restaurant with a missing/invalid DOHMH coordinate could have a
+  // house+street match anywhere in the country accepted as "verified"
+  // (e.g. a real "25 Madison Avenue" in Glen Cove, NY, outside the five
+  // boroughs).
   const withinNYC = isWithinNYC(candLat, candLon);
   if (!withinNYC) reasons.push('outside_nyc_bounds');
 
-  // Sanity cap — reject outright if too far, even if house+street matched
+  // Sanity cap: reject outright if too far, even if house+street matched
   // (e.g. a duplicate address in a different borough).
   const withinDistanceCap =
     distanceFromDohmh == null || distanceFromDohmh <= MAX_ACCEPTABLE_DISTANCE_METERS;
@@ -80,7 +82,7 @@ export function scoreCandidate(candidate, input) {
     return { accepted: false, score: 0, matchType: null, distanceFromDohmh, reasons };
   }
 
-  // Weighted bonuses — only computed for accepted candidates, used to rank
+  // Weighted bonuses, only computed for accepted candidates, used to rank
   // multiple acceptable candidates against each other.
   let score = 100; // base score for passing required checks
 
@@ -93,8 +95,9 @@ export function scoreCandidate(candidate, input) {
   if (zipMatch) score += 10;
   else reasons.push('zip_unconfirmed');
 
-  // Closer distance is a tiebreaker, not a requirement — small bonus that
-  // decays with distance, capped so it never outweighs boro/zip agreement.
+  // Closer distance is a tiebreaker, not a requirement: a small bonus
+  // that decays with distance, capped so it never outweighs boro/zip
+  // agreement.
   if (distanceFromDohmh != null) {
     score += Math.max(0, 10 - distanceFromDohmh / 100);
   }
@@ -108,9 +111,9 @@ export function scoreCandidate(candidate, input) {
   };
 }
 
-// Given a list of { candidate, queryLabel } pairs (from both the hyphenated
-// and no-hyphen queries) and the restaurant's input data, returns the best
-// accepted match or null if nothing qualifies.
+// Given a list of { candidate, queryLabel } pairs (from both the
+// hyphenated and no-hyphen queries) and the restaurant's input data,
+// returns the best accepted match, or null if nothing qualifies.
 export function selectBestMatch(candidateEntries, input) {
   const scored = candidateEntries.map(({ candidate, queryLabel }) => ({
     candidate,

@@ -1,10 +1,8 @@
 // RestaurantReport.tsx
 //
-// Displays the full inspection report for a single selected inspection.
-//
-// The report is reached by selecting a row in Restaurant Details' Inspection
-// History list. It also includes newer/older navigation for browsing between
-// inspections without leaving the Report tab.
+// Full inspection report for one selected inspection, reached from the
+// Inspection History list on the Details tab. Includes newer/older
+// navigation for browsing inspections without leaving the Report tab.
 
 import { useState } from "react";
 

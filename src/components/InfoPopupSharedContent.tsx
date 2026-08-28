@@ -1,9 +1,7 @@
 // InfoPopupSharedContent.tsx
 //
-// Reusable content shared between dashboard information popups.
-//
-// Keeps grade definitions and official NYC health resources consistent
-// wherever they appear.
+// Content shared between dashboard info popups, keeping grade definitions
+// and official NYC health resources consistent everywhere they appear.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 

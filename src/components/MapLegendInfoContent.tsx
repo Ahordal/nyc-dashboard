@@ -2,7 +2,7 @@
 //
 // The contents of the map panel's info popup (overview, how-to-use, the
 // grade/score legend table, and data notes). Lifted out of MapView.tsx
-// as a plain constant -- it's static JSX passed straight to PanelHeader.
+// as a plain constant; it's static JSX passed straight to PanelHeader.
 //
 // The six legend rows only differ by colour, dot sizes, and score text,
 // so they're described by LEGEND_ROWS and rendered by LegendRow. A row

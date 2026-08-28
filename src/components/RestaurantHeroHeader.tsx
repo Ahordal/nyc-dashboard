@@ -1,5 +1,7 @@
 // RestaurantHeroHeader.tsx
-// Shared header block displaying the restaurant name and its corresponding inspection badges.
+//
+// Shared header block: the restaurant name coloured by grade category,
+// with its inspection badges.
 
 import InspectionBadges from "./InspectionBadges";
 import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";

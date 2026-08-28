@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
 
+// useChartKeyboardNav.test.ts
+//
+// Unit tests for useChartKeyboardNav: default focus, arrow/Home/End
+// navigation with clamping, Enter/Space selection, Tab and empty-data
+// no-ops, re-focus on a new selection, reset on data change, and the
+// focus/blur handlers.
+
 import { describe, it, expect, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 import type { FocusEvent, KeyboardEvent } from "react";
@@ -147,7 +154,7 @@ describe("useChartKeyboardNav", () => {
       container: HTMLDivElement,
       { focusVisible, sameTarget = true }: { focusVisible: boolean; sameTarget?: boolean },
     ): FocusEvent<HTMLDivElement> {
-      container.matches = () => focusVisible;
+      container.matches = (() => focusVisible) as unknown as typeof container.matches;
       return {
         target: sameTarget ? container : document.createElement("span"),
         currentTarget: container,

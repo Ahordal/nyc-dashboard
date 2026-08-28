@@ -1,8 +1,9 @@
-//MapScaleZoomControls.tsx
+// MapScaleZoomControls.tsx
 //
-//Custom scale/zoom controls for MapView: a top-left zoom in/out button pair
-//(replacing the default esri/widgets/Zoom), and the bottom-left Map Scale /
-//Zoom Level readouts, each click-to-edit to jump straight to a value.
+// Custom scale/zoom controls for MapView: a top-left zoom in/out button
+// pair (replacing the default esri/widgets/Zoom), and the bottom-left Map
+// Scale / Zoom Level readouts, each click-to-edit to jump straight to a
+// value.
 
 import { useEffect, useState } from "react";
 import type MapView from "@arcgis/core/views/MapView";

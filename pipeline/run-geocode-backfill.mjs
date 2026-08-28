@@ -1,19 +1,19 @@
 // run-geocode-backfill.mjs
+//
 // PRODUCTION entry point for the geocode backfill, run by the scheduled
 // GitHub Action (see .github/workflows/geocode-backfill.yml). Fetches the
 // live DOHMH dataset (same source fetch-inspection.mjs uses), builds the
 // restaurant list, and runs the shared backfill loop against it.
 //
-// This is intentionally decoupled from fetch-inspection.mjs's own build --
-// this script is the ONLY place that makes LocationIQ API calls. The
-// Vercel build step (fetch-inspection.mjs) only ever reads the resulting
+// Intentionally decoupled from fetch-inspection.mjs's own build: this
+// script is the ONLY place that makes LocationIQ API calls. The Vercel
+// build step (fetch-inspection.mjs) only ever reads the resulting
 // committed cache, never writes to it or calls LocationIQ itself.
-
 
 import dotenv from 'dotenv';
 // Loads .env if present (local runs). In GitHub Actions, env vars are
-// injected directly by the workflow -- dotenv.config() is a harmless no-op
-// there since no .env file exists in that environment.
+// injected directly by the workflow, so dotenv.config() is a harmless
+// no-op there since no .env file exists.
 dotenv.config({ path: '../.env' });
 
 import { readFile, writeFile } from 'node:fs/promises';
@@ -61,10 +61,10 @@ async function main() {
       `Cache size: ${result.cacheSize}`
   );
 
-  // Reload the cache runGeocodeBackfill() just wrote -- eventsByRestaurant
+  // Reload the cache runGeocodeBackfill() just wrote. eventsByRestaurant
   // above is still valid to reuse (backfill only resolves coordinates, it
-  // doesn't touch inspection rows), but the geocode resolutions themselves
-  // need to come from disk to reflect what this run actually committed.
+  // doesn't touch inspection rows), but the geocode resolutions
+  // themselves need to come from disk to reflect what this run committed.
   console.log('Computing dashboard counts for this run...');
   const updatedCache = await loadCache(CACHE_PATH);
   const latestGeoJSON = buildLatestInspectionsGeoJSON(eventsByRestaurant, new Date().toISOString(), updatedCache);
@@ -78,7 +78,7 @@ async function main() {
   // Diff against the PREVIOUS daily run's snapshot (seeded from the `data`
   // branch by the workflow before this script runs). Nothing else writes
   // counts-snapshot.json, so this is strictly (this daily refresh) minus
-  // (the previous daily refresh) -- site rebuilds from `main` pushes in
+  // (the previous daily refresh); site rebuilds from `main` pushes in
   // between never touch it. null (not 0) when there's no prior run yet.
   const previousSnapshot = await readSnapshotOrNull(COUNTS_SNAPSHOT_PATH);
   const { restaurantDelta, inspectionDelta } = computeCountDeltas(
@@ -112,10 +112,10 @@ export async function readSnapshotOrNull(path) {
   }
 }
 
-// (this daily refresh) minus (the previous daily refresh). A field is null
-// -- never 0 -- when the previous snapshot has no comparable count, so the
-// dashboard can tell "no prior run to compare" apart from "genuinely no
-// change since yesterday".
+// (this daily refresh) minus (the previous daily refresh). A field is
+// null (never 0) when the previous snapshot has no comparable count, so
+// the dashboard can tell "no prior run to compare" apart from "genuinely
+// no change since yesterday".
 export function computeCountDeltas(
   { restaurantCount, inspectionCount },
   previousSnapshot,
@@ -137,8 +137,9 @@ export function formatDelta(delta) {
   return delta >= 0 ? `+${delta}` : `${delta}`;
 }
 
-// Only run the backfill when invoked directly (node run-geocode-backfill.mjs),
-// not when imported by a test -- mirrors fetch-inspection.mjs.
+// Only run the backfill when invoked directly (node
+// run-geocode-backfill.mjs), not when imported by a test; mirrors
+// fetch-inspection.mjs.
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((err) => {
     console.error('Geocode backfill run failed:', err);

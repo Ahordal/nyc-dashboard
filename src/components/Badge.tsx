@@ -1,7 +1,8 @@
 // Badge.tsx
-// Reusable pill badge for violation severity, codes, categories, and status flags.
-// Serves as the single source of truth for severity colors; base sizing and 
-// other variant styles are defined in global.css.
+//
+// Reusable pill badge for violation severity, codes, categories, and
+// status flags. Single source of truth for severity colours; base sizing
+// and other variant styles live in global.css.
 
 import type { CSSProperties, ReactNode } from "react";
 
@@ -22,7 +23,7 @@ type SeverityStyle = {
   color: string;
 };
 
-// Central source of truth for violation severity colors. 
+// Central source of truth for violation severity colours.
 // eslint-disable-next-line react-refresh/only-export-components
 export const SEVERITY_STYLES: Record<"critical" | "not-critical", SeverityStyle> = {
   critical: { background: "#8B0000", color: "#ffffff" },

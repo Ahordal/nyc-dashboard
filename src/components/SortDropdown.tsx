@@ -30,7 +30,7 @@ export default function SortDropdown<T extends string>({
 
   const selectedOption = options.find((o) => o.value === value);
 
-  // Close on click outside -- same pattern PanelHeader.tsx uses for its
+  // Close on click outside, the same pattern PanelHeader.tsx uses for its
   // info popup.
   useEffect(() => {
     if (!isOpen) return;

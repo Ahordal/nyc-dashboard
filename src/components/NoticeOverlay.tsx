@@ -1,7 +1,8 @@
 // NoticeOverlay.tsx
 //
-// Generic self-dismissing notification overlay. Triggers on changes to triggerKey,
-// auto-hiding after durationMs, with rAF animation frame reset to replay CSS fades.
+// Generic self-dismissing notification overlay. Shows on each change to
+// triggerKey and auto-hides after durationMs, forcing a reflow between
+// re-triggers so the CSS fade replays.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 

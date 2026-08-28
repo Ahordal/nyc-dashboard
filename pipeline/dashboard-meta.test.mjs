@@ -1,9 +1,10 @@
 // dashboard-meta.test.mjs
-// buildDashboardMeta() must report the LAST DAILY geocode-backfill run --
-// never the build that happens to be running. counts-snapshot.json (written
-// once per day by run-geocode-backfill.mjs) is the source of truth for all
-// five fields; the build's own live totals are only a pre-first-snapshot
-// fallback.
+//
+// buildDashboardMeta() must report the LAST DAILY geocode-backfill run,
+// never the build that happens to be running. counts-snapshot.json
+// (written once per day by run-geocode-backfill.mjs) is the source of
+// truth for all five fields; the build's own live totals are only a
+// pre-first-snapshot fallback.
 //
 // Run with: node --test dashboard-meta.test.mjs
 

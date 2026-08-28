@@ -1,7 +1,8 @@
 // cache.test.mjs
-// Tests for cache.mjs — uses real temp files on disk (via node:os tmpdir) so
-// the atomic-write and load/corruption-recovery behavior is tested for real,
-// not mocked.
+//
+// Tests for cache.mjs. Uses real temp files on disk (via node:os
+// tmpdir) so the atomic-write and load/corruption-recovery behaviour is
+// tested for real, not mocked.
 //
 // Run with: node --test cache.test.mjs
 
@@ -28,7 +29,7 @@ async function withTempDir(fn) {
   }
 }
 
-// --- loadCache ---------------------------------------------------------
+// loadCache
 
 test('loadCache returns empty object when file does not exist', async () => {
   await withTempDir(async (dir) => {
@@ -56,7 +57,7 @@ test('loadCache correctly reads a previously saved cache', async () => {
   });
 });
 
-// --- saveCacheAtomic -----------------------------------------------------
+// saveCacheAtomic
 
 test('saveCacheAtomic writes a file that loadCache can read back correctly', async () => {
   await withTempDir(async (dir) => {
@@ -88,7 +89,7 @@ test('saveCacheAtomic overwrites a previous cache cleanly', async () => {
   });
 });
 
-// --- buildCacheEntry -----------------------------------------------------
+// buildCacheEntry
 
 test('buildCacheEntry produces a verified entry with resolved coordinates', () => {
   const entry = buildCacheEntry({
@@ -124,7 +125,7 @@ test('buildCacheEntry produces an unverified entry with null resolved coordinate
   assert.equal(entry.status, 'unverified');
   assert.equal(entry.resolved, null);
   assert.equal(entry.reason, 'no_acceptable_match');
-  assert.ok(entry.resolvedAt); // unverified is still a FINAL result — gets a timestamp
+  assert.ok(entry.resolvedAt); // unverified is still a FINAL result, so it gets a timestamp
 });
 
 test('buildCacheEntry produces a pending entry with no resolvedAt timestamp', () => {
@@ -137,12 +138,12 @@ test('buildCacheEntry produces a pending entry with no resolvedAt timestamp', ()
 
   assert.equal(entry.status, 'pending');
   assert.equal(entry.resolved, null);
-  // Pending is NOT a final result — no resolvedAt, so it's unambiguous this
-  // was never actually completed.
+  // Pending is NOT a final result: no resolvedAt, so it's unambiguous
+  // this was never actually completed.
   assert.equal(entry.resolvedAt, null);
 });
 
-// --- needsResolution -------------------------------------------------------
+// needsResolution
 
 test('needsResolution is true when there is no cache entry at all', () => {
   assert.equal(needsResolution({}, '123', 'hash-abc'), true);
@@ -173,7 +174,7 @@ test('needsResolution is false for an unverified entry with matching hash (do no
   assert.equal(needsResolution(cache, '123', 'hash-abc'), false);
 });
 
-// --- upsertCacheEntry --------------------------------------------------------
+// upsertCacheEntry
 
 test('upsertCacheEntry adds a new entry without mutating the original cache object', () => {
   const original = { a: { camis: 'a' } };

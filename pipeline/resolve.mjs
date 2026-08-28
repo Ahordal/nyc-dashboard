@@ -1,7 +1,8 @@
 // resolve.mjs
-// Combines geocode.mjs (network) + scoring.mjs (pure logic) into the full
-// "resolve one restaurant" flow. Handles the quota check, the pending vs.
-// unverified distinction, and rate limiting between calls.
+//
+// Combines geocode.mjs (network) and scoring.mjs (pure logic) into the
+// full "resolve one restaurant" flow. Handles the quota check, the
+// pending vs. unverified distinction, and rate limiting between calls.
 //
 // A restaurant object must have: dba, building, street, boro, zip,
 // dohmhLat, dohmhLon.
@@ -18,9 +19,9 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
 
   for (const { label, query } of queries) {
     if (quota.remaining() <= 0) {
-      // Ran out of quota mid-restaurant. Whatever we've gathered so far is
-      // incomplete — do NOT treat this as "no match found". Pending means
-      // "try again next run", never written to the cache as final.
+      // Ran out of quota mid-restaurant. Whatever's been gathered so far
+      // is incomplete; do NOT treat this as "no match found". Pending
+      // means "try again next run", never written to the cache as final.
       return {
         status: 'pending',
         reason: 'quota_exhausted',
@@ -34,15 +35,15 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
       results = await fetchGeocode(query, apiKey);
       quota.use(); // count the call regardless of whether it returned results
     } catch (err) {
-      quota.use(); // the request was still sent — counts against quota either way
+      quota.use(); // the request was still sent, so it counts against quota either way
 
       if (err instanceof RateLimitedError) {
         // The ACCOUNT is rate-limited, not just this one restaurant.
         // Flagged separately (rateLimited: true) so the caller's loop can
-        // stop the entire run immediately rather than grinding through
-        // every remaining restaurant with the same guaranteed failure —
-        // wasting the run's time budget and adding more rejected requests
-        // to the day's usage stats for no benefit.
+        // stop the whole run immediately rather than grinding through
+        // every remaining restaurant with the same guaranteed failure,
+        // wasting the time budget and adding more rejected requests to
+        // the day's usage stats for nothing.
         return {
           status: 'pending',
           reason: 'rate_limited',
@@ -53,7 +54,7 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
         };
       }
 
-      // Network/API error — this is NOT the same as "geocoder ran and found
+      // Network/API error. NOT the same as "geocoder ran and found
       // nothing". Pending, retried next run.
       return {
         status: 'pending',
@@ -68,8 +69,8 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
     await rateLimitDelay();
   }
 
-  // Both queries completed successfully (even if one or both returned zero
-  // results) — now it's safe to make a final determination.
+  // Both queries completed successfully (even if one or both returned
+  // zero results); now it's safe to make a final determination.
   const best = selectBestMatch(candidateEntries, restaurant);
 
   if (best) {
@@ -84,7 +85,7 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
     };
   }
 
-  // Geocoder ran cleanly, no acceptable candidate — this IS a final
+  // Geocoder ran cleanly, no acceptable candidate. This IS a final
   // "unverified" result, safe to cache (until the address itself changes).
   return {
     status: 'unverified',

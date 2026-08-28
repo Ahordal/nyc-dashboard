@@ -1,7 +1,7 @@
 // PanelHeader.tsx
 //
-// Reusable panel header component. Displays the panel title and an optional 
-// info button that triggers an auto-positioning, portal-rendered tooltip.
+// Reusable panel header: the panel title and an optional info button that
+// opens an auto-positioning, portal-rendered tooltip.
 
 import {
   useEffect,
@@ -33,7 +33,7 @@ type PanelHeaderProps = {
   infoContent?: ReactNode;
   infoPlacement?: InfoPlacement;
   // When provided, the info button no longer opens PanelHeader's own
-  // anchored popup -- it just calls this instead, and isInfoOpen drives
+  // anchored popup; it just calls this instead, and isInfoOpen drives
   // the button's expanded/close-icon state. Used by panels that swap
   // infoContent in for their own body content inline rather than
   // showing it in a floating popup (see RestaurantDetails,

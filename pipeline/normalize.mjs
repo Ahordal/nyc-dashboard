@@ -1,20 +1,20 @@
 // normalize.mjs
-// Address normalization helpers for the geocoding pipeline.
-// These are pure functions — no API calls, no side effects — so they can be
-// unit tested in isolation before we ever touch LocationIQ.
+//
+// Address normalization helpers for the geocoding pipeline. Pure
+// functions (no API calls, no side effects) so they can be unit-tested
+// in isolation before any LocationIQ call.
 //
 // Three distinct jobs, kept deliberately separate:
-//   1. normalizeHouseNumber  — for MATCHING (comparing DOHMH vs geocoder results)
-//   2. normalizeStreetName   — for MATCHING
-//   3. formatDisplayAddress  — for DISPLAY ONLY, never used in matching/hashing
+//   1. normalizeHouseNumber  for MATCHING (DOHMH vs geocoder results)
+//   2. normalizeStreetName    for MATCHING
+//   3. formatDisplayAddress   for DISPLAY ONLY, never used in matching/hashing
 
-// ---------------------------------------------------------------------------
 // 1. House number normalization (for matching)
-// ---------------------------------------------------------------------------
-// Returns both the raw input and a normalized (digits-only) form.
-// We keep the raw form so "79-01" and a hypothetical "7-901" — which would
-// both strip to overlapping digit sequences in edge cases — can still be
-// told apart if ever needed for debugging or stricter comparison later.
+//
+// Returns both the raw input and a normalized (digits-only) form. The
+// raw form is kept so "79-01" and a hypothetical "7-901", which could
+// strip to overlapping digit sequences in edge cases, can still be told
+// apart later if needed.
 export function normalizeHouseNumber(raw) {
   const raw_ = (raw || '').toString().trim();
   const normalized = raw_.replace(/\D/g, ''); // digits only, e.g. "79-01" -> "7901"
@@ -28,13 +28,12 @@ export function houseNumbersMatch(a, b) {
   return Boolean(na) && na === nb;
 }
 
-// ---------------------------------------------------------------------------
 // 2. Street name normalization (for matching)
-// ---------------------------------------------------------------------------
-// Token-level mapping, NOT loose string replacement — we don't want to risk
-// collapsing two genuinely different streets into a false match (e.g. don't
-// blindly strip "saint" from "St. Nicholas Ave" the same way we'd expand
-// "St" -> "Street" elsewhere).
+//
+// Token-level mapping, NOT loose string replacement, so two genuinely
+// different streets can't collapse into a false match (e.g. don't
+// blindly strip "saint" from "St. Nicholas Ave" the way "St" expands to
+// "Street" elsewhere).
 
 const STREET_TYPE_MAP = {
   st: 'street',
@@ -93,9 +92,7 @@ export function streetNamesMatch(a, b) {
   return Boolean(na) && na === nb;
 }
 
-// ---------------------------------------------------------------------------
-// 3. Display formatting (DISPLAY ONLY — never feeds into matching or hashing)
-// ---------------------------------------------------------------------------
+// 3. Display formatting (DISPLAY ONLY, never feeds into matching or hashing)
 
 function ordinalSuffix(n) {
   const num = parseInt(n, 10);
@@ -142,7 +139,7 @@ export function formatDisplayStreet(raw) {
 }
 
 // Combines building + formatted street (+ optional neighbourhood) into a
-// single display string. Neighbourhood is enrichment only — never required.
+// single display string. Neighbourhood is enrichment only, never required.
 export function formatDisplayAddress({ building, street, neighbourhood }) {
   const parts = [building, formatDisplayStreet(street)].filter(Boolean);
   let result = parts.join(' ');
@@ -150,11 +147,9 @@ export function formatDisplayAddress({ building, street, neighbourhood }) {
   return result;
 }
 
-// ---------------------------------------------------------------------------
-// 4. Address hash (for cache invalidation) — built from NORMALIZED matching
+// 4. Address hash (for cache invalidation), built from NORMALIZED matching
 //    inputs, never from the display string, so cosmetic formatting changes
 //    never trigger unnecessary re-geocoding.
-// ---------------------------------------------------------------------------
 export function addressHash({ camis, building, street, boro, zip }) {
   const houseNorm = normalizeHouseNumber(building).normalized;
   const streetNorm = normalizeStreetName(street);
@@ -163,12 +158,11 @@ export function addressHash({ camis, building, street, boro, zip }) {
   return [camis, houseNorm, streetNorm, boroNorm, zipNorm].join('|');
 }
 
-// ---------------------------------------------------------------------------
 // 5. NYC bounding box (for geographic sanity checks)
-// ---------------------------------------------------------------------------
+//
 // Loose bounding box around NYC (including a small margin), used to catch
-// obviously-wrong coordinates -- e.g. (0, 0), swapped lat/lon, or a
-// same-house-number match in a real address outside the five boroughs
+// obviously-wrong coordinates: (0, 0), swapped lat/lon, or a
+// same-house-number match at a real address outside the five boroughs
 // (e.g. "25 Madison Avenue" also exists in Glen Cove, NY).
 export const NYC_BOUNDS = {
   minLat: 40.4,

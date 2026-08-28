@@ -1,10 +1,8 @@
 // PerformanceTooltip.tsx
 //
 // Custom chart tooltip positioned relative to the active inspection dot.
-//
-// Displays the inspection date and grade/score badges. Closure inspections
-// also display the same "Closed by DOHMH" status tag used in Restaurant
-// Details.
+// Shows the inspection date and grade/score badges; closure inspections
+// also show the "Closed by DOHMH" status tag used in Restaurant Details.
 
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
@@ -63,7 +61,7 @@ export default function PerformanceTooltip({
     // Prefer whichever side actually fits the tooltip; if neither does,
     // pick whichever side has more room. Either way, the tooltip's near
     // edge is always pinned exactly DOT_CLEARANCE away from the dot's
-    // center and is never pulled back across that line — so it may spill
+    // centre and is never pulled back across that line, so it may spill
     // past the chart's own edge in a tight corner, but it can never cover
     // the dot itself.
     const placeAbove =

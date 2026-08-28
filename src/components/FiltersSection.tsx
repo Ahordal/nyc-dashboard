@@ -1,7 +1,7 @@
 // FilterSection.tsx
 //
-// Generic multi-select filter panel with toggle buttons, optional custom active 
-// colors, and a clear-all action.
+// Generic multi-select filter panel: toggle buttons, an optional custom
+// active colour per option, and a clear-all action.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";

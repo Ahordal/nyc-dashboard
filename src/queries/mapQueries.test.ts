@@ -1,3 +1,10 @@
+// mapQueries.test.ts
+//
+// Unit tests for the pure helpers in mapQueries: search-clause
+// normalization, definitionExpression and grade where-clause building,
+// queryVisibleRestaurants paging and scope, client-side grade filtering,
+// CATEGORY_CLAUSES score bands, and restaurant-layer hit-testing.
+
 import { describe, it, expect } from "vitest";
 import {
   buildSearchClause,
@@ -215,7 +222,7 @@ describe("CATEGORY_CLAUSES", () => {
 });
 
 describe("filterRestaurantsByGradeCategory", () => {
-  // Minimal stand-ins -- only action/grade/score are read, via getGradeCategory.
+  // Minimal stand-ins: only action/grade/score are read, via getGradeCategory.
   const CITED = "Violations were cited in the following area(s).";
   const A = { action: CITED, grade: "A", score: 10 };
   const C = { action: CITED, grade: "C", score: 40 };
@@ -227,7 +234,7 @@ describe("filterRestaurantsByGradeCategory", () => {
     grade: "A",
     score: 5,
   };
-  // Null grade but a real score -- still an A by the score band.
+  // Null grade but a real score: still an A by the score band.
   const NULL_GRADE_A = { action: CITED, grade: null, score: 8 };
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any

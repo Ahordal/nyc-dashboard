@@ -1,4 +1,11 @@
-// src/hooks/useUrlSync.ts
+// useUrlSync.ts
+//
+// Two-way sync between filter/search/selection/radius state and the URL
+// query string, so a given dashboard view is shareable and bookmarkable.
+// Reads the initial state from the URL once on mount, then writes state
+// back with history.replaceState on every change. The pure parse/build
+// helpers are exported so they can be unit-tested without the hook.
+
 import { useEffect, useRef } from "react";
 
 import {
@@ -31,7 +38,7 @@ export type InitialUrlState = {
   radius: InitialRadiusState | null;
 };
 
-// Coordinates are rounded to 5 decimal places (~1 m) on the way out --
+// Coordinates are rounded to 5 decimal places (~1 m) on the way out,
 // enough to land the pin back on the same block without bloating the URL.
 const RADIUS_COORD_PRECISION = 5;
 

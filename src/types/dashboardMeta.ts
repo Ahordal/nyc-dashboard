@@ -1,4 +1,4 @@
-// types/dashboardMeta.ts
+// dashboardMeta.ts
 //
 // Dashboard-wide metadata describing the freshness and size of the
 // underlying inspection dataset.
@@ -10,9 +10,9 @@ export type DashboardMeta = {
   lastUpdated: string | null;
   restaurantCount: number | null;
   inspectionCount: number | null;
-  // Change from the daily run before this one. null means there's no prior
-  // run to compare against yet (before the first geocode-backfill run has
-  // committed a snapshot) -- distinct from a zero-change day, which is 0.
+  // Change from the daily run before this one. null means there's no
+  // prior run to compare against yet (before the first geocode-backfill
+  // run has committed a snapshot), distinct from a zero-change day (0).
   restaurantDelta: number | null;
   inspectionDelta: number | null;
 };
