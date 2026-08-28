@@ -7510,5 +7510,29 @@
     "distanceMeters": 225.9357152883453,
     "matchType": "house+street",
     "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "41403280",
+    "dba": "STARBUCKS",
+    "address": "254-41 HORACE HARDING EXPRESSWAY, Queens 11362",
+    "dohmhLat": 40.763872379501,
+    "dohmhLon": -73.726713344799,
+    "resolvedLat": 40.764835,
+    "resolvedLon": -73.726002,
+    "distanceMeters": 122.66343653036893,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "50191525",
+    "dba": "TABLE 87",
+    "address": "850 3RD AVE, Brooklyn 11232",
+    "dohmhLat": 40.658510383839,
+    "dohmhLon": -74.00332668335,
+    "resolvedLat": 40.6592037,
+    "resolvedLon": -74.0045755,
+    "distanceMeters": 130.53779442307066,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
   }
 ]
