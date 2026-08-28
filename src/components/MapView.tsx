@@ -22,6 +22,7 @@ import { getGradeCategory } from "../utils/gradeCategory";
 import { pointsRenderer } from "../utils/mapRenderer";
 import { useSearchRadiusTool } from "../hooks/useSearchRadiusTool";
 import { useSelectionHighlight } from "../hooks/useSelectionHighlight";
+import { useMapHover } from "../hooks/useMapHover";
 import PanelHeader from "./PanelHeader";
 import MapHoverCard, { type HoverCardState } from "./MapHoverCard";
 import MAP_LEGEND_INFO_CONTENT from "./MapLegendInfoContent";
@@ -43,8 +44,6 @@ import {
 } from "../queries/mapQueries";
 
 esriConfig.apiKey = import.meta.env.PUBLIC_ARCGIS_API_KEY;
-
-const HOVER_CARD_MAX_SCALE = 18056;
 
 const DEFAULT_CENTER: [number, number] = [-73.98, 40.7];
 const DEFAULT_ZOOM = 9.75;
@@ -119,6 +118,17 @@ export default function InspectionMapView({
 
   const queryRequestIdRef = useRef(0);
   const clickRequestIdRef = useRef(0);
+
+  // Pointer-move throttling, the restaurant hit test, cursor styling, and
+  // the on-canvas hover card all live in this hook. It wires its own
+  // listeners once `mapView` exists.
+  useMapHover({
+    view: mapView,
+    layerRef,
+    isPlacingPointRef: searchRadius.isPlacingPointRef,
+    onHoverRestaurantRef,
+    setHoverCard,
+  });
 
   useEffect(() => {
     selectedRestaurantIdRef.current = selectedRestaurantId;
@@ -308,90 +318,8 @@ export default function InspectionMapView({
       }
     });
 
-    const POINTER_MOVE_THROTTLE_MS = 60;
-    let pointerMoveTimeoutId: number | null = null;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    let latestPointerMoveEvent: any = null;
-    let latestHitTestToken = 0;
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const runHitTest = async (event: any) => {
-      if (searchRadius.isPlacingPointRef.current) return;
-
-      const token = ++latestHitTestToken;
-      let response;
-      try {
-        response = await view.hitTest(event);
-      } catch (err) {
-        console.error("MapView: failed to hit-test pointer move", err);
-        return;
-      }
-      if (token !== latestHitTestToken) return;
-
-      const graphicHit = findRestaurantGraphicHit(response, layer);
-
-      if (view.container) {
-        view.container.style.cursor = graphicHit ? "pointer" : "default";
-      }
-
-      if (graphicHit) {
-        onHoverRestaurantRef.current?.(graphicHit.graphic.attributes);
-      } else {
-        onHoverRestaurantRef.current?.(null);
-      }
-
-      if (graphicHit && view.scale <= HOVER_CARD_MAX_SCALE) {
-        const attrs = graphicHit.graphic.attributes;
-        const category = getGradeCategory(
-          attrs.action,
-          attrs.grade,
-          attrs.score,
-        );
-
-        setHoverCard({
-          x: event.x,
-          y: event.y,
-          name: attrs.name,
-          category,
-          gradeText: attrs.grade ? attrs.grade : "N/A",
-          scoreText: attrs.score != null ? String(attrs.score) : "—",
-        });
-      } else {
-        setHoverCard(null);
-      }
-    };
-
-    const pointerMoveHandle = view.on("pointer-move", (event) => {
-      latestPointerMoveEvent = event;
-      if (pointerMoveTimeoutId !== null) return;
-
-      pointerMoveTimeoutId = window.setTimeout(() => {
-        pointerMoveTimeoutId = null;
-        const eventToTest = latestPointerMoveEvent;
-        latestPointerMoveEvent = null;
-        if (eventToTest) void runHitTest(eventToTest);
-      }, POINTER_MOVE_THROTTLE_MS);
-    });
-
-    const handlePointerLeaveContainer = () => {
-      setHoverCard(null);
-      // Prevents corner control hover events from clearing the placement crosshair cursor.
-      if (view.container && !searchRadius.isPlacingPointRef.current) {
-        view.container.style.cursor = "default";
-      }
-      onHoverRestaurantRef.current?.(null);
-    };
-    view.container?.addEventListener("mouseleave", handlePointerLeaveContainer);
-
     return () => {
       clickHandle.remove();
-      pointerMoveHandle.remove();
-      if (pointerMoveTimeoutId !== null) {
-        window.clearTimeout(pointerMoveTimeoutId);
-      }
-      view.container?.removeEventListener(
-        "mouseleave",
-        handlePointerLeaveContainer,
-      );
       stationaryWatchHandle.remove();
       view.destroy();
       setMapView(null);
