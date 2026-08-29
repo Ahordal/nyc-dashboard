@@ -49,6 +49,8 @@ The project is split across two branches:
 
 The map view (`MapView.tsx`) is lazy-loaded via a dynamic `import()`, with a lightweight `MapViewSkeleton` shown while it loads — the ArcGIS SDK is the heaviest single dependency in the app, so this keeps it out of the initial bundle. The ArcGIS Esri theme CSS is imported from `MapView.tsx` (not the entry) for the same reason. The two Recharts-backed panels (`GradeChart`, `PerformanceChart`) are lazy-loaded the same way, behind a `ChartSkeleton`, so Recharts and its d3 dependencies stay off the critical path.
 
+A single `ErrorBoundary` component (`src/components/ErrorBoundary.tsx`) wraps the app root in `main.tsx` and each lazy panel's `<Suspense>` in `dashboard.tsx`. A render-time error — including a lazy chunk that fails to download — shows an inline `ErrorFallback` with a reload prompt in just that panel, rather than unmounting the whole dashboard. The `PerformanceChart` boundary is keyed to the selected restaurant so switching restaurants clears a stale error on its own.
+
 ### Accessibility
 
 The dashboard is built to be operable by keyboard and screen reader:
@@ -178,6 +180,7 @@ Frontend logic is tested with Vitest, colocated with the source it covers (`src/
 | `src/utils/restaurantSort.test.ts` | Verifies the two-level list sort: numeric vs `localeCompare` ordering, grade-category ranking, nulls always last in both directions, the distance key (inert without a point), secondary-key tie-breaking sharing one direction, and the name-then-id stable fallback |
 | `src/hooks/useUrlSync.test.ts` | Verifies the URL parse/serialize helpers: `?radius=<lat>,<lng>,<miles>` parsing with range/arity/value guards, comma-list and `id`/`camis` handling, 5-dp coordinate rounding on write, and a placed-radius round-trip |
 | `src/utils/explorerTabs.test.ts` | Verifies the Explorer tab helpers: the button/panel id builders and `nextTabIndex`'s Arrow/Home/End index resolution with wraparound and a null for unhandled keys |
+| `src/components/ErrorBoundary.test.tsx` | Verifies the shared error boundary: passes children through when nothing throws, swaps in the fallback once a child throws, clears the error when `resetKey` changes, and stays in the fallback while `resetKey` holds |
 
 ### Scripts
 

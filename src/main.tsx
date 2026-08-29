@@ -4,6 +4,8 @@
 
 import { createRoot } from "react-dom/client";
 import Dashboard from "./components/dashboard";
+import ErrorBoundary from "./components/ErrorBoundary";
+import ErrorFallback from "./components/ErrorFallback";
 import "./styles/global.css";
 // The @arcgis/core Esri theme CSS is imported inside MapView.tsx instead
 // of here, so Vite splits it into the lazy MapView chunk rather than the
@@ -12,4 +14,15 @@ import "./styles/global.css";
 
 const rootElement = document.getElementById("root")!;
 
-createRoot(rootElement).render(<Dashboard />);
+createRoot(rootElement).render(
+  <ErrorBoundary
+    context="app-root"
+    fallback={
+      <ErrorFallback
+        fullPage
+        message="Something went wrong loading the dashboard."
+      />
+    }>
+    <Dashboard />
+  </ErrorBoundary>,
+);

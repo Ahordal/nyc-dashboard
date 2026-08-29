@@ -25,6 +25,8 @@ import DashboardFooter from "./DashboardFooter";
 import NoticeOverlay from "./NoticeOverlay";
 import MapViewSkeleton from "./MapViewSkeleton";
 import ChartSkeleton from "./ChartSkeleton";
+import ErrorBoundary from "./ErrorBoundary";
+import ErrorFallback from "./ErrorFallback";
 import ExplorerTabs from "./ExplorerTabs";
 import {
   tabButtonId,
@@ -360,14 +362,23 @@ export default function Dashboard() {
           </div>
 
           <div className="grade-chart">
-            <Suspense fallback={<ChartSkeleton label="Loading grade breakdown…" />}>
-              <GradeChart
-                counts={gradeCounts}
-                filters={filters}
-                setFilters={setFilters}
-                searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
-              />
-            </Suspense>
+            <ErrorBoundary
+              context="GradeChart"
+              fallback={
+                <ErrorFallback message="The grade breakdown chart failed to load." />
+              }>
+              <Suspense
+                fallback={<ChartSkeleton label="Loading grade breakdown…" />}>
+                <GradeChart
+                  counts={gradeCounts}
+                  filters={filters}
+                  setFilters={setFilters}
+                  searchRadiusMiles={
+                    searchRadiusPoint ? activeRadiusMiles : null
+                  }
+                />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </div>
 
@@ -392,23 +403,27 @@ export default function Dashboard() {
           </div>
 
           <div className="map-view">
-            <Suspense fallback={<MapViewSkeleton />}>
-              <MapView
-                filters={filters}
-                searchQuery={searchQuery}
-                selectedRestaurantId={selectedRestaurant?.id ?? null}
-                hoveredRestaurantId={hoveredRestaurantId}
-                onSelectRestaurant={handleSelectRestaurant}
-                onHoverRestaurant={handleHoverRestaurant}
-                onVisibleRestaurantsChange={setVisibleRestaurants}
-                onGradeCountsChange={setGradeCounts}
-                onSearchRadiusChange={(point, radius) => {
-                  setSearchRadiusPoint(point);
-                  setActiveRadiusMiles(radius);
-                }}
-                initialSearchRadius={initialSearchRadius}
-              />
-            </Suspense>
+            <ErrorBoundary
+              context="MapView"
+              fallback={<ErrorFallback message="The map failed to load." />}>
+              <Suspense fallback={<MapViewSkeleton />}>
+                <MapView
+                  filters={filters}
+                  searchQuery={searchQuery}
+                  selectedRestaurantId={selectedRestaurant?.id ?? null}
+                  hoveredRestaurantId={hoveredRestaurantId}
+                  onSelectRestaurant={handleSelectRestaurant}
+                  onHoverRestaurant={handleHoverRestaurant}
+                  onVisibleRestaurantsChange={setVisibleRestaurants}
+                  onGradeCountsChange={setGradeCounts}
+                  onSearchRadiusChange={(point, radius) => {
+                    setSearchRadiusPoint(point);
+                    setActiveRadiusMiles(radius);
+                  }}
+                  initialSearchRadius={initialSearchRadius}
+                />
+              </Suspense>
+            </ErrorBoundary>
           </div>
         </div>
 
@@ -548,16 +563,24 @@ export default function Dashboard() {
         </div>
 
         <div className="performance-chart">
-          <Suspense fallback={<ChartSkeleton label="Loading score history…" />}>
-            <PerformanceChart
-              restaurant={selectedRestaurant}
-              history={history}
-              isLoadingHistory={isLoadingHistory}
-              onSelectInspection={handleSelectInspection}
-              hoveredInspectionId={hoveredInspectionId}
-              selectedInspectionId={reportInspectionId}
-            />
-          </Suspense>
+          <ErrorBoundary
+            context="PerformanceChart"
+            resetKey={selectedRestaurant?.camis ?? null}
+            fallback={
+              <ErrorFallback message="The score history chart failed to load." />
+            }>
+            <Suspense
+              fallback={<ChartSkeleton label="Loading score history…" />}>
+              <PerformanceChart
+                restaurant={selectedRestaurant}
+                history={history}
+                isLoadingHistory={isLoadingHistory}
+                onSelectInspection={handleSelectInspection}
+                hoveredInspectionId={hoveredInspectionId}
+                selectedInspectionId={reportInspectionId}
+              />
+            </Suspense>
+          </ErrorBoundary>
         </div>
 
         <div className="dashboard-footer">
