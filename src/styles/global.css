@@ -771,14 +771,11 @@ summary:focus-visible,
   color: var(--text-muted);
 }
 
-.search-input:focus {
-  border-color: var(--accent-blue);
-}
-
-/* This field shows focus through its border colour (above). Opt out of
-   the global focus-visible ring: text inputs match :focus-visible on
-   mouse click too, so the ring would otherwise double the treatment. */
-.search-input:focus-visible {
+/* Keyboard focus keeps the shared :focus-visible ring (section 1.4);
+   a plain mouse click gets nothing. Text inputs always match
+   :focus-visible, so the pointer case is gated on data-input-modality
+   (set in inputModality.ts) rather than CSS. */
+:root[data-input-modality="pointer"] .search-input:focus {
   outline: none;
 }
 
