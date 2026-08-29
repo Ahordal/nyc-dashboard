@@ -8,9 +8,10 @@
 
 /*///////////////////////////////////////////// 1. RESET & GLOBAL FOUNDATIONS //////////////////////////////////////////////*/
 
-/* 1.1 IMPORTS & BOX SIZING */
+/* 1.1 BOX SIZING */
 
-@import url('https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Archivo:wght@600;700;800&display=swap');
+/* Google Fonts (Public Sans, Archivo) are loaded via <link> in
+   index.html, not @import here - see the comment there. */
 
 *,
 *::before,

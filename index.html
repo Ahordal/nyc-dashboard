@@ -8,6 +8,20 @@
     <link rel="icon" href="/favicon.ico" />
     <meta name="viewport" content="width=device-width" />
     <title>NYC: Dining Under the Microscope: Inspection Trends and Insights</title>
+
+    <!-- Fonts loaded here rather than via @import in global.css: a <link>
+         in <head> lets the browser start the fetch immediately instead of
+         waiting for the stylesheet to download and parse first. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;500;600;700&family=Archivo:wght@600;700;800&display=swap"
+    />
+
+    <!-- Map basemap tiles come from here once MapView lazy-loads; resolve
+         DNS early without holding a connection open pre-emptively. -->
+    <link rel="dns-prefetch" href="https://basemaps-api.arcgis.com" />
   </head>
   <body>
     <div id="root"></div>
