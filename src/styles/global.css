@@ -775,6 +775,13 @@ summary:focus-visible,
   border-color: var(--accent-blue);
 }
 
+/* This field shows focus through its border colour (above). Opt out of
+   the global focus-visible ring: text inputs match :focus-visible on
+   mouse click too, so the ring would otherwise double the treatment. */
+.search-input:focus-visible {
+  outline: none;
+}
+
 .search-filter-toggle {
   display: inline-flex;
   align-items: center;
@@ -2026,6 +2033,16 @@ summary:focus-visible,
   height: 100%;
   min-width: 0;
   min-height: 0;
+}
+
+/* Covers the canvas when the ArcGIS view or the inspection GeoJSON fails
+   to load -- promise rejections the surrounding ErrorBoundary can't see.
+   The inner .panel-error (opaque --bg-alt, fills its box) does the
+   visuals; "Retry" rebuilds the view in place. */
+.map-load-error {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
 }
 
 .map-hover-card {

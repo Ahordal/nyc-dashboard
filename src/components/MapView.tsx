@@ -37,6 +37,7 @@ import MapScaleZoomControls from "./MapScaleZoomControls";
 import MapBasemapToggle from "./MapBasemapToggle";
 import MapCompass from "./MapCompass";
 import MapSearchRadiusControl from "./MapSearchRadiusControl";
+import ErrorFallback from "./ErrorFallback";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
@@ -88,6 +89,13 @@ export default function InspectionMapView({
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
+
+  // The surrounding ErrorBoundary only catches render-time throws, so the
+  // async failures below (GeoJSON 404, missing/invalid/over-quota ArcGIS
+  // key -> view or layer promise rejects) need their own visible state.
+  // `retryNonce` re-runs the mount effect, rebuilding the map from scratch.
+  const [loadError, setLoadError] = useState(false);
+  const [retryNonce, setRetryNonce] = useState(0);
 
   const mapDivRef = useRef<HTMLDivElement | null>(null);
   const layerRef = useRef<GeoJSONLayer | null>(null);
@@ -222,6 +230,12 @@ export default function InspectionMapView({
   useEffect(() => {
     if (!mapDivRef.current) return;
 
+    // Clear any error from a previous attempt before rebuilding. `disposed`
+    // guards against a stale rejection from the torn-down view/layer
+    // flipping the error state back on after a retry.
+    setLoadError(false);
+    let disposed = false;
+
     const layer = new GeoJSONLayer({
       url: "/data/latest-inspections.geojson",
       title: "NYC Restaurant Inspections",
@@ -258,9 +272,25 @@ export default function InspectionMapView({
 
     view.popupEnabled = false;
 
-    view.when(() => {
-      reportVisibleRestaurants(view, layer);
-      void applyHighlightForId(selectedRestaurantIdRef.current);
+    view.when(
+      () => {
+        reportVisibleRestaurants(view, layer);
+        void applyHighlightForId(selectedRestaurantIdRef.current);
+      },
+      (err: unknown) => {
+        if (disposed) return;
+        console.error("MapView: map view failed to initialize", err);
+        setLoadError(true);
+      },
+    );
+
+    // view.when() can still resolve when only the GeoJSON layer fails
+    // (e.g. a 404 on latest-inspections.geojson), so load it explicitly
+    // and surface that rejection too.
+    layer.load().catch((err) => {
+      if (disposed) return;
+      console.error("MapView: inspection layer failed to load", err);
+      setLoadError(true);
     });
 
     const stationaryWatchHandle = reactiveUtils.watch(
@@ -309,6 +339,7 @@ export default function InspectionMapView({
     });
 
     return () => {
+      disposed = true;
       clickHandle.remove();
       stationaryWatchHandle.remove();
       view.destroy();
@@ -316,9 +347,10 @@ export default function InspectionMapView({
     };
     // Excluded from the dependency array so the map isn't torn down and
     // recreated on every render; the click handler safely reads stable
-    // refs and callbacks from the searchRadius hook.
+    // refs and callbacks from the searchRadius hook. `retryNonce` is the
+    // one intentional rebuild trigger (the "Retry" button on load error).
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [applyHighlightForId]);
+  }, [applyHighlightForId, retryNonce]);
 
   useEffect(() => {
     const layer = layerRef.current;
@@ -518,6 +550,15 @@ export default function InspectionMapView({
         )}
 
         {hoverCard && <MapHoverCard card={hoverCard} />}
+
+        {loadError && (
+          <div className="map-load-error">
+            <ErrorFallback
+              message="The map failed to load. This can be a lost connection or a temporary service issue."
+              onRetry={() => setRetryNonce((n) => n + 1)}
+            />
+          </div>
+        )}
       </div>
     </div>
   );

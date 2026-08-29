@@ -9,11 +9,16 @@ type ErrorFallbackProps = {
   // Shown above the button, e.g. "The map failed to load."
   message: string;
   fullPage?: boolean;
+  // When set, the button retries in place (and reads "Retry") instead of
+  // reloading the page. Used for async failures a caller can recover from
+  // without a full reload, e.g. the map view rebuilding after a load error.
+  onRetry?: () => void;
 };
 
 export default function ErrorFallback({
   message,
   fullPage = false,
+  onRetry,
 }: ErrorFallbackProps) {
   return (
     <div className={fullPage ? "app-error" : "panel-error"} role="alert">
@@ -22,10 +27,8 @@ export default function ErrorFallback({
       <button
         type="button"
         className="error-fallback-retry"
-        onClick={() => {
-          window.location.reload();
-        }}>
-        Reload
+        onClick={onRetry ?? (() => window.location.reload())}>
+        {onRetry ? "Retry" : "Reload"}
       </button>
     </div>
   );
