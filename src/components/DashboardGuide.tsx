@@ -244,7 +244,8 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
 
               <li>
                 Restaurants with no scored inspection on record (including
-                ones never inspected) do not appear on the map at all.
+                ones never inspected) appear as a distinct &quot;Uninspected&quot;
+                category on the map and in the grade breakdown.
               </li>
 
               <li>

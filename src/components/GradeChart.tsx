@@ -26,8 +26,9 @@ function gradeChartInfoContent(withinRadius: boolean) {
           {withinRadius
             ? "within the active Search Radius"
             : "within the current map view"}
-          . This total isn't affected by the active grade filter, so you can
-          always see the complete picture alongside whatever you've selected.
+          , also narrowed by any active Borough filter and the search field, but
+          not by the active grade filter — so the grade mix stays complete
+          alongside whatever grade you've selected.
         </p>
       }
       howToUse={

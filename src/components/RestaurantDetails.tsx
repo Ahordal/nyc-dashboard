@@ -139,8 +139,8 @@ const RESTAURANT_INFO_CONTENT = (
         </li>
 
         <li>
-          Use the Google Street View link to open available street-level imagery
-          in a new tab.
+          Use the Google Maps link to open the restaurant&apos;s location on
+          Google Maps in a new tab.
         </li>
       </ul>
     }
@@ -185,10 +185,9 @@ const RESTAURANT_INFO_CONTENT = (
     dataNotes={
       <ul>
         <li>
-          Google Street View links automatically snap to the nearest available
-          street-level imagery for the location. Photos are provided directly by
-          Google Maps and may not reflect the restaurant&apos;s current
-          storefront, facade, or business operations.
+          The Google Maps link runs a name-and-address search on Google Maps.
+          Results come directly from Google and may not match the
+          restaurant&apos;s current location, storefront, or business operations.
         </li>
 
         <li>
