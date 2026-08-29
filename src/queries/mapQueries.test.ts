@@ -11,9 +11,11 @@ import {
   buildDefinitionExpression,
   buildGradeWhereClause,
   queryVisibleRestaurants,
+  queryRestaurantByCamis,
   filterRestaurantsByGradeCategory,
   findRestaurantGraphicHit,
   CATEGORY_CLAUSES,
+  RESTAURANT_OUT_FIELDS,
 } from "./mapQueries";
 import type { Filters } from "../types/filters";
 
@@ -204,6 +206,45 @@ describe("queryVisibleRestaurants", () => {
     );
     expect(result).toEqual([]);
     expect(layer.captured).toHaveLength(1);
+  });
+});
+
+describe("queryRestaurantByCamis", () => {
+  it("matches on either id or camis, escaping the value, and returns the first hit's attributes", async () => {
+    const layer = makeFakeLayer([
+      {
+        features: [{ attributes: { id: "50012345", name: "Joe's Diner" } }],
+        exceededTransferLimit: false,
+      },
+    ]);
+
+    const result = await queryRestaurantByCamis(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      layer as any,
+      "O'Brien's 5",
+    );
+
+    const q = layer.captured[0];
+    expect(q.where).toBe("id = 'O''Brien''s 5' OR camis = 'O''Brien''s 5'");
+    expect(q.outFields).toBe(RESTAURANT_OUT_FIELDS);
+    expect(q.returnGeometry).toBe(false);
+    expect(q.num).toBe(1);
+    expect(layer.loadCount).toBe(1);
+    expect(result).toEqual({ id: "50012345", name: "Joe's Diner" });
+  });
+
+  it("returns null when nothing matches", async () => {
+    const layer = makeFakeLayer([
+      { features: [], exceededTransferLimit: false },
+    ]);
+
+    const result = await queryRestaurantByCamis(
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      layer as any,
+      "50099999",
+    );
+
+    expect(result).toBeNull();
   });
 });
 

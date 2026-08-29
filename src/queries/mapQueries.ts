@@ -335,6 +335,34 @@ export async function checkSelectionAgainstFilters(
   };
 }
 
+// Resolves a single restaurant by its CAMIS (or feature `id`) against
+// the whole layer, deliberately ignoring the current map extent and the
+// display-only grade filter. Used to honour a `?camis=` deep link even
+// when the target sits outside the starting viewport or wouldn't pass
+// the active grade filter -- the cases a scan of dashboard's already
+// extent/grade-filtered visible set silently misses. The borough/search
+// `definitionExpression` still applies: a link that filters to one
+// borough while pointing at a restaurant in another is self-
+// contradictory, and letting the filter win is the predictable outcome.
+export async function queryRestaurantByCamis(
+  layer: GeoJSONLayer,
+  camis: string,
+): Promise<RestaurantProperties | null> {
+  await layer.load();
+
+  const query = layer.createQuery();
+  const escapedCamis = escapeSqlString(camis);
+  query.where = `id = '${escapedCamis}' OR camis = '${escapedCamis}'`;
+  query.outFields = RESTAURANT_OUT_FIELDS;
+  query.returnGeometry = false;
+  query.num = 1;
+
+  const result = await layer.queryFeatures(query);
+  return result.features.length > 0
+    ? (result.features[0].attributes as RestaurantProperties)
+    : null;
+}
+
 export type FilterExtentResult = {
   count: number;
   extent: Extent | null;

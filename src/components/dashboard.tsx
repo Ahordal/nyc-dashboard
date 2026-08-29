@@ -86,8 +86,11 @@ export default function Dashboard() {
   const [selectedRestaurant, setSelectedRestaurant] =
     useState<RestaurantProperties | null>(null);
 
-
-
+  // A restaurant named in the initial URL (?camis=). MapView resolves it
+  // against the full layer once its layer is ready, hands it back via
+  // onSelectRestaurant, then reports done so this clears. Resolving it
+  // there (not by scanning visibleRestaurants) is what lets a shared
+  // link land on a restaurant that's off-screen or off the active grade.
   const [pendingCamisFromUrl, setPendingCamisFromUrl] = useState<string | null>(
     null,
   );
@@ -186,24 +189,6 @@ export default function Dashboard() {
     },
     handleInitialUrlState,
   );
-
-  // If a restaurant was specified in the initial URL, select it once visible
-  useEffect(() => {
-    if (!pendingCamisFromUrl || visibleRestaurants.length === 0) {
-      return;
-    }
-
-    const match = visibleRestaurants.find(
-      (restaurant) =>
-        restaurant.camis === pendingCamisFromUrl ||
-        restaurant.id === pendingCamisFromUrl,
-    );
-
-    if (match) {
-      handleSelectRestaurant(match);
-      setPendingCamisFromUrl(null);
-    }
-  }, [pendingCamisFromUrl, visibleRestaurants]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -421,6 +406,10 @@ export default function Dashboard() {
                     setActiveRadiusMiles(radius);
                   }}
                   initialSearchRadius={initialSearchRadius}
+                  initialSelectedCamis={pendingCamisFromUrl}
+                  onInitialSelectionResolved={() =>
+                    setPendingCamisFromUrl(null)
+                  }
                 />
               </Suspense>
             </ErrorBoundary>

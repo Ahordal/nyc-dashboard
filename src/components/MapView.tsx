@@ -42,6 +42,7 @@ import {
   buildDefinitionExpression,
   buildGradeWhereClause,
   queryVisibleRestaurants,
+  queryRestaurantByCamis,
   checkSelectionAgainstFilters,
   queryFilterExtent,
   filterRestaurantsByGradeCategory,
@@ -73,6 +74,14 @@ type MapViewProps = {
     point: SearchRadiusPoint;
     miles: SearchRadiusMiles;
   } | null;
+  // A CAMIS (or feature id) from the initial URL to select once the
+  // layer is ready. Resolved with a direct layer query rather than a
+  // scan of the visible set, so a shared link still lands even when the
+  // target is off-screen or filtered out by grade. Null in normal use.
+  initialSelectedCamis?: string | null;
+  // Called once the deep-linked CAMIS has been resolved (matched or
+  // not), so the parent can drop its pending state.
+  onInitialSelectionResolved?: () => void;
 };
 
 export default function InspectionMapView({
@@ -86,6 +95,8 @@ export default function InspectionMapView({
   onGradeCountsChange,
   onSearchRadiusChange,
   initialSearchRadius = null,
+  initialSelectedCamis = null,
+  onInitialSelectionResolved,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
@@ -125,6 +136,7 @@ export default function InspectionMapView({
   const onVisibleRestaurantsChangeRef = useRef(onVisibleRestaurantsChange);
   const onGradeCountsChangeRef = useRef(onGradeCountsChange);
   const onSearchRadiusChangeRef = useRef(onSearchRadiusChange);
+  const onInitialSelectionResolvedRef = useRef(onInitialSelectionResolved);
 
   const prevBoroughsRef = useRef<string[]>(filters.boroughs);
   const prevSearchRef = useRef<string>(searchQuery);
@@ -169,6 +181,10 @@ export default function InspectionMapView({
   useEffect(() => {
     onSearchRadiusChangeRef.current = onSearchRadiusChange;
   }, [onSearchRadiusChange]);
+
+  useEffect(() => {
+    onInitialSelectionResolvedRef.current = onInitialSelectionResolved;
+  }, [onInitialSelectionResolved]);
 
   useEffect(() => {
     onSearchRadiusChangeRef.current?.(
@@ -351,6 +367,46 @@ export default function InspectionMapView({
     // one intentional rebuild trigger (the "Retry" button on load error).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyHighlightForId, retryNonce]);
+
+  // Resolve a ?camis= deep link once the layer is ready. Done here with a
+  // direct layer query, not by scanning dashboard's visibleRestaurants:
+  // that set is already extent- and grade-filtered, so a shared link to
+  // anything off-screen or off the active grade never matched.
+  const didResolveDeepLinkRef = useRef(false);
+
+  useEffect(() => {
+    if (didResolveDeepLinkRef.current || !initialSelectedCamis) return;
+
+    const view = viewRef.current;
+    const layer = layerRef.current;
+    if (!view || !layer) return;
+
+    let cancelled = false;
+
+    (async () => {
+      try {
+        await view.when();
+        const restaurant = await queryRestaurantByCamis(
+          layer,
+          initialSelectedCamis,
+        );
+        if (cancelled) return;
+        // The query ran, so we have a definitive answer (a match or a
+        // genuine miss) -- don't try again on a later render/retry.
+        didResolveDeepLinkRef.current = true;
+        if (restaurant) onSelectRestaurantRef.current?.(restaurant);
+        onInitialSelectionResolvedRef.current?.();
+      } catch (err) {
+        // View/layer never became ready. Leave the guard down so a
+        // successful Map "Retry" gets another chance at the link.
+        console.error("MapView: failed to resolve deep-linked restaurant", err);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [initialSelectedCamis, retryNonce]);
 
   useEffect(() => {
     const layer = layerRef.current;
