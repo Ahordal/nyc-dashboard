@@ -538,6 +538,7 @@ export default function Dashboard() {
               <RestaurantReport
                 restaurant={selectedRestaurant}
                 history={history}
+                isLoadingHistory={isLoadingHistory}
                 selectedInspectionId={reportInspectionId}
                 violationCodes={violationCodes}
                 onSelectInspection={handleSelectInspection}

@@ -78,7 +78,6 @@ export type RestaurantProperties = {
   inspection_date: string;
   inspection_type: string;
   action: string;
-  violations: string; // JSON-stringified; GeoJSONLayer limitation, see pipeline notes
   current_status_code: CurrentStatus;
   current_status_label: string;
   record_date: string | null;
@@ -86,9 +85,10 @@ export type RestaurantProperties = {
   council_district: string;
 };
 
-// One inspection event from history/{camis}.json. Unlike
-// RestaurantProperties, violations is a real array because this file is
-// loaded with fetch + JSON.parse instead of GeoJSONLayer.
+// One inspection event from history/{camis}.json, loaded with fetch +
+// JSON.parse. This is the only place violation data lives on the client:
+// the current inspection's violations are read from the matching event
+// here, not from the GeoJSON feature (which no longer carries them).
 
 // Inspection history
 

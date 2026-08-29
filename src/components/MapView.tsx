@@ -41,7 +41,6 @@ import {
   buildDefinitionExpression,
   buildGradeWhereClause,
   queryVisibleRestaurants,
-  fetchRestaurantDetail,
   checkSelectionAgainstFilters,
   queryFilterExtent,
   filterRestaurantsByGradeCategory,
@@ -123,7 +122,6 @@ export default function InspectionMapView({
   const prevSearchRef = useRef<string>(searchQuery);
 
   const queryRequestIdRef = useRef(0);
-  const clickRequestIdRef = useRef(0);
 
   // Pointer-move throttling, the restaurant hit test, cursor styling, and
   // the on-canvas hover card all live in this hook. It wires its own
@@ -299,33 +297,14 @@ export default function InspectionMapView({
 
       const graphicHit = findRestaurantGraphicHit(response, layer);
 
-      const requestId = ++clickRequestIdRef.current;
-
+      // The graphic already carries every field the dashboard reads
+      // (RESTAURANT_OUT_FIELDS); violations are fetched separately from
+      // history/{camis}.json on select, so there's no follow-up query
+      // here.
       if (graphicHit) {
-        if (onSelectRestaurantRef.current) {
-          const id = graphicHit.graphic.attributes.id;
-
-          try {
-            const full = await fetchRestaurantDetail(layer, id);
-            if (requestId !== clickRequestIdRef.current) return;
-
-            onSelectRestaurantRef.current(
-              full ?? graphicHit.graphic.attributes,
-            );
-          } catch (err) {
-            console.error(
-              "MapView: failed to fetch full restaurant detail",
-              err,
-            );
-            if (requestId !== clickRequestIdRef.current) return;
-
-            onSelectRestaurantRef.current(graphicHit.graphic.attributes);
-          }
-        }
+        onSelectRestaurantRef.current?.(graphicHit.graphic.attributes);
       } else {
-        if (onSelectRestaurantRef.current) {
-          onSelectRestaurantRef.current(null);
-        }
+        onSelectRestaurantRef.current?.(null);
       }
     });
 

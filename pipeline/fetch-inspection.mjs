@@ -470,7 +470,7 @@ export function buildLatestInspectionsGeoJSON(
 
     if (!latest) continue;
 
-    const { primary, violations } = latest;
+    const { primary } = latest;
 
     const dohmhLatRaw = parseFloat(primary.latitude);
     const dohmhLonRaw = parseFloat(primary.longitude);
@@ -555,7 +555,11 @@ export function buildLatestInspectionsGeoJSON(
         inspection_date: latest.date,
         inspection_type: primary.inspection_type ?? "",
         action: primary.action ?? "",
-        violations: JSON.stringify(violations),
+        // The current inspection's violations are not carried here: they
+        // ride in history/{camis}.json (see buildInspectionHistory), which
+        // the frontend already fetches on select. Keeping ~4 MB of
+        // per-feature violation arrays out of this file keeps the bulk
+        // download and its main-thread parse lean.
         current_status_code: status.code,
         current_status_label: status.label,
         record_date: primary.record_date ?? null,

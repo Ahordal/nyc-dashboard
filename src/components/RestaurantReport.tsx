@@ -16,21 +16,10 @@ import Badge from "./Badge";
 import type {
   RestaurantProperties,
   InspectionEvent,
-  Violation,
   ViolationCodeLookup,
 } from "../types/restaurant";
 
 import { isClosedInspection, UNINSPECTED_GRADE } from "../utils/gradeCategory";
-
-function parseViolations(raw: string): Violation[] {
-  try {
-    const parsed = JSON.parse(raw);
-
-    return Array.isArray(parsed) ? parsed : [];
-  } catch {
-    return [];
-  }
-}
 
 function formatDate(raw: string | null): string {
   if (!raw) {
@@ -121,6 +110,10 @@ type RestaurantReportProps = {
 
   history: InspectionEvent[];
 
+  // History carries the violation data (the GeoJSON feature no longer
+  // does), so the default view's violation list waits on this fetch.
+  isLoadingHistory?: boolean;
+
   selectedInspectionId: string | null;
 
   violationCodes: ViolationCodeLookup;
@@ -131,6 +124,7 @@ type RestaurantReportProps = {
 export default function RestaurantReport({
   restaurant,
   history,
+  isLoadingHistory = false,
   selectedInspectionId,
   violationCodes,
   onSelectInspection,
@@ -179,6 +173,14 @@ export default function RestaurantReport({
   const selectedEvent =
     history.find((event) => event.id === selectedInspectionId) ?? null;
 
+  // The default view shows the restaurant's current inspection. Its
+  // grade/score/date/action still come off the GeoJSON record, but its
+  // violations now come from the matching history event (falling back to
+  // the most recent one), since the feature no longer carries them.
+  const currentEvent =
+    history.find((event) => event.id === restaurant.id) ??
+    (history.length > 0 ? history[history.length - 1] : null);
+
   const displayed = selectedEvent
     ? {
         grade: selectedEvent.grade,
@@ -204,7 +206,7 @@ export default function RestaurantReport({
 
         action: restaurant.action,
 
-        violations: parseViolations(restaurant.violations),
+        violations: currentEvent?.violations ?? [],
       };
 
   const panelTitle =
@@ -312,10 +314,17 @@ export default function RestaurantReport({
           </tbody>
         </table>
 
-        <ViolationList
-          violations={displayed.violations}
-          violationCodes={violationCodes}
-        />
+        {!selectedEvent &&
+        isLoadingHistory &&
+        history.length === 0 &&
+        displayed.grade !== UNINSPECTED_GRADE ? (
+          <p className="details-loading">Loading violations…</p>
+        ) : (
+          <ViolationList
+            violations={displayed.violations}
+            violationCodes={violationCodes}
+          />
+        )}
       </div>
     </section>
   );

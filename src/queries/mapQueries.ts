@@ -29,14 +29,13 @@ import {
 // neighbourhood, community_board, council_district, record_date,
 // grade_date, and display_address.
 //
-// Also excludes "violations", which IS displayed but only for one
-// selected restaurant at a time and is by far the heaviest field per
-// feature. This list doubles as the GeoJSONLayer's own outFields (kept
-// resident for all ~27,000 graphics) and queryVisibleRestaurants'
-// outFields (re-pulled into React state on every pan/zoom), so keeping
-// it lean is a real chunk of the memory footprint. See
-// RESTAURANT_DETAIL_OUT_FIELDS and fetchRestaurantDetail below for how
-// one restaurant's violations text is fetched on click instead.
+// Violations aren't in the GeoJSON at all any more (they were ~4 MB of
+// per-feature arrays); they live only in history/{camis}.json, which the
+// dashboard already fetches on select. This list doubles as the
+// GeoJSONLayer's own outFields (kept resident for all ~27,000 graphics)
+// and queryVisibleRestaurants' outFields (re-pulled into React state on
+// every pan/zoom), so keeping it lean is a real chunk of the memory
+// footprint.
 export const RESTAURANT_OUT_FIELDS = [
   "id",
   "camis",
@@ -58,14 +57,6 @@ export const RESTAURANT_OUT_FIELDS = [
   "action",
   "current_status_code",
   "current_status_label",
-];
-
-// Full field set for a single restaurant's complete record, including
-// its current inspection's violations text. Only ever requested for one
-// restaurant at a time; see fetchRestaurantDetail.
-export const RESTAURANT_DETAIL_OUT_FIELDS = [
-  ...RESTAURANT_OUT_FIELDS,
-  "violations",
 ];
 
 // Builds a SQL IN-list of the exact closure action strings
@@ -291,28 +282,6 @@ export async function queryVisibleRestaurants(
   return allFeatures.map(
     (feature) => feature.attributes as RestaurantProperties,
   );
-}
-
-// Fetches the complete record, including violations text, for a single
-// restaurant. Used on click/select instead of RESTAURANT_OUT_FIELDS
-// (which excludes "violations" to keep resident graphics and the bulk
-// query lean). A small targeted query against one id, so the full field
-// list doesn't carry the cost it would across thousands of features.
-export async function fetchRestaurantDetail(
-  layer: GeoJSONLayer,
-  restaurantId: string,
-): Promise<RestaurantProperties | null> {
-  await layer.load();
-
-  const query = layer.createQuery();
-  query.where = `id = '${escapeSqlString(restaurantId)}'`;
-  query.outFields = RESTAURANT_DETAIL_OUT_FIELDS;
-  query.returnGeometry = false;
-
-  const result = await layer.queryFeatures(query);
-  const feature = result.features[0];
-
-  return feature ? (feature.attributes as RestaurantProperties) : null;
 }
 
 // Result of checking a single restaurant ID against the active
