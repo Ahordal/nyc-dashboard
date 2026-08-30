@@ -121,7 +121,7 @@ const renderCustomizedShape = (props: any) => {
           stroke="var(--bg-panel)"
           strokeWidth={2}
           style={{
-            filter: `drop-shadow(0px 0px 8px ${fill})`,
+            filter: "drop-shadow(0px 0px 8px var(--accent))",
             pointerEvents: "none",
           }}
         />
