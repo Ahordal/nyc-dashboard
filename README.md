@@ -1,5 +1,7 @@
 # NYC Restaurant Inspection Dashboard
 
+![NYC restaurant inspection dashboard — map of restaurants coloured by grade, with filter bar, restaurant list, and grade-breakdown donut.](docs/dashboard.png)
+
 An interactive map and analytics dashboard for exploring NYC DOHMH restaurant inspection data — built with Vite, React, TypeScript, the ArcGIS Maps SDK, and Recharts.
 
 **Live site:** [nyc-teal.vercel.app](https://nyc-teal.vercel.app)
