@@ -36,6 +36,7 @@ import {
 
 import { useUrlSync } from "../hooks/useUrlSync";
 import type { InitialUrlState, InitialRadiusState } from "../hooks/useUrlSync";
+import { useJsonFetch } from "../hooks/useJsonFetch";
 
 import type { Filters } from "../types/filters";
 import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
@@ -63,6 +64,9 @@ const GradeChart = lazy(() => import("./GradeChart"));
 const PerformanceChart = lazy(() => import("./PerformanceChart"));
 
 const FILTER_NOTICE_DURATION_MS = 1300;
+
+// Stable fallback for the violation-codes fetch (see useJsonFetch).
+const EMPTY_VIOLATION_CODES: ViolationCodeLookup = {};
 
 const MAX_HISTORY_CACHE_ENTRIES = 50;
 
@@ -135,9 +139,13 @@ export default function Dashboard() {
 
   const historyCache = useRef<Map<string, InspectionEvent[]>>(new Map());
 
-  const [violationCodes, setViolationCodes] = useState<ViolationCodeLookup>({});
+  const violationCodes = useJsonFetch<ViolationCodeLookup>(
+    "/data/violation-codes.json",
+    EMPTY_VIOLATION_CODES,
+  );
 
-  const [dashboardMeta, setDashboardMeta] = useState<DashboardMeta | null>(
+  const dashboardMeta = useJsonFetch<DashboardMeta | null>(
+    "/data/dashboard-meta.json",
     null,
   );
 
@@ -189,48 +197,6 @@ export default function Dashboard() {
     },
     handleInitialUrlState,
   );
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/data/violation-codes.json", {
-      signal: controller.signal,
-    })
-      .then((response) => (response.ok ? response.json() : {}))
-      .then((data: ViolationCodeLookup) => {
-        setViolationCodes(data);
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") {
-          setViolationCodes({});
-        }
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
-
-  useEffect(() => {
-    const controller = new AbortController();
-
-    fetch("/data/dashboard-meta.json", {
-      signal: controller.signal,
-    })
-      .then((response) => (response.ok ? response.json() : null))
-      .then((data: DashboardMeta | null) => {
-        setDashboardMeta(data);
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") {
-          setDashboardMeta(null);
-        }
-      });
-
-    return () => {
-      controller.abort();
-    };
-  }, []);
 
   useEffect(() => {
     setSelectedInspectionId(null);
@@ -357,7 +323,6 @@ export default function Dashboard() {
                 <GradeChart
                   counts={gradeCounts}
                   filters={filters}
-                  setFilters={setFilters}
                   searchRadiusMiles={
                     searchRadiusPoint ? activeRadiusMiles : null
                   }

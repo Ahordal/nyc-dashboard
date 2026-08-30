@@ -11,7 +11,7 @@ import { PieChart, Pie, ResponsiveContainer, Sector } from "recharts";
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
 
-import type { Filters, SetFilters } from "../types/filters";
+import type { Filters } from "../types/filters";
 import type { GradeCounts } from "../types/gradeCounts";
 import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
 import type { SearchRadiusMiles } from "../types/searchRadius";
@@ -66,7 +66,6 @@ type GradeChartProps = {
   // MapView now computes and passes just that instead.
   counts: GradeCounts;
   filters: Filters;
-  setFilters: SetFilters;
   // Set while the Search Radius tool is active; switches the panel title
   // (and info copy) from "Map View" to "Within <distance>".
   searchRadiusMiles?: SearchRadiusMiles | null;
@@ -134,11 +133,6 @@ export default function GradeChart({
   filters,
   searchRadiusMiles = null,
 }: GradeChartProps) {
-  // setFilters is no longer used: this chart is a pure display of the
-  // current scope (see the comment on gradeCounts in MapView.tsx), not an
-  // input. Left in GradeChartProps since the parent still passes it and
-  // other consumers of this type may rely on it.
-
   const [showInfo, setShowInfo] = useState(false);
 
   const scopeText =
