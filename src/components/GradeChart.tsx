@@ -163,7 +163,7 @@ export default function GradeChart({
     [searchRadiusMiles],
   );
 
-  const { data, totalCount, activeLabels, activeValue, activeColor } = useMemo<{
+  const { data, totalCount, activeLabels, activeValue } = useMemo<{
     data: ChartDataItem[];
     totalCount: number;
     // Labels currently exploded in the pie and highlighted in the centre
@@ -171,7 +171,6 @@ export default function GradeChart({
     // more than one, since the grade filter is multi-select).
     activeLabels: Set<string>;
     activeValue: number;
-    activeColor: string;
   }>(() => {
     const labels = new Set<string>(filters.grades);
 
@@ -197,18 +196,12 @@ export default function GradeChart({
 
     const activeSlices = chartData.filter((item) => labels.has(item.label));
     const summedValue = activeSlices.reduce((sum, item) => sum + item.value, 0);
-    // A single highlighted slice gets its own color; multiple (a
-    // multi-grade filter) fall back to a neutral color rather than
-    // picking one arbitrarily.
-    const color =
-      activeSlices.length === 1 ? activeSlices[0].color : "var(--text-body)";
 
     return {
       data: chartData,
       totalCount: total,
       activeLabels: labels,
       activeValue: summedValue,
-      activeColor: color,
     };
   }, [counts, filters.grades]);
 
@@ -363,7 +356,7 @@ export default function GradeChart({
                       <span
                         style={{
                           fontFamily: "var(--font-display)",
-                          color: activeColor,
+                          color: "var(--text-body)",
                         }}>
                         {activeValue.toLocaleString()}
                       </span>{" "}
