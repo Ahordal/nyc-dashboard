@@ -239,7 +239,7 @@ Note: `import.meta.env` in Vite only exposes `VITE_`-prefixed vars by default â€
 
 See [Testing](#testing) for the `npm run test:pipeline` / `npm run test:frontend` scripts.
 
-`prebuild` (runs automatically before `build`, not meant to be invoked directly) pulls `pipeline/geocode-cache.json` and `pipeline/counts-snapshot.json` down from the `data` branch via `curl` before `fetch-inspection.mjs` runs, since that's how the pipeline gets the committed geocode cache locally rather than checking out the branch itself.
+`prebuild` (runs automatically before `build`, not meant to be invoked directly) runs `pipeline/prebuild.mjs`, which pulls `pipeline/geocode-cache.json` and `pipeline/counts-snapshot.json` down from the `data` branch before `fetch-inspection.mjs` runs, since that's how the pipeline gets the committed geocode cache locally rather than checking out the branch itself. A download failure clears any stale local copy, logs a warning, and lets the build continue â€” `fetch-inspection.mjs` runs without the cache, just emitting un-geocoded output.
 
 ## Deployment
 
