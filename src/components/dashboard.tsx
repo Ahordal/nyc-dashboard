@@ -8,8 +8,7 @@ import {
   lazy,
   Suspense,
   useCallback,
-  useEffect,
-  useRef,
+  useReducer,
   useState,
 } from "react";
 
@@ -34,10 +33,15 @@ import {
   tabPanelId,
   type ExplorerTab,
 } from "../utils/explorerTabs";
+import {
+  selectionReducer,
+  INITIAL_SELECTION_STATE,
+} from "./selectionReducer";
 
 import { useUrlSync } from "../hooks/useUrlSync";
 import type { InitialUrlState, InitialRadiusState } from "../hooks/useUrlSync";
 import { useJsonFetch } from "../hooks/useJsonFetch";
+import { useInspectionHistory } from "../hooks/useInspectionHistory";
 
 import type { Filters } from "../types/filters";
 import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
@@ -45,7 +49,6 @@ import type { SearchRadiusPoint, SearchRadiusMiles } from "../types/searchRadius
 
 import type {
   RestaurantProperties,
-  InspectionEvent,
   ViolationCodeLookup,
 } from "../types/restaurant";
 
@@ -53,7 +56,6 @@ import type { DashboardMeta } from "../types/dashboardMeta";
 import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
-import { lruGet, lruSet } from "../utils/lruMap";
 import { resolveReportInspectionId } from "../utils/reportInspection";
 import { getFilterNoticeParts } from "../utils/filterNotice";
 
@@ -72,8 +74,6 @@ const FILTER_NOTICE_DURATION_MS = 1300;
 // Stable fallback for the violation-codes fetch (see useJsonFetch).
 const EMPTY_VIOLATION_CODES: ViolationCodeLookup = {};
 
-const MAX_HISTORY_CACHE_ENTRIES = 50;
-
 const GRADE_FILTER_COLORS: Record<string, string> = {
   A: CATEGORY_COLORS.A,
   B: CATEGORY_COLORS.B,
@@ -91,8 +91,19 @@ export default function Dashboard() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  const [selectedRestaurant, setSelectedRestaurant] =
-    useState<RestaurantProperties | null>(null);
+  // Selection, hover, and the active Explorer tab move together — see
+  // selectionReducer for the "selecting X clears Y, switches tab" rules.
+  const [selection, dispatchSelection] = useReducer(
+    selectionReducer,
+    INITIAL_SELECTION_STATE,
+  );
+  const {
+    selectedRestaurant,
+    selectedInspectionId,
+    hoveredInspectionId,
+    hoveredRestaurantId,
+    activeTab: activeExplorerTab,
+  } = selection;
 
   // A restaurant named in the initial URL (?camis=). MapView resolves it
   // against the full layer once its layer is ready, hands it back via
@@ -102,9 +113,6 @@ export default function Dashboard() {
   const [pendingCamisFromUrl, setPendingCamisFromUrl] = useState<string | null>(
     null,
   );
-
-  const [activeExplorerTab, setActiveExplorerTab] =
-    useState<ExplorerTab>("list");
 
   const [visibleRestaurants, setVisibleRestaurants] = useState<
     RestaurantProperties[]
@@ -125,23 +133,9 @@ export default function Dashboard() {
   const [initialSearchRadius, setInitialSearchRadius] =
     useState<InitialRadiusState | null>(null);
 
-  const [history, setHistory] = useState<InspectionEvent[]>([]);
-
-  const [isLoadingHistory, setIsLoadingHistory] = useState(false);
-
-  const [selectedInspectionId, setSelectedInspectionId] = useState<
-    string | null
-  >(null);
-
-  const [hoveredInspectionId, setHoveredInspectionId] = useState<string | null>(
-    null,
+  const { history, isLoadingHistory } = useInspectionHistory(
+    selectedRestaurant?.camis ?? null,
   );
-
-  const [hoveredRestaurantId, setHoveredRestaurantId] = useState<
-    string | null
-  >(null);
-
-  const historyCache = useRef<Map<string, InspectionEvent[]>>(new Map());
 
   const violationCodes = useJsonFetch<ViolationCodeLookup>(
     "/data/violation-codes.json",
@@ -201,103 +195,27 @@ export default function Dashboard() {
     handleInitialUrlState,
   );
 
-  useEffect(() => {
-    setSelectedInspectionId(null);
-
-    setHoveredInspectionId(null);
-
-    if (!selectedRestaurant) {
-      setHistory([]);
-      setIsLoadingHistory(false);
-
-      return;
-    }
-
-    const cachedHistory = lruGet(historyCache.current, selectedRestaurant.camis);
-
-    if (cachedHistory) {
-      setHistory(cachedHistory);
-
-      setIsLoadingHistory(false);
-
-      return;
-    }
-
-    setHistory([]);
-    setIsLoadingHistory(true);
-
-    const controller = new AbortController();
-
-    fetch(`/data/history/${selectedRestaurant.camis}.json`, {
-      signal: controller.signal,
-    })
-      .then((response) => (response.ok ? response.json() : []))
-      .then((data: InspectionEvent[]) => {
-        lruSet(
-          historyCache.current,
-          selectedRestaurant.camis,
-          data,
-          MAX_HISTORY_CACHE_ENTRIES,
-        );
-
-        setHistory(data);
-
-        setIsLoadingHistory(false);
-      })
-      .catch((error) => {
-        if (error.name !== "AbortError") {
-          setHistory([]);
-
-          setIsLoadingHistory(false);
-        }
-      });
-
-    return () => {
-      controller.abort();
-    };
-    // Key on camis rather than object identity: map queries can return fresh
-    // object refs for the same restaurant, causing unnecessary cache refetches.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedRestaurant?.camis]);
-
   function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
-    setHoveredInspectionId(null);
-
-    setHoveredRestaurantId(null);
-
-    setSelectedRestaurant(restaurant);
-
-    if (restaurant) {
-      setActiveExplorerTab("details");
-    } else {
-      setActiveExplorerTab("list");
-    }
+    dispatchSelection({ type: "selectRestaurant", restaurant });
   }
 
   function handleSelectInspection(inspectionId: string) {
-    setHoveredInspectionId(null);
-
-    setSelectedInspectionId(inspectionId);
-
-    setActiveExplorerTab("report");
+    dispatchSelection({ type: "selectInspection", inspectionId });
   }
 
   function handleHoverInspection(inspectionId: string | null) {
-    setHoveredInspectionId(inspectionId);
+    dispatchSelection({ type: "hoverInspection", inspectionId });
   }
 
-  function handleHoverRestaurant(
-    restaurant: RestaurantProperties | null,
-  ) {
-    setHoveredRestaurantId(restaurant?.id ?? null);
+  function handleHoverRestaurant(restaurant: RestaurantProperties | null) {
+    dispatchSelection({
+      type: "hoverRestaurant",
+      restaurantId: restaurant?.id ?? null,
+    });
   }
 
   function handleExplorerTabChange(tab: ExplorerTab) {
-    setHoveredInspectionId(null);
-
-    setHoveredRestaurantId(null);
-
-    setActiveExplorerTab(tab);
+    dispatchSelection({ type: "changeTab", tab });
   }
 
   return (
