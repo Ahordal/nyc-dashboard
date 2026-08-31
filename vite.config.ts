@@ -22,7 +22,7 @@ export default defineConfig({
   },
   test: {
     // Scoped to src/ only; pipeline/*.test.mjs is its own suite, run
-    // separately via `npm test` (node:test), not picked up here.
+    // separately via `npm run test:pipeline` (node:test), not picked up here.
     include: ["src/**/*.test.{ts,tsx}"],
   },
 });
