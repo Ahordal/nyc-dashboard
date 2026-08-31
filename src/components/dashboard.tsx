@@ -52,6 +52,8 @@ import type { DashboardMeta } from "../types/dashboardMeta";
 import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
+import { lruGet, lruSet } from "../utils/lruMap";
+import { resolveReportInspectionId } from "../utils/reportInspection";
 
 const MapView = lazy(() => import("./MapView"));
 
@@ -155,11 +157,10 @@ export default function Dashboard() {
 
   const radiusKey = searchRadiusPoint ? `radius-${activeRadiusMiles}` : "";
 
-  const reportInspectionId =
-    selectedInspectionId !== null &&
-    history.some((event) => event.id === selectedInspectionId)
-      ? selectedInspectionId
-      : (history[history.length - 1]?.id ?? null);
+  const reportInspectionId = resolveReportInspectionId(
+    selectedInspectionId,
+    history,
+  );
 
   // Initialize state from URL params on first mount
   const handleInitialUrlState = useCallback((initial: InitialUrlState) => {
@@ -210,12 +211,9 @@ export default function Dashboard() {
       return;
     }
 
-    const cachedHistory = historyCache.current.get(selectedRestaurant.camis);
+    const cachedHistory = lruGet(historyCache.current, selectedRestaurant.camis);
 
     if (cachedHistory) {
-      historyCache.current.delete(selectedRestaurant.camis);
-      historyCache.current.set(selectedRestaurant.camis, cachedHistory);
-
       setHistory(cachedHistory);
 
       setIsLoadingHistory(false);
@@ -233,12 +231,12 @@ export default function Dashboard() {
     })
       .then((response) => (response.ok ? response.json() : []))
       .then((data: InspectionEvent[]) => {
-        const cache = historyCache.current;
-        if (cache.size >= MAX_HISTORY_CACHE_ENTRIES) {
-          const oldestKey = cache.keys().next().value;
-          if (oldestKey !== undefined) cache.delete(oldestKey);
-        }
-        cache.set(selectedRestaurant.camis, data);
+        lruSet(
+          historyCache.current,
+          selectedRestaurant.camis,
+          data,
+          MAX_HISTORY_CACHE_ENTRIES,
+        );
 
         setHistory(data);
 
