@@ -255,8 +255,7 @@ export default function InspectionMapView({
     const layer = new GeoJSONLayer({
       url: "/data/latest-inspections.geojson",
       title: "NYC Restaurant Inspections",
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      renderer: pointsRenderer as any,
+      renderer: pointsRenderer,
       outFields: RESTAURANT_OUT_FIELDS,
       copyright: "NYC DOHMH |",
     });

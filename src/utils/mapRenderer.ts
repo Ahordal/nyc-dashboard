@@ -14,6 +14,8 @@
 // closed -> uninspected -> pending -> A/B/C order in step with the other
 // two if any of them changes.
 
+import type { UniqueValueRendererProperties } from "@arcgis/core/renderers/UniqueValueRenderer";
+
 import { CATEGORY_COLORS } from "./gradeColours";
 
 const gradeCategoryExpression = `
@@ -53,7 +55,9 @@ const scoreWeightExpression = `
   return 20;
 `;
 
-export const pointsRenderer = {
+export const pointsRenderer: UniqueValueRendererProperties & {
+  type: "unique-value";
+} = {
   type: "unique-value",
   valueExpression: gradeCategoryExpression,
   defaultSymbol: {
