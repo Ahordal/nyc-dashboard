@@ -365,9 +365,6 @@ export default function RestaurantList({
             <button
               type="button"
               className="sort-direction-toggle sort-direction-toggle-icon"
-              data-tooltip={
-                sortDirection === "asc" ? "Ascending" : "Descending"
-              }
               onClick={() => {
                 setSortDirection((current) =>
                   current === "asc" ? "desc" : "asc",

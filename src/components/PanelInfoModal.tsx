@@ -106,6 +106,7 @@ export default function PanelInfoModal({
   return createPortal(
     <div
       className="info-modal-overlay"
+      role="presentation"
       onClick={onClose}
     >
       <div
