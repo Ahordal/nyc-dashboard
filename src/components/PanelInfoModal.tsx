@@ -42,7 +42,8 @@ export default function PanelInfoModal({
 
     const previouslyFocused = document.activeElement as HTMLElement | null;
 
-    closeButtonRef.current?.focus();
+    // Close button only renders with a title; fall back to the dialog itself.
+    (closeButtonRef.current ?? dialogRef.current)?.focus();
 
     const previousOverflow = document.body.style.overflow;
 
@@ -112,6 +113,7 @@ export default function PanelInfoModal({
         className="info-modal"
         role="dialog"
         aria-modal="true"
+        tabIndex={-1}
         aria-labelledby={title ? titleId : undefined}
         onClick={(event) => {
           event.stopPropagation();
