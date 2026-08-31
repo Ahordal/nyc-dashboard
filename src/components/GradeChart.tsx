@@ -6,6 +6,7 @@
 // itself is non-filtering.
 
 import { useMemo, useState } from "react";
+import type { CSSProperties } from "react";
 import { PieChart, Pie, ResponsiveContainer, Sector } from "recharts";
 
 import PanelHeader from "./PanelHeader";
@@ -213,13 +214,6 @@ export default function GradeChart({
 
   return (
     <section className="panel grade-chart-panel">
-      <style>{`
-        .grade-chart-svg-wrap svg:focus,
-        .grade-chart-svg-wrap svg *:focus {
-          outline: none;
-        }
-      `}</style>
-
       <PanelHeader
         title={title}
         titleText={`Grade Breakdown — ${scopeText}`}
@@ -233,33 +227,13 @@ export default function GradeChart({
       {showInfo ? (
         <div className="panel-scroll-content">{infoContent}</div>
       ) : (
-        <div
-          className="panel-scroll-content"
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
-            justifyContent: "center",
-            height: "100%",
-            padding: "1rem",
-            position: "relative",
-            boxSizing: "border-box",
-          }}>
+        <div className="panel-scroll-content grade-chart-body">
           <div
             className="grade-chart-svg-wrap"
             role="img"
-            aria-label={chartAriaLabel}
-            style={{
-              flex: 1,
-              minHeight: 0,
-              width: "100%",
-              height: "100%",
-              position: "relative",
-            }}>
+            aria-label={chartAriaLabel}>
             {data.length === 0 ? (
-              <div
-                className="details-empty"
-                style={{ textAlign: "center", padding: "2rem" }}>
+              <div className="details-empty grade-chart-empty">
                 No data available for current view.
               </div>
             ) : (
@@ -279,101 +253,46 @@ export default function GradeChart({
                   </PieChart>
                 </ResponsiveContainer>
 
-                <div
-                  style={{
-                    position: "absolute",
-                    top: "50%",
-                    left: "50%",
-                    transform: "translate(-50%, -50%)",
-                    textAlign: "center",
-                    pointerEvents: "none",
-                    display: "flex",
-                    flexDirection: "column",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    width: "65%",
-                    maxWidth: "180px",
-                  }}>
-                  <div
-                    style={{
-                      fontSize: "0.8rem",
-                      fontWeight: 700,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.02em",
-                      lineHeight: 1.35,
-                      display: "flex",
-                      flexWrap: "wrap",
-                      justifyContent: "center",
-                      gap: "0rem 0.25rem",
-                    }}>
+                <div className="grade-chart-center">
+                  <div className="grade-chart-legend">
                     {SLICE_CONFIG.map(({ key, label, color }, index) => {
                       const isActive = activeLabels.has(label);
                       const isDimmed = activeLabels.size > 0 && !isActive;
                       const isLast = index === SLICE_CONFIG.length - 1;
 
                       return (
-                        <span key={key}>
+                        <span
+                          key={key}
+                          className="grade-chart-legend-group"
+                          data-dimmed={isDimmed ? "true" : undefined}>
                           <span
-                            style={{
-                              color: isDimmed ? "var(--text-muted)" : color,
-                              opacity: isDimmed ? 0.45 : 1,
-                              transition: "opacity 0.15s ease, color 0.15s ease",
-                            }}>
+                            className="grade-chart-legend-item"
+                            style={
+                              { "--legend-color": color } as CSSProperties
+                            }>
                             {label}
                           </span>
                           {!isLast && (
-                            <span
-                              style={{
-                                color: "var(--text-muted)",
-                                opacity: isDimmed ? 0.45 : 1,
-                              }}>
-                              ,
-                            </span>
+                            <span className="grade-chart-legend-sep">,</span>
                           )}
                         </span>
                       );
                     })}
                   </div>
 
-                  {activeLabels.size > 0 ? (
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        color: "var(--text-muted)",
-                        marginTop: "0.45rem",
-                        lineHeight: 1.3,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.02em",
-                        textAlign: "center",
-                      }}>
-                      <span
-                        style={{
-                          fontFamily: "var(--font-display)",
-                          color: "var(--text-body)",
-                        }}>
-                        {activeValue.toLocaleString()}
-                      </span>{" "}
-                      Restaurants
-                    </div>
-                  ) : (
-                    <div
-                      style={{
-                        fontSize: "0.8rem",
-                        fontWeight: 600,
-                        color: "var(--text-muted)",
-                        marginTop: "0.45rem",
-                        lineHeight: 1.3,
-                        textTransform: "uppercase",
-                        letterSpacing: "0.02em",
-                        textAlign: "center",
-                      }}>
-                      <span style={{ color: "var(--text-body)" }}>
-                        {totalCount.toLocaleString()}
-                      </span>{" "}
-                      Restaurants
-                    </div>
-                  )}
+                  <div className="grade-chart-count">
+                    <span
+                      className="grade-chart-count-value"
+                      data-emphasis={
+                        activeLabels.size > 0 ? "true" : undefined
+                      }>
+                      {(activeLabels.size > 0
+                        ? activeValue
+                        : totalCount
+                      ).toLocaleString()}
+                    </span>{" "}
+                    Restaurants
+                  </div>
                 </div>
               </>
             )}

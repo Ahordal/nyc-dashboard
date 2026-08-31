@@ -1720,6 +1720,102 @@ summary:focus-visible,
   height: 100%;
 }
 
+/* Grade chart body — donut wrap, centre summary, legend */
+
+.grade-chart-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 1rem;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.grade-chart-svg-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Recharts focuses its own SVG on click; the HTML wrapper owns keyboard nav. */
+.grade-chart-svg-wrap svg:focus,
+.grade-chart-svg-wrap svg *:focus {
+  outline: none;
+}
+
+.grade-chart-empty {
+  text-align: center;
+  padding: 2rem;
+}
+
+.grade-chart-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 65%;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.grade-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.25rem;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.grade-chart-legend-item {
+  color: var(--legend-color);
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.grade-chart-legend-sep {
+  color: var(--text-muted);
+}
+
+.grade-chart-legend-group[data-dimmed="true"] .grade-chart-legend-item {
+  color: var(--text-muted);
+  opacity: 0.45;
+}
+
+.grade-chart-legend-group[data-dimmed="true"] .grade-chart-legend-sep {
+  opacity: 0.45;
+}
+
+.grade-chart-count {
+  margin-top: 0.45rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.grade-chart-count-value {
+  color: var(--text-body);
+}
+
+.grade-chart-count-value[data-emphasis="true"] {
+  font-family: var(--font-display);
+}
+
 /* 14.3 DASHBOARD GUIDE PANEL */
 
 .dashboard-guide-panel {
