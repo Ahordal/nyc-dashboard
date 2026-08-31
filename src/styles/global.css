@@ -2645,6 +2645,13 @@ summary:focus-visible,
   border-color: var(--accent-blue);
 }
 
+/* Always-mounted role="status" wrapper. Generates no box so it neither
+   adds a flex gap in .restaurant-card-list nor becomes the positioned
+   ancestor the overlay's inset: 0 resolves against. */
+.filter-notice-live-region {
+  display: contents;
+}
+
 .filter-notice-overlay {
   position: absolute;
   inset: 0;

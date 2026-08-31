@@ -3,6 +3,10 @@
 // Generic self-dismissing notification overlay. Shows on each change to
 // triggerKey and auto-hides after durationMs, forcing a reflow between
 // re-triggers so the CSS fade replays.
+//
+// The role="status" live region stays mounted at all times; only its
+// inner overlay toggles. Unmounting and remounting a live region that
+// already contains text stops many screen readers from announcing it.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 
@@ -52,15 +56,17 @@ export default function NoticeOverlay({
     };
   }, [triggerKey, durationMs]);
 
-  if (!visible) return null;
-
   return (
     <div
-      className="filter-notice-overlay"
+      className="filter-notice-live-region"
       role="status"
       aria-live="polite"
       aria-atomic="true">
-      <div className="filter-notice-text">{children}</div>
+      {visible && (
+        <div className="filter-notice-overlay">
+          <div className="filter-notice-text">{children}</div>
+        </div>
+      )}
     </div>
   );
 }
