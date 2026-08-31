@@ -4,6 +4,7 @@
 // layout, and coordinates data flow between the child panels.
 
 import {
+  Fragment,
   lazy,
   Suspense,
   useCallback,
@@ -54,6 +55,7 @@ import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 import { lruGet, lruSet } from "../utils/lruMap";
 import { resolveReportInspectionId } from "../utils/reportInspection";
+import { getFilterNoticeParts } from "../utils/filterNotice";
 
 const MapView = lazy(() => import("./MapView"));
 
@@ -408,72 +410,50 @@ export default function Dashboard() {
                 <NoticeOverlay
                   triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}-${radiusKey}`}
                   durationMs={FILTER_NOTICE_DURATION_MS}>
-                  {filters.grades.length > 0 && (
-                    <span className="filter-notice-group">
-                      Grade:{" "}
-                      {filters.grades.map((grade, index) => (
-                        <span key={grade}>
-                          <span
-                            style={{
-                              color: GRADE_FILTER_COLORS[grade],
-                            }}>
-                            {grade}
-                          </span>
-
-                          {index < filters.grades.length - 1 && ", "}
-                        </span>
-                      ))}
-                    </span>
-                  )}
-
-                  {filters.grades.length > 0 && filters.boroughs.length > 0 && (
-                    <span className="filter-notice-separator">, </span>
-                  )}
-
-                  {filters.boroughs.length > 0 && (
-                    <span className="filter-notice-group">
-                      Borough: {filters.boroughs.join(", ")}
-                    </span>
-                  )}
-
-                  {(filters.grades.length > 0 || filters.boroughs.length > 0) &&
-                    searchQuery && (
-                      <span className="filter-notice-separator">, </span>
-                    )}
-
-                  {searchQuery && (
-                    <span className="filter-notice-group">
-                      Search: &quot;
-                      {searchQuery}
-                      &quot;
-                    </span>
-                  )}
-
-                  {(filters.grades.length > 0 ||
-                    filters.boroughs.length > 0 ||
-                    searchQuery) &&
-                    searchRadiusPoint && (
-                      <span className="filter-notice-separator">, </span>
-                    )}
-
-                  {searchRadiusPoint && (
-                    <span className="filter-notice-group">
-                      Restaurants within{" "}
-                      <span className="unit-mi">
-                        {SEARCH_RADIUS_LABELS[activeRadiusMiles]}
-                      </span>{" "}
-                      of centre
-                    </span>
-                  )}
-
-                  {filters.grades.length === 0 &&
-                    filters.boroughs.length === 0 &&
-                    !searchQuery &&
-                    !searchRadiusPoint && (
+                  {getFilterNoticeParts({
+                    grades: filters.grades,
+                    boroughs: filters.boroughs,
+                    searchQuery,
+                    hasSearchRadius: Boolean(searchRadiusPoint),
+                  }).map((part, index) => (
+                    <Fragment key={part.kind}>
+                      {index > 0 && (
+                        <span className="filter-notice-separator">, </span>
+                      )}
                       <span className="filter-notice-group">
-                        All Restaurants
+                        {part.kind === "grades" && (
+                          <>
+                            Grade:{" "}
+                            {part.grades.map((grade, gradeIndex) => (
+                              <span key={grade}>
+                                <span
+                                  style={{ color: GRADE_FILTER_COLORS[grade] }}>
+                                  {grade}
+                                </span>
+                                {gradeIndex < part.grades.length - 1 && ", "}
+                              </span>
+                            ))}
+                          </>
+                        )}
+                        {part.kind === "boroughs" && (
+                          <>Borough: {part.boroughs.join(", ")}</>
+                        )}
+                        {part.kind === "search" && (
+                          <>Search: &quot;{part.query}&quot;</>
+                        )}
+                        {part.kind === "radius" && (
+                          <>
+                            Restaurants within{" "}
+                            <span className="unit-mi">
+                              {SEARCH_RADIUS_LABELS[activeRadiusMiles]}
+                            </span>{" "}
+                            of centre
+                          </>
+                        )}
+                        {part.kind === "all" && <>All Restaurants</>}
                       </span>
-                    )}
+                    </Fragment>
+                  ))}
                 </NoticeOverlay>
               </RestaurantList>
             </div>
