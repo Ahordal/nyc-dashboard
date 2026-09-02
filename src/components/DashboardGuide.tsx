@@ -149,7 +149,7 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
           setShowInfoModal(false);
         }}
       >
-        <div className="panel-header" style={{ marginBottom: "1.5rem", borderRadius: "4px" }}>
+        <div className="panel-header info-modal-panel-header">
           <span className="panel-header-title">
             Dashboard Information
           </span>

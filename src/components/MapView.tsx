@@ -573,8 +573,9 @@ export default function InspectionMapView({
       <div className="map-view-top-header">
         <PanelHeader
           title=""
-          titleText="Map Legend"
+          titleText="Map View"
           infoContent={MAP_LEGEND_INFO_CONTENT}
+          infoVariant="modal"
         />
       </div>
       <div className="map-canvas-wrapper">

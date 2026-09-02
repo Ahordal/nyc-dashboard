@@ -105,8 +105,8 @@ const PERFORMANCE_CHART_INFO_CONTENT = (
           visible.
         </li>
         <li>
-          Use the arrow keys to move between chart points, then press Enter or
-          Space to open the selected report.
+          Tab to the chart, then use the left/right arrow keys to move between
+          points; press Enter or Space to open the selected report.
         </li>
       </ul>
     }
@@ -693,7 +693,7 @@ export default function PerformanceChart({
       <PanelHeader
         title="Restaurant Performance Over Time"
         infoContent={PERFORMANCE_CHART_INFO_CONTENT}
-        infoPlacement="up"
+        infoVariant="modal"
       />
 
       {content}

@@ -176,21 +176,26 @@ summary:focus-visible,
   height: 100%;
   min-width: 0;
   min-height: 0;
+  /* Safety net: scroll rather than clip panels when the viewport drops
+     below the supported desktop floor. Reset in the reflow block. */
+  overflow: auto;
 }
 
 .dashboard {
   display: grid;
   width: 100%;
   height: 100%;
-  min-width: 0;
-  min-height: 0;
-  grid-template-columns: clamp(350px, 25vw, 450px) minmax(0, 1fr) clamp(400px, 28vw, 550px);
+  /* Full 3-pane floor: keeps the map above ~480px wide and every panel
+     usable down to ~800px tall. Below 1750px the reflow block resets both. */
+  min-width: 1246px;
+  min-height: 800px;
+  grid-template-columns: clamp(350px, 25vw, 450px) minmax(480px, 1fr) clamp(400px, 28vw, 550px);
   grid-template-rows: auto minmax(0, 1fr) 280px 60px;
   grid-template-areas:
-    "sidebar map-column search"
-    "sidebar map-column explorer"
+    "sidebar map-column  search"
+    "sidebar map-column  explorer"
     "sidebar performance explorer"
-    "footer footer footer";
+    "footer  footer      footer";
   gap: var(--space-xs);
 }
 
@@ -492,6 +497,13 @@ summary:focus-visible,
   padding: 0 16px 16px;
 }
 
+/* Panel-header bar used as a modal's own heading (PanelHeader modal
+   variant, DashboardGuide). */
+.info-modal-panel-header {
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
 /*///////////////////////////////////////////// 6. DASHBOARD TITLE //////////////////////////////////////////////*/
 
 /* 6.1 TITLE TYPOGRAPHY & WRAPPER */
@@ -553,14 +565,14 @@ summary:focus-visible,
 /* 7.1 FILTER BAR & BUTTONS */
 
 .dashboard-filters {
-  display: grid;
-  grid-template-columns: max-content max-content;
+  display: flex;
+  flex-wrap: wrap;
   justify-content: center;
+  align-items: stretch;
   width: 100%;
   min-width: 0;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
-  overflow: hidden;
 }
 
 .dashboard-grade-filters,
@@ -575,17 +587,14 @@ summary:focus-visible,
   justify-content: center;
   width: auto;
   height: 100%;
-  padding: 1rem;
+  padding: 0.4rem 1rem;
   background: transparent;
   border: none;
 }
 
-.dashboard-grade-filters .panel {
-  border-right: 1px solid var(--border-panel);
-}
-
 .filter-group {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: center;
   gap: var(--space-xs);
@@ -668,9 +677,10 @@ summary:focus-visible,
 
 .stats-panel-line {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  justify-content: center; 
-  gap: var(--space-m); 
+  justify-content: center;
+  gap: var(--space-xs) var(--space-m);
   width: 100%;
   height: 100%;
   min-width: 0;
@@ -713,9 +723,10 @@ summary:focus-visible,
 
 .stats-breakdown {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  height: 75%;
-  min-width: 0;  
+  row-gap: 0.25rem;
+  min-width: 0;
 }
 
 .stats-breakdown-item {
@@ -2774,6 +2785,209 @@ summary:focus-visible,
   10% { opacity: 1; }
   80% { opacity: 1; }
   100% { opacity: 0; }
+}
+
+/*///////////////////////////////////////////// 16. RESPONSIVE REFLOW //////////////////////////////////////////////*/
+
+/* Two independent breakpoints:
+   - <=2359px: the filter bar collapses into a <details> disclosure (the
+     full inline bar only fits on one line above this).
+   - <=1750px: the 3-pane grid collapses to a stacked, scrolling layout.
+   The disclosure rules below therefore also apply throughout the 3-pane
+   range from 1751-2359px. */
+@media (max-width: 2359px) {
+  /* Filters collapse into a disclosure; the two sections stack and
+     left-align inside it */
+  .filters-disclosure {
+    border: 1px solid var(--border-panel);
+    background-color: var(--bg-panel);
+  }
+
+  .filters-disclosure-summary {
+    display: flex;
+    align-items: center;
+    gap: var(--space-xs);
+    padding: 0.65rem 0.75rem;
+    background-color: var(--bg-alt);
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+
+  .filters-disclosure-summary::-webkit-details-marker {
+    display: none;
+  }
+
+  .filters-disclosure-summary:hover,
+  .filters-disclosure-summary:focus-visible {
+    color: var(--text-heading);
+  }
+
+  .filters-disclosure-chevron {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+    transition: transform 0.15s ease;
+  }
+
+  .filters-disclosure[open] .filters-disclosure-chevron {
+    transform: rotate(90deg);
+  }
+
+  .filters-disclosure-active {
+    margin-left: auto;
+    min-width: 0;
+    font-family: var(--font-body);
+    font-weight: 600;
+    letter-spacing: 0;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .dashboard-filters {
+    flex-direction: column;
+    border: none;
+  }
+
+  .dashboard-grade-filters .panel,
+  .dashboard-borough-filters .panel {
+    justify-content: flex-start;
+  }
+
+  .dashboard-grade-filters .panel {
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  .filter-group {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 1750px) {
+  body {
+    overflow: auto;
+  }
+
+  .dashboard-container {
+    height: auto;
+    overflow: visible;
+  }
+
+  .dashboard {
+    min-width: 0;
+    min-height: 0;
+    height: auto;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: repeat(6, auto);
+    grid-template-areas:
+      "title       guide"
+      "map-column  map-column"
+      "search      search"
+      "explorer    explorer"
+      "grade       performance"
+      "footer      footer";
+  }
+
+  /* Header band: title and Dashboard Information sit side by side, filling
+     the dead space next to the oversized "NYC" wordmark. .left-sidebar is
+     flattened so its three children place into the grid directly. */
+  .left-sidebar {
+    display: contents;
+  }
+
+  .dashboard-title {
+    grid-area: title;
+  }
+
+  .dashboard-guide {
+    grid-area: guide;
+  }
+
+  .grade-chart {
+    grid-area: grade;
+  }
+
+  .dashboard-title-panel .panel-header {
+    display: none;
+  }
+
+  .h1-large {
+    font-size: clamp(4rem, 12vw, 9rem);
+  }
+
+  /* Dashboard Information: 2x2 grid of label/value pairs (value stacked
+     under the label, as at full size), centred against the title */
+  .dashboard-guide-meta {
+    display: grid;
+    flex: 1;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-s) var(--space-m);
+    align-content: center;
+  }
+
+  .dashboard-guide-meta-row {
+    display: contents;
+  }
+
+  .dashboard-guide-meta-item {
+    min-width: 0;
+  }
+
+  .dashboard-guide-meta-divider {
+    display: none;
+  }
+
+  /* KPI stays a distinct panel, set off from the filter bar */
+  .map-stats {
+    margin-top: var(--space-xs);
+  }
+
+  /* Map column: drop the subgrid, let filters/stats/map flow */
+  .map-column {
+    display: block;
+  }
+
+  .map-top {
+    display: block;
+    margin-bottom: var(--space-xs);
+  }
+
+  .map-view {
+    height: min(65vh, 560px);
+  }
+
+  /* Grade + performance share a row here - halves the grade chart's empty
+     width. Tall enough to keep the donut near its desktop size so the
+     centre summary clears the ring. Restacked at the phone breakpoint. */
+  .grade-chart,
+  .performance-chart {
+    height: min(60vh, 460px);
+  }
+
+  .explorer {
+    height: auto;
+  }
+
+  .explorer-content {
+    flex: 0 0 auto;
+    height: min(70vh, 600px);
+  }
+}
+
+/* Wide enough for the inline filter bar on one line: the disclosure
+   wrapper is inert and its summary is hidden. */
+@media (min-width: 2360px) {
+  .filters-disclosure-summary {
+    display: none;
+  }
 }
 
 @media (max-width: 1100px) {

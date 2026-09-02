@@ -12,6 +12,9 @@ import {
   useState,
 } from "react";
 
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
+
 import DashboardTitle from "./DashboardTitle";
 import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
@@ -38,6 +41,7 @@ import {
   INITIAL_SELECTION_STATE,
 } from "./selectionReducer";
 
+import { useMediaQuery } from "../hooks/useMediaQuery";
 import { useUrlSync } from "../hooks/useUrlSync";
 import type { InitialUrlState, InitialRadiusState } from "../hooks/useUrlSync";
 import { useJsonFetch } from "../hooks/useJsonFetch";
@@ -90,6 +94,13 @@ export default function Dashboard() {
   });
 
   const [searchQuery, setSearchQuery] = useState("");
+
+  // The inline filter bar only fits on one line at ~2360px+; below that
+  // it collapses into a <details> disclosure. At/above it the bar is
+  // always shown and the summary is hidden via CSS.
+  const isFilterBarInline = useMediaQuery("(min-width: 2360px)");
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const filtersExpanded = isFilterBarInline || filtersOpen;
 
   // Selection, hover, and the active Explorer tab move together — see
   // selectionReducer for the "selecting X clears Y, switches tab" rules.
@@ -152,6 +163,34 @@ export default function Dashboard() {
   const boroughsKey = filters.boroughs.join(",");
 
   const radiusKey = searchRadiusPoint ? `radius-${activeRadiusMiles}` : "";
+
+  // Active grade/borough filters, summarised for the collapsed filter
+  // bar. Grade names carry their category colour; boroughs stay muted.
+  const hasGradeFilter = filters.grades.length > 0;
+  const hasBoroughFilter = filters.boroughs.length > 0;
+
+  const filterSummary =
+    !hasGradeFilter && !hasBoroughFilter ? (
+      "All grades & boroughs"
+    ) : (
+      <>
+        {hasGradeFilter && (
+          <>
+            Grade:{" "}
+            {filters.grades.map((grade, index) => (
+              <Fragment key={grade}>
+                {index > 0 && ", "}
+                <span style={{ color: GRADE_FILTER_COLORS[grade] }}>
+                  {grade}
+                </span>
+              </Fragment>
+            ))}
+          </>
+        )}
+        {hasGradeFilter && hasBoroughFilter && " · "}
+        {hasBoroughFilter && `Borough: ${filters.boroughs.join(", ")}`}
+      </>
+    );
 
   const reportInspectionId = resolveReportInspectionId(
     selectedInspectionId,
@@ -252,15 +291,36 @@ export default function Dashboard() {
 
         <div className="map-column">
           <div className="map-top">
-            <div className="dashboard-filters">
-              <div className="dashboard-grade-filters">
-                <GradeFilters filters={filters} setFilters={setFilters} />
-              </div>
+            <details
+              className="filters-disclosure"
+              open={filtersExpanded}
+              onToggle={(event) => {
+                if (!isFilterBarInline) {
+                  setFiltersOpen(event.currentTarget.open);
+                }
+              }}>
+              <summary className="filters-disclosure-summary">
+                <FontAwesomeIcon
+                  icon={faChevronRight}
+                  className="filters-disclosure-chevron"
+                  aria-hidden="true"
+                />
+                <span className="filters-disclosure-label">Filters</span>
+                <span className="filters-disclosure-active">
+                  {filterSummary}
+                </span>
+              </summary>
 
-              <div className="dashboard-borough-filters">
-                <BoroughFilters filters={filters} setFilters={setFilters} />
+              <div className="dashboard-filters">
+                <div className="dashboard-grade-filters">
+                  <GradeFilters filters={filters} setFilters={setFilters} />
+                </div>
+
+                <div className="dashboard-borough-filters">
+                  <BoroughFilters filters={filters} setFilters={setFilters} />
+                </div>
               </div>
-            </div>
+            </details>
 
             <div className="map-stats">
               <StatsPanel

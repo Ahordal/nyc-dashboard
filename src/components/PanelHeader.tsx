@@ -21,6 +21,8 @@ import { createPortal } from "react-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleInfo, faXmark } from "@fortawesome/free-solid-svg-icons";
 
+import PanelInfoModal from "./PanelInfoModal";
+
 type InfoPlacement = "up" | "down" | "auto";
 type ResolvedPlacement = "up" | "down";
 
@@ -32,6 +34,11 @@ type PanelHeaderProps = {
   titleText?: string;
   infoContent?: ReactNode;
   infoPlacement?: InfoPlacement;
+  // "popup" (default): the button toggles PanelHeader's own anchored
+  // popup. "modal": the button opens a centred PanelInfoModal instead —
+  // for content too tall to sit beside the trigger on a short viewport
+  // (see MapView). Ignored when onInfoClick is set.
+  infoVariant?: "popup" | "modal";
   // When provided, the info button no longer opens PanelHeader's own
   // anchored popup; it just calls this instead, and isInfoOpen drives
   // the button's expanded/close-icon state. Used by panels that swap
@@ -66,6 +73,7 @@ export default function PanelHeader({
   titleText,
   infoContent,
   infoPlacement = "down",
+  infoVariant = "popup",
   onInfoClick,
   isInfoOpen = false,
 }: PanelHeaderProps) {
@@ -73,6 +81,11 @@ export default function PanelHeader({
 
   const titleForLabel =
     titleText ?? (typeof title === "string" ? title : "panel");
+
+  // Modal mode swaps the anchored popup for a centred PanelInfoModal.
+  const isModal = infoVariant === "modal" && !onInfoClick;
+  const modalTitle =
+    titleText ?? (typeof title === "string" && title.length > 0 ? title : undefined);
 
   const [showInfo, setShowInfo] = useState(false);
   const [resolvedPlacement, setResolvedPlacement] =
@@ -87,6 +100,7 @@ export default function PanelHeader({
   // Position and clamp the portal popup relative to the button and viewport before paint
   useLayoutEffect(() => {
     if (
+      isModal ||
       !showInfo ||
       !buttonRef.current ||
       !popupRef.current
@@ -241,14 +255,16 @@ export default function PanelHeader({
       resizeObserver?.disconnect();
     };
   }, [
+    isModal,
     showInfo,
     infoPlacement,
     infoContent,
   ]);
 
-  // Handle outside clicks and Escape key presses
+  // Handle outside clicks and Escape key presses (anchored popup only;
+  // PanelInfoModal manages its own dismissal in modal mode).
   useEffect(() => {
-    if (!showInfo) {
+    if (!showInfo || isModal) {
       return;
     }
 
@@ -299,10 +315,11 @@ export default function PanelHeader({
         handleKeyDown,
       );
     };
-  }, [showInfo]);
+  }, [showInfo, isModal]);
 
   const popup =
     showInfo &&
+    !isModal &&
     typeof document !== "undefined"
       ? createPortal(
           <div
@@ -357,19 +374,43 @@ export default function PanelHeader({
             aria-label={`About ${titleForLabel}`}
             aria-expanded={onInfoClick ? isInfoOpen : showInfo}
             aria-controls={
-              !onInfoClick && showInfo
+              !onInfoClick && !isModal && showInfo
                 ? popupId
                 : undefined
             }
           >
             <FontAwesomeIcon
-              icon={onInfoClick && isInfoOpen ? faXmark : faCircleInfo}
+              icon={
+                (onInfoClick && isInfoOpen) || (isModal && showInfo)
+                  ? faXmark
+                  : faCircleInfo
+              }
             />
           </button>
         )}
       </div>
 
       {popup}
+
+      {isModal && (
+        <PanelInfoModal
+          isOpen={showInfo}
+          onClose={() => setShowInfo(false)}
+        >
+          <div className="panel-header info-modal-panel-header">
+            <span className="panel-header-title">{modalTitle}</span>
+            <button
+              type="button"
+              className="panel-header-info-button"
+              onClick={() => setShowInfo(false)}
+              aria-label="Close"
+            >
+              <FontAwesomeIcon icon={faXmark} />
+            </button>
+          </div>
+          {infoContent}
+        </PanelInfoModal>
+      )}
     </>
   );
 }
