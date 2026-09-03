@@ -7534,5 +7534,17 @@
     "distanceMeters": 130.53779442307066,
     "matchType": "house+street",
     "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "50191845",
+    "dba": "TEA&COFFEE HILLSIDE LLC",
+    "address": "258-03 HILLSIDE AVE, Queens 11004",
+    "dohmhLat": 40.736979169452,
+    "dohmhLon": -73.709979656461,
+    "resolvedLat": 40.7349995,
+    "resolvedLon": -73.7191856,
+    "distanceMeters": 806.2794971852189,
+    "matchType": "house+street",
+    "resolvedVia": "no-hyphen"
   }
 ]
