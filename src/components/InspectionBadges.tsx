@@ -29,14 +29,22 @@ export default function InspectionBadges({
 
   return (
     <div className="card-badges" style={style}>
-      <div className="badge-box">
+      <div
+        className="badge-box"
+        style={{
+          borderColor: `color-mix(in srgb, ${categoryColor} 80%, transparent)`,
+        }}>
         <span className="badge-label">GRADE</span>
         <span className="badge-val" style={{ color: categoryColor }}>
           {isUninspected ? "—" : grade ?? "N/A"}
         </span>
       </div>
 
-      <div className="badge-box">
+      <div
+        className="badge-box"
+        style={{
+          borderColor: `color-mix(in srgb, ${categoryColor} 80%, transparent)`,
+        }}>
         <span className="badge-label">SCORE</span>
         <span className="badge-val" style={{ color: categoryColor }}>
           {isUninspected ? "—" : score ?? "N/A"}

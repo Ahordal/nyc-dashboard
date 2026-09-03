@@ -15,14 +15,10 @@ import { buildSearchRadiusGraphics } from "../utils/searchRadiusRings";
 
 const DEFAULT_RADIUS_MILES: SearchRadiusMiles = 0.25;
 
-// Clamp the framing zoom to this scale so fitting a larger ring never
-// zooms out past the restaurant hover threshold (HOVER_CARD_MAX_SCALE).
-const FRAMING_MAX_SCALE = 18056;
-
 const METERS_PER_MILE = 1609.344;
 // ArcGIS scale = (projected metres per pixel) * 96 dpi / 0.0254 m per inch.
 const SCALE_PER_METER_PER_PIXEL = 96 / 0.0254;
-// Extra margin around the circle when it does fit.
+// Extra margin around the circle so it always sits fully inside the view.
 const FRAMING_PADDING = 1.4;
 
 export function useSearchRadiusTool(
@@ -75,10 +71,10 @@ export function useSearchRadiusTool(
     [],
   );
 
-  // Pans and zooms to frame the circle for the selected distance (capped
-  // at FRAMING_MAX_SCALE). Runs on placement and on distance changes so
-  // the view matches the panel's scope, without disturbing a manual
-  // pan/zoom.
+  // Pans and zooms so the whole circle for the selected distance is
+  // visible (fits the diameter, plus FRAMING_PADDING, to the shorter view
+  // axis). Runs on placement and on distance changes so the view matches
+  // the panel's scope, without disturbing a manual pan/zoom.
   const frameRadiusCircle = useCallback(
     (point: SearchRadiusPoint, miles: SearchRadiusMiles) => {
       const view = viewRef.current;
@@ -104,10 +100,7 @@ export function useSearchRadiusTool(
         SCALE_PER_METER_PER_PIXEL;
 
       view
-        .goTo(
-          { center, scale: Math.min(fitScale, FRAMING_MAX_SCALE) },
-          { duration: 600 },
-        )
+        .goTo({ center, scale: fitScale }, { duration: 600 })
         .catch(() => {
           // goTo rejects if the user interrupts the animation; ignore.
         });

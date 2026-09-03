@@ -46,6 +46,10 @@ type PerformanceChartProps = {
   onSelectInspection?: (inspectionId: string) => void;
   hoveredInspectionId?: string | null;
   selectedInspectionId?: string | null;
+  // Mobile passes "compact" — the full date + badges card is too large
+  // for the short pinned chart, so it drops to a small grade + score
+  // label on the active dot.
+  tooltipVariant?: "full" | "compact";
 };
 
 type RechartsDotProps = {
@@ -289,6 +293,7 @@ export default function PerformanceChart({
   onSelectInspection,
   hoveredInspectionId,
   selectedInspectionId,
+  tooltipVariant = "full",
 }: PerformanceChartProps) {
   const instructionsId = useId();
 
@@ -676,6 +681,7 @@ export default function PerformanceChart({
 
         <PerformanceTooltip
           hoveredPoint={tooltipPriority.activeTooltipPoint}
+          variant={tooltipVariant}
           formattedDate={
             tooltipPriority.activeTooltipPoint
               ? formatTooltipDate(

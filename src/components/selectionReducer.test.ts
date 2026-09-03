@@ -89,6 +89,21 @@ describe("selectionReducer", () => {
     });
   });
 
+  describe("previewInspection", () => {
+    it("sets the inspection and clears the inspection hover but stays on the current tab", () => {
+      const next = selectionReducer(
+        { ...POPULATED, activeTab: "details" },
+        { type: "previewInspection", inspectionId: "insp-9" },
+      );
+
+      expect(next.selectedInspectionId).toBe("insp-9");
+      expect(next.activeTab).toBe("details");
+      expect(next.hoveredInspectionId).toBeNull();
+      expect(next.hoveredRestaurantId).toBe("200");
+      expect(next.selectedRestaurant).toBe(POPULATED.selectedRestaurant);
+    });
+  });
+
   describe("changeTab", () => {
     it("switches tab and clears both hovers, leaving selections intact", () => {
       const next = selectionReducer(POPULATED, {

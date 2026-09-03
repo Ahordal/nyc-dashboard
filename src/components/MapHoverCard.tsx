@@ -31,13 +31,21 @@ export default function MapHoverCard({ card }: { card: HoverCardState }) {
         {card.name}
       </span>
       <div className="map-hover-card-stats">
-        <div className="badge-box">
+        <div
+          className="badge-box"
+          style={{
+            borderColor: `color-mix(in srgb, ${color} 80%, transparent)`,
+          }}>
           <span className="badge-label">GRADE</span>
           <span className="badge-val" style={{ color }}>
             {card.gradeText}
           </span>
         </div>
-        <div className="badge-box">
+        <div
+          className="badge-box"
+          style={{
+            borderColor: `color-mix(in srgb, ${color} 80%, transparent)`,
+          }}>
           <span className="badge-label">SCORE</span>
           <span className="badge-val" style={{ color }}>
             {card.scoreText}

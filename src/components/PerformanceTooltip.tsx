@@ -1,14 +1,21 @@
 // PerformanceTooltip.tsx
 //
 // Custom chart tooltip positioned relative to the active inspection dot.
-// Shows the inspection date and grade/score badges; closure inspections
-// also show the "Closed by DOHMH" status tag used in Restaurant Details.
+// The "full" variant shows the inspection date and grade/score badges;
+// closure inspections also show the "Closed by DOHMH" status tag. The
+// "compact" variant (mobile, where the chart is short) drops to a small
+// grade + score label pinned to the dot.
 
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { ChartPoint } from "../types/restaurant";
 import InspectionBadges from "./InspectionBadges";
-import { isClosedInspection } from "../utils/gradeCategory";
+import {
+  getGradeCategory,
+  CATEGORY_COLORS,
+  UNINSPECTED_GRADE,
+  isClosedInspection,
+} from "../utils/gradeCategory";
 
 type PerformanceTooltipProps = {
   hoveredPoint: {
@@ -17,6 +24,7 @@ type PerformanceTooltipProps = {
     payload: ChartPoint;
   } | null;
   formattedDate: string;
+  variant?: "full" | "compact";
 };
 
 // Padding kept from the chart edges
@@ -30,6 +38,7 @@ const DOT_CLEARANCE = 20;
 export default function PerformanceTooltip({
   hoveredPoint,
   formattedDate,
+  variant = "full",
 }: PerformanceTooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<CSSProperties>({
@@ -98,6 +107,30 @@ export default function PerformanceTooltip({
 
   const { score, grade, action } = hoveredPoint.payload;
   const isClosure = isClosedInspection(action ?? "");
+
+  if (variant === "compact") {
+    const categoryColor =
+      CATEGORY_COLORS[getGradeCategory(action ?? "", grade, score ?? 0)];
+    const isUninspected = grade === UNINSPECTED_GRADE;
+
+    return (
+      <div
+        ref={tooltipRef}
+        className="performance-tooltip performance-tooltip-compact"
+        style={style}>
+        <span
+          className="performance-tooltip-compact-box"
+          style={{ color: categoryColor }}>
+          {isUninspected ? "—" : grade ?? "N/A"}
+        </span>
+        <span
+          className="performance-tooltip-compact-box"
+          style={{ color: categoryColor }}>
+          {isUninspected ? "—" : score ?? "—"}
+        </span>
+      </div>
+    );
+  }
 
   return (
     <div ref={tooltipRef} className="performance-tooltip" style={style}>

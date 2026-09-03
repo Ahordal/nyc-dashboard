@@ -128,6 +128,7 @@ summary:focus-visible,
   --text-body: #d6d8d4;
   --text-heading: #ffffff;
   --text-muted: #a0a0a0;
+  --text-faded: #767676;
 
   --border-panel: #424242;
 
@@ -141,7 +142,7 @@ summary:focus-visible,
   --status-delta-positive: #66bb6a;
   --status-delta-negative: #ef5350;
 
-  --badge-bg: rgba(0, 0, 0, 0.10);
+  --bg-score: #272727;
   --shadow-overlay: rgba(0, 0, 0, 0.4);
   --shadow-modal: rgba(0, 0, 0, 0.6);
   --shadow-controls: rgba(0, 0, 0, 0.3);
@@ -1227,7 +1228,9 @@ summary:focus-visible,
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: var(--badge-bg);
+  background: var(--bg-score);
+  /* borderColor set inline by each consumer to the grade colour at 80% */
+  border: 0.5px solid var(--border-panel);
 }
 
 .badge-label {
@@ -1705,6 +1708,32 @@ summary:focus-visible,
   color: var(--text-heading);
 }
 
+/* Compact variant (mobile pinned chart): two small value-only blocks
+   (grade, score) side by side, no card behind them. */
+.performance-tooltip-compact {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.performance-tooltip-compact-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  background: var(--bg-score);
+  border: 0.5px solid;
+  border-color: color-mix(in srgb, currentColor 80%, transparent);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: 0.8rem;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
 .chart-dot {
   transition: all 0.2s ease-in-out;
 }
@@ -2048,7 +2077,7 @@ summary:focus-visible,
 .legend-grade-text {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.875rem;
   text-transform: uppercase;
 }
 
@@ -2056,7 +2085,7 @@ summary:focus-visible,
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 0.4rem;
+  gap: 0.25rem;
 }
 
 .dot-sample {
@@ -2078,23 +2107,24 @@ summary:focus-visible,
 }
 
 .legend-score-text {
-  font-size: 0.8rem;
+  font-size: 0.875rem;
+  line-height: 1.35;
   color: var(--text-body);
-  text-align: right;
   font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 }
 
 .legend-table td {
-  padding: 0.4rem var(--space-xs);
+  padding: 0.3rem 0.3rem;
   vertical-align: middle;
 }
 
 .legend-table td:first-child {
-  width: auto;
+  width: 1%;
+  white-space: nowrap;
 }
 
 .legend-table td:nth-child(2) {
+  width: 3.25rem;
   text-align: center;
 }
 
@@ -2181,7 +2211,7 @@ summary:focus-visible,
   justify-content: center;
   width: 40px;
   height: 40px;
-  background: var(--badge-bg);
+  background: var(--bg-score);
   border-radius: 0;
 }
 
@@ -2289,6 +2319,10 @@ summary:focus-visible,
 .map-zoom-buttons-chip {
   display: flex;
   flex-direction: column;
+  /* 32-wide outer box (border included) so the pair lines up with the
+     single 32x32 control chips; 64 tall = two stacked. */
+  width: 32px;
+  height: 64px;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
   box-shadow: 0 2px 4px var(--shadow-controls);
@@ -2303,8 +2337,8 @@ summary:focus-visible,
   font-family: var(--font-display);
   font-size: 1rem;
   font-weight: 700;
-  width: 32px;
-  height: 32px;
+  width: 100%;
+  flex: 1;
   padding: 0;
   display: flex;
   align-items: center;
@@ -2570,9 +2604,16 @@ summary:focus-visible,
   z-index: 30;
 }
 
-[data-tooltip]:hover::after,
 [data-tooltip]:focus-visible::after {
   opacity: 1;
+}
+
+/* Hover reveal only where hovering is real — on touch a tap leaves a
+   sticky :hover, pinning the tooltip open with no way to dismiss it. */
+@media (hover: hover) {
+  [data-tooltip]:hover::after {
+    opacity: 1;
+  }
 }
 
 [data-tooltip].tooltip-right::after {
@@ -2996,5 +3037,898 @@ summary:focus-visible,
   }
   .stats-breakdown-item {
     padding: 0 0.4rem;
+  }
+}
+
+/*///////////////////////////////////////////// 18. MOBILE (PHONE) LAYOUT //////////////////////////////////////////////*/
+
+/* Below 640px dashboard.tsx renders <MobileDashboard> instead of the
+   desktop grid: a slim app bar, an area-summary strip, a full-bleed map,
+   and a bottom sheet (peek / half / full detents on [data-detent]) that
+   is purely restaurant info. All the classes below only exist inside
+   this query since that tree never mounts wider. */
+@media (max-width: 640px) {
+  body {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* 18.1 SHELL */
+
+  .mobile-dashboard {
+    --appbar-h: calc(52px + env(safe-area-inset-top));
+    --strip-h: 34px;
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background-color: var(--bg);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Starts below the app bar + area strip (rather than full-bleed behind
+     them) so the map's own top-left/right control cluster clears them. */
+  .mobile-map {
+    position: absolute;
+    top: calc(var(--appbar-h) + var(--strip-h));
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  /* The bottom map readouts (scale 1:x, zoom level, scale bar) sit at
+     bottom: 1.5rem — directly behind the peek sheet. Drop them on phones;
+     the top-left zoom buttons stay. */
+  .mobile-dashboard .map-bottom-controls,
+  .mobile-dashboard .map-scale-bar-container {
+    display: none;
+  }
+
+  /* Tuck the remaining map control chips nearer the edges on a phone. */
+  .mobile-dashboard .map-zoom-buttons-container,
+  .mobile-dashboard .map-compass-container {
+    left: 0.5rem;
+  }
+
+  .mobile-dashboard .map-basemap-toggle-container,
+  .mobile-dashboard .map-search-radius-container {
+    right: 0.5rem;
+  }
+
+  /* The map legend/info button is dropped on phones — its content is
+     folded into the app-bar Info drawer instead. Pull the buttons it
+     used to sit above up so the top one lines up with the zoom pair. */
+  .mobile-dashboard .map-view-top-header {
+    display: none;
+  }
+
+  .mobile-dashboard .map-basemap-toggle-container {
+    top: 1rem;
+  }
+
+  .mobile-dashboard .map-search-radius-container {
+    top: calc(1rem + 40px);
+  }
+
+  /* Touch leaves a sticky :hover after a tap, so a map control keeps its
+     hover highlight and reads as held. Pin each to its resting look on
+     hover; real state (the search-radius button's .active) still shows.
+     Also drop the post-tap focus ring for pointer input. */
+  .mobile-dashboard .map-zoom-button:hover:not(:disabled) {
+    color: var(--text-muted);
+    background-color: transparent;
+  }
+
+  .mobile-dashboard .map-compass-button:hover:not(:disabled),
+  .mobile-dashboard .map-basemap-toggle-button:hover,
+  .mobile-dashboard .map-search-radius-button:hover {
+    color: var(--text-muted);
+    background-color: var(--bg-panel);
+  }
+
+  .mobile-dashboard .map-search-radius-button.active:hover {
+    color: var(--text-body);
+  }
+
+  .mobile-dashboard .map-control-button:hover {
+    color: var(--text-body);
+  }
+
+  :root[data-input-modality="pointer"] .mobile-dashboard .map-zoom-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-compass-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-basemap-toggle-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-search-radius-button:focus {
+    outline: none;
+  }
+
+  /* 18.2 APP BAR */
+
+  .mobile-appbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs);
+    height: var(--appbar-h);
+    padding: env(safe-area-inset-top) 0.5rem 0;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  .mobile-appbar-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    line-height: 1;
+  }
+
+  .mobile-appbar-wordmark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: 1.15rem;
+    letter-spacing: -0.02em;
+    color: var(--text-muted);
+    text-shadow: -2px 2px 0 var(--bg-alt);
+  }
+
+  .mobile-appbar-subtitle {
+    max-width: 60vw;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 0.65rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-muted);
+  }
+
+  .mobile-appbar-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Sized and styled to match MapView's own 32px control chips. */
+  .mobile-appbar-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    box-shadow: 0 2px 4px var(--shadow-controls);
+    color: var(--text-muted);
+    font-size: 1rem;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  .mobile-appbar-button:hover,
+  .mobile-appbar-button[data-active] {
+    background-color: var(--link-background-hover);
+    color: var(--link-hover);
+  }
+
+  /* Touch leaves a sticky :hover after a tap, so a button whose drawer
+     has been closed keeps the highlight and reads as still open. Pin a
+     closed (not data-active) button to its resting look; data-active is
+     the only "open" signal. */
+  .mobile-appbar-button:not([data-active]):hover {
+    background-color: var(--bg-panel);
+    color: var(--text-muted);
+  }
+
+  :root[data-input-modality="pointer"] .mobile-appbar-button:focus {
+    outline: none;
+  }
+
+  .mobile-appbar-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 8px;
+    background-color: var(--accent-blue);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: 0.65rem;
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* Filters + Dashboard Information drop down from below the area strip.
+     The panel is a full-bleed --bg-panel background (flush to the strip
+     and both screen edges); the bordered card inside sits 0.5rem in from
+     every edge, content 0.5rem inside that — same as the bottom sheet's
+     list / details / reports panes. Info stacks two such panels
+     (meta/guide, then a pinned footer) with a 0.5rem gap where the map
+     shows through. */
+  .mobile-filter-drawer,
+  .mobile-info-drawer {
+    position: absolute;
+    top: calc(var(--appbar-h) + var(--strip-h));
+    left: 0;
+    right: 0;
+    z-index: 26;
+    max-height: 0;
+    overflow: hidden;
+  }
+
+  /* Full-bleed fill only on the open state — a closed (max-height: 0)
+     drawer would otherwise draw a sliver under the strip. */
+  .mobile-filter-drawer[data-open="true"] {
+    max-height: min(82dvh, 640px);
+    overflow-y: auto;
+    background-color: var(--bg-panel);
+    box-shadow: 0 6px 16px var(--shadow-overlay);
+  }
+
+  /* Info drawer: a capped flex column that does NOT scroll as a whole.
+     The transparent wrapper lets the map show through the 0.5rem gap
+     between its two full-bleed panels; the guide panel scrolls inside
+     its bordered card. */
+  .mobile-info-drawer {
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+  }
+
+  .mobile-info-drawer[data-open="true"] {
+    max-height: min(82dvh, 640px);
+  }
+
+  .mobile-info-drawer-panel {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-panel);
+    box-shadow: 0 6px 16px var(--shadow-overlay);
+    pointer-events: auto;
+  }
+
+  .mobile-info-drawer > .mobile-info-drawer-panel:first-child {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .mobile-info-drawer > .mobile-info-drawer-footer-panel {
+    flex-shrink: 0;
+  }
+
+  .mobile-info-drawer-panel + .mobile-info-drawer-panel {
+    margin-top: var(--space-xs);
+  }
+
+  /* The inner bordered card, shared by every drop-down panel: 0.5rem in
+     from the full-bleed panel edge on all sides, content 0.5rem inside. */
+  .mobile-filter-drawer-card,
+  .mobile-area-drawer-chart,
+  .mobile-info-drawer-panel-body {
+    margin: var(--space-xs);
+    padding: var(--space-xs);
+    border: 1px solid var(--border-panel);
+    background-color: var(--bg-panel);
+  }
+
+  /* The guide card scrolls inside its border; the footer card doesn't. */
+  .mobile-info-drawer-panel:first-child .mobile-info-drawer-panel-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Compact dataset meta: a 2x2 grid of label-over-value stats, no
+     divider, hairline under the block to set it off from the map guide
+     that follows. */
+  .dashboard-guide-meta[data-compact="true"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem 1.25rem;
+    padding: 0 0 var(--space-s);
+    border-top: none;
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  .dashboard-guide-meta[data-compact="true"] .dashboard-guide-meta-item {
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .dashboard-guide-meta[data-compact="true"] .dashboard-guide-meta-label {
+    font-size: 0.8rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-guide-meta[data-compact="true"] .dashboard-guide-meta-value {
+    font-size: 0.8rem;
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Space between the dataset meta and the folded-in map legend/how-to. */
+  .mobile-info-drawer-panel .info-popup-content {
+    margin-top: var(--space-s);
+  }
+
+  .mobile-info-drawer-footer-panel .dashboard-footer {
+    border: none;
+    padding: 0;
+    background: transparent;
+  }
+
+  .mobile-info-drawer-footer-panel .dashboard-footer-bar {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: auto;
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+
+  .mobile-info-drawer-footer-panel .footer-location,
+  .mobile-info-drawer-footer-panel .footer-links,
+  .mobile-info-drawer-footer-panel .footer-copyright {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .mobile-filter-groups {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-s);
+  }
+
+  .mobile-filter-groups > * + * {
+    border-top: 1px solid var(--border-panel);
+    padding-top: var(--space-s);
+  }
+
+  .mobile-filter-groups .panel {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .mobile-filter-groups .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.4rem;
+  }
+
+  .mobile-filter-groups .filter-label {
+    flex-basis: 100%;
+    margin: 0 0 0.4rem;
+    color: var(--text-body);
+    font-size: 0.8rem;
+  }
+
+  /* Clear stays at the front of the row (right after the label), with a
+     slightly wider gap before the first option. */
+  .mobile-filter-groups .filter-clear {
+    margin: 0 0.6rem 0 0;
+  }
+
+  .mobile-filter-groups .filter-button {
+    flex: 1 0 auto;
+    min-width: 4.5rem;
+    padding: 0.6rem 0.5rem;
+  }
+
+  /* Touch has no real hover, and a tap leaves a sticky :hover fill that
+     reads as "selected" — so a not-yet-toggled filter button keeps its
+     resting look on hover. Toggle state is .active; press feedback is
+     :active. Also drop the lingering focus ring after a tap (keyboard
+     focus still rings). */
+  .mobile-filter-groups .filter-button:not(.active):hover {
+    background-color: transparent;
+    color: var(--text-muted);
+  }
+
+  .mobile-filter-groups .filter-button:not(.active):active {
+    background-color: var(--bg-alt);
+    color: var(--link-hover);
+  }
+
+  :root[data-input-modality="pointer"] .mobile-filter-groups .filter-button:focus {
+    outline: none;
+  }
+
+  /* Clear never toggles, so it also never shows a focus outline — even
+     for keyboard (the :not(.active) rules above already handle its hover
+     and press). */
+  .mobile-filter-groups .filter-clear .filter-button:focus,
+  .mobile-filter-groups .filter-clear .filter-button:focus-visible {
+    outline: none;
+  }
+
+  /* Static echo of the desktop filter-change notice, so a tap visibly
+     registers. */
+  .mobile-filter-notice-rule {
+    margin: var(--space-s) 0 0;
+    border: none;
+    border-top: 1px solid var(--border-panel);
+  }
+
+  .mobile-filter-notice {
+    margin: var(--space-s) 0 0;
+    font-family: var(--font-display);
+    font-size: 0.78rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+  }
+
+  /* "Grade:" / "Borough:" labels sit at --text-body; grade values keep
+     their inline category colour; the "Filters applied:" lead-in and
+     borough names are faded. */
+  .mobile-filter-notice-label {
+    color: var(--text-body);
+  }
+
+  .mobile-filter-notice-lead,
+  .mobile-filter-notice-borough {
+    color: var(--text-faded);
+  }
+
+  /* 18.2b AREA STRIP — count + grade mix for the current view, pinned
+     under the app bar; opens the grade donut + tally in a modal. */
+
+  .mobile-area-strip {
+    position: absolute;
+    top: var(--appbar-h);
+    left: 0;
+    right: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    height: var(--strip-h);
+    padding: 0 0.75rem;
+    background-color: var(--bg-alt);
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+
+  .mobile-area-strip-icon {
+    flex-shrink: 0;
+    font-size: 0.85rem;
+  }
+
+  .mobile-area-strip-count {
+    flex-shrink: 0;
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: 0.8rem;
+  }
+
+  .mobile-area-strip-scope {
+    flex-shrink: 0;
+  }
+
+  .mobile-area-strip-bar {
+    display: flex;
+    flex: 1;
+    min-width: 40px;
+    height: 8px;
+    overflow: hidden;
+    background-color: var(--bg-panel);
+  }
+
+  .mobile-area-strip-bar > span {
+    display: block;
+    min-width: 0;
+  }
+
+  .mobile-area-strip-chevron {
+    flex-shrink: 0;
+    font-size: 0.7rem;
+  }
+
+  /* faChevronDown: points down to expand the drawer, up to collapse it. */
+  .mobile-area-strip[data-open="true"] .mobile-area-strip-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* Drops down from under the strip, over the map — the top-area
+     counterpart of the bottom sheet. Full-bleed --bg-panel background
+     (flush to strip + edges), with the bordered .mobile-area-drawer-chart
+     card 0.5rem in (shared rule above). Fill only on the open state — a
+     closed max-height:0 panel would draw a sliver. */
+  .mobile-area-drawer {
+    position: absolute;
+    top: calc(var(--appbar-h) + var(--strip-h));
+    left: 0;
+    right: 0;
+    z-index: 24;
+    max-height: 0;
+    overflow: hidden;
+  }
+
+  .mobile-area-drawer[data-open="true"] {
+    max-height: min(74dvh, 560px);
+    overflow-y: auto;
+    background-color: var(--bg-panel);
+    box-shadow: 0 6px 16px var(--shadow-overlay);
+  }
+
+  /* Donut + the per-grade KPI, stacked inside the card. */
+  .mobile-area-drawer-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  /* GradeChart has no `.grade-chart` wrapper here to make its panel a
+     flex column (so its body / info popup scrolls), so re-create that,
+     give the donut area an explicit height, and drop the panel's own
+     border/fill so it reads as part of the drawer rectangle. */
+  .mobile-area-drawer-chart .grade-chart-panel {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    height: min(46dvh, 380px);
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .mobile-area-drawer-chart .grade-chart-panel > .panel-header {
+    flex-shrink: 0;
+  }
+
+  /* KPI directly under the donut: drop the redundant total (it's in the
+     strip and the donut centre), strip the panel chrome, and centre the
+     breakdown even when it wraps to a second line. */
+  .mobile-area-drawer .stats-panel.panel {
+    height: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .mobile-area-drawer .stats-panel-line {
+    height: auto;
+  }
+
+  .mobile-area-drawer .stats-total {
+    display: none;
+  }
+
+  .mobile-area-drawer .stats-breakdown {
+    justify-content: center;
+  }
+
+  /* 18.3 BOTTOM SHEET */
+
+  .mobile-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-panel);
+    border-top: 1px solid var(--border-panel);
+    box-shadow: 0 -4px 16px var(--shadow-overlay);
+  }
+
+  /* Peek: the chevron plus the selected restaurant's list card. With no
+     selection it collapses to just the chevron + browse prompt. */
+  .mobile-dashboard[data-detent="peek"] .mobile-sheet {
+    height: calc(118px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-dashboard[data-detent="peek"][data-peek="empty"] .mobile-sheet {
+    height: calc(58px + env(safe-area-inset-bottom));
+  }
+
+  .mobile-dashboard[data-detent="open"] .mobile-sheet {
+    height: calc(100dvh - var(--appbar-h) - var(--strip-h) - 16px);
+  }
+
+  .mobile-sheet-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    flex-shrink: 0;
+    padding: 7px 12px 5px;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  /* Keyboard focus keeps the shared ring; a tap does not (same treatment
+     as .search-input — see the data-input-modality note in section 9). */
+  :root[data-input-modality="pointer"] .mobile-sheet-handle:focus,
+  :root[data-input-modality="pointer"] .mobile-sheet-peek:focus,
+  :root[data-input-modality="pointer"] .mobile-area-strip:focus {
+    outline: none;
+  }
+
+  /* Same chevron glyph as the area strip. Points up (rotated) at peek to
+     expand; points down when open to collapse. */
+  .mobile-sheet-chevron {
+    font-size: 0.85rem;
+    transform: rotate(180deg);
+  }
+
+  .mobile-dashboard[data-detent="open"] .mobile-sheet-chevron {
+    transform: rotate(0deg);
+  }
+
+  /* Peek content: the selected restaurant's list card (keeps its own
+     border + darker --bg-alt fill against the --bg-panel drawer), or the
+     browse prompt. */
+  .mobile-sheet-peek-card {
+    flex-shrink: 0;
+    padding: 0 0.625rem 8px;
+  }
+
+  .mobile-sheet-peek {
+    width: 100%;
+    flex-shrink: 0;
+    padding: 0 0.5rem 10px;
+    background: transparent;
+    border: none;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .mobile-sheet-peek-label {
+    display: inline-block;
+    max-width: 90vw;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: 0.85rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-faded);
+  }
+
+  /* Sheet body (open detent only): one scroll holding the search, tab
+     list, and either the list or the selected restaurant's record with
+     its score-history chart below it. */
+  .mobile-sheet-scroll {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding: 0 0.625rem calc(0.75rem + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* 18.4 SHEET CONTENT — reused desktop panels, stripped of their
+     panel chrome so they read as sheet sections */
+
+  .mobile-sheet-search {
+    flex-shrink: 0;
+  }
+
+  .mobile-sheet-search .panel {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .mobile-sheet-search .panel-header {
+    display: none;
+  }
+
+  /* 18.5 EXPLORER — fills the sheet with a bounded content box on every
+     tab: the List pane's pagination measures a real height, and the
+     Details / Report panes keep their header fixed while their
+     .panel-scroll-content scrolls. On Details the score-history chart is
+     then pinned to the bottom of the sheet, below that box. */
+
+  .mobile-explorer {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  .mobile-explorer .explorer-tabs {
+    position: sticky;
+    top: 0;
+    z-index: 2;
+  }
+
+  .mobile-explorer .explorer-tab {
+    padding: 0.7rem 0.35rem;
+    font-size: 0.68rem;
+  }
+
+  /* An inactive tab's 2px transparent bottom border let a sliver of
+     --bg-panel show between the tab row and the pane's top border,
+     reading as a gap. Give the inactive tabs a 1px border that just
+     continues the pane's own top border; the selected tab keeps its
+     thicker 2px underline. */
+  .mobile-explorer .explorer-tab:not(.active) {
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  /* No border here — the pane's own .panel border (inside) provides it,
+     and it lines up with the tab strip's side borders. A border on both
+     doubled the L/R/bottom edge. */
+  .mobile-explorer .explorer-content {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Tighter content inset than the desktop panel default, matching the
+     app-bar drawers. */
+  .mobile-explorer .explorer-content .panel {
+    padding: var(--space-xs);
+  }
+
+  /* Details / Report: drop the panel's right pad and re-add it on the
+     children — 0.5rem on the header, 0.75rem on the scroll area so its
+     scrollbar stops drawing over content (it was overlapping the grade
+     boxes). */
+  .mobile-explorer .explorer-content .restaurant-details-panel,
+  .mobile-explorer .explorer-content .restaurant-report-panel {
+    padding-right: 0;
+  }
+
+  /* Header bar ends 0.75rem in, lining its right edge up with the
+     section-header bars inside the scroll area (which sit 0.75rem in via
+     that area's own right pad). */
+  .mobile-explorer .restaurant-details-panel > .panel-header,
+  .mobile-explorer .restaurant-report-panel > .panel-header {
+    margin-right: 0.75rem;
+  }
+
+  .mobile-explorer .restaurant-details-panel > .panel-scroll-content,
+  .mobile-explorer .restaurant-report-panel > .panel-scroll-content {
+    padding-right: 0.75rem;
+  }
+
+  /* Details / Report tab of a selected restaurant: the panel header
+     stays put and its .panel-scroll-content scrolls in its own box (the
+     default bounded layout, same as the List tab) — so .mobile-sheet-scroll
+     itself doesn't scroll. On Details this also leaves the score-history
+     chart pinned to the bottom of the sheet, below the scrolling box. */
+  .mobile-dashboard[data-peek="card"][data-tab="details"] .mobile-sheet-scroll,
+  .mobile-dashboard[data-peek="card"][data-tab="report"] .mobile-sheet-scroll {
+    overflow: hidden;
+  }
+
+  /* Pagination: keep Previous / Next on the edges, centre the status
+     text between them, and drop the "(N restaurants)" count to its own
+     line so it doesn't wrap raggedly on a narrow list. */
+  .mobile-explorer .restaurant-list-pagination .pagination-text {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .mobile-explorer .restaurant-list-pagination .pagination-count {
+    display: block;
+  }
+
+  /* Sort bar: keep it on one line by tightening the gaps and letting the
+     dropdown triggers hug their label + chevron instead of padding out
+     to a fixed min-width. */
+  .mobile-explorer .restaurant-list-sort-bar {
+    flex-wrap: nowrap;
+    gap: 0.35rem;
+  }
+
+  .mobile-explorer .restaurant-list-sort-bar .sort-label,
+  .mobile-explorer .restaurant-list-sort-bar .sort-then-label,
+  .mobile-explorer .restaurant-list-sort-bar .sort-direction-toggle-icon {
+    flex-shrink: 0;
+  }
+
+  .mobile-explorer .restaurant-list-sort-bar .sort-dropdown {
+    flex: 0 1 auto;
+    min-width: 0;
+  }
+
+  .mobile-explorer .restaurant-list-sort-bar .sort-dropdown-trigger {
+    min-width: 0;
+    gap: 0.3rem;
+    padding: 0.4rem 0.45rem;
+    justify-content: flex-start;
+  }
+
+  .mobile-explorer .restaurant-list-sort-bar .sort-dropdown-trigger-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Inspection history rows (in Restaurant Details): tighten the fixed
+     column widths, gaps, and badge padding so the row fits a phone-width
+     list pane instead of pushing wider than it. */
+  .mobile-explorer .inspection-history-list li {
+    gap: 0.3rem;
+    padding: 0.4rem 0.2rem;
+  }
+
+  /* Keep every column a fixed width (just smaller than desktop) so the
+     rows still line up with each other. */
+  .mobile-explorer .inspection-row-date {
+    width: 4.75rem;
+    min-width: 0;
+  }
+
+  .mobile-explorer .inspection-row-grade,
+  .mobile-explorer .inspection-row-score {
+    width: 1.6rem;
+  }
+
+  .mobile-explorer .inspection-violation-counts {
+    grid-template-columns: 72px 104px;
+    gap: 0.3rem;
+    margin: 0;
+  }
+
+  .mobile-explorer .inspection-history-list .violation-tag {
+    padding: 2px 4px;
+    font-size: 0.7rem;
+  }
+
+  .mobile-explorer .inspection-history-list .violation-count-val {
+    font-size: 0.75rem;
+  }
+
+  /* 18.6 SELECTION-SCOPED SCORE HISTORY — pinned to the bottom of the
+     open sheet on the Details tab (18.5), so it stays in view while the
+     history list scrolls above it. No border: PerformanceChart's own
+     .panel border provides it. */
+  .mobile-perf-chart {
+    flex-shrink: 0;
+    height: 240px;
+  }
+
+  /* Match the explorer panes' tighter content inset. */
+  .mobile-perf-chart .panel {
+    padding: var(--space-xs);
   }
 }

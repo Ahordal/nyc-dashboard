@@ -3,82 +3,10 @@
 // The contents of the map panel's info popup (overview, how-to-use, the
 // grade/score legend table, and data notes). Lifted out of MapView.tsx
 // as a plain constant; it's static JSX passed straight to PanelHeader.
-//
-// The six legend rows only differ by colour, dot sizes, and score text,
-// so they're described by LEGEND_ROWS and rendered by LegendRow. A row
-// with one dot size shows a single dot; a row with two shows the small
-// dot, an arrow, then the large dot.
+// The legend table itself is shared (InfoPopupSharedContent).
 
-import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowRight } from "@fortawesome/free-solid-svg-icons";
-
-import { CATEGORY_COLORS } from "../utils/gradeColours";
 import InfoPopupContent from "./InfoPopupContent";
-
-type LegendRowData = {
-  label: string;
-  color: string;
-  score: string;
-  dots: readonly [number] | readonly [number, number];
-};
-
-const LEGEND_ROWS: readonly LegendRowData[] = [
-  { label: "A", color: CATEGORY_COLORS.A, dots: [4, 6], score: "0–13 pts" },
-  { label: "B", color: CATEGORY_COLORS.B, dots: [6, 8], score: "14–27 pts" },
-  { label: "C", color: CATEGORY_COLORS.C, dots: [8, 11], score: "28+ pts" },
-  {
-    label: "Pending",
-    color: CATEGORY_COLORS.pending,
-    dots: [4, 11],
-    score: "N / P / Z (score varies)",
-  },
-  {
-    label: "Uninspected",
-    color: CATEGORY_COLORS.uninspected,
-    dots: [6],
-    score: "No scored inspection on record",
-  },
-  { label: "Closed", color: CATEGORY_COLORS.closed, dots: [11], score: "" },
-];
-
-function Dot({ size, color }: { size: number; color: string }) {
-  return (
-    <span
-      className="dot-sample"
-      style={{
-        width: `${size}px`,
-        height: `${size}px`,
-        backgroundColor: color,
-        border: "0.5px solid rgba(26, 26, 26, 1)",
-      }}></span>
-  );
-}
-
-function LegendRow({ row }: { row: LegendRowData }) {
-  return (
-    <tr>
-      <td>
-        <span className="legend-grade-text" style={{ color: row.color }}>
-          {row.label}
-        </span>
-      </td>
-      <td>
-        {row.dots.length === 2 ? (
-          <div className="legend-scale-visual">
-            <Dot size={row.dots[0]} color={row.color} />
-            <FontAwesomeIcon icon={faArrowRight} className="legend-arrow" />
-            <Dot size={row.dots[1]} color={row.color} />
-          </div>
-        ) : (
-          <div className="legend-scale-visual single-dot-align">
-            <Dot size={row.dots[0]} color={row.color} />
-          </div>
-        )}
-      </td>
-      <td className="legend-score-text">{row.score}</td>
-    </tr>
-  );
-}
+import { LegendTable } from "./InfoPopupSharedContent";
 
 const MAP_LEGEND_INFO_CONTENT = (
   <InfoPopupContent
@@ -124,15 +52,7 @@ const MAP_LEGEND_INFO_CONTENT = (
         </li>
       </ul>
     }
-    legend={
-      <table className="details-table legend-table">
-        <tbody>
-          {LEGEND_ROWS.map((row) => (
-            <LegendRow key={row.label} row={row} />
-          ))}
-        </tbody>
-      </table>
-    }
+    legend={<LegendTable />}
     dataNotes={
       <ul>
         <li>

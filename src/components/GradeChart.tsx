@@ -1,9 +1,9 @@
 // GradeChart.tsx
 //
-// Read-only donut chart showing the full restaurant grade distribution for
-// the current scope (map view or search radius circle, minus active filters).
-// Slices matching the active grade filter are highlighted, but the chart
-// itself is non-filtering.
+// Read-only donut chart of the restaurant grade distribution for the
+// current scope (map view or search radius circle). Narrowed by the
+// active Borough filter and search; when a grade filter is active the
+// chart is scoped to just those grades so it matches the map and list.
 
 import { useMemo, useState } from "react";
 import type { CSSProperties } from "react";
@@ -14,6 +14,7 @@ import InfoPopupContent from "./InfoPopupContent";
 
 import type { Filters } from "../types/filters";
 import type { GradeCounts } from "../types/gradeCounts";
+import { scopeGradeCounts } from "../types/gradeCounts";
 import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
 import type { SearchRadiusMiles } from "../types/searchRadius";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
@@ -23,22 +24,20 @@ function gradeChartInfoContent(withinRadius: boolean) {
     <InfoPopupContent
       overview={
         <p>
-          Shows the full breakdown of restaurant grades and statuses{" "}
+          Shows the breakdown of restaurant grades and statuses{" "}
           {withinRadius
             ? "within the active Search Radius"
             : "within the current map view"}
-          , also narrowed by any active Borough filter and the search field, but
-          not by the active grade filter — so the grade mix stays complete
-          alongside whatever grade you've selected.
+          , narrowed by any active Borough filter and the search field.
         </p>
       }
       howToUse={
         <ul>
           <li>
             This chart is read-only. When a grade or status filter is active,
-            the matching slice(s) are exploded to show their share of the
-            total, the center count updates to their combined total, and the
-            remaining labels dim.
+            the chart is limited to those grades and the center count is their
+            total; center labels for grades with no restaurants in the current
+            view are dimmed.
           </li>
         </ul>
       }
@@ -77,55 +76,25 @@ type ChartDataItem = {
   label: string;
   value: number;
   color: string;
-  isSelected: boolean;
 };
-
-const ACTIVE_RADIUS_GROWTH = 10; // px
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const renderCustomizedShape = (props: any) => {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, payload } =
     props;
 
-  const isSelected = payload?.isSelected;
-  const fill = payload?.color;
-
-  const isActive = isSelected;
-
   return (
-    <g>
-      <Sector
-        cx={cx}
-        cy={cy}
-        innerRadius={innerRadius}
-        outerRadius={outerRadius}
-        startAngle={startAngle}
-        endAngle={endAngle}
-        fill={fill}
-        stroke="var(--bg-panel)"
-        strokeWidth={2}
-        style={{
-          opacity: isActive ? 0 : 1,
-        }}
-      />
-
-      {isActive && (
-        <Sector
-          cx={cx}
-          cy={cy}
-          innerRadius={innerRadius}
-          outerRadius={outerRadius + ACTIVE_RADIUS_GROWTH}
-          startAngle={startAngle}
-          endAngle={endAngle}
-          fill={fill}
-          stroke="var(--bg-panel)"
-          strokeWidth={2}
-          style={{
-            pointerEvents: "none",
-          }}
-        />
-      )}
-    </g>
+    <Sector
+      cx={cx}
+      cy={cy}
+      innerRadius={innerRadius}
+      outerRadius={outerRadius}
+      startAngle={startAngle}
+      endAngle={endAngle}
+      fill={payload?.color}
+      stroke="var(--bg-panel)"
+      strokeWidth={2}
+    />
   );
 };
 
@@ -158,46 +127,34 @@ export default function GradeChart({
     [searchRadiusMiles],
   );
 
-  const { data, totalCount, activeLabels, activeValue } = useMemo<{
+  const hasGradeFilter = filters.grades.length > 0;
+
+  const { data, totalCount, scopedCounts } = useMemo<{
     data: ChartDataItem[];
     totalCount: number;
-    // Labels currently exploded in the pie and highlighted in the centre
-    // summary: every slice matching the active grade filter (there can be
-    // more than one, since the grade filter is multi-select).
-    activeLabels: Set<string>;
-    activeValue: number;
+    // The tally restricted to the selected grades (unchanged when none
+    // are selected). Drives the slices, the centre count, and which
+    // centre labels stay coloured.
+    scopedCounts: GradeCounts;
   }>(() => {
-    const labels = new Set<string>(filters.grades);
+    const scoped = scopeGradeCounts(counts, filters.grades);
 
-    const chartData = SLICE_CONFIG.map(({ key, label, color }) => {
-      const isSelected = labels.has(label);
-
-      return {
-        name: key,
-        label,
-        value: counts[key] ?? 0,
-        color,
-        isSelected,
-      } satisfies ChartDataItem;
-    }).filter((item) => item.value > 0);
+    const chartData = SLICE_CONFIG.map(({ key, label, color }) => ({
+      name: key,
+      label,
+      value: scoped[key] ?? 0,
+      color,
+    })).filter((item) => item.value > 0);
 
     const total =
-      counts.A +
-      counts.B +
-      counts.C +
-      counts.pending +
-      counts.uninspected +
-      counts.closed;
+      scoped.A +
+      scoped.B +
+      scoped.C +
+      scoped.pending +
+      scoped.uninspected +
+      scoped.closed;
 
-    const activeSlices = chartData.filter((item) => labels.has(item.label));
-    const summedValue = activeSlices.reduce((sum, item) => sum + item.value, 0);
-
-    return {
-      data: chartData,
-      totalCount: total,
-      activeLabels: labels,
-      activeValue: summedValue,
-    };
+    return { data: chartData, totalCount: total, scopedCounts: scoped };
   }, [counts, filters.grades]);
 
   const chartAriaLabel = useMemo(() => {
@@ -256,8 +213,10 @@ export default function GradeChart({
                 <div className="grade-chart-center">
                   <div className="grade-chart-legend">
                     {SLICE_CONFIG.map(({ key, label, color }, index) => {
-                      const isActive = activeLabels.has(label);
-                      const isDimmed = activeLabels.size > 0 && !isActive;
+                      // Coloured only when that category has restaurants in
+                      // the scoped view (which already excludes grades not
+                      // in the active filter). Everything else dims.
+                      const isDimmed = (scopedCounts[key] ?? 0) === 0;
                       const isLast = index === SLICE_CONFIG.length - 1;
 
                       return (
@@ -283,13 +242,8 @@ export default function GradeChart({
                   <div className="grade-chart-count">
                     <span
                       className="grade-chart-count-value"
-                      data-emphasis={
-                        activeLabels.size > 0 ? "true" : undefined
-                      }>
-                      {(activeLabels.size > 0
-                        ? activeValue
-                        : totalCount
-                      ).toLocaleString()}
+                      data-emphasis={hasGradeFilter ? "true" : undefined}>
+                      {totalCount.toLocaleString()}
                     </span>{" "}
                     Restaurants
                   </div>

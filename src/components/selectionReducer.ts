@@ -22,6 +22,7 @@ export type SelectionState = {
 export type SelectionAction =
   | { type: "selectRestaurant"; restaurant: RestaurantProperties | null }
   | { type: "selectInspection"; inspectionId: string }
+  | { type: "previewInspection"; inspectionId: string }
   | { type: "changeTab"; tab: ExplorerTab }
   | { type: "hoverInspection"; inspectionId: string | null }
   | { type: "hoverRestaurant"; restaurantId: string | null };
@@ -63,6 +64,17 @@ export function selectionReducer(
         selectedInspectionId: action.inspectionId,
         hoveredInspectionId: null,
         activeTab: "report",
+      };
+
+    // Like selectInspection but stays on the current tab — the mobile
+    // score chart uses this so a dot tap highlights the matching
+    // Inspection History row (and scrolls it into view) instead of
+    // jumping to the report and hiding the chart.
+    case "previewInspection":
+      return {
+        ...state,
+        selectedInspectionId: action.inspectionId,
+        hoveredInspectionId: null,
       };
 
     case "changeTab":

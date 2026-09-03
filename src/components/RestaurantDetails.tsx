@@ -5,7 +5,7 @@
 // row previews its chart point; activating one opens that inspection's
 // full report.
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
@@ -213,6 +213,11 @@ type RestaurantDetailsProps = {
   onSelectInspection: (inspectionId: string) => void;
 
   onHoverInspection: (inspectionId: string | null) => void;
+
+  // Set by the mobile pinned score chart on a dot tap: scroll this
+  // inspection's history row into view. A fresh object (bumped nonce)
+  // each tap, so re-tapping the same dot re-scrolls. Omitted on desktop.
+  historyScrollTarget?: { id: string; nonce: number } | null;
 };
 
 export default function RestaurantDetails({
@@ -222,8 +227,25 @@ export default function RestaurantDetails({
   selectedInspectionId,
   onSelectInspection,
   onHoverInspection,
+  historyScrollTarget,
 }: RestaurantDetailsProps) {
   const [showInfo, setShowInfo] = useState(false);
+
+  // Scroll a history row into view only when the mobile score chart asks
+  // for it (a dot tap), never just because the selection changed — so
+  // opening Details doesn't jump straight to the list.
+  const historyListRef = useRef<HTMLUListElement>(null);
+  useEffect(() => {
+    if (!historyScrollTarget || isLoadingHistory) {
+      return;
+    }
+
+    const row = historyListRef.current?.querySelector<HTMLElement>(
+      `[data-inspection-id="${CSS.escape(historyScrollTarget.id)}"]`,
+    );
+
+    row?.scrollIntoView({ block: "nearest", behavior: "smooth" });
+  }, [historyScrollTarget, isLoadingHistory]);
 
   const header = (
     <PanelHeader
@@ -297,7 +319,11 @@ export default function RestaurantDetails({
           </div>
 
           <div className="details-hero-badges">
-            <div className="badge-box">
+            <div
+              className="badge-box"
+              style={{
+                borderColor: `color-mix(in srgb, ${categoryColor} 80%, transparent)`,
+              }}>
               <span className="badge-label">GRADE</span>
 
               <span
@@ -311,7 +337,11 @@ export default function RestaurantDetails({
               </span>
             </div>
 
-            <div className="badge-box">
+            <div
+              className="badge-box"
+              style={{
+                borderColor: `color-mix(in srgb, ${categoryColor} 80%, transparent)`,
+              }}>
               <span className="badge-label">SCORE</span>
 
               <span
@@ -453,7 +483,7 @@ export default function RestaurantDetails({
         )}
 
         {!isLoadingHistory && historyDescending.length > 0 && (
-          <ul className="inspection-history-list">
+          <ul className="inspection-history-list" ref={historyListRef}>
             {historyDescending.map((event) => {
               const eventCategory = getGradeCategory(
                 event.action,
@@ -472,6 +502,7 @@ export default function RestaurantDetails({
               return (
                 <li
                   key={event.id}
+                  data-inspection-id={event.id}
                   className={isSelected ? "inspection-row-selected" : ""}
                   style={
                     isSelected

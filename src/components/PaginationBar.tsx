@@ -65,9 +65,11 @@ export default function PaginationBar({
       </button>
       <span className="pagination-text">
         Page <span className="pagination-num">{currentPage}</span> of{" "}
-        <span className="pagination-num">{totalPages.toLocaleString()}</span> (
-        <span className="pagination-num">{totalItems.toLocaleString()}</span>{" "}
-        {itemName})
+        <span className="pagination-num">{totalPages.toLocaleString()}</span>{" "}
+        <span className="pagination-count">
+          (<span className="pagination-num">{totalItems.toLocaleString()}</span>{" "}
+          {itemName})
+        </span>
       </span>
       <button
         ref={nextButtonRef}

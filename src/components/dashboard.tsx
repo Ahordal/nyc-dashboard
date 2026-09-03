@@ -15,6 +15,7 @@ import {
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
 
+import MobileDashboard from "./MobileDashboard";
 import DashboardTitle from "./DashboardTitle";
 import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
@@ -101,6 +102,10 @@ export default function Dashboard() {
   const isFilterBarInline = useMediaQuery("(min-width: 2360px)");
   const [filtersOpen, setFiltersOpen] = useState(false);
   const filtersExpanded = isFilterBarInline || filtersOpen;
+
+  // Below this width the desktop 3-pane grid is replaced by the phone
+  // layout (app bar + full-bleed map + bottom sheet); see MobileDashboard.
+  const isPhone = useMediaQuery("(max-width: 640px)");
 
   // Selection, hover, and the active Explorer tab move together — see
   // selectionReducer for the "selecting X clears Y, switches tab" rules.
@@ -242,6 +247,10 @@ export default function Dashboard() {
     dispatchSelection({ type: "selectInspection", inspectionId });
   }
 
+  function handlePreviewInspection(inspectionId: string) {
+    dispatchSelection({ type: "previewInspection", inspectionId });
+  }
+
   function handleHoverInspection(inspectionId: string | null) {
     dispatchSelection({ type: "hoverInspection", inspectionId });
   }
@@ -255,6 +264,50 @@ export default function Dashboard() {
 
   function handleExplorerTabChange(tab: ExplorerTab) {
     dispatchSelection({ type: "changeTab", tab });
+  }
+
+  const handleSearchRadiusChange = useCallback(
+    (point: SearchRadiusPoint | null, radius: SearchRadiusMiles) => {
+      setSearchRadiusPoint(point);
+      setActiveRadiusMiles(radius);
+    },
+    [],
+  );
+
+  if (isPhone) {
+    return (
+      <MobileDashboard
+        filters={filters}
+        setFilters={setFilters}
+        searchQuery={searchQuery}
+        onSearchChange={setSearchQuery}
+        selectedRestaurant={selectedRestaurant}
+        reportInspectionId={reportInspectionId}
+        hoveredInspectionId={hoveredInspectionId}
+        hoveredRestaurantId={hoveredRestaurantId}
+        activeExplorerTab={activeExplorerTab}
+        onSelectRestaurant={handleSelectRestaurant}
+        onSelectInspection={handleSelectInspection}
+        onPreviewInspection={handlePreviewInspection}
+        onHoverInspection={handleHoverInspection}
+        onHoverRestaurant={handleHoverRestaurant}
+        onExplorerTabChange={handleExplorerTabChange}
+        visibleRestaurants={visibleRestaurants}
+        onVisibleRestaurantsChange={setVisibleRestaurants}
+        gradeCounts={gradeCounts}
+        onGradeCountsChange={setGradeCounts}
+        searchRadiusPoint={searchRadiusPoint}
+        activeRadiusMiles={activeRadiusMiles}
+        onSearchRadiusChange={handleSearchRadiusChange}
+        initialSearchRadius={initialSearchRadius}
+        pendingCamisFromUrl={pendingCamisFromUrl}
+        onInitialSelectionResolved={() => setPendingCamisFromUrl(null)}
+        history={history}
+        isLoadingHistory={isLoadingHistory}
+        violationCodes={violationCodes}
+        dashboardMeta={dashboardMeta}
+      />
+    );
   }
 
   return (
@@ -344,10 +397,7 @@ export default function Dashboard() {
                   onHoverRestaurant={handleHoverRestaurant}
                   onVisibleRestaurantsChange={setVisibleRestaurants}
                   onGradeCountsChange={setGradeCounts}
-                  onSearchRadiusChange={(point, radius) => {
-                    setSearchRadiusPoint(point);
-                    setActiveRadiusMiles(radius);
-                  }}
+                  onSearchRadiusChange={handleSearchRadiusChange}
                   initialSearchRadius={initialSearchRadius}
                   initialSelectedCamis={pendingCamisFromUrl}
                   onInitialSelectionResolved={() =>
