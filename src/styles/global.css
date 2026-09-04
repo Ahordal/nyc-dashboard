@@ -3775,14 +3775,20 @@ summary:focus-visible,
   }
 
   /* At the half detent the body is taller than the sheet, so the scroll
-     would clip raw at the screen edge. Wrap it in the same bordered
+     would clip raw at the screen edge. Same problem at the open detent on
+     Details / Report, now that both unbind into the shared scroll (18.5)
+     — the panel's own border ends wherever content happens to end instead
+     of tracking the sheet edge. Wrap the scroll in the same bordered
      --bg-panel card the app-bar drawers use — inset 0.5rem (the bottom
      margin also clears the home indicator). No padding: the tab strip
      sits flush to this border so scrolled content can't show in a gap
      behind it, and the card's border doubles as the tab group's outer
      edge (so .explorer-tabs drops its own). The reused content .panel
-     keeps its 0.5rem pad but drops its border. */
-  .mobile-dashboard[data-detent="half"] .mobile-sheet-scroll {
+     keeps its 0.5rem pad but drops its border. Open's List tab stays
+     bounded/self-bordered (18.5), so it's excluded here. */
+  .mobile-dashboard[data-detent="half"] .mobile-sheet-scroll,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-sheet-scroll,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-sheet-scroll {
     margin: var(--space-xs);
     margin-bottom: calc(var(--space-xs) + env(safe-area-inset-bottom));
     padding: 0;
@@ -3790,12 +3796,16 @@ summary:focus-visible,
     background-color: var(--bg-panel);
   }
 
-  .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-content .panel {
+  .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-content .panel,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-content .panel,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-content .panel {
     border: none;
   }
 
   /* Border off — the card supplies the tab group's outer edge. */
-  .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-tabs {
+  .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-tabs,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-tabs,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-tabs {
     border: none;
   }
 
@@ -3810,11 +3820,11 @@ summary:focus-visible,
     background: transparent;
   }
 
-  /* 18.5 EXPLORER — fills the sheet with a bounded content box on every
-     tab: the List pane's pagination measures a real height, and the
-     Details / Report panes keep their header fixed while their
-     .panel-scroll-content scrolls. On Details the score-history chart is
-     then pinned to the bottom of the sheet, below that box. */
+  /* 18.5 EXPLORER — fills the sheet with a bounded content box on the
+     List tab, whose pagination measures a real height. Details / Report
+     unbind at both open and half detent (below) so the record, the
+     inspection history and the score-history chart all flow together in
+     .mobile-sheet-scroll. */
 
   .mobile-explorer {
     display: flex;
@@ -3881,30 +3891,26 @@ summary:focus-visible,
     padding-right: 0.75rem;
   }
 
-  /* Details / Report tab of a selected restaurant, OPEN detent only: the
-     panel header stays put and its .panel-scroll-content scrolls in its
-     own box (the default bounded layout, same as the List tab) — so
-     .mobile-sheet-scroll itself doesn't scroll. On Details this also
-     leaves the score-history chart pinned to the bottom of the sheet,
-     below the scrolling box. At the half detent (below) the whole pane
-     plus the chart scroll together in .mobile-sheet-scroll instead. */
-  .mobile-dashboard[data-detent="open"][data-peek="card"][data-tab="details"] .mobile-sheet-scroll,
-  .mobile-dashboard[data-detent="open"][data-peek="card"][data-tab="report"] .mobile-sheet-scroll {
-    overflow: hidden;
-  }
-
-  /* Half detent, Details / Report: unbound the pane so the record, the
-     inspection history and the score-history chart all flow in the one
-     .mobile-sheet-scroll (which keeps its default overflow-y: auto). The
-     chart only pins once the sheet is fully open and the history list has
-     room to scroll under it. The tab strip still sticks to the top of
-     that scroll (.explorer-tabs position: sticky). */
+  /* Open or half detent, Details / Report: unbound the pane so the
+     record, the inspection history and the score-history chart all flow
+     in the one .mobile-sheet-scroll (which keeps its default
+     overflow-y: auto) instead of the chart pinning below a separately
+     scrolling box. The tab strip still sticks to the top of that scroll
+     (.explorer-tabs position: sticky). */
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer,
   .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer,
   .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-content,
   .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .explorer-content,
   .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-content > div,
   .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .explorer-content > div,
   .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .panel-scroll-content,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .panel-scroll-content,
   .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .panel-scroll-content,
   .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .panel-scroll-content {
     flex: 0 0 auto;
@@ -4008,11 +4014,10 @@ summary:focus-visible,
     font-size: 0.75rem;
   }
 
-  /* 18.6 SELECTION-SCOPED SCORE HISTORY — on the Details tab. At the open
-     detent it's pinned to the bottom of the sheet (18.5) so it stays in
-     view while the history list scrolls above it; at the half detent it
-     just flows at the end of the shared sheet scroll. No border:
-     PerformanceChart's own .panel border provides it. */
+  /* 18.6 SELECTION-SCOPED SCORE HISTORY — on the Details tab. Flows at
+     the end of the shared sheet scroll (18.5) at both open and half
+     detent. Border off: like the explorer panes (18.5), it relies on the
+     card's own edge instead of a nested one. */
   .mobile-perf-chart {
     flex-shrink: 0;
     height: 240px;
@@ -4021,5 +4026,6 @@ summary:focus-visible,
   /* Match the explorer panes' tighter content inset. */
   .mobile-perf-chart .panel {
     padding: var(--space-xs);
+    border: none;
   }
 }

@@ -246,8 +246,8 @@ export default function MobileDashboard({
 
   // The score-history chart is a companion to the Details tab's
   // inspection-history list only — not the Report tab (per-inspection
-  // violations). On the Details tab it's pinned to the bottom of the
-  // sheet while the details content scrolls above it (CSS 18.5 / 18.6).
+  // violations). It flows at the end of the shared sheet scroll, below
+  // the details content (CSS 18.5 / 18.6).
   const showPerformanceChart =
     selectedRestaurant != null && activeExplorerTab === "details";
 
