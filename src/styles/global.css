@@ -3776,20 +3776,26 @@ summary:focus-visible,
 
   /* At the half detent the body is taller than the sheet, so the scroll
      would clip raw at the screen edge. Wrap it in the same bordered
-     --bg-panel card the app-bar drawers use — inset 0.5rem, content
-     0.5rem inside (the bottom margin also clears the home indicator).
-     The 0.5rem padding keeps this card's border off the tab strip's own
-     border so they don't double; the reused content .panel drops its
-     border since the card frames it. */
+     --bg-panel card the app-bar drawers use — inset 0.5rem (the bottom
+     margin also clears the home indicator). No padding: the tab strip
+     sits flush to this border so scrolled content can't show in a gap
+     behind it, and the card's border doubles as the tab group's outer
+     edge (so .explorer-tabs drops its own). The reused content .panel
+     keeps its 0.5rem pad but drops its border. */
   .mobile-dashboard[data-detent="half"] .mobile-sheet-scroll {
     margin: var(--space-xs);
     margin-bottom: calc(var(--space-xs) + env(safe-area-inset-bottom));
-    padding: var(--space-xs);
+    padding: 0;
     border: 1px solid var(--border-panel);
     background-color: var(--bg-panel);
   }
 
   .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-content .panel {
+    border: none;
+  }
+
+  /* Border off — the card supplies the tab group's outer edge. */
+  .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-tabs {
     border: none;
   }
 
