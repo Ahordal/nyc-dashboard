@@ -2,12 +2,12 @@
 //
 // Map-corner tool chip for the Search Radius feature, controlled by
 // useSearchRadiusTool via props. The 32x32 icon button stays put,
-// swapping its icon (crosshair/X) and behaviour; when active, the hover
+// swapping its icon (bullseye/X) and behaviour; when active, the hover
 // tooltip becomes a persistent label to its left with the radius picker
 // stacked beneath.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faLocationCrosshairs, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faBullseye, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import SearchRadiusPicker from "./SearchRadiusPicker";
 import type { SearchRadiusMiles } from "../types/searchRadius";
@@ -51,7 +51,7 @@ export default function MapSearchRadiusControl({
         data-tooltip={isIdle ? "Search Radius" : undefined}
         aria-label={isIdle ? "Search Radius" : "Close search radius"}
         className={`map-search-radius-button ${isIdle ? "tooltip-left" : "active"}`}>
-        <FontAwesomeIcon icon={isIdle ? faLocationCrosshairs : faXmark} />
+        <FontAwesomeIcon icon={isIdle ? faBullseye : faXmark} />
       </button>
 
       {!isIdle && (

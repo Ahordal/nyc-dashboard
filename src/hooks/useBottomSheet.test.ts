@@ -28,14 +28,24 @@ describe("useBottomSheet", () => {
     expect(result.current.detent).toBe("open");
   });
 
-  it("open() and collapse() set an explicit detent", () => {
+  it("open(), half() and collapse() set an explicit detent", () => {
     const { result } = renderHook(() => useBottomSheet());
 
     act(() => result.current.open());
     expect(result.current.detent).toBe("open");
 
+    act(() => result.current.half());
+    expect(result.current.detent).toBe("half");
+
     act(() => result.current.collapse());
     expect(result.current.detent).toBe("peek");
+  });
+
+  it("toggle() from half expands to open", () => {
+    const { result } = renderHook(() => useBottomSheet("half"));
+
+    act(() => result.current.toggle());
+    expect(result.current.detent).toBe("open");
   });
 
   it("setDetent sets an explicit detent", () => {

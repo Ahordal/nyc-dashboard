@@ -1,10 +1,12 @@
 // MobileAppBar.tsx
 //
-// Slim top bar for the phone layout: compact wordmark, a Filters button
-// (badged with the active filter count) and an Info button — each slides
-// down its own drawer. The Info drawer is the single info surface on
-// phones: dataset meta, the map legend / how-to (folded in from
-// MapView), then the attribution footer as a detached panel.
+// Slim top bar for the phone layout: compact wordmark, a Search button, a
+// Filters button (badged with the active filter count) and an Info button
+// — each slides down its own drawer. Search filters the map live while
+// the sheet sits at its half detent so the generated list stays visible.
+// The Info drawer is the single info surface on phones: dataset meta, the
+// map legend / how-to (folded in from MapView), then the attribution
+// footer as a detached panel.
 
 import { Fragment, useId } from "react";
 
@@ -12,11 +14,13 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faSliders,
   faCircleInfo,
+  faMagnifyingGlass,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
+import ExplorerSearch from "./ExplorerSearch";
 import DashboardGuideMeta from "./DashboardGuideMeta";
 import DashboardFooter from "./DashboardFooter";
 import MOBILE_INFO_CONTENT from "./MobileInfoContent";
@@ -82,29 +86,43 @@ function FilterSummary({ filters }: { filters: Filters }) {
   );
 }
 
+type MobileDrawer = "search" | "filters" | "info" | "grades" | null;
+
 type MobileAppBarProps = {
   filters: Filters;
   setFilters: SetFilters;
   meta: DashboardMeta | null;
+  onSearchChange: (query: string) => void;
+  // A search query is committed — badge the button so it reads as a live
+  // filter even with the drawer closed.
+  searchActive: boolean;
   // The one open top drawer across the whole mobile layout (see
-  // MobileDashboard). Filters/Info live here; "grades" is the area-strip
-  // drawer and just means neither of these is open.
-  activeDrawer: "filters" | "info" | "grades" | null;
-  onDrawerChange: (drawer: "filters" | "info" | "grades" | null) => void;
+  // MobileDashboard). Search/Filters/Info live here; "grades" is the
+  // area-strip drawer and just means none of these is open.
+  activeDrawer: MobileDrawer;
+  onDrawerChange: (drawer: MobileDrawer) => void;
 };
 
 export default function MobileAppBar({
   filters,
   setFilters,
   meta,
+  onSearchChange,
+  searchActive,
   activeDrawer,
   onDrawerChange,
 }: MobileAppBarProps) {
+  const searchDrawerId = useId();
   const filterDrawerId = useId();
   const infoDrawerId = useId();
 
+  const searchOpen = activeDrawer === "search";
   const filtersOpen = activeDrawer === "filters";
   const infoOpen = activeDrawer === "info";
+
+  function toggleSearch() {
+    onDrawerChange(searchOpen ? null : "search");
+  }
 
   function toggleFilters() {
     onDrawerChange(filtersOpen ? null : "filters");
@@ -129,6 +147,29 @@ export default function MobileAppBar({
         </div>
 
         <div className="mobile-appbar-actions">
+          <button
+            type="button"
+            className="mobile-appbar-button"
+            data-active={searchOpen || undefined}
+            aria-expanded={searchOpen}
+            aria-controls={searchDrawerId}
+            aria-label={
+              searchOpen
+                ? "Close search"
+                : searchActive
+                  ? "Search (active) — edit or clear"
+                  : "Search"
+            }
+            onClick={toggleSearch}>
+            <FontAwesomeIcon icon={searchOpen ? faXmark : faMagnifyingGlass} />
+            {searchActive && !searchOpen && (
+              <span
+                className="mobile-appbar-badge mobile-appbar-badge-dot"
+                aria-hidden="true"
+              />
+            )}
+          </button>
+
           <button
             type="button"
             className="mobile-appbar-button"
@@ -161,6 +202,15 @@ export default function MobileAppBar({
           </button>
         </div>
       </header>
+
+      <div
+        id={searchDrawerId}
+        className="mobile-search-drawer"
+        data-open={searchOpen}>
+        <div className="mobile-search-drawer-card">
+          <ExplorerSearch onSearchChange={onSearchChange} />
+        </div>
+      </div>
 
       <div
         id={filterDrawerId}

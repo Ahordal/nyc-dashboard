@@ -3,13 +3,16 @@
 // Phone layout (rendered by dashboard.tsx below ~640px): a slim app bar,
 // an area-summary strip (count + grade mix for the current view), a
 // full-bleed map, and a bottom sheet that is purely restaurant info.
-// The sheet has two detents: peek shows the selected restaurant's list
-// card (or a browse prompt) over a full-size map; open is one scrolling
-// view of the search, tab list, the list or the selected restaurant's
-// details/report, and the score-history chart below it. Grade/borough
-// filters live in the app bar's Filters modal; the grade donut and
-// dataset meta live in the area strip's modal. All shared state stays
-// in dashboard.tsx; the child panels are the desktop ones.
+// The sheet has three detents: peek shows the selected restaurant's list
+// card (or a browse prompt) over a full-size map; half raises it to the
+// list or the selected restaurant's Details pane over a still-visible,
+// panned map (entered by a selection, or by the app-bar Search drawer
+// filtering live); open is the full-height explorer, where Details pins
+// the score-history chart to the bottom while the record scrolls above.
+// Search and grade/borough filters live in the app bar's drawers; the
+// grade donut and dataset meta live in the area strip's drawer. All
+// shared state stays in dashboard.tsx; the child panels are the desktop
+// ones.
 
 import {
   lazy,
@@ -21,11 +24,13 @@ import {
 } from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronDown } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronDown,
+  faChevronUp,
+} from "@fortawesome/free-solid-svg-icons";
 
 import MobileAppBar from "./MobileAppBar";
 import MobileAreaStrip from "./MobileAreaStrip";
-import ExplorerSearch from "./ExplorerSearch";
 import ExplorerTabs from "./ExplorerTabs";
 import RestaurantList from "./RestaurantList";
 import RestaurantDetails from "./RestaurantDetails";
@@ -133,13 +138,53 @@ export default function MobileDashboard({
   violationCodes,
   dashboardMeta,
 }: MobileDashboardProps) {
-  const { detent, setDetent, toggle, open } = useBottomSheet("peek");
+  const { detent, setDetent, open } = useBottomSheet("peek");
 
-  // The one open top drawer, if any — Filters / Info (app bar) and the
-  // grade-breakdown drawer (area strip) are mutually exclusive.
+  // The one open top drawer, if any — Search / Filters / Info (app bar)
+  // and the grade-breakdown drawer (area strip) are mutually exclusive.
   const [activeDrawer, setActiveDrawer] = useState<
-    "filters" | "info" | "grades" | null
+    "search" | "filters" | "info" | "grades" | null
   >(null);
+
+  // Opening Search drops the sheet to its half detent on the list so the
+  // map stays visible while typing. Closing it (or switching drawers)
+  // keeps that half view while a query is still active — the filtered
+  // list shouldn't vanish just because the input was dismissed — and only
+  // hands the whole map back once the search is empty. Committing to the
+  // open detent closes Search.
+  const hasActiveQuery = searchQuery.trim().length > 0;
+  const handleDrawerChange = useCallback(
+    (drawer: "search" | "filters" | "info" | "grades" | null) => {
+      setActiveDrawer(drawer);
+      if (drawer === "search") {
+        if (activeExplorerTab !== "list") onExplorerTabChange("list");
+        setDetent("half");
+      } else {
+        setDetent((d) => (d === "half" && !hasActiveQuery ? "peek" : d));
+      }
+    },
+    [activeExplorerTab, hasActiveQuery, onExplorerTabChange, setDetent],
+  );
+
+  // The sheet steps one detent at a time via centred chevrons in the
+  // handle row: up (peek -> half -> open) and down (open -> half ->
+  // peek). peek shows only up, open only down, half both. Tapping the
+  // peek card itself jumps straight to open (a committed selection).
+  const searching = activeDrawer === "search";
+  const expandSheet = useCallback(
+    () => setDetent((d) => (d === "peek" ? "half" : "open")),
+    [setDetent],
+  );
+  const collapseSheet = useCallback(
+    () => setDetent((d) => (d === "open" ? "half" : "peek")),
+    [setDetent],
+  );
+
+  // Reaching "open" (a commit to reading a record) closes Search rather
+  // than leaving its drawer stranded behind a full-height sheet.
+  useEffect(() => {
+    if (searching && detent === "open") setActiveDrawer(null);
+  }, [detent, searching]);
 
   // Tapping a map dot is exploratory: show the restaurant's card at peek
   // with the map still full-size. Tapping a list row is a commit: open
@@ -152,12 +197,19 @@ export default function MobileDashboard({
     [onSelectRestaurant, setDetent],
   );
 
+  // Selecting a restaurant lands at the half detent: its Details pane
+  // over a map that has panned to the pin. The handle then promotes to
+  // open (full record + pinned score chart). Any open app-bar drawer
+  // closes so the details view isn't sitting under it.
   const handleListSelect = useCallback(
     (restaurant: RestaurantProperties | null) => {
       onSelectRestaurant(restaurant);
-      if (restaurant) open();
+      if (restaurant) {
+        setActiveDrawer(null);
+        setDetent("half");
+      }
     },
-    [onSelectRestaurant, open],
+    [onSelectRestaurant, setDetent],
   );
 
   // Clearing the selection drops the sheet back to peek.
@@ -213,8 +265,10 @@ export default function MobileDashboard({
         filters={filters}
         setFilters={setFilters}
         meta={dashboardMeta}
+        onSearchChange={onSearchChange}
+        searchActive={hasActiveQuery}
         activeDrawer={activeDrawer}
-        onDrawerChange={setActiveDrawer}
+        onDrawerChange={handleDrawerChange}
       />
 
       <MobileAreaStrip
@@ -224,7 +278,7 @@ export default function MobileDashboard({
         searchRadiusMiles={radiusMiles}
         open={activeDrawer === "grades"}
         onToggle={() =>
-          setActiveDrawer((d) => (d === "grades" ? null : "grades"))
+          handleDrawerChange(activeDrawer === "grades" ? null : "grades")
         }
       />
 
@@ -252,17 +306,26 @@ export default function MobileDashboard({
       </div>
 
       <section className="mobile-sheet" aria-label="Restaurant explorer">
-        <button
-          type="button"
-          className="mobile-sheet-handle"
-          aria-label={detent === "open" ? "Collapse panel" : "Expand panel"}
-          onClick={toggle}>
-          <FontAwesomeIcon
-            icon={faChevronDown}
-            className="mobile-sheet-chevron"
-            aria-hidden="true"
-          />
-        </button>
+        <div className="mobile-sheet-handle">
+          {detent !== "open" && (
+            <button
+              type="button"
+              className="mobile-sheet-handle-arrow"
+              aria-label="Expand panel"
+              onClick={expandSheet}>
+              <FontAwesomeIcon icon={faChevronUp} aria-hidden="true" />
+            </button>
+          )}
+          {detent !== "peek" && (
+            <button
+              type="button"
+              className="mobile-sheet-handle-arrow"
+              aria-label="Collapse panel"
+              onClick={collapseSheet}>
+              <FontAwesomeIcon icon={faChevronDown} aria-hidden="true" />
+            </button>
+          )}
+        </div>
 
         {detent === "peek" &&
           (selectedRestaurant ? (
@@ -273,7 +336,7 @@ export default function MobileDashboard({
                 onClick={open}
               />
             </div>
-          ) : (
+          ) : searching ? null : (
             <button
               type="button"
               className="mobile-sheet-peek"
@@ -288,12 +351,8 @@ export default function MobileDashboard({
             </button>
           ))}
 
-        {detent === "open" && (
+        {(detent === "open" || detent === "half") && (
           <div className="mobile-sheet-scroll">
-            <div className="mobile-sheet-search">
-              <ExplorerSearch onSearchChange={onSearchChange} />
-            </div>
-
             <div className="mobile-explorer">
               <ExplorerTabs
                 activeTab={activeExplorerTab}

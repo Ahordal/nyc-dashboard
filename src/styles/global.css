@@ -3058,6 +3058,15 @@ summary:focus-visible,
   .mobile-dashboard {
     --appbar-h: calc(52px + env(safe-area-inset-top));
     --strip-h: 34px;
+    --sheet-handle-h: 32px;
+    /* Height .mobile-explorer gets at the open detent (sheet - handle -
+       .mobile-sheet-scroll's bottom pad). The half/list rule (18.5)
+       forces the list to lay out at this size so its page count matches
+       full height, then the short sheet scrolls the overflow. */
+    --sheet-explorer-h: calc(
+      100dvh - var(--appbar-h) - var(--strip-h) - 16px - var(--sheet-handle-h) -
+        0.75rem - env(safe-area-inset-bottom)
+    );
     position: relative;
     width: 100%;
     height: 100dvh;
@@ -3256,13 +3265,27 @@ summary:focus-visible,
     line-height: 1;
   }
 
-  /* Filters + Dashboard Information drop down from below the area strip.
-     The panel is a full-bleed --bg-panel background (flush to the strip
-     and both screen edges); the bordered card inside sits 0.5rem in from
-     every edge, content 0.5rem inside that — same as the bottom sheet's
-     list / details / reports panes. Info stacks two such panels
+  /* Count-less variant: a bare dot for on/off state, not a tally
+     (an active search query). */
+  .mobile-appbar-badge-dot {
+    top: -4px;
+    right: -4px;
+    min-width: 8px;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 1px solid var(--bg-panel);
+  }
+
+  /* Search + Filters + Dashboard Information drop down from below the area
+     strip. The panel is a full-bleed --bg-panel background (flush to the
+     strip and both screen edges); the bordered card inside sits 0.5rem in
+     from every edge, content 0.5rem inside that — same as the bottom
+     sheet's list / details / reports panes. Info stacks two such panels
      (meta/guide, then a pinned footer) with a 0.5rem gap where the map
-     shows through. */
+     shows through. Search stays short so the sheet's half detent (the
+     generated list) shows below it over a still-visible map. */
+  .mobile-search-drawer,
   .mobile-filter-drawer,
   .mobile-info-drawer {
     position: absolute;
@@ -3276,6 +3299,7 @@ summary:focus-visible,
 
   /* Full-bleed fill only on the open state — a closed (max-height: 0)
      drawer would otherwise draw a sliver under the strip. */
+  .mobile-search-drawer[data-open="true"],
   .mobile-filter-drawer[data-open="true"] {
     max-height: min(82dvh, 640px);
     overflow-y: auto;
@@ -3320,6 +3344,7 @@ summary:focus-visible,
 
   /* The inner bordered card, shared by every drop-down panel: 0.5rem in
      from the full-bleed panel edge on all sides, content 0.5rem inside. */
+  .mobile-search-drawer-card,
   .mobile-filter-drawer-card,
   .mobile-area-drawer-chart,
   .mobile-info-drawer-panel-body {
@@ -3647,8 +3672,8 @@ summary:focus-visible,
     box-shadow: 0 -4px 16px var(--shadow-overlay);
   }
 
-  /* Peek: the chevron plus the selected restaurant's list card. With no
-     selection it collapses to just the chevron + browse prompt. */
+  /* Peek: the handle chevron plus the selected restaurant's list card.
+     With no selection it collapses to just the chevron + browse prompt. */
   .mobile-dashboard[data-detent="peek"] .mobile-sheet {
     height: calc(118px + env(safe-area-inset-bottom));
   }
@@ -3657,17 +3682,37 @@ summary:focus-visible,
     height: calc(58px + env(safe-area-inset-bottom));
   }
 
+  /* Half: the list (or a selected restaurant's Details) over a still-
+     visible map. */
+  .mobile-dashboard[data-detent="half"] .mobile-sheet {
+    height: calc((100dvh - var(--appbar-h) - var(--strip-h)) * 0.5);
+  }
+
   .mobile-dashboard[data-detent="open"] .mobile-sheet {
     height: calc(100dvh - var(--appbar-h) - var(--strip-h) - 16px);
   }
 
+  /* Handle row: centred chevrons that step one detent — up (peek -> half
+     -> open) and down (open -> half -> peek). peek shows only up, open
+     only down, half both (side by side). */
   .mobile-sheet-handle {
     display: flex;
     align-items: center;
     justify-content: center;
+    gap: 1.5rem;
     width: 100%;
+    height: var(--sheet-handle-h);
     flex-shrink: 0;
-    padding: 7px 12px 5px;
+  }
+
+  .mobile-sheet-handle-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    max-width: 6rem;
+    padding: 9px 12px 7px;
+    font-size: 0.85rem;
     background: transparent;
     border: none;
     color: var(--text-muted);
@@ -3676,21 +3721,10 @@ summary:focus-visible,
 
   /* Keyboard focus keeps the shared ring; a tap does not (same treatment
      as .search-input — see the data-input-modality note in section 9). */
-  :root[data-input-modality="pointer"] .mobile-sheet-handle:focus,
+  :root[data-input-modality="pointer"] .mobile-sheet-handle-arrow:focus,
   :root[data-input-modality="pointer"] .mobile-sheet-peek:focus,
   :root[data-input-modality="pointer"] .mobile-area-strip:focus {
     outline: none;
-  }
-
-  /* Same chevron glyph as the area strip. Points up (rotated) at peek to
-     expand; points down when open to collapse. */
-  .mobile-sheet-chevron {
-    font-size: 0.85rem;
-    transform: rotate(180deg);
-  }
-
-  .mobile-dashboard[data-detent="open"] .mobile-sheet-chevron {
-    transform: rotate(0deg);
   }
 
   /* Peek content: the selected restaurant's list card (keeps its own
@@ -3725,9 +3759,9 @@ summary:focus-visible,
     color: var(--text-faded);
   }
 
-  /* Sheet body (open detent only): one scroll holding the search, tab
-     list, and either the list or the selected restaurant's record with
-     its score-history chart below it. */
+  /* Sheet body: one scroll holding the tab list and either the list or
+     the selected restaurant's record with its score-history chart below
+     it. */
   .mobile-sheet-scroll {
     flex: 1;
     min-height: 0;
@@ -3740,21 +3774,34 @@ summary:focus-visible,
     -webkit-overflow-scrolling: touch;
   }
 
+  /* At the half detent the body is taller than the sheet, so the scroll
+     would clip raw at the screen edge. Wrap it in the same bordered
+     --bg-panel card the app-bar drawers use — inset 0.5rem, content
+     0.5rem inside (the bottom margin also clears the home indicator).
+     The 0.5rem padding keeps this card's border off the tab strip's own
+     border so they don't double; the reused content .panel drops its
+     border since the card frames it. */
+  .mobile-dashboard[data-detent="half"] .mobile-sheet-scroll {
+    margin: var(--space-xs);
+    margin-bottom: calc(var(--space-xs) + env(safe-area-inset-bottom));
+    padding: var(--space-xs);
+    border: 1px solid var(--border-panel);
+    background-color: var(--bg-panel);
+  }
+
+  .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-content .panel {
+    border: none;
+  }
+
   /* 18.4 SHEET CONTENT — reused desktop panels, stripped of their
      panel chrome so they read as sheet sections */
 
-  .mobile-sheet-search {
-    flex-shrink: 0;
-  }
-
-  .mobile-sheet-search .panel {
+  /* Search moved to the app-bar drawer (.mobile-search-drawer); it keeps
+     the desktop .panel chrome there. */
+  .mobile-search-drawer-card .panel {
     padding: 0;
     border: none;
     background: transparent;
-  }
-
-  .mobile-sheet-search .panel-header {
-    display: none;
   }
 
   /* 18.5 EXPLORER — fills the sheet with a bounded content box on every
@@ -3828,14 +3875,51 @@ summary:focus-visible,
     padding-right: 0.75rem;
   }
 
-  /* Details / Report tab of a selected restaurant: the panel header
-     stays put and its .panel-scroll-content scrolls in its own box (the
-     default bounded layout, same as the List tab) — so .mobile-sheet-scroll
-     itself doesn't scroll. On Details this also leaves the score-history
-     chart pinned to the bottom of the sheet, below the scrolling box. */
-  .mobile-dashboard[data-peek="card"][data-tab="details"] .mobile-sheet-scroll,
-  .mobile-dashboard[data-peek="card"][data-tab="report"] .mobile-sheet-scroll {
+  /* Details / Report tab of a selected restaurant, OPEN detent only: the
+     panel header stays put and its .panel-scroll-content scrolls in its
+     own box (the default bounded layout, same as the List tab) — so
+     .mobile-sheet-scroll itself doesn't scroll. On Details this also
+     leaves the score-history chart pinned to the bottom of the sheet,
+     below the scrolling box. At the half detent (below) the whole pane
+     plus the chart scroll together in .mobile-sheet-scroll instead. */
+  .mobile-dashboard[data-detent="open"][data-peek="card"][data-tab="details"] .mobile-sheet-scroll,
+  .mobile-dashboard[data-detent="open"][data-peek="card"][data-tab="report"] .mobile-sheet-scroll {
     overflow: hidden;
+  }
+
+  /* Half detent, Details / Report: unbound the pane so the record, the
+     inspection history and the score-history chart all flow in the one
+     .mobile-sheet-scroll (which keeps its default overflow-y: auto). The
+     chart only pins once the sheet is fully open and the history list has
+     room to scroll under it. The tab strip still sticks to the top of
+     that scroll (.explorer-tabs position: sticky). */
+  .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer,
+  .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer,
+  .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .panel-scroll-content,
+  .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .panel-scroll-content {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* Half detent, List tab: the list can't show a full page in the short
+     sheet, so lay .mobile-explorer out at the open-detent height — the
+     bounded card area then measures the same, so the page holds the same
+     restaurants as full height — and let .mobile-sheet-scroll scroll the
+     overflow. The header, sort bar, cards and the pagination row all
+     scroll as one block under the fixed (sticky) tab strip. An explicit
+     `height` (not just min-height) is required: the `height: 100%` chain
+     down to .restaurant-card-list only resolves against a *definite*
+     parent height, so with min-height alone the card area collapses to
+     its content and the page size tracks the list length. */
+  .mobile-dashboard[data-detent="half"][data-tab="list"] .mobile-explorer {
+    flex: 0 0 auto;
+    height: var(--sheet-explorer-h);
   }
 
   /* Pagination: keep Previous / Next on the edges, centre the status
@@ -3918,10 +4002,11 @@ summary:focus-visible,
     font-size: 0.75rem;
   }
 
-  /* 18.6 SELECTION-SCOPED SCORE HISTORY — pinned to the bottom of the
-     open sheet on the Details tab (18.5), so it stays in view while the
-     history list scrolls above it. No border: PerformanceChart's own
-     .panel border provides it. */
+  /* 18.6 SELECTION-SCOPED SCORE HISTORY — on the Details tab. At the open
+     detent it's pinned to the bottom of the sheet (18.5) so it stays in
+     view while the history list scrolls above it; at the half detent it
+     just flows at the end of the shared sheet scroll. No border:
+     PerformanceChart's own .panel border provides it. */
   .mobile-perf-chart {
     flex-shrink: 0;
     height: 240px;
