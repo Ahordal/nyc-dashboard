@@ -7546,5 +7546,17 @@
     "distanceMeters": 806.2794971852189,
     "matchType": "house+street",
     "resolvedVia": "no-hyphen"
+  },
+  {
+    "camis": "50191908",
+    "dba": "VATAN ONE LLC",
+    "address": "6620 AVENUE U, Brooklyn 11234",
+    "dohmhLat": 40.617443901148,
+    "dohmhLon": -73.910742885846,
+    "resolvedLat": 40.617141,
+    "resolvedLon": -73.909546,
+    "distanceMeters": 106.49017568078756,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
   }
 ]
