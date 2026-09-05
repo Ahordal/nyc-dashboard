@@ -82,6 +82,10 @@ type MapViewProps = {
   // Called once the deep-linked CAMIS has been resolved (matched or
   // not), so the parent can drop its pending state.
   onInitialSelectionResolved?: () => void;
+  // The on-canvas hover card doesn't suit touch -- a tap has no hover to
+  // preview before committing, so mobile suppresses it and relies on the
+  // sheet's own selection view instead.
+  showHoverCard?: boolean;
 };
 
 export default function InspectionMapView({
@@ -97,6 +101,7 @@ export default function InspectionMapView({
   initialSearchRadius = null,
   initialSelectedCamis = null,
   onInitialSelectionResolved,
+  showHoverCard = true,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
@@ -605,7 +610,7 @@ export default function InspectionMapView({
           </div>
         )}
 
-        {hoverCard && <MapHoverCard card={hoverCard} />}
+        {showHoverCard && hoverCard && <MapHoverCard card={hoverCard} />}
 
         {loadError && (
           <div className="map-load-error">

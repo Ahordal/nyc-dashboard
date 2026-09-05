@@ -261,6 +261,28 @@ export default function MobileDashboard({
     return `${base} ${activeExplorerTab === tab ? "" : "explorer-pane-hidden"}`;
   }
 
+  // The peek row's browse prompt names whichever of search/filters/radius
+  // are actually narrowing the results, rather than a generic "Browse
+  // restaurants" that reads as if nothing were applied.
+  const hasActiveFilters = filters.grades.length > 0 || filters.boroughs.length > 0;
+  const browsePromptNoun = searching
+    ? hasActiveFilters
+      ? "Filtered Search Results"
+      : "Search Results"
+    : hasActiveFilters
+      ? "Filtered Restaurants"
+      : "restaurants";
+  // A radius names its own scope; otherwise the true baseline (nothing
+  // narrowing the results at all) calls out that it's the full map view,
+  // rather than leaving the scope unstated. Search/filtered states already
+  // say something more specific, so they don't get this suffix.
+  const browsePromptScope = searchRadiusPoint
+    ? " in radius"
+    : !searching && !hasActiveFilters
+      ? " in map view"
+      : "";
+  const browsePromptLabel = `Browse ${browsePromptNoun}${browsePromptScope}`;
+
   return (
     <main
       className="mobile-dashboard"
@@ -306,6 +328,7 @@ export default function MobileDashboard({
               initialSearchRadius={initialSearchRadius}
               initialSelectedCamis={pendingCamisFromUrl}
               onInitialSelectionResolved={onInitialSelectionResolved}
+              showHoverCard={false}
             />
           </Suspense>
         </ErrorBoundary>
@@ -342,7 +365,7 @@ export default function MobileDashboard({
                 onClick={open}
               />
             </div>
-          ) : searching ? null : (
+          ) : (
             <button
               type="button"
               className="mobile-sheet-peek"
@@ -350,9 +373,9 @@ export default function MobileDashboard({
                 if (activeExplorerTab !== "list") onExplorerTabChange("list");
                 open();
               }}
-              aria-label="Expand panel to browse restaurants">
+              aria-label={`Expand panel to ${browsePromptLabel.toLowerCase()}`}>
               <span className="mobile-sheet-peek-label">
-                Browse restaurants{searchRadiusPoint ? " in radius" : ""}
+                {browsePromptLabel}
               </span>
             </button>
           ))}
@@ -365,79 +388,81 @@ export default function MobileDashboard({
                 onTabChange={onExplorerTabChange}
               />
 
-              <div className="explorer-content">
-                <div
-                  id={tabPanelId("list")}
-                  role="tabpanel"
-                  aria-labelledby={tabButtonId("list")}
-                  className={paneClass("list", "restaurant-list")}>
-                  <RestaurantList
-                    restaurants={visibleRestaurants}
-                    selectedRestaurantId={selectedRestaurant?.id ?? null}
-                    selectedRestaurant={selectedRestaurant}
-                    hoveredRestaurantId={hoveredRestaurantId}
-                    onSelectRestaurant={handleListSelect}
-                    onHoverRestaurant={onHoverRestaurant}
-                    searchRadiusPoint={searchRadiusPoint}
-                  />
-                </div>
+              <div className="mobile-sheet-scroll-body">
+                <div className="explorer-content">
+                  <div
+                    id={tabPanelId("list")}
+                    role="tabpanel"
+                    aria-labelledby={tabButtonId("list")}
+                    className={paneClass("list", "restaurant-list")}>
+                    <RestaurantList
+                      restaurants={visibleRestaurants}
+                      selectedRestaurantId={selectedRestaurant?.id ?? null}
+                      selectedRestaurant={selectedRestaurant}
+                      hoveredRestaurantId={hoveredRestaurantId}
+                      onSelectRestaurant={handleListSelect}
+                      onHoverRestaurant={onHoverRestaurant}
+                      searchRadiusPoint={searchRadiusPoint}
+                    />
+                  </div>
 
-                <div
-                  id={tabPanelId("details")}
-                  role="tabpanel"
-                  aria-labelledby={tabButtonId("details")}
-                  className={paneClass("details", "restaurant-details")}>
-                  <RestaurantDetails
-                    restaurant={selectedRestaurant}
-                    history={history}
-                    isLoadingHistory={isLoadingHistory}
-                    selectedInspectionId={reportInspectionId}
-                    onSelectInspection={onSelectInspection}
-                    onHoverInspection={onHoverInspection}
-                    historyScrollTarget={historyScrollTarget}
-                  />
-                </div>
-
-                <div
-                  id={tabPanelId("report")}
-                  role="tabpanel"
-                  aria-labelledby={tabButtonId("report")}
-                  className={paneClass("report", "restaurant-report")}>
-                  <RestaurantReport
-                    restaurant={selectedRestaurant}
-                    history={history}
-                    isLoadingHistory={isLoadingHistory}
-                    selectedInspectionId={reportInspectionId}
-                    violationCodes={violationCodes}
-                    onSelectInspection={onSelectInspection}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {showPerformanceChart && (
-              <div className="mobile-perf-chart">
-                <ErrorBoundary
-                  context="PerformanceChart"
-                  resetKey={selectedRestaurant?.camis ?? null}
-                  fallback={
-                    <ErrorFallback message="The score history chart failed to load." />
-                  }>
-                  <Suspense
-                    fallback={<ChartSkeleton label="Loading score history…" />}>
-                    <PerformanceChart
+                  <div
+                    id={tabPanelId("details")}
+                    role="tabpanel"
+                    aria-labelledby={tabButtonId("details")}
+                    className={paneClass("details", "restaurant-details")}>
+                    <RestaurantDetails
                       restaurant={selectedRestaurant}
                       history={history}
                       isLoadingHistory={isLoadingHistory}
-                      onSelectInspection={handleChartPreview}
-                      hoveredInspectionId={hoveredInspectionId}
                       selectedInspectionId={reportInspectionId}
-                      tooltipVariant="compact"
+                      onSelectInspection={onSelectInspection}
+                      onHoverInspection={onHoverInspection}
+                      historyScrollTarget={historyScrollTarget}
                     />
-                  </Suspense>
-                </ErrorBoundary>
+                  </div>
+
+                  <div
+                    id={tabPanelId("report")}
+                    role="tabpanel"
+                    aria-labelledby={tabButtonId("report")}
+                    className={paneClass("report", "restaurant-report")}>
+                    <RestaurantReport
+                      restaurant={selectedRestaurant}
+                      history={history}
+                      isLoadingHistory={isLoadingHistory}
+                      selectedInspectionId={reportInspectionId}
+                      violationCodes={violationCodes}
+                      onSelectInspection={onSelectInspection}
+                    />
+                  </div>
+                </div>
+
+                {showPerformanceChart && (
+                  <div className="mobile-perf-chart">
+                    <ErrorBoundary
+                      context="PerformanceChart"
+                      resetKey={selectedRestaurant?.camis ?? null}
+                      fallback={
+                        <ErrorFallback message="The score history chart failed to load." />
+                      }>
+                      <Suspense
+                        fallback={<ChartSkeleton label="Loading score history…" />}>
+                        <PerformanceChart
+                          restaurant={selectedRestaurant}
+                          history={history}
+                          isLoadingHistory={isLoadingHistory}
+                          onSelectInspection={handleChartPreview}
+                          hoveredInspectionId={hoveredInspectionId}
+                          selectedInspectionId={reportInspectionId}
+                          tooltipVariant="compact"
+                        />
+                      </Suspense>
+                    </ErrorBoundary>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
       </section>

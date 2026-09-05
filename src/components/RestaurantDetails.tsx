@@ -9,6 +9,7 @@ import { useEffect, useRef, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
+import RestaurantHeroHeader from "./RestaurantHeroHeader";
 import Badge from "./Badge";
 import type { BadgeVariant } from "./Badge";
 
@@ -288,10 +289,6 @@ export default function RestaurantDetails({
     restaurant.score,
   );
 
-  const categoryColor = CATEGORY_COLORS[category];
-
-  const displayName = toTitleCase(restaurant.name);
-
   const inspectionAge = yearsSince(restaurant.inspection_date);
 
   // The 1900-01-01 placeholder DOHMH uses for restaurants with no real
@@ -306,56 +303,12 @@ export default function RestaurantDetails({
       {header}
 
       <div className="panel-scroll-content">
-        <div className="details-hero-header">
-          <div className="details-hero-main">
-            <div
-              className="details-hero-title"
-              style={{
-                color: categoryColor,
-              }}
-              title={displayName}>
-              {displayName}
-            </div>
-          </div>
-
-          <div className="details-hero-badges">
-            <div
-              className="badge-box"
-              style={{
-                borderColor: `color-mix(in srgb, ${categoryColor} 80%, transparent)`,
-              }}>
-              <span className="badge-label">GRADE</span>
-
-              <span
-                className="badge-val"
-                style={{
-                  color: categoryColor,
-                }}>
-                {restaurant.grade === UNINSPECTED_GRADE
-                  ? "—"
-                  : restaurant.grade ?? "N/A"}
-              </span>
-            </div>
-
-            <div
-              className="badge-box"
-              style={{
-                borderColor: `color-mix(in srgb, ${categoryColor} 80%, transparent)`,
-              }}>
-              <span className="badge-label">SCORE</span>
-
-              <span
-                className="badge-val"
-                style={{
-                  color: categoryColor,
-                }}>
-                {restaurant.grade === UNINSPECTED_GRADE
-                  ? "—"
-                  : restaurant.score ?? "N/A"}
-              </span>
-            </div>
-          </div>
-        </div>
+        <RestaurantHeroHeader
+          name={restaurant.name}
+          score={restaurant.score}
+          grade={restaurant.grade}
+          action={restaurant.action}
+        />
 
         <h4 className="section-header">Restaurant Information</h4>
 

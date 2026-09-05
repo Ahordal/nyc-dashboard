@@ -121,11 +121,6 @@ export default function PerformanceTooltip({
         <span
           className="performance-tooltip-compact-box"
           style={{ color: categoryColor }}>
-          {isUninspected ? "—" : grade ?? "N/A"}
-        </span>
-        <span
-          className="performance-tooltip-compact-box"
-          style={{ color: categoryColor }}>
           {isUninspected ? "—" : score ?? "—"}
         </span>
       </div>

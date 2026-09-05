@@ -111,11 +111,13 @@ export default function MobileAreaStrip({
           ))}
         </span>
 
-        <FontAwesomeIcon
-          icon={faChevronDown}
-          className="mobile-area-strip-chevron"
-          aria-hidden="true"
-        />
+        <span className="mobile-area-strip-chevron-box">
+          <FontAwesomeIcon
+            icon={faChevronDown}
+            className="mobile-area-strip-chevron"
+            aria-hidden="true"
+          />
+        </span>
       </button>
 
       <div id={drawerId} className="mobile-area-drawer" data-open={isOpen}>
