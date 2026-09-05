@@ -167,13 +167,19 @@ export default function MobileDashboard({
   );
 
   // The sheet steps one detent at a time via centred chevrons in the
-  // handle row: up (peek -> half -> open) and down (open -> half ->
-  // peek). peek shows only up, open only down, half both. Tapping the
-  // peek card itself jumps straight to open (a committed selection).
+  // handle row: up (peek -> half -> open when browsing, peek -> open
+  // directly once a restaurant is selected — half's list/browse stopover
+  // has nothing to add over a card the user already committed to) and
+  // down (open -> half -> peek, always, so collapsing keeps the graceful
+  // step-down). peek shows only up, open only down, half both. Tapping
+  // the peek card itself jumps straight to open (a committed selection).
   const searching = activeDrawer === "search";
   const expandSheet = useCallback(
-    () => setDetent((d) => (d === "peek" ? "half" : "open")),
-    [setDetent],
+    () =>
+      setDetent((d) =>
+        d === "peek" ? (selectedRestaurant ? "open" : "half") : "open",
+      ),
+    [setDetent, selectedRestaurant],
   );
   const collapseSheet = useCallback(
     () => setDetent((d) => (d === "open" ? "half" : "peek")),
