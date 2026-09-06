@@ -58,10 +58,10 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
         }}
       >
         <div className="panel-header info-modal-panel-header">
-          <span className="panel-header-title">
+          <h2 className="panel-header-title">
             Dashboard Information
-          </span>
-          
+          </h2>
+
           <button
             type="button"
             className="panel-header-info-button"

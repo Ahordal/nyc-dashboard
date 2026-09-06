@@ -141,9 +141,9 @@ export default function MobileAppBar({
           <span className="mobile-appbar-wordmark" aria-hidden="true">
             NYC
           </span>
-          <span className="mobile-appbar-subtitle">
+          <h1 className="mobile-appbar-subtitle">
             Dining Under the Microscope
-          </span>
+          </h1>
         </div>
 
         <div className="mobile-appbar-actions">

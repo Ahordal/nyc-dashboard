@@ -30,9 +30,9 @@ function InfoPopupSection({
 }: InfoPopupSectionProps) {
   return (
     <div className="info-popup-section">
-      <h4 className="section-header">
+      <h3 className="section-header">
         {title}
-      </h4>
+      </h3>
 
       {children}
     </div>

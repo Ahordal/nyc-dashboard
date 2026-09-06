@@ -29,7 +29,7 @@ export default function ViolationList({
 
   return (
     <>
-      <h4 className="section-header">Violations</h4>
+      <h3 className="section-header">Violations</h3>
       <ul className="violations-list">
         {sortedViolations.map((v, i) => (
           <ViolationCard

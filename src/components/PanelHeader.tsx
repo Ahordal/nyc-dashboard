@@ -34,6 +34,12 @@ type PanelHeaderProps = {
   titleText?: string;
   infoContent?: ReactNode;
   infoPlacement?: InfoPlacement;
+  // "panel" (default) renders the title as the panel's <h2>. "section"
+  // renders an <h3> at the .section-header size, for a companion panel
+  // whose title should sit level with in-scroll section headers rather
+  // than read as a top-level panel name (the score-history chart, which
+  // flows beside Inspection History).
+  titleVariant?: "panel" | "section";
   // "popup" (default): the button toggles PanelHeader's own anchored
   // popup. "modal": the button opens a centred PanelInfoModal instead —
   // for content too tall to sit beside the trigger on a short viewport
@@ -74,6 +80,7 @@ export default function PanelHeader({
   infoContent,
   infoPlacement = "down",
   infoVariant = "popup",
+  titleVariant = "panel",
   onInfoClick,
   isInfoOpen = false,
 }: PanelHeaderProps) {
@@ -347,7 +354,13 @@ export default function PanelHeader({
         className="panel-header"
       >
         {title ? (
-          <h2 className="panel-header-title">{title}</h2>
+          titleVariant === "section" ? (
+            <h3 className="panel-header-title panel-header-title-section">
+              {title}
+            </h3>
+          ) : (
+            <h2 className="panel-header-title">{title}</h2>
+          )
         ) : (
           <span className="panel-header-title" aria-hidden="true">
             {"\u00A0"}
@@ -398,7 +411,7 @@ export default function PanelHeader({
           onClose={() => setShowInfo(false)}
         >
           <div className="panel-header info-modal-panel-header">
-            <span className="panel-header-title">{modalTitle}</span>
+            <h2 className="panel-header-title">{modalTitle}</h2>
             <button
               type="button"
               className="panel-header-info-button"

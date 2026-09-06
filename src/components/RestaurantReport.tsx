@@ -278,7 +278,7 @@ export default function RestaurantReport({
           </div>
         )}
 
-        <h4 className="section-header">Inspection Information</h4>
+        <h3 className="section-header">Inspection Information</h3>
 
         <table className="details-table">
           <tbody>

@@ -1,9 +1,5 @@
 /*
- * global.css
- *
- * Every style for the dashboard: design tokens, layout grid, panels, the
- * restaurant explorer, charts, and the map view and its controls.
- * Organized into the numbered sections below.
+ * global.css - every style for the dashboard, in the numbered sections below.
  */
 
 /*///////////////////////////////////////////// 1. RESET & GLOBAL FOUNDATIONS //////////////////////////////////////////////*/
@@ -64,9 +60,7 @@ a:focus-visible {
 
 /* 1.4 FOCUS INDICATOR & SCREEN-READER UTILITIES */
 
-/* One consistent keyboard-focus ring for every interactive element,
-   including the role-based custom controls (cards, tabs, listbox
-   options). Pointer focus stays ring-free via :focus-visible. */
+/* One keyboard-focus ring for every control, role-based ones included. */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
@@ -81,8 +75,7 @@ summary:focus-visible,
   outline-offset: 2px;
 }
 
-/* Visually hidden but exposed to assistive tech (labels, live-region
-   text, offscreen instructions). */
+/* Hidden visually, still read by assistive tech. */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -107,13 +100,6 @@ summary:focus-visible,
     scroll-behavior: auto !important;
   }
 }
-
-/* .panel-header-popup p,
-.panel-header-popup li,
-.info-modal-content p,
-.info-modal-content li {
-  text-align: justify;
-} */
 
 /*///////////////////////////////////////////// 2. VARIABLES //////////////////////////////////////////////*/
 
@@ -158,6 +144,16 @@ summary:focus-visible,
   --font-body: 'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   --font-display: 'Archivo', var(--font-body);
 
+  /* Type scale. Every font-size resolves to one of these; CI guards it. */
+  --fs-2xs: 0.625rem;   /* 10px - micro badge labels */
+  --fs-xs: 0.75rem;     /* 12px - tags, tab labels, tooltips, fine print */
+  --fs-sm: 0.8125rem;   /* 13px - dense rows, section headers (h3) */
+  --fs-md: 0.875rem;    /* 14px - body copy, panel headers (h2), controls */
+  --fs-lg: 1rem;        /* 16px - emphasis, icons, inline controls */
+  --fs-xl: 1.1875rem;   /* 19px - hero / content titles */
+  --fs-2xl: 1.375rem;   /* 22px - big stat numbers, h1 primary line */
+  --fs-display: 10rem;  /* decorative "NYC" wordmark only; reflow clamps it */
+
   --link-hover: #ffffff;
   --link-background-hover: #424242;
   --link-selected: #ffffff;
@@ -177,8 +173,7 @@ summary:focus-visible,
   height: 100%;
   min-width: 0;
   min-height: 0;
-  /* Safety net: scroll rather than clip panels when the viewport drops
-     below the supported desktop floor. Reset in the reflow block. */
+  /* Scroll, not clip, below the desktop floor; reflow block resets it. */
   overflow: auto;
 }
 
@@ -186,8 +181,7 @@ summary:focus-visible,
   display: grid;
   width: 100%;
   height: 100%;
-  /* Full 3-pane floor: keeps the map above ~480px wide and every panel
-     usable down to ~800px tall. Below 1750px the reflow block resets both. */
+  /* 3-pane floor; reflow block resets these below 1750px. */
   min-width: 1246px;
   min-height: 800px;
   grid-template-columns: clamp(350px, 25vw, 450px) minmax(480px, 1fr) clamp(400px, 28vw, 550px);
@@ -282,7 +276,7 @@ summary:focus-visible,
   height: 100%;
   min-width: 0;
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -344,9 +338,9 @@ summary:focus-visible,
   overflow: hidden;
 }
 
+/* Fallback for a bare <h2> in a panel; real ones use .panel-header-title. */
 .panel h2 {
   color: var(--text-heading);
-  font-size: 1.25rem;
   font-family: var(--font-display);
 }
 
@@ -370,12 +364,11 @@ summary:focus-visible,
   padding-bottom: 0.25rem;
 }
 
-/* Rendered as an <h2> when it carries a real title (see PanelHeader);
-   the compound selector keeps these values ahead of the .panel h2 rule. */
+/* <h2> via PanelHeader; compound selector outranks .panel h2. */
 .panel-header .panel-header-title {
   margin: 0;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   line-height: 1.5;
   text-transform: uppercase;
   font-weight: 700;
@@ -383,8 +376,13 @@ summary:focus-visible,
   padding-left: 0.4rem;
 }
 
-/* Keeps the "mi" unit lowercase inside otherwise-uppercased text
-   (panel titles, the stats line, the map filter notice). */
+/* "section" variant: <h3> matching .section-header, not a panel name. */
+.panel-header .panel-header-title-section {
+  font-size: var(--fs-sm);
+  letter-spacing: 0.05em;
+}
+
+/* Keeps the "mi" unit lowercase inside uppercased text. */
 .unit-mi {
   text-transform: none;
 }
@@ -395,7 +393,7 @@ summary:focus-visible,
   color: var(--text-muted);
   cursor: pointer;
   padding: 0.2rem var(--space-s);
-  font-size: 1rem;
+  font-size: var(--fs-lg);
 }
 
 .panel-header-info-button:hover {
@@ -410,7 +408,7 @@ summary:focus-visible,
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
   padding: var(--space-s);
-  font-size: 0.9em;
+  font-size: var(--fs-md);
   line-height: 1.6;
   box-shadow: 0 4px 12px var(--shadow-overlay);
 }
@@ -421,14 +419,10 @@ summary:focus-visible,
   padding-left: 1.2rem;
 }
 
-/* Shared typography for InfoPopupContent's sections, wherever it's
-   rendered -- an anchored popup, the centered modal, or inline in a
-   panel body (see PanelHeader's onInfoClick / RestaurantDetails,
-   RestaurantReport, GradeChart). Keeps the content itself looking the
-   same regardless of container, instead of relying on each container
-   class to happen to set matching font-size/line-height/list rules. */
+/* Shared typography for InfoPopupContent so it looks the same in a
+   popup, modal, or inline panel body. */
 .info-popup-content {
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   line-height: 1.6;
 }
 
@@ -464,7 +458,7 @@ summary:focus-visible,
   background: var(--bg-panel);
   font-family: var(--font-body);
   box-sizing: border-box;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   color: var(--text-body);
 }
 
@@ -498,8 +492,7 @@ summary:focus-visible,
   padding: 0 16px 16px;
 }
 
-/* Panel-header bar used as a modal's own heading (PanelHeader modal
-   variant, DashboardGuide). */
+/* Panel-header bar reused as a modal heading. */
 .info-modal-panel-header {
   margin-bottom: 1.5rem;
   border-radius: 4px;
@@ -535,9 +528,9 @@ summary:focus-visible,
   gap: 0.15rem;
 }
 
-.h1-large { 
+.h1-large {
   font-family: var(--font-display);
-  font-size: 10rem; 
+  font-size: var(--fs-display);
   font-weight: bold;
   color: var(--text-muted);
   line-height: 1;
@@ -548,14 +541,14 @@ summary:focus-visible,
 
 .h1-med {
   font-family: var(--font-body);
-  font-size: 1.35rem;
+  font-size: var(--fs-2xl);
   font-weight: 700;
   color: var(--text-muted);
 }
 
 .h1-small {
   font-family: var(--font-body);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   color: var(--text-muted);
   letter-spacing: 0.05rem;
@@ -608,7 +601,7 @@ summary:focus-visible,
   align-items: center;
   margin-right: var(--space-xs);
   font-family: var(--font-display);
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--text-muted);
   text-transform: uppercase;
@@ -616,7 +609,7 @@ summary:focus-visible,
 }
 
 .filter-label svg {
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   margin-right: 0.5rem;
 }
 
@@ -633,7 +626,7 @@ summary:focus-visible,
   text-transform: uppercase;
   cursor: pointer;
   white-space: nowrap;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .filter-button:hover {
@@ -701,7 +694,7 @@ summary:focus-visible,
   align-items: center;
   justify-content: center;
   color: var(--text-muted);
-  font-size: 1.25rem;
+  font-size: var(--fs-xl);
   background: transparent;
   border: none;
   padding: 0;
@@ -709,14 +702,14 @@ summary:focus-visible,
 
 .stats-total-label {
   color: var(--text-muted);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;  
   font-weight: 700;
 }
 
 .stats-total-count {
   color: var(--text-body);  
-  font-size: 0.80rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   line-height: 1;
   font-family: var(--font-body);
@@ -746,14 +739,14 @@ summary:focus-visible,
 
 .stats-breakdown-value {  
   color: var(--text-body);
-  font-size: 0.80rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   font-variant-numeric: tabular-nums;  
   font-family: var(--font-body);
 }
 
 .stats-breakdown-label {
-  font-size: 0.80rem;
+  font-size: var(--fs-sm);
   font-weight: 700;  
   text-transform: uppercase;
 }
@@ -776,17 +769,16 @@ summary:focus-visible,
   color: var(--text-body);
   padding: 0.4rem var(--space-xs);
   font: inherit;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
 }
 
 .search-input::placeholder {
   color: var(--text-muted);
 }
 
-/* Keyboard focus keeps the shared :focus-visible ring (section 1.4);
-   a plain mouse click gets nothing. Text inputs always match
-   :focus-visible, so the pointer case is gated on data-input-modality
-   (set in inputModality.ts) rather than CSS. */
+/* Keyboard focus keeps the ring; mouse click gets none. Gated on
+   data-input-modality (inputModality.ts) since inputs always match
+   :focus-visible. */
 :root[data-input-modality="pointer"] .search-input:focus {
   outline: none;
 }
@@ -801,7 +793,7 @@ summary:focus-visible,
   background: transparent;
   border: 1px solid var(--border-panel);
   color: var(--text-body);
-  font-size: 1.15rem;
+  font-size: var(--fs-xl);
   cursor: pointer;
 }
 
@@ -869,7 +861,7 @@ summary:focus-visible,
   color: var(--text-muted);
   padding: 1rem var(--space-s);
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.05em;
@@ -942,7 +934,7 @@ summary:focus-visible,
   align-items: center;
   justify-content: space-between;
   padding: 0.5rem 0;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   color: var(--text-muted);
   font-family: var(--font-display);
@@ -955,7 +947,7 @@ summary:focus-visible,
   border: 1px solid var(--border-panel);
   padding: 0.25rem 0.6rem;
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
   cursor: pointer;
@@ -994,7 +986,7 @@ summary:focus-visible,
   gap: 0.4rem;
   row-gap: 0.35rem;
   padding: 0.25rem 0.5rem 0.5rem;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   flex-shrink: 0;
 }
 
@@ -1002,15 +994,14 @@ summary:focus-visible,
 .sort-then-label {
   color: var(--text-muted);
   font-weight: 600;
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
 }
 
 .sort-then-label {
   font-weight: 500;
 }
 
-/* Two field dropdowns have to fit on one row, tighter than the
-   stand-alone default. */
+/* Two dropdowns per row, tighter than the standalone default. */
 .restaurant-list-sort-bar .sort-dropdown-trigger {
   min-width: 118px;
 }
@@ -1073,7 +1064,7 @@ summary:focus-visible,
 }
 
 .sort-dropdown-chevron {
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   transition: transform 0.15s ease;
 }
 
@@ -1094,9 +1085,8 @@ summary:focus-visible,
   padding: 0;
 }
 
-/* The listbox takes programmatic focus so the arrow keys reach it;
-   the active option is shown via .active, so the container itself
-   doesn't need a ring. */
+/* Listbox takes programmatic focus for arrow keys; .active marks the
+   option, so no container ring. */
 .sort-dropdown-menu:focus {
   outline: none;
 }
@@ -1162,8 +1152,7 @@ summary:focus-visible,
   opacity: 0.85;
 }
 
-/* While the Search Radius tool is active each card carries an extra
-   Distance line -- give it the room. Keep in sync with
+/* Extra Distance line when Search Radius is active. Keep in sync with
    CARD_HEIGHT_WITH_DISTANCE in RestaurantList.tsx. */
 .restaurant-list-container.with-distance .restaurant-card {
   height: 100px;
@@ -1175,8 +1164,7 @@ summary:focus-visible,
   opacity: 1;
 }
 
-/* Hover reveal only where hovering is real -- on touch a tap leaves a
-   sticky :hover, making a previously-tapped card look selected too. */
+/* Hover reveal only on real hover; touch's sticky :hover mimics selection. */
 @media (hover: hover) {
   .restaurant-card:hover {
     background: var(--bg-alt);
@@ -1204,7 +1192,7 @@ summary:focus-visible,
 .card-title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--fs-lg);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1215,7 +1203,7 @@ summary:focus-visible,
 
 .card-subtext,
 .card-meta {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   white-space: nowrap;
   overflow: hidden;
@@ -1243,7 +1231,7 @@ summary:focus-visible,
 }
 
 .badge-label {
-  font-size: 0.55rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--text-muted);
@@ -1254,7 +1242,7 @@ summary:focus-visible,
 .badge-val {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--fs-lg);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -1297,7 +1285,7 @@ summary:focus-visible,
 .details-hero-title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 1.15rem;
+  font-size: var(--fs-xl);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1319,18 +1307,18 @@ summary:focus-visible,
 }
 
 .details-hero-badges .badge-label {
-  font-size: 0.6rem;
+  font-size: var(--fs-2xs);
   margin-bottom: 2px;
 }
 
 .details-hero-badges .badge-val {
-  font-size: 1.1rem;
+  font-size: var(--fs-xl);
 }
 
 .details-table {
   width: 100%;
   border-collapse: collapse;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   margin-bottom: var(--space-xs);
 }
 
@@ -1345,7 +1333,7 @@ summary:focus-visible,
 
 .restaurant-details-panel .details-table td:first-child {
   text-transform: uppercase;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
 }
 
@@ -1358,14 +1346,14 @@ summary:focus-visible,
 }
 
 .details-stale-note {
-  font-size: 0.85em;
+  font-size: var(--fs-md);
   color: var(--status-warning-bg);
 }
 
 .details-pending-note {
   display: block;
   text-align: left;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-body);
   margin-top: 0;
   margin-bottom: 0;
@@ -1374,7 +1362,7 @@ summary:focus-visible,
 .details-loading {
   color: var(--text-muted);
   font-style: italic;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   padding: var(--space-xs) 0.4rem;
 }
 
@@ -1384,7 +1372,7 @@ summary:focus-visible,
   margin-bottom: 0.4rem;
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.75rem;
+  font-size: var(--fs-sm);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   color: var(--text-muted);
@@ -1422,7 +1410,7 @@ summary:focus-visible,
   flex: 1;
   text-align: center;
   padding: 0.4rem 0.6rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
 }
 
 .report-nav-btn {
@@ -1430,7 +1418,7 @@ summary:focus-visible,
   color: var(--text-muted);
   border: none;
   border-right: 1px solid var(--border-panel);
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   cursor: pointer;
   font-weight: 600;
 }
@@ -1505,7 +1493,7 @@ summary:focus-visible,
   background-color: var(--bg-row-alt);
   border-left: 3px solid var(--border-panel);
   padding: var(--space-xs);
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
 }
 
 .violations-list li.violation-item {
@@ -1533,7 +1521,7 @@ summary:focus-visible,
   display: inline-flex;
   align-items: center;
   padding: 2px 6px;
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   border-radius: 3px;
   text-transform: uppercase;
@@ -1543,6 +1531,7 @@ summary:focus-visible,
 
 .violation-tag.severity-tag {
   border: 0.5px solid var(--highlight-border);
+  white-space: nowrap;
 }
 
 .violation-tag.violation-code-tag {
@@ -1561,7 +1550,7 @@ summary:focus-visible,
 
 .violation-description {
   color: var(--text-muted);
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   line-height: 1.45;
   text-align: justify;
 }
@@ -1581,7 +1570,7 @@ summary:focus-visible,
   align-items: center;
   gap: var(--space-xs);
   padding: 0.4rem var(--space-xs);
-  font-size: 0.8125rem;
+  font-size: var(--fs-sm);
   cursor: pointer;
 }
 
@@ -1659,7 +1648,7 @@ summary:focus-visible,
 .violation-count-val {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-body);
   font-variant-numeric: tabular-nums;
 }
@@ -1702,13 +1691,13 @@ summary:focus-visible,
 .performance-tooltip-date {
   margin-bottom: 4px;
   color: var(--text-muted);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 700;
 }
 
 .performance-tooltip-score {
   color: var(--text-body);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
 }
 
 .performance-tooltip-score span {
@@ -1717,8 +1706,7 @@ summary:focus-visible,
   color: var(--text-heading);
 }
 
-/* Compact variant (mobile pinned chart): two small value-only blocks
-   (grade, score) side by side, no card behind them. */
+/* Compact variant (mobile chart): grade + score blocks side by side, no card. */
 .performance-tooltip-compact {
   display: flex;
   gap: 0.25rem;
@@ -1738,7 +1726,7 @@ summary:focus-visible,
   border-color: color-mix(in srgb, currentColor 80%, transparent);
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -1821,7 +1809,7 @@ summary:focus-visible,
   flex-wrap: wrap;
   justify-content: center;
   gap: 0 0.25rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   line-height: 1.35;
   text-transform: uppercase;
@@ -1848,7 +1836,7 @@ summary:focus-visible,
 
 .grade-chart-count {
   margin-top: 0.45rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   line-height: 1.3;
   color: var(--text-muted);
@@ -1902,7 +1890,7 @@ summary:focus-visible,
   background-color: var(--bg-alt);
   color: var(--text-muted);
   font-family: var(--font-display);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   text-transform: uppercase;
@@ -1918,7 +1906,7 @@ summary:focus-visible,
 .dashboard-guide-chevron {
   flex-shrink: 0;
   color: var(--text-muted);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   transition: transform 0.15s ease;
 }
 
@@ -1934,7 +1922,7 @@ summary:focus-visible,
 
 .dashboard-guide-section-content {
   padding: 0.65rem 0.75rem 0.75rem;
-  font-size: 0.82rem;
+  font-size: var(--fs-sm);
   line-height: 1.55;
 }
 
@@ -1989,7 +1977,7 @@ summary:focus-visible,
 }
 
 .dashboard-guide-meta-label {
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   letter-spacing: 0.06em;
   text-transform: uppercase;
@@ -1998,7 +1986,7 @@ summary:focus-visible,
 }
 
 .dashboard-guide-meta-value {
-  font-size: 0.9rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   color: var(--text-body);
 }
@@ -2008,7 +1996,7 @@ summary:focus-visible,
   align-items: center;
   gap: 2px;
   margin-left: 0.4rem;
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   font-variant-numeric: tabular-nums;
 }
@@ -2086,7 +2074,7 @@ summary:focus-visible,
 .legend-grade-text {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   text-transform: uppercase;
 }
 
@@ -2105,7 +2093,7 @@ summary:focus-visible,
 }
 
 .legend-arrow {
-  font-size: 0.65rem;
+  font-size: var(--fs-2xs);
   color: var(--text-muted);
 }
 
@@ -2116,7 +2104,7 @@ summary:focus-visible,
 }
 
 .legend-score-text {
-  font-size: 0.875rem;
+  font-size: var(--fs-md);
   line-height: 1.35;
   color: var(--text-body);
   font-variant-numeric: tabular-nums;
@@ -2148,7 +2136,7 @@ summary:focus-visible,
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   color: var(--text-body);
 }
 
@@ -2161,7 +2149,7 @@ summary:focus-visible,
 
 .legend-range {
   font-family: var(--font-body);
-  font-size: 0.75rem;
+  font-size: var(--fs-xs);
   color: var(--text-muted);
   width: 50px;
   text-align: right;
@@ -2178,10 +2166,8 @@ summary:focus-visible,
   min-height: 0;
 }
 
-/* Covers the canvas when the ArcGIS view or the inspection GeoJSON fails
-   to load -- promise rejections the surrounding ErrorBoundary can't see.
-   The inner .panel-error (opaque --bg-alt, fills its box) does the
-   visuals; "Retry" rebuilds the view in place. */
+/* Shown when the ArcGIS view or GeoJSON fails (rejections ErrorBoundary
+   can't catch). "Retry" rebuilds the view in place. */
 .map-load-error {
   position: absolute;
   inset: 0;
@@ -2201,7 +2187,7 @@ summary:focus-visible,
 
 .map-hover-card-name {
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 700;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2225,7 +2211,7 @@ summary:focus-visible,
 }
 
 .map-hover-card .badge-label {
-  font-size: 0.55rem;
+  font-size: var(--fs-2xs);
   font-weight: 700;
   letter-spacing: 0.05em;
   color: var(--text-muted);
@@ -2236,7 +2222,7 @@ summary:focus-visible,
 .map-hover-card .badge-val {
   font-family: var(--font-body);
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: var(--fs-lg);
   line-height: 1;
   font-variant-numeric: tabular-nums;
 }
@@ -2250,7 +2236,7 @@ summary:focus-visible,
   align-items: center;
   gap: 8px;
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
   pointer-events: auto;
 }
@@ -2328,8 +2314,7 @@ summary:focus-visible,
 .map-zoom-buttons-chip {
   display: flex;
   flex-direction: column;
-  /* 32-wide outer box (border included) so the pair lines up with the
-     single 32x32 control chips; 64 tall = two stacked. */
+  /* 32 wide, 64 tall (two stacked) to align with the 32x32 control chips. */
   width: 32px;
   height: 64px;
   background-color: var(--bg-panel);
@@ -2344,7 +2329,7 @@ summary:focus-visible,
   border-bottom: 1px solid var(--border-panel);
   color: var(--text-muted);
   font-family: var(--font-display);
-  font-size: 1rem;
+  font-size: var(--fs-lg);
   font-weight: 700;
   width: 100%;
   flex: 1;
@@ -2466,18 +2451,10 @@ summary:focus-visible,
   background-color: var(--link-background-hover);
 }
 
-/* Once placing or a point is set, the idle [data-tooltip] hover pill is
-   replaced by this panel, positioned the exact same way (tooltip-left's
-   right: calc(100% + 0.5rem) mechanism) so the header label sits where
-   the tooltip did -- to the button's left, same gap, same vertical
-   position (both start at top: 0, and the header label is 32px tall
-   like the button, so they land aligned without needing to center
-   anything). The radius picker stacks below the header label only --
-   the icon button itself stays a standalone square, nothing renders
-   under it. Column flex + stretch is what keeps the header label and
-   the picker row the same total width -- the panel auto-sizes to
-   whichever is naturally wider, and stretch fills the narrower one out
-   to match, with no width hardcoded either way. */
+/* Replaces the idle hover pill while placing / when a point is set,
+   positioned the same way (left of the button, top: 0). Column flex +
+   stretch keeps the header label and picker row equal width, panel
+   auto-sized to the wider one. */
 .map-search-radius-panel {
   position: absolute;
   top: 0;
@@ -2500,7 +2477,7 @@ summary:focus-visible,
   box-shadow: 0 2px 4px var(--shadow-controls);
   color: var(--text-body);
   font-family: var(--font-display);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2521,31 +2498,22 @@ summary:focus-visible,
   justify-content: center;
   background-color: var(--bg-panel);
   color: var(--text-muted);
-  /* Labels are "0.25 mi" and similar; keep the unit lowercase rather
-     than inheriting .filter-button's uppercase. */
+  /* Keep the "mi" unit lowercase, not .filter-button's uppercase. */
   text-transform: none;
 }
 
-/* Overrides the shared .filter-button.active color; this one should
-   read as "selected" via brightened text-body, not the link-hover color
-   used for grade/borough filter toggles elsewhere. Also swaps the shared
-   rule's border-bottom for an inset box-shadow: border-bottom adds to
-   the box's height, which (with align-items: center) shifts the text up
-   by half the border width to stay centered in the now-taller box;
-   box-shadow paints the same line without affecting layout at all, so
-   height and text position stay exactly constant. */
+/* Selected = brightened text-body, not the link-hover used elsewhere.
+   Inset box-shadow, not border-bottom, so the line doesn't grow the box
+   and shift the centred text. */
 .search-radius-picker .filter-button.active {
   color: var(--text-body);
   border-bottom: none;
   box-shadow: inset 0 -2px 0 0 var(--border-panel);
 }
 
-/* Positioning context for the placement hint. The overrides below take
-   the default fill-the-ancestor .filter-notice-overlay (inset: 0, solid
-   --bg-alt panel, self-dismissing fade) down to a content-hugging chip
-   that stays put -- it's rendered only while the user is placing a
-   point, so it should persist until they click the map rather than
-   time out. */
+/* Positioning context for the placement hint. Overrides below shrink the
+   full .filter-notice-overlay to a chip that stays put (shown only while
+   placing a point). */
 .map-placement-hint-anchor {
   position: absolute;
   top: 1rem;
@@ -2555,9 +2523,7 @@ summary:focus-visible,
   pointer-events: none;
 }
 
-/* Style the placement hint to match the Search Radius header chip
-   (.map-search-radius-header-label) rather than the full-panel
-   filter-notice treatment used on the list/stats panels. */
+/* Match the Search Radius header chip, not the full-panel filter-notice. */
 .map-placement-hint-anchor .filter-notice-overlay {
   position: static;
   inset: auto;
@@ -2577,7 +2543,7 @@ summary:focus-visible,
 .map-placement-hint-anchor .filter-notice-text {
   color: var(--text-body);
   font-family: var(--font-display);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   font-weight: 400;
   letter-spacing: 0.03em;
   white-space: nowrap;
@@ -2601,7 +2567,7 @@ summary:focus-visible,
   border: 1px solid var(--border-panel);
   color: var(--text-body);
   font-family: var(--font-display);
-  font-size: 0.7rem;
+  font-size: var(--fs-xs);
   letter-spacing: 0.03em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -2617,8 +2583,7 @@ summary:focus-visible,
   opacity: 1;
 }
 
-/* Hover reveal only where hovering is real — on touch a tap leaves a
-   sticky :hover, pinning the tooltip open with no way to dismiss it. */
+/* Hover reveal only on real hover; touch's sticky :hover pins it open. */
 @media (hover: hover) {
   [data-tooltip]:hover::after {
     opacity: 1;
@@ -2629,9 +2594,7 @@ summary:focus-visible,
   left: calc(100% + 0.5rem);
 }
 
-/* map-control-button sits inside map-control-label's own 0.5rem right
-   padding, which would otherwise absorb the gap above before it reaches
-   the label's visible border. */
+/* Offsets map-control-label's 0.5rem right padding so the gap clears its border. */
 .map-control-button.tooltip-right::after {
   left: calc(100% + 1rem);
 }
@@ -2658,7 +2621,7 @@ summary:focus-visible,
   box-shadow: 0 2px 4px var(--shadow-controls);
   box-sizing: border-box;
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   color: var(--text-muted);
 }
 
@@ -2689,10 +2652,8 @@ summary:focus-visible,
   color: var(--text-muted) !important;
   font-family: var(--font-display) !important;
   text-transform: uppercase !important;
-  font-size: 0.75rem !important;
-  /* Horizontal padding is 0 because .esri-attribution__sources and
-     .esri-attribution__powered-by already carry their own 16px (1rem)
-     outer padding; adding more here would stack on top of that. */
+  font-size: var(--fs-xs) !important;
+  /* Horizontal padding 0 -- the esri child elements carry their own 1rem. */
   padding: 4px 0 !important;
 }
 
@@ -2701,9 +2662,8 @@ summary:focus-visible,
   text-transform: uppercase !important;
 }
 
-/* Suppress the focus outline only on the ArcGIS view internals (the
-   keyboard-pannable canvas surface and esri widgets). The custom map
-   control buttons sit outside .esri-view and keep the global ring. */
+/* Suppress the focus ring on ArcGIS internals only; the custom controls
+   sit outside .esri-view and keep it. */
 .map-view .esri-view :focus,
 .map-view .esri-view :focus-visible {
   outline: none;
@@ -2721,7 +2681,7 @@ summary:focus-visible,
 
 .map-view-skeleton-label {
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -2746,7 +2706,7 @@ summary:focus-visible,
 
 .chart-skeleton-label {
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-muted);
@@ -2755,8 +2715,8 @@ summary:focus-visible,
 
 /* 15.5 ERROR BOUNDARY FALLBACKS */
 
-/* Compact version fills one panel; .app-error is the root fallback from
-   main.tsx. Both borrow the skeletons' muted, bordered look. */
+/* Compact fills one panel; .app-error is main.tsx's root fallback.
+   Both borrow the skeleton look. */
 .panel-error,
 .app-error {
   width: 100%;
@@ -2779,14 +2739,14 @@ summary:focus-visible,
 .error-fallback-message {
   max-width: 42ch;
   font-family: var(--font-display);
-  font-size: 0.85rem;
+  font-size: var(--fs-md);
   font-weight: 600;
   color: var(--text-muted);
 }
 
 .error-fallback-retry {
   font-family: var(--font-display);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 600;
   text-transform: uppercase;
   color: var(--text-body);
@@ -2802,9 +2762,8 @@ summary:focus-visible,
   border-color: var(--accent-blue);
 }
 
-/* Always-mounted role="status" wrapper. Generates no box so it neither
-   adds a flex gap in .restaurant-card-list nor becomes the positioned
-   ancestor the overlay's inset: 0 resolves against. */
+/* Always-mounted role="status". No box, so no flex gap and it's not the
+   overlay's positioning ancestor. */
 .filter-notice-live-region {
   display: contents;
 }
@@ -2825,7 +2784,7 @@ summary:focus-visible,
 
 .filter-notice-text {
   color: var(--text-heading);
-  font-size: 0.8rem;
+  font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
 }
@@ -2839,15 +2798,11 @@ summary:focus-visible,
 
 /*///////////////////////////////////////////// 16. RESPONSIVE REFLOW //////////////////////////////////////////////*/
 
-/* Two independent breakpoints:
-   - <=2359px: the filter bar collapses into a <details> disclosure (the
-     full inline bar only fits on one line above this).
-   - <=1750px: the 3-pane grid collapses to a stacked, scrolling layout.
-   The disclosure rules below therefore also apply throughout the 3-pane
-   range from 1751-2359px. */
+/* Two independent breakpoints: <=2359px folds the filter bar into a
+   <details> disclosure; <=1750px stacks the 3-pane grid. So disclosure
+   rules also apply in the 1751-2359px range. */
 @media (max-width: 2359px) {
-  /* Filters collapse into a disclosure; the two sections stack and
-     left-align inside it */
+  /* Filter sections stack and left-align in the disclosure. */
   .filters-disclosure {
     border: 1px solid var(--border-panel);
     background-color: var(--bg-panel);
@@ -2861,7 +2816,7 @@ summary:focus-visible,
     background-color: var(--bg-alt);
     color: var(--text-muted);
     font-family: var(--font-display);
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.05em;
     text-transform: uppercase;
@@ -2881,7 +2836,7 @@ summary:focus-visible,
 
   .filters-disclosure-chevron {
     flex-shrink: 0;
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     transition: transform 0.15s ease;
   }
 
@@ -2946,9 +2901,8 @@ summary:focus-visible,
       "footer      footer";
   }
 
-  /* Header band: title and Dashboard Information sit side by side, filling
-     the dead space next to the oversized "NYC" wordmark. .left-sidebar is
-     flattened so its three children place into the grid directly. */
+  /* Title + Dashboard Information side by side next to the "NYC" wordmark.
+     .left-sidebar flattened so its children place into the grid directly. */
   .left-sidebar {
     display: contents;
   }
@@ -2973,8 +2927,7 @@ summary:focus-visible,
     font-size: clamp(4rem, 12vw, 9rem);
   }
 
-  /* Dashboard Information: 2x2 grid of label/value pairs (value stacked
-     under the label, as at full size), centred against the title */
+  /* Dashboard Information: 2x2 label/value grid, centred against the title. */
   .dashboard-guide-meta {
     display: grid;
     flex: 1;
@@ -3014,9 +2967,8 @@ summary:focus-visible,
     height: min(65vh, 560px);
   }
 
-  /* Grade + performance share a row here - halves the grade chart's empty
-     width. Tall enough to keep the donut near its desktop size so the
-     centre summary clears the ring. Restacked at the phone breakpoint. */
+  /* Grade + performance share a row; tall enough for the donut's centre
+     summary to clear the ring. Restacked at phone width. */
   .grade-chart,
   .performance-chart {
     height: min(60vh, 460px);
@@ -3032,8 +2984,7 @@ summary:focus-visible,
   }
 }
 
-/* Wide enough for the inline filter bar on one line: the disclosure
-   wrapper is inert and its summary is hidden. */
+/* Inline filter bar fits on one line; disclosure wrapper inert, summary hidden. */
 @media (min-width: 2360px) {
   .filters-disclosure-summary {
     display: none;
@@ -3051,11 +3002,9 @@ summary:focus-visible,
 
 /*///////////////////////////////////////////// 18. MOBILE (PHONE) LAYOUT //////////////////////////////////////////////*/
 
-/* Below 640px dashboard.tsx renders <MobileDashboard> instead of the
-   desktop grid: a slim app bar, an area-summary strip, a full-bleed map,
-   and a bottom sheet (peek / half / full detents on [data-detent]) that
-   is purely restaurant info. All the classes below only exist inside
-   this query since that tree never mounts wider. */
+/* Below 640px dashboard.tsx renders <MobileDashboard>: app bar, area
+   strip, full-bleed map, bottom sheet (peek/half/full on [data-detent]).
+   Classes below are mobile-only -- that tree never mounts wider. */
 @media (max-width: 640px) {
   body {
     padding: 0;
@@ -3068,19 +3017,15 @@ summary:focus-visible,
     --appbar-h: calc(52px + env(safe-area-inset-top));
     --strip-h: 34px;
     --sheet-handle-h: 32px;
-    /* Enforced (not just estimated) via .explorer-tabs's own height (18.5)
-       so --sheet-content-h below is exact, not approximate. */
+    /* Fixed via .explorer-tabs height (18.5) so --sheet-content-h is exact. */
     --explorer-tabs-h: 36px;
     /* Height .mobile-explorer gets at the open detent (sheet - handle). */
     --sheet-explorer-h: calc(
       100dvh - var(--appbar-h) - var(--strip-h) - 16px - var(--sheet-handle-h)
     );
-    /* Height .explorer-content gets at the open detent (explorer height
-       minus the tab strip above it). The half/list rule (18.5) forces the
-       list to lay out at this size so its page count matches full height,
-       then .mobile-sheet-scroll-body (18.3) scrolls the overflow.
-       .mobile-sheet-scroll-body's own bottom pad is internal to
-       .explorer-content's containing block, so it isn't subtracted here. */
+    /* Open-detent height for .explorer-content (explorer minus tab strip).
+       The half/list rule (18.5) lays the list out at this size so its
+       page count matches; 18.3 scrolls the overflow. */
     --sheet-content-h: calc(var(--sheet-explorer-h) - var(--explorer-tabs-h));
     position: relative;
     width: 100%;
@@ -3090,8 +3035,7 @@ summary:focus-visible,
     -webkit-tap-highlight-color: transparent;
   }
 
-  /* Starts below the app bar + area strip (rather than full-bleed behind
-     them) so the map's own top-left/right control cluster clears them. */
+  /* Starts below the app bar + area strip so the map's control clusters clear them. */
   .mobile-map {
     position: absolute;
     top: calc(var(--appbar-h) + var(--strip-h));
@@ -3100,9 +3044,8 @@ summary:focus-visible,
     bottom: 0;
   }
 
-  /* The bottom map readouts (scale 1:x, zoom level, scale bar) sit at
-     bottom: 1.5rem — directly behind the peek sheet. Drop them on phones;
-     the top-left zoom buttons stay. */
+  /* Bottom map readouts sit behind the peek sheet -- drop them on phones;
+     zoom buttons stay. */
   .mobile-dashboard .map-bottom-controls,
   .mobile-dashboard .map-scale-bar-container {
     display: none;
@@ -3119,9 +3062,8 @@ summary:focus-visible,
     right: 0.5rem;
   }
 
-  /* The map legend/info button is dropped on phones — its content is
-     folded into the app-bar Info drawer instead. Pull the buttons it
-     used to sit above up so the top one lines up with the zoom pair. */
+  /* Legend/info button dropped on phones (folded into the app-bar Info
+     drawer); pull the buttons below it up to meet the zoom pair. */
   .mobile-dashboard .map-view-top-header {
     display: none;
   }
@@ -3134,10 +3076,9 @@ summary:focus-visible,
     top: calc(1rem + 40px);
   }
 
-  /* Touch leaves a sticky :hover after a tap, so a map control keeps its
-     hover highlight and reads as held. Pin each to its resting look on
-     hover; real state (the search-radius button's .active) still shows.
-     Also drop the post-tap focus ring for pointer input. */
+  /* Touch's sticky :hover makes a control read as held -- pin controls to
+     their resting look on hover (.active still shows). Also drop the
+     post-tap pointer focus ring. */
   .mobile-dashboard .map-zoom-button:hover:not(:disabled) {
     color: var(--text-muted);
     background-color: transparent;
@@ -3200,7 +3141,7 @@ summary:focus-visible,
   .mobile-appbar-wordmark {
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: 1.15rem;
+    font-size: var(--fs-xl);
     letter-spacing: -0.02em;
     color: var(--text-muted);
     text-shadow: -2px 2px 0 var(--bg-alt);
@@ -3210,7 +3151,7 @@ summary:focus-visible,
     max-width: 60vw;
     overflow: hidden;
     font-family: var(--font-display);
-    font-size: 0.65rem;
+    font-size: var(--fs-2xs);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
@@ -3237,7 +3178,7 @@ summary:focus-visible,
     border: 1px solid var(--border-panel);
     box-shadow: 0 2px 4px var(--shadow-controls);
     color: var(--text-muted);
-    font-size: 1rem;
+    font-size: var(--fs-lg);
     cursor: pointer;
     box-sizing: border-box;
   }
@@ -3248,10 +3189,8 @@ summary:focus-visible,
     color: var(--link-hover);
   }
 
-  /* Touch leaves a sticky :hover after a tap, so a button whose drawer
-     has been closed keeps the highlight and reads as still open. Pin a
-     closed (not data-active) button to its resting look; data-active is
-     the only "open" signal. */
+  /* Touch's sticky :hover makes a closed button read as open -- pin
+     non-[data-active] buttons to their resting look. */
   .mobile-appbar-button:not([data-active]):hover {
     background-color: var(--bg-panel);
     color: var(--text-muted);
@@ -3275,13 +3214,12 @@ summary:focus-visible,
     background-color: var(--accent-blue);
     color: #fff;
     font-family: var(--font-body);
-    font-size: 0.65rem;
+    font-size: var(--fs-2xs);
     font-weight: 700;
     line-height: 1;
   }
 
-  /* Count-less variant: a bare dot for on/off state, not a tally
-     (an active search query). */
+  /* Bare dot for on/off state, not a tally. */
   .mobile-appbar-badge-dot {
     top: -4px;
     right: -4px;
@@ -3292,14 +3230,10 @@ summary:focus-visible,
     border: 1px solid var(--bg-panel);
   }
 
-  /* Search + Filters + Dashboard Information drop down from below the area
-     strip. The panel is a full-bleed --bg-panel background (flush to the
-     strip and both screen edges); the bordered card inside sits 0.5rem in
-     from every edge, content 0.5rem inside that — same as the bottom
-     sheet's list / details / reports panes. Info stacks two such panels
-     (meta/guide, then a pinned footer) with a 0.5rem gap where the map
-     shows through. Search stays short so the sheet's half detent (the
-     generated list) shows below it over a still-visible map. */
+  /* Search / Filters / Info drawers drop from below the area strip:
+     full-bleed --bg-panel, bordered card 0.5rem in, content 0.5rem
+     inside (as in the sheet panes). Info stacks two panels with a 0.5rem
+     gap. Search stays short so the sheet's half detent shows below it. */
   .mobile-search-drawer,
   .mobile-filter-drawer,
   .mobile-info-drawer {
@@ -3312,8 +3246,7 @@ summary:focus-visible,
     overflow: hidden;
   }
 
-  /* Full-bleed fill only on the open state — a closed (max-height: 0)
-     drawer would otherwise draw a sliver under the strip. */
+  /* Fill only when open; a closed max-height:0 drawer would draw a sliver. */
   .mobile-search-drawer[data-open="true"],
   .mobile-filter-drawer[data-open="true"] {
     max-height: min(82dvh, 640px);
@@ -3322,10 +3255,8 @@ summary:focus-visible,
     box-shadow: 0 6px 16px var(--shadow-overlay);
   }
 
-  /* Info drawer: a capped flex column that does NOT scroll as a whole.
-     The transparent wrapper lets the map show through the 0.5rem gap
-     between its two full-bleed panels; the guide panel scrolls inside
-     its bordered card. */
+  /* Info drawer: capped flex column, no whole-drawer scroll. Transparent
+     wrapper shows the map through the gap; the guide panel scrolls in its card. */
   .mobile-info-drawer {
     display: flex;
     flex-direction: column;
@@ -3357,8 +3288,7 @@ summary:focus-visible,
     margin-top: var(--space-xs);
   }
 
-  /* The inner bordered card, shared by every drop-down panel: 0.5rem in
-     from the full-bleed panel edge on all sides, content 0.5rem inside. */
+  /* Shared inner card: 0.5rem in from the panel edge, content 0.5rem inside. */
   .mobile-search-drawer-card,
   .mobile-filter-drawer-card,
   .mobile-area-drawer-chart,
@@ -3376,9 +3306,7 @@ summary:focus-visible,
     overflow-y: auto;
   }
 
-  /* Compact dataset meta: a 2x2 grid of label-over-value stats, no
-     divider, hairline under the block to set it off from the map guide
-     that follows. */
+  /* Compact dataset meta: 2x2 label-over-value grid, hairline under it. */
   .dashboard-guide-meta[data-compact="true"] {
     display: grid;
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -3395,13 +3323,13 @@ summary:focus-visible,
   }
 
   .dashboard-guide-meta[data-compact="true"] .dashboard-guide-meta-label {
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     letter-spacing: 0.06em;
     text-transform: uppercase;
   }
 
   .dashboard-guide-meta[data-compact="true"] .dashboard-guide-meta-value {
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
     overflow: hidden;
@@ -3425,7 +3353,7 @@ summary:focus-visible,
     justify-content: center;
     gap: 0.4rem;
     height: auto;
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
     letter-spacing: 0.04em;
     text-align: center;
   }
@@ -3465,11 +3393,10 @@ summary:focus-visible,
     flex-basis: 100%;
     margin: 0 0 0.4rem;
     color: var(--text-body);
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
   }
 
-  /* Clear stays at the front of the row (right after the label), with a
-     slightly wider gap before the first option. */
+  /* Clear sits right after the label, wider gap before the first option. */
   .mobile-filter-groups .filter-clear {
     margin: 0 0.6rem 0 0;
   }
@@ -3480,11 +3407,9 @@ summary:focus-visible,
     padding: 0.6rem 0.5rem;
   }
 
-  /* Touch has no real hover, and a tap leaves a sticky :hover fill that
-     reads as "selected" — so a not-yet-toggled filter button keeps its
-     resting look on hover. Toggle state is .active; press feedback is
-     :active. Also drop the lingering focus ring after a tap (keyboard
-     focus still rings). */
+  /* Touch's sticky :hover reads as selected -- pin non-.active filter
+     buttons to their resting look (.active = toggled, :active = press).
+     Also drop the post-tap focus ring. */
   .mobile-filter-groups .filter-button:not(.active):hover {
     background-color: transparent;
     color: var(--text-muted);
@@ -3499,16 +3424,13 @@ summary:focus-visible,
     outline: none;
   }
 
-  /* Clear never toggles, so it also never shows a focus outline — even
-     for keyboard (the :not(.active) rules above already handle its hover
-     and press). */
+  /* Clear never toggles, so no focus ring even for keyboard. */
   .mobile-filter-groups .filter-clear .filter-button:focus,
   .mobile-filter-groups .filter-clear .filter-button:focus-visible {
     outline: none;
   }
 
-  /* Static echo of the desktop filter-change notice, so a tap visibly
-     registers. */
+  /* Static echo of the desktop filter-change notice so a tap registers. */
   .mobile-filter-notice-rule {
     margin: var(--space-s) 0 0;
     border: none;
@@ -3518,16 +3440,15 @@ summary:focus-visible,
   .mobile-filter-notice {
     margin: var(--space-s) 0 0;
     font-family: var(--font-display);
-    font-size: 0.78rem;
+    font-size: var(--fs-xs);
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.02em;
     color: var(--text-muted);
   }
 
-  /* "Grade:" / "Borough:" labels sit at --text-body; grade values keep
-     their inline category colour; the "Filters applied:" lead-in and
-     borough names are faded. */
+  /* Field labels at --text-body, grade values keep their category colour,
+     lead-in and borough names faded. */
   .mobile-filter-notice-label {
     color: var(--text-body);
   }
@@ -3537,8 +3458,7 @@ summary:focus-visible,
     color: var(--text-faded);
   }
 
-  /* 18.2b AREA STRIP — count + grade mix for the current view, pinned
-     under the app bar; opens the grade donut + tally in a modal. */
+  /* 18.2b AREA STRIP — count + grade mix for the view; opens the donut in a modal. */
 
   .mobile-area-strip {
     position: absolute;
@@ -3556,7 +3476,7 @@ summary:focus-visible,
     border: none;
     color: var(--text-muted);
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.02em;
@@ -3565,14 +3485,14 @@ summary:focus-visible,
 
   .mobile-area-strip-icon {
     flex-shrink: 0;
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
   }
 
   .mobile-area-strip-count {
     flex-shrink: 0;
     color: var(--text-body);
     font-family: var(--font-body);
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
   }
 
   .mobile-area-strip-scope {
@@ -3593,9 +3513,8 @@ summary:focus-visible,
     min-width: 0;
   }
 
-  /* Invisible box matching the 32px app-bar / map-control buttons above
-     and below, so the glyph -- much narrower than those boxes -- centers
-     on the same column instead of hugging the strip's own right edge. */
+  /* Invisible 32px box (like the app-bar buttons) so the narrow glyph
+     centres on the same column. */
   .mobile-area-strip-chevron-box {
     flex-shrink: 0;
     display: flex;
@@ -3606,7 +3525,7 @@ summary:focus-visible,
 
   .mobile-area-strip-chevron {
     flex-shrink: 0;
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
   }
 
   /* faChevronDown: points down to expand the drawer, up to collapse it. */
@@ -3614,11 +3533,8 @@ summary:focus-visible,
     transform: rotate(180deg);
   }
 
-  /* Drops down from under the strip, over the map — the top-area
-     counterpart of the bottom sheet. Full-bleed --bg-panel background
-     (flush to strip + edges), with the bordered .mobile-area-drawer-chart
-     card 0.5rem in (shared rule above). Fill only on the open state — a
-     closed max-height:0 panel would draw a sliver. */
+  /* Drops from under the strip over the map (top-area counterpart of the
+     sheet). Full-bleed --bg-panel, card 0.5rem in. Fill only when open. */
   .mobile-area-drawer {
     position: absolute;
     top: calc(var(--appbar-h) + var(--strip-h));
@@ -3643,10 +3559,8 @@ summary:focus-visible,
     gap: var(--space-xs);
   }
 
-  /* GradeChart has no `.grade-chart` wrapper here to make its panel a
-     flex column (so its body / info popup scrolls), so re-create that,
-     give the donut area an explicit height, and drop the panel's own
-     border/fill so it reads as part of the drawer rectangle. */
+  /* No `.grade-chart` wrapper here -- recreate the flex column, give the
+     donut an explicit height, drop the panel border/fill. */
   .mobile-area-drawer-chart .grade-chart-panel {
     display: flex;
     flex-direction: column;
@@ -3661,9 +3575,8 @@ summary:focus-visible,
     flex-shrink: 0;
   }
 
-  /* KPI directly under the donut: drop the redundant total (it's in the
-     strip and the donut centre), strip the panel chrome, and centre the
-     breakdown even when it wraps to a second line. */
+  /* Under the donut: drop the redundant total, strip panel chrome, centre
+     the breakdown when it wraps. */
   .mobile-area-drawer .stats-panel.panel {
     height: auto;
     padding: 0;
@@ -3698,8 +3611,8 @@ summary:focus-visible,
     box-shadow: 0 -4px 16px var(--shadow-overlay);
   }
 
-  /* Peek: the handle chevron plus the selected restaurant's list card.
-     With no selection it collapses to just the chevron + browse prompt. */
+  /* Peek: handle chevron + the selected restaurant's card, or just
+     chevron + browse prompt. */
   .mobile-dashboard[data-detent="peek"] .mobile-sheet {
     height: calc(118px + env(safe-area-inset-bottom));
   }
@@ -3708,8 +3621,7 @@ summary:focus-visible,
     height: calc(58px + env(safe-area-inset-bottom));
   }
 
-  /* Half: the list (or a selected restaurant's Details) over a still-
-     visible map. */
+  /* Half: the list (or a selected restaurant's Details) over a visible map. */
   .mobile-dashboard[data-detent="half"] .mobile-sheet {
     height: calc((100dvh - var(--appbar-h) - var(--strip-h)) * 0.4);
   }
@@ -3718,9 +3630,8 @@ summary:focus-visible,
     height: calc(100dvh - var(--appbar-h) - var(--strip-h) - 16px);
   }
 
-  /* Handle row: centred chevrons that step one detent — up (peek -> half
-     -> open) and down (open -> half -> peek). peek shows only up, open
-     only down, half both (side by side). */
+  /* Handle row: centred chevrons stepping one detent. peek shows up only,
+     open down only, half both. */
   .mobile-sheet-handle {
     display: flex;
     align-items: center;
@@ -3738,24 +3649,22 @@ summary:focus-visible,
     flex: 1;
     max-width: 6rem;
     padding: 9px 12px 7px;
-    font-size: 0.85rem;
+    font-size: var(--fs-md);
     background: transparent;
     border: none;
     color: var(--text-muted);
     cursor: pointer;
   }
 
-  /* Keyboard focus keeps the shared ring; a tap does not (same treatment
-     as .search-input — see the data-input-modality note in section 9). */
+  /* Keyboard focus rings, tap doesn't (like .search-input, section 9). */
   :root[data-input-modality="pointer"] .mobile-sheet-handle-arrow:focus,
   :root[data-input-modality="pointer"] .mobile-sheet-peek:focus,
   :root[data-input-modality="pointer"] .mobile-area-strip:focus {
     outline: none;
   }
 
-  /* Peek content: the selected restaurant's list card (keeps its own
-     border + darker --bg-alt fill against the --bg-panel drawer), or the
-     browse prompt. */
+  /* Peek content: the restaurant's card (own border + --bg-alt fill), or
+     the browse prompt. */
   .mobile-sheet-peek-card {
     flex-shrink: 0;
     padding: 0 0.625rem 8px;
@@ -3776,7 +3685,7 @@ summary:focus-visible,
     max-width: 90vw;
     overflow: hidden;
     font-family: var(--font-display);
-    font-size: 0.8rem;
+    font-size: var(--fs-sm);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.02em;
@@ -3785,11 +3694,9 @@ summary:focus-visible,
     color: var(--text-faded);
   }
 
-  /* Sheet body: holds the tab list (not scrolling) above the one scroll
-     region (.mobile-sheet-scroll-body, below) carrying either the list or
-     the selected restaurant's record with its score-history chart below
-     it. Split so the scrollbar only ever runs alongside that region,
-     never the tab strip above it. */
+  /* Sheet body: non-scrolling tab list above the one scroll region
+     (.mobile-sheet-scroll-body), so the scrollbar never runs alongside
+     the tabs. */
   .mobile-sheet-scroll {
     flex: 1;
     min-height: 0;
@@ -3810,18 +3717,11 @@ summary:focus-visible,
     -webkit-overflow-scrolling: touch;
   }
 
-  /* At the half detent the body is taller than the sheet, so the scroll
-     would clip raw at the screen edge. Same problem at the open detent on
-     Details / Report, now that both unbind into the shared scroll (18.5)
-     — the panel's own border ends wherever content happens to end instead
-     of tracking the sheet edge. Wrap the scroll in the same bordered
-     --bg-panel card the app-bar drawers use — inset 0.5rem (the bottom
-     margin also clears the home indicator). No padding: the tab strip
-     sits flush to this border so scrolled content can't show in a gap
-     behind it, and the card's border doubles as the tab group's outer
-     edge (so .explorer-tabs drops its own). The reused content .panel
-     keeps its 0.5rem pad but drops its border. Open's List tab stays
-     bounded/self-bordered (18.5), so it's excluded here. */
+  /* Half detent (and open on Details/Report) overflow the sheet, so wrap
+     the scroll in the app-bar drawers' bordered --bg-panel card, inset
+     0.5rem. No padding: the tab strip sits flush and the card border
+     doubles as the tab group's edge. Open's List tab is self-bordered
+     (18.5), excluded. */
   .mobile-dashboard[data-detent="half"] .mobile-sheet-scroll,
   .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-sheet-scroll,
   .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-sheet-scroll {
@@ -3832,9 +3732,8 @@ summary:focus-visible,
     background-color: var(--bg-panel);
   }
 
-  /* At open, Details/Report should sit flush under the handle like List
-     does (List is excluded from the margin above, see its comment) --
-     only the half detent needs the inset on all four sides. */
+  /* At open, Details/Report sit flush under the handle like List; only
+     half needs the 4-side inset. */
   .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-sheet-scroll,
   .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-sheet-scroll {
     margin-top: 0;
@@ -3853,22 +3752,18 @@ summary:focus-visible,
     border: none;
   }
 
-  /* 18.4 SHEET CONTENT — reused desktop panels, stripped of their
-     panel chrome so they read as sheet sections */
+  /* 18.4 SHEET CONTENT — reused desktop panels, stripped of panel chrome. */
 
-  /* Search moved to the app-bar drawer (.mobile-search-drawer); it keeps
-     the desktop .panel chrome there. */
+  /* Search moved to the app-bar drawer, where it keeps the desktop .panel chrome. */
   .mobile-search-drawer-card .panel {
     padding: 0;
     border: none;
     background: transparent;
   }
 
-  /* 18.5 EXPLORER — fills the sheet with a bounded content box on the
-     List tab, whose pagination measures a real height. Details / Report
-     unbind at both open and half detent (below) so the record, the
-     inspection history and the score-history chart all flow together in
-     .mobile-sheet-scroll. */
+  /* 18.5 EXPLORER — List tab gets a bounded box so pagination measures a
+     real height. Details/Report unbind (below) so record, history and
+     chart flow together in .mobile-sheet-scroll. */
 
   .mobile-explorer {
     display: flex;
@@ -3877,9 +3772,7 @@ summary:focus-visible,
     min-height: 0;
   }
 
-  /* Explicit height (not just content-driven) so --explorer-tabs-h (18.1)
-     is exact -- the calc that depends on it assumes this row is exactly
-     that tall. */
+  /* Explicit height so --explorer-tabs-h (18.1) is exact. */
   .mobile-explorer .explorer-tabs {
     height: var(--explorer-tabs-h);
   }
@@ -3889,21 +3782,17 @@ summary:focus-visible,
     align-items: center;
     justify-content: center;
     padding: 0.7rem 0.35rem;
-    font-size: 0.68rem;
+    font-size: var(--fs-xs);
   }
 
-  /* An inactive tab's 2px transparent bottom border let a sliver of
-     --bg-panel show between the tab row and the pane's top border,
-     reading as a gap. Give the inactive tabs a 1px border that just
-     continues the pane's own top border; the selected tab keeps its
-     thicker 2px underline. */
+  /* Inactive tabs get a 1px border continuing the pane's top border (a
+     2px transparent one showed a gap); the selected tab keeps its 2px
+     underline. */
   .mobile-explorer .explorer-tab:not(.active) {
     border-bottom: 1px solid var(--border-panel);
   }
 
-  /* No border here — the pane's own .panel border (inside) provides it,
-     and it lines up with the tab strip's side borders. A border on both
-     doubled the L/R/bottom edge. */
+  /* No border -- the inner .panel border provides it; both doubled the edge. */
   .mobile-explorer .explorer-content {
     position: relative;
     flex: 1;
@@ -3911,24 +3800,20 @@ summary:focus-visible,
     overflow: hidden;
   }
 
-  /* Tighter content inset than the desktop panel default, matching the
-     app-bar drawers. */
+  /* Tighter content inset than desktop, matching the app-bar drawers. */
   .mobile-explorer .explorer-content .panel {
     padding: var(--space-xs);
   }
 
-  /* Details / Report: drop the panel's right pad and re-add it on the
-     children — 0.5rem on the header, 0.75rem on the scroll area so its
-     scrollbar stops drawing over content (it was overlapping the grade
-     boxes). */
+  /* Details/Report: move the panel's right pad to the children -- 0.5rem
+     header, 0.75rem scroll area so the scrollbar clears content. */
   .mobile-explorer .explorer-content .restaurant-details-panel,
   .mobile-explorer .explorer-content .restaurant-report-panel {
     padding-right: 0;
   }
 
-  /* Header bar ends 0.75rem in, lining its right edge up with the
-     section-header bars inside the scroll area (which sit 0.75rem in via
-     that area's own right pad). */
+  /* Header right edge at 0.75rem to line up with the section-header bars
+     in the scroll area. */
   .mobile-explorer .restaurant-details-panel > .panel-header,
   .mobile-explorer .restaurant-report-panel > .panel-header {
     margin-right: 0.75rem;
@@ -3939,13 +3824,9 @@ summary:focus-visible,
     padding-right: 0.75rem;
   }
 
-  /* Open or half detent, Details / Report: unbound the pane so the
-     record, the inspection history and the score-history chart all flow
-     in the one .mobile-sheet-scroll-body (which keeps its default
-     overflow-y: auto) instead of the chart pinning below a separately
-     scrolling box. .mobile-explorer itself always stays flex:1 -- it's
-     .mobile-sheet-scroll-body, not .mobile-explorer, that needs to
-     collapse to content height here so that scroll body is what scrolls. */
+  /* Open/half, Details/Report: unbind the pane so record, history and
+     chart all flow in .mobile-sheet-scroll-body. .mobile-explorer stays
+     flex:1; the scroll body collapses to content so it's what scrolls. */
   .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-content,
   .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-content,
   .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .explorer-content,
@@ -3964,27 +3845,17 @@ summary:focus-visible,
     overflow: visible;
   }
 
-  /* Half detent, List tab: the list can't show a full page in the short
-     sheet, so lay .explorer-content out at the open-detent height — the
-     bounded card area then measures the same, so the page holds the same
-     restaurants as full height. .mobile-sheet-scroll-body (18.3), sized to
-     the sheet's *real* half-detent space and unaffected by this, scrolls
-     the resulting overflow -- the tab strip above it, a sibling outside
-     .mobile-sheet-scroll-body, never enters that scroll. The header, sort
-     bar, cards and the pagination row all scroll as one block beneath it.
-     An explicit `height` (not just min-height) is required: the
-     `height: 100%` chain down to .restaurant-card-list only resolves
-     against a *definite* parent height, so with min-height alone the card
-     area collapses to its content and the page size tracks the list
-     length. */
+  /* Half detent, List tab: lay .explorer-content out at the open-detent
+     height so the page holds the same restaurants; .mobile-sheet-scroll-body
+     scrolls the overflow. Needs an explicit `height` (not min-height) or
+     the `height: 100%` chain to .restaurant-card-list doesn't resolve and
+     page size tracks list length. */
   .mobile-dashboard[data-detent="half"][data-tab="list"] .mobile-explorer .explorer-content {
     flex: 0 0 auto;
     height: var(--sheet-content-h);
   }
 
-  /* Pagination: keep Previous / Next on the edges, centre the status
-     text between them, and drop the "(N restaurants)" count to its own
-     line so it doesn't wrap raggedly on a narrow list. */
+  /* Pagination: Prev/Next on the edges, status text centred, count on its own line. */
   .mobile-explorer .restaurant-list-pagination .pagination-text {
     flex: 1;
     min-width: 0;
@@ -3995,12 +3866,17 @@ summary:focus-visible,
     display: block;
   }
 
-  /* Sort bar: keep it on one line by tightening the gaps and letting the
-     dropdown triggers hug their label + chevron instead of padding out
-     to a fixed min-width. */
+  /* Sort bar: one line, full width. Labels + toggle natural size; the two
+     dropdowns split the rest equally (flex-basis 0) so they match and the
+     row reaches both edges. */
   .mobile-explorer .restaurant-list-sort-bar {
     flex-wrap: nowrap;
-    gap: 0.35rem;
+    gap: 0.5rem;
+    /* No side padding so it lines up with the flush cards; extra bottom
+       padding sets it off. */
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 1rem;
   }
 
   .mobile-explorer .restaurant-list-sort-bar .sort-label,
@@ -4010,15 +3886,15 @@ summary:focus-visible,
   }
 
   .mobile-explorer .restaurant-list-sort-bar .sort-dropdown {
-    flex: 0 1 auto;
+    flex: 1 1 0;
     min-width: 0;
   }
 
   .mobile-explorer .restaurant-list-sort-bar .sort-dropdown-trigger {
+    width: 100%;
     min-width: 0;
     gap: 0.3rem;
     padding: 0.4rem 0.45rem;
-    justify-content: flex-start;
   }
 
   .mobile-explorer .restaurant-list-sort-bar .sort-dropdown-trigger-label {
@@ -4027,21 +3903,17 @@ summary:focus-visible,
     text-overflow: ellipsis;
   }
 
-  /* Inspection history rows (in Restaurant Details): tighten the fixed
-     column widths, gaps, and badge padding so the row fits a phone-width
-     list pane instead of pushing wider than it. */
+  /* Inspection history rows: tighten column widths, gaps and badge
+     padding to fit a phone-width pane. */
   .mobile-explorer .inspection-history-list li {
     gap: 0.3rem;
     padding: 0.4rem 0.2rem;
-    /* Desktop centers .inspection-violation-counts via its own auto
-       margins (13.2); that's cancelled below for the tighter mobile grid,
-       so distribute the row's leftover space here instead of letting it
-       collapse to a dead gap on the right. */
+    /* Desktop's auto-margin centring (13.2) is cancelled for the mobile
+       grid; distribute leftover space here instead of a dead right gap. */
     justify-content: space-between;
   }
 
-  /* Keep every column a fixed width (just smaller than desktop) so the
-     rows still line up with each other. */
+  /* Fixed column widths (smaller than desktop) so rows still align. */
   .mobile-explorer .inspection-row-date {
     width: 4.75rem;
     min-width: 0;
@@ -4053,32 +3925,44 @@ summary:focus-visible,
   }
 
   .mobile-explorer .inspection-violation-counts {
-    grid-template-columns: 72px 104px;
-    gap: 0.3rem;
+    grid-template-columns: 72px 116px;
+    gap: 0.25rem;
     margin: 0;
   }
 
   .mobile-explorer .inspection-history-list .violation-tag {
     padding: 2px 4px;
-    font-size: 0.7rem;
+    font-size: var(--fs-xs);
   }
 
   .mobile-explorer .inspection-history-list .violation-count-val {
-    font-size: 0.75rem;
+    font-size: var(--fs-xs);
   }
 
-  /* 18.6 SELECTION-SCOPED SCORE HISTORY — on the Details tab. Flows at
-     the end of the shared sheet scroll (18.5) at both open and half
-     detent. Border off: like the explorer panes (18.5), it relies on the
-     card's own edge instead of a nested one. */
+  /* 18.6 SCORE HISTORY — Details tab, flows at the end of the sheet
+     scroll (18.5). No border; relies on the card's own edge. */
   .mobile-perf-chart {
     flex-shrink: 0;
     height: 240px;
+  }
+
+  /* Info takeover: swaps the 240px chart for its info content, filling
+     the pane like the Details/Report info panels (record hidden alongside). */
+  .mobile-perf-chart-info-open {
+    height: auto;
   }
 
   /* Match the explorer panes' tighter content inset. */
   .mobile-perf-chart .panel {
     padding: var(--space-xs);
     border: none;
+  }
+
+  .mobile-perf-chart-info-open > .panel > .panel-header {
+    margin-right: 0.75rem;
+  }
+
+  .mobile-perf-chart-info-open > .panel > .panel-scroll-content {
+    padding-right: 0.75rem;
   }
 }

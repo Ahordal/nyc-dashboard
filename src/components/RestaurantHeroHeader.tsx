@@ -28,12 +28,12 @@ export default function RestaurantHeroHeader({
   return (
     <div className="details-hero-header">
       <div className="details-hero-main">
-        <div
+        <h3
           className="details-hero-title"
           style={{ color: categoryColor }}
           title={displayName}>
           {displayName}
-        </div>
+        </h3>
       </div>
 
       <div className="details-hero-badges">

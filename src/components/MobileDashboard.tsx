@@ -146,6 +146,9 @@ export default function MobileDashboard({
     "search" | "filters" | "info" | "grades" | null
   >(null);
 
+  // Score-chart info takeover (see showPerformanceChart below).
+  const [perfInfoOpen, setPerfInfoOpen] = useState(false);
+
   // Opening Search drops the sheet to its half detent on the list so the
   // map stays visible while typing. Closing it (or switching drawers)
   // keeps that half view while a query is still active — the filtered
@@ -170,19 +173,38 @@ export default function MobileDashboard({
   // handle row: up (peek -> half -> open when browsing, peek -> open
   // directly once a restaurant is selected — half's list/browse stopover
   // has nothing to add over a card the user already committed to) and
-  // down (open -> half -> peek, always, so collapsing keeps the graceful
-  // step-down). peek shows only up, open only down, half both. Tapping
-  // the peek card itself jumps straight to open (a committed selection).
+  // down (open -> half -> peek, so collapsing keeps the graceful
+  // step-down — except it goes open -> peek directly when that just
+  // undoes an untouched peek -> open skip). peek shows only up, open only
+  // down, half both. Tapping the peek card itself jumps straight to open
+  // (a committed selection).
   const searching = activeDrawer === "search";
+  // Set when the up chevron skips peek -> open directly (a committed
+  // selection, nothing moved the map). While it holds, the first down
+  // chevron reverses that exact jump straight back to peek instead of
+  // stopping at half. Any selection pans the map and forces half on its
+  // own, so it clears this (see the camis-change effect below).
+  const skippedToOpenRef = useRef(false);
   const expandSheet = useCallback(
     () =>
-      setDetent((d) =>
-        d === "peek" ? (selectedRestaurant ? "open" : "half") : "open",
-      ),
+      setDetent((d) => {
+        if (d !== "peek") return "open";
+        if (!selectedRestaurant) return "half";
+        skippedToOpenRef.current = true;
+        return "open";
+      }),
     [setDetent, selectedRestaurant],
   );
   const collapseSheet = useCallback(
-    () => setDetent((d) => (d === "open" ? "half" : "peek")),
+    () =>
+      setDetent((d) => {
+        if (d !== "open") return "peek";
+        if (skippedToOpenRef.current) {
+          skippedToOpenRef.current = false;
+          return "peek";
+        }
+        return "half";
+      }),
     [setDetent],
   );
 
@@ -218,12 +240,16 @@ export default function MobileDashboard({
     [onSelectRestaurant, setDetent],
   );
 
-  // Clearing the selection drops the sheet back to peek.
+  // Any change of selection pans the map and routes through its own
+  // detent (half), so a pending peek<->open undo no longer applies.
+  // Clearing the selection also drops the sheet back to peek.
   const prevCamisRef = useRef<string | null>(null);
   useEffect(() => {
     const camis = selectedRestaurant?.camis ?? null;
-    if (!camis && prevCamisRef.current) {
-      setDetent("peek");
+    if (camis !== prevCamisRef.current) {
+      skippedToOpenRef.current = false;
+      setPerfInfoOpen(false);
+      if (!camis) setDetent("peek");
     }
     prevCamisRef.current = camis;
   }, [selectedRestaurant, setDetent]);
@@ -256,6 +282,20 @@ export default function MobileDashboard({
   // the details content (CSS 18.5 / 18.6).
   const showPerformanceChart =
     selectedRestaurant != null && activeExplorerTab === "details";
+
+  // The chart's info button opens a full-pane takeover (like the Details /
+  // Report info panels) instead of a modal. Close it whenever the chart
+  // itself goes away — leaving the Details tab, or clearing the selection.
+  useEffect(() => {
+    if (!showPerformanceChart) setPerfInfoOpen(false);
+  }, [showPerformanceChart]);
+
+  // Opening the takeover: reset the shared sheet scroll so its panel
+  // header is at the top, not wherever the record was scrolled to.
+  const sheetScrollBodyRef = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    if (perfInfoOpen) sheetScrollBodyRef.current?.scrollTo({ top: 0 });
+  }, [perfInfoOpen]);
 
   function paneClass(tab: ExplorerTab, base: string) {
     return `${base} ${activeExplorerTab === tab ? "" : "explorer-pane-hidden"}`;
@@ -388,8 +428,11 @@ export default function MobileDashboard({
                 onTabChange={onExplorerTabChange}
               />
 
-              <div className="mobile-sheet-scroll-body">
-                <div className="explorer-content">
+              <div className="mobile-sheet-scroll-body" ref={sheetScrollBodyRef}>
+                <div
+                  className={`explorer-content${
+                    perfInfoOpen ? " explorer-pane-hidden" : ""
+                  }`}>
                   <div
                     id={tabPanelId("list")}
                     role="tabpanel"
@@ -439,7 +482,10 @@ export default function MobileDashboard({
                 </div>
 
                 {showPerformanceChart && (
-                  <div className="mobile-perf-chart">
+                  <div
+                    className={`mobile-perf-chart${
+                      perfInfoOpen ? " mobile-perf-chart-info-open" : ""
+                    }`}>
                     <ErrorBoundary
                       context="PerformanceChart"
                       resetKey={selectedRestaurant?.camis ?? null}
@@ -455,6 +501,8 @@ export default function MobileDashboard({
                           onSelectInspection={handleChartPreview}
                           hoveredInspectionId={hoveredInspectionId}
                           selectedInspectionId={reportInspectionId}
+                          onInfoClick={() => setPerfInfoOpen((v) => !v)}
+                          isInfoOpen={perfInfoOpen}
                           tooltipVariant="compact"
                         />
                       </Suspense>

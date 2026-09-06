@@ -50,6 +50,12 @@ type PerformanceChartProps = {
   // for the short pinned chart, so it drops to a small grade + score
   // label on the active dot.
   tooltipVariant?: "full" | "compact";
+  // Mobile: when set, the info button calls this (a full-pane takeover
+  // wired up by MobileDashboard) instead of opening the centred modal,
+  // and this component swaps its body for the info content while
+  // isInfoOpen is true.
+  onInfoClick?: () => void;
+  isInfoOpen?: boolean;
 };
 
 type RechartsDotProps = {
@@ -294,6 +300,8 @@ export default function PerformanceChart({
   hoveredInspectionId,
   selectedInspectionId,
   tooltipVariant = "full",
+  onInfoClick,
+  isInfoOpen = false,
 }: PerformanceChartProps) {
   const instructionsId = useId();
 
@@ -471,6 +479,28 @@ export default function PerformanceChart({
     },
     [exitKeyboardMode, setPointerPoint],
   );
+
+  // Mobile info takeover: replace the chart with its info content, filling
+  // the pane like the Restaurant Details / Inspection Reports info panels.
+  // MobileDashboard hides the record and unbinds the height around this.
+  if (isInfoOpen) {
+    return (
+      <section className="panel performance-chart-panel">
+        {/* Full info takeover reads as a standalone information panel, so
+            its header is the default H2 (unlike the chart-in-context
+            header below, which sits level with the section headers). */}
+        <PanelHeader
+          title="Restaurant Performance Over Time"
+          infoContent={PERFORMANCE_CHART_INFO_CONTENT}
+          onInfoClick={onInfoClick}
+          isInfoOpen
+        />
+        <div className="panel-scroll-content">
+          {PERFORMANCE_CHART_INFO_CONTENT}
+        </div>
+      </section>
+    );
+  }
 
   let content;
 
@@ -698,8 +728,11 @@ export default function PerformanceChart({
     <section className="panel performance-chart-panel">
       <PanelHeader
         title="Restaurant Performance Over Time"
+        titleVariant="section"
         infoContent={PERFORMANCE_CHART_INFO_CONTENT}
-        infoVariant="modal"
+        {...(onInfoClick
+          ? { onInfoClick, isInfoOpen }
+          : { infoVariant: "modal" as const })}
       />
 
       {content}

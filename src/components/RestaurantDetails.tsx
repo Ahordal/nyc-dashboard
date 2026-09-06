@@ -310,7 +310,7 @@ export default function RestaurantDetails({
           action={restaurant.action}
         />
 
-        <h4 className="section-header">Restaurant Information</h4>
+        <h3 className="section-header">Restaurant Information</h3>
 
         <table className="details-table">
           <tbody>
@@ -357,7 +357,7 @@ export default function RestaurantDetails({
           </tbody>
         </table>
 
-        <h4 className="section-header">Geographical Information</h4>
+        <h3 className="section-header">Geographical Information</h3>
 
         <table className="details-table">
           <tbody>
@@ -429,7 +429,7 @@ export default function RestaurantDetails({
           </tbody>
         </table>
 
-        <h4 className="section-header">Inspection History</h4>
+        <h3 className="section-header">Inspection History</h3>
 
         {isLoadingHistory && (
           <p className="details-loading">Loading inspection history…</p>

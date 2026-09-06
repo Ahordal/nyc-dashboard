@@ -350,8 +350,13 @@ export default function InspectionMapView({
       // The graphic already carries every field the dashboard reads
       // (RESTAURANT_OUT_FIELDS); violations are fetched separately from
       // history/{camis}.json on select, so there's no follow-up query
-      // here.
-      if (graphicHit) {
+      // here. A hit on the already-selected restaurant clears it: click
+      // tolerance (and the post-select pan sliding its dot toward centre)
+      // otherwise makes a dismiss click land back on that same dot.
+      if (
+        graphicHit &&
+        graphicHit.graphic.attributes.id !== selectedRestaurantIdRef.current
+      ) {
         onSelectRestaurantRef.current?.(graphicHit.graphic.attributes);
       } else {
         onSelectRestaurantRef.current?.(null);
