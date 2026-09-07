@@ -72,13 +72,11 @@ const NO_SECONDARY = "none";
 
 const SORT_NOTICE_DURATION_MS = 1300;
 
-const CARD_GAP = 8;
-// .restaurant-card height + CARD_GAP. The card grows by one line (via
-// the .with-distance CSS rule) while a Search Radius point is active so
-// the Distance line has room; keep these in sync with global.css.
-const CARD_HEIGHT = 80 + CARD_GAP;
-const CARD_HEIGHT_WITH_DISTANCE = 100 + CARD_GAP;
-const MIN_PAGE_SIZE = 4;
+// Fixed page size. The card area scrolls when a page overflows it
+// (.restaurant-card-list on desktop, the bottom sheet on mobile), so the
+// count no longer tracks viewport height and page N always holds the
+// same restaurants.
+const PAGE_SIZE = 10;
 
 type RestaurantListProps = {
   restaurants: RestaurantProperties[];
@@ -120,11 +118,6 @@ export default function RestaurantList({
   const [secondarySort, setSecondarySort] = useState<SortKeyId | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
-
-  const rowHeight = searchRadiusPoint
-    ? CARD_HEIGHT_WITH_DISTANCE
-    : CARD_HEIGHT;
 
   // The map-view query is the list's source, plus the selected restaurant
   // if that query doesn't carry it. Everything below (sort, pagination,
@@ -138,41 +131,11 @@ export default function RestaurantList({
     return alreadyListed ? restaurants : [...restaurants, selectedRestaurant];
   }, [restaurants, selectedRestaurant]);
 
-  const containerRef = useRef<HTMLDivElement | null>(null);
   const cardListRef = useRef<HTMLDivElement | null>(null);
   const prevRestaurantCountRef = useRef(listRestaurants.length);
   const prevSelectedIdRef = useRef<string | null>(selectedRestaurantId);
   const prevSortRef = useRef({ primarySort, secondarySort, sortDirection });
   const preRadiusPrimarySortRef = useRef<SortKeyId>(primarySort);
-
-  useEffect(() => {
-    const cardList = cardListRef.current;
-    if (!cardList) return;
-
-    const recomputePageSize = () => {
-      const availableHeight = cardList.clientHeight;
-      // On an inactive explorer tab this pane is display:none, so
-      // clientHeight is 0, and ResizeObserver still fires for that
-      // transition. Bail on non-positive heights so the page size keeps
-      // its last good value instead of collapsing to MIN_PAGE_SIZE every
-      // time the user leaves the tab and comes back.
-      if (availableHeight <= 0) return;
-      // Whole rows that fit. No "+ CARD_GAP" for the absent trailing gap:
-      // that packs the page to the exact pixel, so the taller .with-distance
-      // cards or any sub-pixel layout drift clip the last card. Keeping a
-      // full gap of slack costs a card only right at the boundary.
-      const fit = Math.floor(availableHeight / rowHeight);
-      setPageSize(Math.max(MIN_PAGE_SIZE, fit));
-    };
-
-    recomputePageSize();
-    const resizeObserver = new ResizeObserver(recomputePageSize);
-    resizeObserver.observe(cardList);
-
-    return () => resizeObserver.disconnect();
-    // rowHeight changes when the Search Radius tool toggles the taller
-    // .with-distance cards; re-measure so pagination stays correct.
-  }, [rowHeight]);
 
   const sorted = useMemo(
     () =>
@@ -250,7 +213,7 @@ export default function RestaurantList({
     if (selectedRestaurantId && sorted.length > 0) {
       const index = sorted.findIndex((r) => r.id === selectedRestaurantId);
       if (index !== -1) {
-        const targetPage = Math.floor(index / pageSize) + 1;
+        const targetPage = Math.floor(index / PAGE_SIZE) + 1;
         setPage(targetPage);
         return;
       }
@@ -262,7 +225,6 @@ export default function RestaurantList({
   }, [
     listRestaurants.length,
     selectedRestaurantId,
-    pageSize,
     sorted,
     primarySort,
     secondarySort,
@@ -274,14 +236,25 @@ export default function RestaurantList({
   // return to page 1 rather than stranding the user on a partial page
   // that reads as "the list is shorter than it should be".
   useEffect(() => {
-    const pageCount = Math.max(1, Math.ceil(sorted.length / pageSize));
+    const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
     if (page > pageCount) setPage(1);
-  }, [sorted.length, pageSize, page]);
+  }, [sorted.length, page]);
 
-  const totalPages = Math.max(1, Math.ceil(sorted.length / pageSize));
+  const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages);
-  const pageStart = (clampedPage - 1) * pageSize;
-  const pageItems = sorted.slice(pageStart, pageStart + pageSize);
+  const pageStart = (clampedPage - 1) * PAGE_SIZE;
+  const pageItems = sorted.slice(pageStart, pageStart + PAGE_SIZE);
+
+  // A page change swaps the whole card set; return to the top of it.
+  // Desktop: the card list scrolls its own overflow. Mobile: the bottom
+  // sheet is the scroller (pagination sits below the fold) - closest()
+  // finds it there and returns null elsewhere.
+  useEffect(() => {
+    cardListRef.current?.scrollTo({ top: 0 });
+    cardListRef.current
+      ?.closest(".mobile-sheet-scroll-body")
+      ?.scrollTo({ top: 0 });
+  }, [clampedPage]);
 
   // Distance only appears as a sort field once a search radius point is
   // active; it's meaningless otherwise.
@@ -336,7 +309,6 @@ export default function RestaurantList({
         <div className="panel-scroll-content">{infoContent}</div>
       ) : (
         <div
-          ref={containerRef}
           className={`restaurant-list-container${
             searchRadiusPoint ? " with-distance" : ""
           }`}>

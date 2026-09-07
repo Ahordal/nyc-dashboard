@@ -1127,7 +1127,13 @@ summary:focus-visible,
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  overflow: hidden;
+  /* Fixed PAGE_SIZE (RestaurantList.tsx) usually overflows this pane;
+     scroll it, with the pagination row pinned below. Mobile overrides
+     this to flow and lets the bottom sheet scroll instead (section 18.5).
+     Needs min-height:0 to shrink below content. */
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
   margin-bottom: 0.5rem;
   width: 100%;
   min-width: 0;
@@ -1152,8 +1158,7 @@ summary:focus-visible,
   opacity: 0.85;
 }
 
-/* Extra Distance line when Search Radius is active. Keep in sync with
-   CARD_HEIGHT_WITH_DISTANCE in RestaurantList.tsx. */
+/* Extra Distance line when Search Radius is active. */
 .restaurant-list-container.with-distance .restaurant-card {
   height: 100px;
 }
@@ -3030,16 +3035,9 @@ summary:focus-visible,
     --appbar-h: calc(52px + env(safe-area-inset-top));
     --strip-h: 34px;
     --sheet-handle-h: 32px;
-    /* Fixed via .explorer-tabs height (18.5) so --sheet-content-h is exact. */
+    /* .explorer-tabs is pinned to this exact height (18.5) so the tab
+       strip's footprint doesn't drift with font metrics. */
     --explorer-tabs-h: 36px;
-    /* Height .mobile-explorer gets at the open detent (sheet - handle). */
-    --sheet-explorer-h: calc(
-      100dvh - var(--appbar-h) - var(--strip-h) - 16px - var(--sheet-handle-h)
-    );
-    /* Open-detent height for .explorer-content (explorer minus tab strip).
-       The half/list rule (18.5) lays the list out at this size so its
-       page count matches; 18.3 scrolls the overflow. */
-    --sheet-content-h: calc(var(--sheet-explorer-h) - var(--explorer-tabs-h));
     position: relative;
     width: 100%;
     height: 100dvh;
@@ -3787,9 +3785,9 @@ summary:focus-visible,
     background: transparent;
   }
 
-  /* 18.5 EXPLORER — List tab gets a bounded box so pagination measures a
-     real height. Details/Report unbind (below) so record, history and
-     chart flow together in .mobile-sheet-scroll. */
+  /* 18.5 EXPLORER — every tab flows in .mobile-sheet-scroll-body (18.3):
+     the list at its fixed page height, Details/Report with record,
+     history and chart stacked. Nothing here scrolls on its own. */
 
   .mobile-explorer {
     display: flex;
@@ -3798,7 +3796,8 @@ summary:focus-visible,
     min-height: 0;
   }
 
-  /* Explicit height so --explorer-tabs-h (18.1) is exact. */
+  /* Pin the strip to a fixed height rather than letting font metrics set
+     it (--explorer-tabs-h, 18.1). */
   .mobile-explorer .explorer-tabs {
     height: var(--explorer-tabs-h);
   }
@@ -3850,9 +3849,12 @@ summary:focus-visible,
     padding-right: 0.75rem;
   }
 
-  /* Open/half, Details/Report: unbind the pane so record, history and
-     chart all flow in .mobile-sheet-scroll-body. .mobile-explorer stays
-     flex:1; the scroll body collapses to content so it's what scrolls. */
+  /* Unbind the active pane so its content flows in
+     .mobile-sheet-scroll-body (that scroll body is what scrolls;
+     .mobile-explorer stays flex:1). List: the fixed-size page. Details/
+     Report: record, history and chart stacked. */
+  .mobile-dashboard[data-tab="list"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-tab="list"] .mobile-explorer .explorer-content > div,
   .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-content,
   .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-content,
   .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .explorer-content,
@@ -3871,14 +3873,17 @@ summary:focus-visible,
     overflow: visible;
   }
 
-  /* Half detent, List tab: lay .explorer-content out at the open-detent
-     height so the page holds the same restaurants; .mobile-sheet-scroll-body
-     scrolls the overflow. Needs an explicit `height` (not min-height) or
-     the `height: 100%` chain to .restaurant-card-list doesn't resolve and
-     page size tracks list length. */
-  .mobile-dashboard[data-detent="half"][data-tab="list"] .mobile-explorer .explorer-content {
-    flex: 0 0 auto;
-    height: var(--sheet-content-h);
+  /* List tab: the list flows at its fixed page height and the sheet
+     scrolls it (above). .restaurant-card-list must not scroll on its own
+     here — a scroll region nested in the sheet scroll traps touch drags. */
+  .mobile-explorer .restaurant-list-container {
+    height: auto;
+  }
+
+  .mobile-explorer .restaurant-card-list {
+    flex: none;
+    min-height: auto;
+    overflow: visible;
   }
 
   /* Pagination: Prev/Next on the edges, status text centred, count on its own line. */
