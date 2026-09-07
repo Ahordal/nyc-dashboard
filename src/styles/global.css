@@ -3055,11 +3055,32 @@ summary:focus-visible,
     bottom: 0;
   }
 
-  /* Bottom map readouts sit behind the peek sheet -- drop them on phones;
-     zoom buttons stay. */
-  .mobile-dashboard .map-bottom-controls,
+  /* Editable scale/zoom readouts are a desktop pointer affordance -- drop
+     them on phones. Zoom buttons stay. */
+  .mobile-dashboard .map-bottom-controls {
+    display: none;
+  }
+
+  /* Graphical scale bar rides just above the sheet through the peek and half
+     detents. At the open detent the map is fully covered, so hide it. */
   .mobile-dashboard .map-scale-bar-container {
     display: none;
+    bottom: calc(118px + env(safe-area-inset-bottom) + 0.5rem);
+    right: 0.5rem;
+  }
+
+  .mobile-dashboard[data-detent="peek"] .map-scale-bar-container,
+  .mobile-dashboard[data-detent="half"] .map-scale-bar-container {
+    display: block;
+  }
+
+  .mobile-dashboard[data-detent="peek"][data-peek="empty"]
+    .map-scale-bar-container {
+    bottom: calc(58px + env(safe-area-inset-bottom) + 0.5rem);
+  }
+
+  .mobile-dashboard[data-detent="half"] .map-scale-bar-container {
+    bottom: calc((100dvh - var(--appbar-h) - var(--strip-h)) * 0.4 + 0.5rem);
   }
 
   /* Tuck the remaining map control chips nearer the edges on a phone. */
