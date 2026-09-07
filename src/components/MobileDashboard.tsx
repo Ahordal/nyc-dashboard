@@ -146,6 +146,11 @@ export default function MobileDashboard({
     "search" | "filters" | "info" | "grades" | null
   >(null);
 
+  // Which of the two overlapping surfaces was touched last — a top drawer
+  // or the bottom sheet — so the most recently opened one stacks on top
+  // (CSS keys off data-front). Only matters while a drawer is open.
+  const [frontSurface, setFrontSurface] = useState<"sheet" | "drawer">("sheet");
+
   // Score-chart info takeover (see showPerformanceChart below).
   const [perfInfoOpen, setPerfInfoOpen] = useState(false);
 
@@ -159,6 +164,7 @@ export default function MobileDashboard({
   const handleDrawerChange = useCallback(
     (drawer: "search" | "filters" | "info" | "grades" | null) => {
       setActiveDrawer(drawer);
+      setFrontSurface(drawer ? "drawer" : "sheet");
       if (drawer === "search") {
         if (activeExplorerTab !== "list") onExplorerTabChange("list");
         setDetent("half");
@@ -186,17 +192,20 @@ export default function MobileDashboard({
   // own, so it clears this (see the camis-change effect below).
   const skippedToOpenRef = useRef(false);
   const expandSheet = useCallback(
-    () =>
+    () => {
+      setFrontSurface("sheet");
       setDetent((d) => {
         if (d !== "peek") return "open";
         if (!selectedRestaurant) return "half";
         skippedToOpenRef.current = true;
         return "open";
-      }),
+      });
+    },
     [setDetent, selectedRestaurant],
   );
   const collapseSheet = useCallback(
-    () =>
+    () => {
+      setFrontSurface("sheet");
       setDetent((d) => {
         if (d !== "open") return "peek";
         if (skippedToOpenRef.current) {
@@ -204,9 +213,16 @@ export default function MobileDashboard({
           return "peek";
         }
         return "half";
-      }),
+      });
+    },
     [setDetent],
   );
+
+  // Peek-row / peek-card tap: expand the sheet and bring it to the front.
+  const openSheet = useCallback(() => {
+    setFrontSurface("sheet");
+    open();
+  }, [open]);
 
   // Reaching "open" (a commit to reading a record) closes Search rather
   // than leaving its drawer stranded behind a full-height sheet.
@@ -220,7 +236,10 @@ export default function MobileDashboard({
   const handleMapSelect = useCallback(
     (restaurant: RestaurantProperties | null) => {
       onSelectRestaurant(restaurant);
-      if (restaurant) setDetent("peek");
+      if (restaurant) {
+        setFrontSurface("sheet");
+        setDetent("peek");
+      }
     },
     [onSelectRestaurant, setDetent],
   );
@@ -234,6 +253,7 @@ export default function MobileDashboard({
       onSelectRestaurant(restaurant);
       if (restaurant) {
         setActiveDrawer(null);
+        setFrontSurface("sheet");
         setDetent("half");
       }
     },
@@ -297,6 +317,12 @@ export default function MobileDashboard({
     if (perfInfoOpen) sheetScrollBodyRef.current?.scrollTo({ top: 0 });
   }, [perfInfoOpen]);
 
+  // Switching tabs starts the new pane at the top rather than inheriting
+  // the previous pane's scroll position in the shared scroll container.
+  useEffect(() => {
+    sheetScrollBodyRef.current?.scrollTo({ top: 0 });
+  }, [activeExplorerTab]);
+
   function paneClass(tab: ExplorerTab, base: string) {
     return `${base} ${activeExplorerTab === tab ? "" : "explorer-pane-hidden"}`;
   }
@@ -327,6 +353,7 @@ export default function MobileDashboard({
     <main
       className="mobile-dashboard"
       data-detent={detent}
+      data-front={frontSurface}
       data-peek={selectedRestaurant ? "card" : "empty"}
       data-tab={activeExplorerTab}>
       <MobileAppBar
@@ -343,6 +370,7 @@ export default function MobileDashboard({
         gradeCounts={gradeCounts}
         visibleRestaurants={visibleRestaurants}
         filters={filters}
+        searchQuery={searchQuery}
         searchRadiusMiles={radiusMiles}
         open={activeDrawer === "grades"}
         onToggle={() =>
@@ -369,6 +397,7 @@ export default function MobileDashboard({
               initialSelectedCamis={pendingCamisFromUrl}
               onInitialSelectionResolved={onInitialSelectionResolved}
               showHoverCard={false}
+              showHoverGlow={false}
             />
           </Suspense>
         </ErrorBoundary>
@@ -402,7 +431,7 @@ export default function MobileDashboard({
               <RestaurantCard
                 restaurant={selectedRestaurant}
                 isSelected
-                onClick={open}
+                onClick={openSheet}
               />
             </div>
           ) : (
@@ -411,7 +440,7 @@ export default function MobileDashboard({
               className="mobile-sheet-peek"
               onClick={() => {
                 if (activeExplorerTab !== "list") onExplorerTabChange("list");
-                open();
+                openSheet();
               }}
               aria-label={`Expand panel to ${browsePromptLabel.toLowerCase()}`}>
               <span className="mobile-sheet-peek-label">
@@ -446,6 +475,7 @@ export default function MobileDashboard({
                       onSelectRestaurant={handleListSelect}
                       onHoverRestaurant={onHoverRestaurant}
                       searchRadiusPoint={searchRadiusPoint}
+                      isMobile
                     />
                   </div>
 
@@ -462,6 +492,7 @@ export default function MobileDashboard({
                       onSelectInspection={onSelectInspection}
                       onHoverInspection={onHoverInspection}
                       historyScrollTarget={historyScrollTarget}
+                      isMobile
                     />
                   </div>
 
@@ -504,6 +535,7 @@ export default function MobileDashboard({
                           onInfoClick={() => setPerfInfoOpen((v) => !v)}
                           isInfoOpen={perfInfoOpen}
                           tooltipVariant="compact"
+                          isMobile
                         />
                       </Suspense>
                     </ErrorBoundary>

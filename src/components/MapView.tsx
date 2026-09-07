@@ -86,6 +86,10 @@ type MapViewProps = {
   // preview before committing, so mobile suppresses it and relies on the
   // sheet's own selection view instead.
   showHoverCard?: boolean;
+  // The white glow drawn around a list-hovered point. Pointless on touch
+  // (no hover state to preview), so mobile turns it off; the selected
+  // point still glows.
+  showHoverGlow?: boolean;
 };
 
 export default function InspectionMapView({
@@ -102,6 +106,7 @@ export default function InspectionMapView({
   initialSelectedCamis = null,
   onInitialSelectionResolved,
   showHoverCard = true,
+  showHoverGlow = true,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
@@ -131,7 +136,7 @@ export default function InspectionMapView({
     layerRef,
     viewRef,
     selectedRestaurantId,
-    hoveredRestaurantId,
+    hoveredRestaurantId: showHoverGlow ? hoveredRestaurantId : null,
   });
 
   const selectedRestaurantIdRef = useRef<string | null>(selectedRestaurantId);

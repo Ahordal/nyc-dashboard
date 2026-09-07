@@ -333,6 +333,7 @@ export default function Dashboard() {
                 <GradeChart
                   counts={gradeCounts}
                   filters={filters}
+                  searchQuery={searchQuery}
                   searchRadiusMiles={
                     searchRadiusPoint ? activeRadiusMiles : null
                   }

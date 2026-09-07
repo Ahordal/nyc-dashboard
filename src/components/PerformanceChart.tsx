@@ -56,6 +56,9 @@ type PerformanceChartProps = {
   // isInfoOpen is true.
   onInfoClick?: () => void;
   isInfoOpen?: boolean;
+  // Mobile drops the desktop hover/keyboard bullets from the info panel
+  // for the tap-only interaction it actually has.
+  isMobile?: boolean;
 };
 
 type RechartsDotProps = {
@@ -84,7 +87,7 @@ const GRADE_BAND_MINS = [
   },
 ];
 
-const PERFORMANCE_CHART_INFO_CONTENT = (
+const performanceChartInfoContent = (isMobile: boolean) => (
   <InfoPopupContent
     overview={
       <>
@@ -105,20 +108,29 @@ const PERFORMANCE_CHART_INFO_CONTENT = (
       </>
     }
     howToUse={
-      <ul>
-        <li>
-          Hover over a chart point or Inspection History row in the restaurant
-          details panel to preview that inspection.
-        </li>
-        <li>
-          Select an inspection to open its full report and keep its chart popup
-          visible.
-        </li>
-        <li>
-          Tab to the chart, then use the left/right arrow keys to move between
-          points; press Enter or Space to open the selected report.
-        </li>
-      </ul>
+      isMobile ? (
+        <ul>
+          <li>
+            Tap a point to highlight its inspection in the Inspection History
+            list on the Details tab and scroll that row into view.
+          </li>
+        </ul>
+      ) : (
+        <ul>
+          <li>
+            Hover over a chart point or Inspection History row in the restaurant
+            details panel to preview that inspection.
+          </li>
+          <li>
+            Select an inspection to open its full report and keep its chart
+            popup visible.
+          </li>
+          <li>
+            Tab to the chart, then use the left/right arrow keys to move between
+            points; press Enter or Space to open the selected report.
+          </li>
+        </ul>
+      )
     }
     statuses={
       <ul>
@@ -302,8 +314,14 @@ export default function PerformanceChart({
   tooltipVariant = "full",
   onInfoClick,
   isInfoOpen = false,
+  isMobile = false,
 }: PerformanceChartProps) {
   const instructionsId = useId();
+
+  const infoContent = useMemo(
+    () => performanceChartInfoContent(isMobile),
+    [isMobile],
+  );
 
   const chartBodyRef = useRef<HTMLDivElement | null>(null);
 
@@ -491,13 +509,11 @@ export default function PerformanceChart({
             header below, which sits level with the section headers). */}
         <PanelHeader
           title="Restaurant Performance Over Time"
-          infoContent={PERFORMANCE_CHART_INFO_CONTENT}
+          infoContent={infoContent}
           onInfoClick={onInfoClick}
           isInfoOpen
         />
-        <div className="panel-scroll-content">
-          {PERFORMANCE_CHART_INFO_CONTENT}
-        </div>
+        <div className="panel-scroll-content">{infoContent}</div>
       </section>
     );
   }
@@ -551,11 +567,6 @@ export default function PerformanceChart({
           position: "relative",
           width: "100%",
           height: "100%",
-          outline: "none",
-
-          boxShadow: keyboardNav.isChartFocusVisible
-            ? "inset 0 0 0 2px var(--text-heading)"
-            : "none",
         }}>
         <span id={instructionsId} style={VISUALLY_HIDDEN_STYLE}>
           Use the left and right arrow keys to move between inspections. Press
@@ -729,7 +740,7 @@ export default function PerformanceChart({
       <PanelHeader
         title="Restaurant Performance Over Time"
         titleVariant="section"
-        infoContent={PERFORMANCE_CHART_INFO_CONTENT}
+        infoContent={infoContent}
         {...(onInfoClick
           ? { onInfoClick, isInfoOpen }
           : { infoVariant: "modal" as const })}

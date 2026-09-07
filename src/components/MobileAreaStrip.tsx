@@ -38,6 +38,7 @@ type MobileAreaStripProps = {
   gradeCounts: GradeCounts;
   visibleRestaurants: RestaurantProperties[];
   filters: Filters;
+  searchQuery: string;
   searchRadiusMiles: SearchRadiusMiles | null;
   // Drawer open/closed, controlled by MobileDashboard (mutually exclusive
   // with the app-bar Filters / Info drawers).
@@ -49,6 +50,7 @@ export default function MobileAreaStrip({
   gradeCounts,
   visibleRestaurants,
   filters,
+  searchQuery,
   searchRadiusMiles,
   open,
   onToggle,
@@ -133,6 +135,7 @@ export default function MobileAreaStrip({
                 <GradeChart
                   counts={displayCounts}
                   filters={filters}
+                  searchQuery={searchQuery}
                   searchRadiusMiles={searchRadiusMiles}
                 />
               </Suspense>

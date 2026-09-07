@@ -25,7 +25,7 @@ import {
 } from "../utils/restaurantSort";
 import type { SortKeyId, SortDirection } from "../utils/restaurantSort";
 
-function restaurantListInfoContent(withinRadius: boolean) {
+function restaurantListInfoContent(withinRadius: boolean, isMobile: boolean) {
   return (
     <InfoPopupContent
       overview={
@@ -35,7 +35,7 @@ function restaurantListInfoContent(withinRadius: boolean) {
             ? "within the active Search Radius"
             : "currently visible in the map view"}
           , respecting any active Grade and Borough filters and the search
-          field above.
+          field{isMobile ? "" : " above"}.
         </p>
       }
       howToUse={
@@ -97,6 +97,9 @@ type RestaurantListProps = {
   // is already scoped to the circle upstream (MapView's query); this is
   // only used to show/sort each card's distance from the point.
   searchRadiusPoint?: SearchRadiusPoint | null;
+  // Mobile: the search field lives in the app-bar drawer, not directly
+  // above the list, so the info panel drops the "above" wording.
+  isMobile?: boolean;
   children?: React.ReactNode; // Slot for external filter notice overlay
 };
 
@@ -108,6 +111,7 @@ export default function RestaurantList({
   onSelectRestaurant,
   onHoverRestaurant,
   searchRadiusPoint = null,
+  isMobile = false,
   children,
 }: RestaurantListProps) {
   const [showInfo, setShowInfo] = useState(false);
@@ -153,9 +157,11 @@ export default function RestaurantList({
       // its last good value instead of collapsing to MIN_PAGE_SIZE every
       // time the user leaves the tab and comes back.
       if (availableHeight <= 0) return;
-      // + CARD_GAP: the last card on a page has no trailing gap, so a
-      // page fits one more than availableHeight / row height.
-      const fit = Math.floor((availableHeight + CARD_GAP) / rowHeight);
+      // Whole rows that fit. No "+ CARD_GAP" for the absent trailing gap:
+      // that packs the page to the exact pixel, so the taller .with-distance
+      // cards or any sub-pixel layout drift clip the last card. Keeping a
+      // full gap of slack costs a card only right at the boundary.
+      const fit = Math.floor(availableHeight / rowHeight);
       setPageSize(Math.max(MIN_PAGE_SIZE, fit));
     };
 
@@ -311,8 +317,8 @@ export default function RestaurantList({
     : SORT_KEYS[primarySort].label;
 
   const infoContent = useMemo(
-    () => restaurantListInfoContent(searchRadiusPoint != null),
-    [searchRadiusPoint],
+    () => restaurantListInfoContent(searchRadiusPoint != null, isMobile),
+    [searchRadiusPoint, isMobile],
   );
 
   return (

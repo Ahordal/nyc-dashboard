@@ -5,7 +5,7 @@
 // row previews its chart point; activating one opens that inspection's
 // full report.
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
@@ -115,7 +115,7 @@ const GRADE_PENDING_NOTES: Record<string, string> = {
     "No scored inspection on record — DOHMH has no inspection date for this establishment.",
 };
 
-const RESTAURANT_INFO_CONTENT = (
+const restaurantInfoContent = (isMobile: boolean) => (
   <InfoPopupContent
     overview={
       <ul>
@@ -128,22 +128,36 @@ const RESTAURANT_INFO_CONTENT = (
       </ul>
     }
     howToUse={
-      <ul>
-        <li>
-          Hover over or focus an Inspection History row to preview its point on
-          the performance chart.
-        </li>
+      isMobile ? (
+        <ul>
+          <li>
+            Tap an Inspection History row to open that inspection&apos;s full
+            report.
+          </li>
 
-        <li>
-          Select an Inspection History row to open that inspection&apos;s full
-          report.
-        </li>
+          <li>
+            Use the Google Maps link to open the restaurant&apos;s location in
+            Google Maps.
+          </li>
+        </ul>
+      ) : (
+        <ul>
+          <li>
+            Hover over or focus an Inspection History row to preview its point
+            on the performance chart.
+          </li>
 
-        <li>
-          Use the Google Maps link to open the restaurant&apos;s location on
-          Google Maps in a new tab.
-        </li>
-      </ul>
+          <li>
+            Select an Inspection History row to open that inspection&apos;s full
+            report.
+          </li>
+
+          <li>
+            Use the Google Maps link to open the restaurant&apos;s location on
+            Google Maps in a new tab.
+          </li>
+        </ul>
+      )
     }
     statuses={
       <ul>
@@ -219,6 +233,10 @@ type RestaurantDetailsProps = {
   // inspection's history row into view. A fresh object (bumped nonce)
   // each tap, so re-tapping the same dot re-scrolls. Omitted on desktop.
   historyScrollTarget?: { id: string; nonce: number } | null;
+
+  // Mobile drops the hover/focus preview bullet from the info panel —
+  // touch has no hover, and the row tap opens the report instead.
+  isMobile?: boolean;
 };
 
 export default function RestaurantDetails({
@@ -229,8 +247,14 @@ export default function RestaurantDetails({
   onSelectInspection,
   onHoverInspection,
   historyScrollTarget,
+  isMobile = false,
 }: RestaurantDetailsProps) {
   const [showInfo, setShowInfo] = useState(false);
+
+  const infoContent = useMemo(
+    () => restaurantInfoContent(isMobile),
+    [isMobile],
+  );
 
   // Scroll a history row into view only when the mobile score chart asks
   // for it (a dot tap), never just because the selection changed — so
@@ -251,7 +275,7 @@ export default function RestaurantDetails({
   const header = (
     <PanelHeader
       title="Restaurant Details"
-      infoContent={RESTAURANT_INFO_CONTENT}
+      infoContent={infoContent}
       onInfoClick={() => {
         setShowInfo((currentValue) => !currentValue);
       }}
@@ -264,7 +288,7 @@ export default function RestaurantDetails({
       <section className="panel restaurant-details-panel">
         {header}
 
-        <div className="panel-scroll-content">{RESTAURANT_INFO_CONTENT}</div>
+        <div className="panel-scroll-content">{infoContent}</div>
       </section>
     );
   }

@@ -66,6 +66,9 @@ type GradeChartProps = {
   // MapView now computes and passes just that instead.
   counts: GradeCounts;
   filters: Filters;
+  // Current search text, if any. Used only for the footnote that flags
+  // when the tally is narrowed by inputs the donut doesn't itself show.
+  searchQuery?: string;
   // Set while the Search Radius tool is active; switches the panel title
   // (and info copy) from "Map View" to "Within <distance>".
   searchRadiusMiles?: SearchRadiusMiles | null;
@@ -101,9 +104,20 @@ const renderCustomizedShape = (props: any) => {
 export default function GradeChart({
   counts,
   filters,
+  searchQuery = "",
   searchRadiusMiles = null,
 }: GradeChartProps) {
   const [showInfo, setShowInfo] = useState(false);
+
+  // Grade filters already scope the slices and centre count, so they need
+  // no callout; borough and search narrow the tally invisibly, so name
+  // them below the chart when active.
+  const filterNote = useMemo(() => {
+    const parts = [...filters.boroughs];
+    const query = searchQuery.trim();
+    if (query) parts.push(`"${query}"`);
+    return parts.join(", ");
+  }, [filters.boroughs, searchQuery]);
 
   const scopeText =
     searchRadiusMiles != null
@@ -250,6 +264,13 @@ export default function GradeChart({
                 </div>
               </>
             )}
+          </div>
+
+          {/* Always rendered so the rule and its reserved two-line space
+              are permanent; only the text toggles, so the donut above
+              never shifts when a filter is added or cleared. */}
+          <div className="grade-chart-filter-note" aria-live="polite">
+            {filterNote && `Filters applied: ${filterNote}`}
           </div>
         </div>
       )}

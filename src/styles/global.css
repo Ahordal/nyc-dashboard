@@ -1218,13 +1218,16 @@ summary:focus-visible,
   flex-shrink: 0;
 }
 
+/* One size for the grade/score box everywhere it appears: list cards,
+   hover card, details/report hero, performance-chart popup. Per-context
+   rules below only tweak non-size details. */
 .badge-box {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   background: var(--bg-score);
   /* borderColor set inline by each consumer to the grade colour at 80% */
   border: 0.5px solid var(--border-panel);
@@ -1285,7 +1288,8 @@ summary:focus-visible,
 .details-hero-title {
   font-family: var(--font-display);
   font-weight: 700;
-  font-size: var(--fs-xl);
+  /* Matches .card-title in the restaurant list. */
+  font-size: var(--fs-lg);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -1299,20 +1303,6 @@ summary:focus-visible,
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
-}
-
-.details-hero-badges .badge-box {
-  width: 46px;
-  height: 46px;
-}
-
-.details-hero-badges .badge-label {
-  font-size: var(--fs-2xs);
-  margin-bottom: 2px;
-}
-
-.details-hero-badges .badge-val {
-  font-size: var(--fs-xl);
 }
 
 .details-table {
@@ -1673,6 +1663,30 @@ summary:focus-visible,
   overflow: visible;
 }
 
+/* Keyboard focus indicator for the chart group (a white inset in place
+   of the global ring); suppressed for pointer focus (a click) via the
+   modality attribute, matching .search-input. */
+.performance-chart-body:focus,
+.performance-chart-body:focus-visible {
+  outline: none;
+}
+
+.performance-chart-body:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--text-heading);
+}
+
+:root[data-input-modality="pointer"] .performance-chart-body:focus-visible {
+  box-shadow: none;
+}
+
+/* Recharts focuses its own SVG layers on click; the HTML wrapper owns
+   keyboard nav. PerformanceDot cancels this on mousedown for desktop, but
+   touch fires no mousedown, so suppress it here for tap too. */
+.performance-chart-body svg:focus,
+.performance-chart-body svg *:focus {
+  outline: none;
+}
+
 .performance-chart-body circle:focus-visible {
   outline: 2px solid var(--accent-blue);
   outline-offset: 2px;
@@ -1782,6 +1796,27 @@ summary:focus-visible,
 .grade-chart-svg-wrap svg:focus,
 .grade-chart-svg-wrap svg *:focus {
   outline: none;
+}
+
+/* Footnote naming the borough / search narrowing that the donut can't
+   show on its own (grade filters already scope the slices). Always
+   present: the rule and a reserved two-line space are permanent so the
+   donut doesn't shift when the text toggles. --fs-sm is the scale step
+   nearest the intended ~0.8rem; raw lengths fail the type-scale guard. */
+.grade-chart-filter-note {
+  flex-shrink: 0;
+  width: 100%;
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  min-height: calc(0.75rem + 2.6em); /* padding-top + two lines at 1.3 */
+  border-top: 1px solid var(--border-panel);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.3;
+  text-transform: uppercase;
+  text-align: center;
+  text-wrap: balance;
 }
 
 .grade-chart-empty {
@@ -2199,32 +2234,10 @@ summary:focus-visible,
   gap: 0.35rem;
 }
 
+/* Size, layout, and type come from the shared .badge-box / .badge-label
+   / .badge-val rules; only the square corner is specific to this card. */
 .map-hover-card .badge-box {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: var(--bg-score);
   border-radius: 0;
-}
-
-.map-hover-card .badge-label {
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  color: var(--text-muted);
-  line-height: 1;
-  margin-bottom: 2px;
-}
-
-.map-hover-card .badge-val {
-  font-family: var(--font-body);
-  font-weight: 700;
-  font-size: var(--fs-lg);
-  line-height: 1;
-  font-variant-numeric: tabular-nums;
 }
 
 .map-bottom-controls {
@@ -3004,7 +3017,7 @@ summary:focus-visible,
 
 /* Below 640px dashboard.tsx renders <MobileDashboard>: app bar, area
    strip, full-bleed map, bottom sheet (peek/half/full on [data-detent]).
-   Classes below are mobile-only -- that tree never mounts wider. */
+   Classes below are mobile-only.*/
 @media (max-width: 640px) {
   body {
     padding: 0;
@@ -3244,6 +3257,16 @@ summary:focus-visible,
     z-index: 26;
     max-height: 0;
     overflow: hidden;
+  }
+
+  /* Recency stacking: while a drawer is the most recently opened surface
+     it sits above the bottom sheet (z-index 40); moving the sheet flips
+     data-front back and drops the drawer behind it again. */
+  .mobile-dashboard[data-front="drawer"] .mobile-search-drawer,
+  .mobile-dashboard[data-front="drawer"] .mobile-filter-drawer,
+  .mobile-dashboard[data-front="drawer"] .mobile-info-drawer,
+  .mobile-dashboard[data-front="drawer"] .mobile-area-drawer {
+    z-index: 45;
   }
 
   /* Fill only when open; a closed max-height:0 drawer would draw a sliver. */
@@ -3565,7 +3588,10 @@ summary:focus-visible,
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    height: min(46dvh, 380px);
+    /* min(46dvh, 380px) is the donut's own height; + the permanent
+       filter-note footprint (its margin + reserved two lines) so the
+       donut keeps that size instead of giving room back to the note. */
+    height: calc(min(46dvh, 380px) + 3.6125rem);
     padding: 0;
     border: none;
     background: transparent;
