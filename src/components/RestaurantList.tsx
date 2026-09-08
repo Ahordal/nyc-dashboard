@@ -95,6 +95,11 @@ type RestaurantListProps = {
   // is already scoped to the circle upstream (MapView's query); this is
   // only used to show/sort each card's distance from the point.
   searchRadiusPoint?: SearchRadiusPoint | null;
+  // The mobile "locate me" dot, if placed. Adds the per-card Distance
+  // line (measured from it) without unlocking the Distance sort key or
+  // re-scoping the list the way searchRadiusPoint does. searchRadiusPoint
+  // wins when both are set.
+  userLocationPoint?: SearchRadiusPoint | null;
   // Mobile: the search field lives in the app-bar drawer, not directly
   // above the list, so the info panel drops the "above" wording.
   isMobile?: boolean;
@@ -109,9 +114,17 @@ export default function RestaurantList({
   onSelectRestaurant,
   onHoverRestaurant,
   searchRadiusPoint = null,
+  userLocationPoint = null,
   isMobile = false,
   children,
 }: RestaurantListProps) {
+  // The point distances are measured from -- for the per-card readout and
+  // the Distance sort key alike: the Search Radius centre if set,
+  // otherwise the "locate me" dot.
+  const distanceOrigin = useMemo(
+    () => searchRadiusPoint ?? userLocationPoint,
+    [searchRadiusPoint, userLocationPoint],
+  );
   const [showInfo, setShowInfo] = useState(false);
   const [primarySort, setPrimarySort] =
     useState<SortKeyId>("inspection_date");
@@ -135,7 +148,7 @@ export default function RestaurantList({
   const prevRestaurantCountRef = useRef(listRestaurants.length);
   const prevSelectedIdRef = useRef<string | null>(selectedRestaurantId);
   const prevSortRef = useRef({ primarySort, secondarySort, sortDirection });
-  const preRadiusPrimarySortRef = useRef<SortKeyId>(primarySort);
+  const preDistancePrimarySortRef = useRef<SortKeyId>(primarySort);
 
   const sorted = useMemo(
     () =>
@@ -143,37 +156,38 @@ export default function RestaurantList({
         primary: primarySort,
         secondary: secondarySort,
         direction: sortDirection,
-        point: searchRadiusPoint,
+        point: distanceOrigin,
       }),
     [
       listRestaurants,
       primarySort,
       secondarySort,
       sortDirection,
-      searchRadiusPoint,
+      distanceOrigin,
     ],
   );
 
-  // Distance only makes sense with a Search Radius point set. Remember
-  // the primary field chosen before Distance, so dismissing the point
-  // restores that rather than a hardcoded default.
+  // Distance only makes sense with a distance origin (Search Radius point
+  // or locate dot) set. Remember the primary field chosen before
+  // Distance, so losing the origin restores that rather than a hardcoded
+  // default.
   useEffect(() => {
-    if (searchRadiusPoint && primarySort !== "distance") {
-      preRadiusPrimarySortRef.current = primarySort;
+    if (distanceOrigin && primarySort !== "distance") {
+      preDistancePrimarySortRef.current = primarySort;
     }
-  }, [searchRadiusPoint, primarySort]);
+  }, [distanceOrigin, primarySort]);
 
   useEffect(() => {
-    if (searchRadiusPoint) return;
+    if (distanceOrigin) return;
     if (primarySort === "distance") {
-      const reverted = preRadiusPrimarySortRef.current;
+      const reverted = preDistancePrimarySortRef.current;
       setPrimarySort(reverted);
       setSortDirection(NATURAL_DIRECTION[reverted]);
     }
     if (secondarySort === "distance") {
       setSecondarySort(null);
     }
-  }, [searchRadiusPoint, primarySort, secondarySort]);
+  }, [distanceOrigin, primarySort, secondarySort]);
 
   // The two sort slots can never hold the same field (e.g. after the
   // primary reverts onto whatever the secondary was).
@@ -256,14 +270,14 @@ export default function RestaurantList({
       ?.scrollTo({ top: 0 });
   }, [clampedPage]);
 
-  // Distance only appears as a sort field once a search radius point is
-  // active; it's meaningless otherwise.
+  // Distance only appears as a sort field once a distance origin (Search
+  // Radius point or locate dot) is set; it's meaningless otherwise.
   const availableSortKeys = useMemo<SortKeyId[]>(
     () =>
       SORT_KEY_ORDER.filter(
-        (key) => searchRadiusPoint != null || !SORT_KEYS[key].radiusOnly,
+        (key) => distanceOrigin != null || !SORT_KEYS[key].needsDistancePoint,
       ),
-    [searchRadiusPoint],
+    [distanceOrigin],
   );
 
   const primarySortOptions = useMemo(
@@ -310,7 +324,7 @@ export default function RestaurantList({
       ) : (
         <div
           className={`restaurant-list-container${
-            searchRadiusPoint ? " with-distance" : ""
+            distanceOrigin ? " with-distance" : ""
           }`}>
           <div className="restaurant-list-sort-bar">
             <span id="sort-field-label" className="sort-label">
@@ -365,7 +379,7 @@ export default function RestaurantList({
                 isHovered={restaurant.id === hoveredRestaurantId}
                 onClick={(selected) => onSelectRestaurant?.(selected)}
                 onHover={onHoverRestaurant}
-                searchRadiusPoint={searchRadiusPoint}
+                distanceOrigin={distanceOrigin}
               />
             ))}
 

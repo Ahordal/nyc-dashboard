@@ -39,14 +39,15 @@ function gradeRank(restaurant: RestaurantProperties): number {
 // comparable value, or null when the row has no value for that field.
 // Null values always sort last regardless of direction (so flipping
 // Score or Inspected to ascending can't flood the first page with
-// not-yet-inspected restaurants). `radiusOnly` fields are only offered
-// while a Search Radius point is set. A sort is one or two of these
-// applied in order, sharing one direction.
+// not-yet-inspected restaurants). `needsDistancePoint` fields are only
+// offered while a distance origin (a Search Radius point or the mobile
+// locate dot) is set. A sort is one or two of these applied in order,
+// sharing one direction.
 export const SORT_KEYS: Record<
   SortKeyId,
   {
     label: string;
-    radiusOnly?: boolean;
+    needsDistancePoint?: boolean;
     keyOf: (
       restaurant: RestaurantProperties,
       point: SearchRadiusPoint | null,
@@ -73,7 +74,7 @@ export const SORT_KEYS: Record<
   score: { label: "Score", keyOf: (restaurant) => restaurant.score ?? null },
   distance: {
     label: "Distance",
-    radiusOnly: true,
+    needsDistancePoint: true,
     keyOf: (restaurant, point) =>
       point && restaurant.latitude != null && restaurant.longitude != null
         ? haversineDistanceMiles(point, {
@@ -111,9 +112,10 @@ export type SortOptions = {
   primary: SortKeyId;
   secondary: SortKeyId | null;
   direction: SortDirection;
-  // The active Search Radius centre, needed by the "distance" key. Null
-  // when the tool is inactive, in which case "distance" keys every row
-  // as null and falls through to the name/id tiebreak.
+  // The distance origin (Search Radius centre or the mobile locate dot),
+  // needed by the "distance" key. Null when neither is set, in which case
+  // "distance" keys every row as null and falls through to the name/id
+  // tiebreak.
   point: SearchRadiusPoint | null;
 };
 

@@ -96,6 +96,12 @@ type MobileDashboardProps = {
     point: SearchRadiusPoint | null,
     radiusMiles: SearchRadiusMiles,
   ) => void;
+  // The "locate me" dot's position (in-NYC fixes only). Shows per-card
+  // distances from it; separate from the Search Radius point.
+  userLocationPoint: SearchRadiusPoint | null;
+  onUserLocationChange: (
+    point: { latitude: number; longitude: number } | null,
+  ) => void;
   initialSearchRadius: InitialRadiusState | null;
 
   pendingCamisFromUrl: string | null;
@@ -130,6 +136,8 @@ export default function MobileDashboard({
   searchRadiusPoint,
   activeRadiusMiles,
   onSearchRadiusChange,
+  userLocationPoint,
+  onUserLocationChange,
   initialSearchRadius,
   pendingCamisFromUrl,
   onInitialSelectionResolved,
@@ -296,6 +304,10 @@ export default function MobileDashboard({
 
   const radiusMiles = searchRadiusPoint ? activeRadiusMiles : null;
 
+  // Distance readouts on cards measure from the Search Radius point when
+  // one is set, otherwise from the "locate me" dot.
+  const distanceOrigin = searchRadiusPoint ?? userLocationPoint;
+
   // The score-history chart is a companion to the Details tab's
   // inspection-history list only — not the Report tab (per-inspection
   // violations). It flows at the end of the shared sheet scroll, below
@@ -393,11 +405,13 @@ export default function MobileDashboard({
               onVisibleRestaurantsChange={onVisibleRestaurantsChange}
               onGradeCountsChange={onGradeCountsChange}
               onSearchRadiusChange={onSearchRadiusChange}
+              onUserLocationChange={onUserLocationChange}
               initialSearchRadius={initialSearchRadius}
               initialSelectedCamis={pendingCamisFromUrl}
               onInitialSelectionResolved={onInitialSelectionResolved}
               showHoverCard={false}
               showHoverGlow={false}
+              showLocateControl
             />
           </Suspense>
         </ErrorBoundary>
@@ -432,6 +446,7 @@ export default function MobileDashboard({
                 restaurant={selectedRestaurant}
                 isSelected
                 onClick={openSheet}
+                distanceOrigin={distanceOrigin}
               />
             </div>
           ) : (
@@ -475,6 +490,7 @@ export default function MobileDashboard({
                       onSelectRestaurant={handleListSelect}
                       onHoverRestaurant={onHoverRestaurant}
                       searchRadiusPoint={searchRadiusPoint}
+                      userLocationPoint={userLocationPoint}
                       isMobile
                     />
                   </div>

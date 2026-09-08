@@ -26,9 +26,11 @@ import type {
 import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 import { getGradeCategory } from "../utils/gradeCategory";
 import { pointsRenderer } from "../utils/mapRenderer";
+import { buildUserLocationGraphics } from "../utils/userLocationGraphics";
 import { useSearchRadiusTool } from "../hooks/useSearchRadiusTool";
 import { useSelectionHighlight } from "../hooks/useSelectionHighlight";
 import { useMapHover } from "../hooks/useMapHover";
+import { useGeolocation } from "../hooks/useGeolocation";
 import PanelHeader from "./PanelHeader";
 import MapHoverCard, { type HoverCardState } from "./MapHoverCard";
 import MAP_LEGEND_INFO_CONTENT from "./MapLegendInfoContent";
@@ -37,7 +39,10 @@ import MapScaleZoomControls from "./MapScaleZoomControls";
 import MapBasemapToggle from "./MapBasemapToggle";
 import MapCompass from "./MapCompass";
 import MapSearchRadiusControl from "./MapSearchRadiusControl";
+import MapUserLocationControl from "./MapUserLocationControl";
+import NoticeOverlay from "./NoticeOverlay";
 import ErrorFallback from "./ErrorFallback";
+import { isWithinNYC } from "../../shared/nycBounds.mjs";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
@@ -68,6 +73,12 @@ type MapViewProps = {
     point: SearchRadiusPoint | null,
     radiusMiles: SearchRadiusMiles,
   ) => void;
+  // Reports the current in-NYC GPS fix (or null when cleared / out of
+  // area) so the dashboard can show per-card distances from it. Only
+  // meaningful with showLocateControl (mobile).
+  onUserLocationChange?: (
+    point: { latitude: number; longitude: number } | null,
+  ) => void;
   // A Search Radius restored from the URL on first load, placed once the
   // map view and rings layer are ready. Null in normal use.
   initialSearchRadius?: {
@@ -90,6 +101,8 @@ type MapViewProps = {
   // (no hover state to preview), so mobile turns it off; the selected
   // point still glows.
   showHoverGlow?: boolean;
+  // The "locate me" chip. Mobile-only feature, so desktop leaves it off.
+  showLocateControl?: boolean;
 };
 
 export default function InspectionMapView({
@@ -102,14 +115,23 @@ export default function InspectionMapView({
   onVisibleRestaurantsChange,
   onGradeCountsChange,
   onSearchRadiusChange,
+  onUserLocationChange,
   initialSearchRadius = null,
   initialSelectedCamis = null,
   onInitialSelectionResolved,
   showHoverCard = true,
   showHoverGlow = true,
+  showLocateControl = false,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
+
+  // Device GPS for the "locate me" chip. The fix is drawn on its own
+  // graphics layer below; a fix outside NYC is rejected (outsideNyc) with
+  // a toast rather than dropping a pin in empty space.
+  const geo = useGeolocation();
+  const [outsideNyc, setOutsideNyc] = useState(false);
+  const [outOfAreaNonce, setOutOfAreaNonce] = useState(0);
 
   // The surrounding ErrorBoundary only catches render-time throws, so the
   // async failures below (GeoJSON 404, missing/invalid/over-quota ArcGIS
@@ -122,6 +144,7 @@ export default function InspectionMapView({
   const layerRef = useRef<GeoJSONLayer | null>(null);
   const viewRef = useRef<MapView | null>(null);
   const ringsLayerRef = useRef<GraphicsLayer | null>(null);
+  const userLocationLayerRef = useRef<GraphicsLayer | null>(null);
 
   const searchRadius = useSearchRadiusTool(
     mapView,
@@ -146,6 +169,7 @@ export default function InspectionMapView({
   const onVisibleRestaurantsChangeRef = useRef(onVisibleRestaurantsChange);
   const onGradeCountsChangeRef = useRef(onGradeCountsChange);
   const onSearchRadiusChangeRef = useRef(onSearchRadiusChange);
+  const onUserLocationChangeRef = useRef(onUserLocationChange);
   const onInitialSelectionResolvedRef = useRef(onInitialSelectionResolved);
 
   const prevBoroughsRef = useRef<string[]>(filters.boroughs);
@@ -191,6 +215,10 @@ export default function InspectionMapView({
   useEffect(() => {
     onSearchRadiusChangeRef.current = onSearchRadiusChange;
   }, [onSearchRadiusChange]);
+
+  useEffect(() => {
+    onUserLocationChangeRef.current = onUserLocationChange;
+  }, [onUserLocationChange]);
 
   useEffect(() => {
     onInitialSelectionResolvedRef.current = onInitialSelectionResolved;
@@ -274,12 +302,15 @@ export default function InspectionMapView({
     const ringsLayer = new GraphicsLayer({ title: "Search Radius Rings" });
     ringsLayerRef.current = ringsLayer;
 
+    const userLocationLayer = new GraphicsLayer({ title: "User Location" });
+    userLocationLayerRef.current = userLocationLayer;
+
     const map = new Map({
       basemap: "arcgis/dark-gray/base",
-      // ringsLayer first: ArcGIS draws array order bottom-to-top, so this
-      // keeps the Search Radius rings under every restaurant
-      // point/highlight.
-      layers: [ringsLayer, layer],
+      // ArcGIS draws array order bottom-to-top: ringsLayer under every
+      // restaurant point/highlight, userLocationLayer on top so the "you
+      // are here" dot is never buried in a dense cluster.
+      layers: [ringsLayer, layer, userLocationLayer],
     });
 
     const view = new MapView({
@@ -421,6 +452,51 @@ export default function InspectionMapView({
       cancelled = true;
     };
   }, [initialSelectedCamis, retryNonce]);
+
+  // Draw (or clear) the "you are here" graphics when a GPS fix lands. A
+  // fix outside NYC draws nothing and raises the out-of-area toast; an
+  // in-bounds fix draws the dot + accuracy circle and flies there. Each
+  // success is a fresh object, so a re-tap re-frames on the new fix.
+  useEffect(() => {
+    const locationLayer = userLocationLayerRef.current;
+    if (!locationLayer) return;
+    locationLayer.removeAll();
+
+    const fix = geo.position;
+    if (!fix) {
+      setOutsideNyc(false);
+      onUserLocationChangeRef.current?.(null);
+      return;
+    }
+
+    if (!isWithinNYC(fix.latitude, fix.longitude)) {
+      setOutsideNyc(true);
+      setOutOfAreaNonce((n) => n + 1);
+      onUserLocationChangeRef.current?.(null);
+      return;
+    }
+
+    setOutsideNyc(false);
+    onUserLocationChangeRef.current?.({
+      latitude: fix.latitude,
+      longitude: fix.longitude,
+    });
+    locationLayer.addMany(buildUserLocationGraphics(fix));
+    viewRef.current
+      ?.goTo(
+        { center: [fix.longitude, fix.latitude], zoom: 15 },
+        { duration: 600 },
+      )
+      .catch(() => {
+        // goTo rejects if the user interrupts the animation; ignore.
+      });
+  }, [geo.position]);
+
+  // Clear a stale out-of-area flag as soon as a new request starts, so the
+  // chip and its tooltip don't keep saying "Outside NYC" while relocating.
+  useEffect(() => {
+    if (geo.status === "locating") setOutsideNyc(false);
+  }, [geo.status]);
 
   useEffect(() => {
     const layer = layerRef.current;
@@ -609,6 +685,23 @@ export default function InspectionMapView({
           onDismiss={searchRadius.handleDismiss}
           onRadiusChange={searchRadius.handleRadiusChange}
         />
+
+        {showLocateControl && (
+          <>
+            <MapUserLocationControl
+              status={geo.status}
+              errorKind={geo.errorKind}
+              outsideNyc={outsideNyc}
+              onLocate={geo.requestLocation}
+              onClear={geo.clearLocation}
+            />
+            <div className="map-user-location-notice-anchor">
+              <NoticeOverlay triggerKey={outOfAreaNonce}>
+                Your location is outside NYC.
+              </NoticeOverlay>
+            </div>
+          </>
+        )}
 
         {searchRadius.isPlacingPoint && (
           <div className="map-placement-hint-anchor">

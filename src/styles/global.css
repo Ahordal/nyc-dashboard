@@ -1145,7 +1145,8 @@ summary:focus-visible,
 }
 
 .restaurant-card {
-  height: 80px;
+  /* min, not fixed: a name that wraps to two lines grows the card. */
+  min-height: 80px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -1160,7 +1161,7 @@ summary:focus-visible,
 
 /* Extra Distance line when Search Radius is active. */
 .restaurant-list-container.with-distance .restaurant-card {
-  height: 100px;
+  min-height: 100px;
 }
 
 .restaurant-card.hovered {
@@ -1198,12 +1199,16 @@ summary:focus-visible,
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--fs-lg);
-  white-space: nowrap;
+  /* Wrap to a second line when one line can't hold the name; clamp
+     and ellipsize only past two. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
   text-transform: uppercase;
   width: 100%;
-  line-height: 1;
+  line-height: 1.1;
 }
 
 .card-subtext,
@@ -2529,6 +2534,141 @@ summary:focus-visible,
   box-shadow: inset 0 -2px 0 0 var(--border-panel);
 }
 
+/* "Locate me" chip. Same 32x32 shell as the other map controls, stacked
+   below the Search Radius button on the right edge. Mobile-only feature,
+   but the base rule carries desktop coords for consistency. */
+.map-user-location-container {
+  position: absolute;
+  top: calc(1rem + 40px + 32px + 8px + 32px + 8px);
+  right: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-user-location-button {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.map-user-location-button:hover:not(:disabled) {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+.map-user-location-button:disabled {
+  cursor: default;
+}
+
+/* Located: the blue of the map marker. Error / out-of-area: dimmed. */
+.map-user-location-button.active {
+  color: #1a85ff;
+}
+
+.map-user-location-button.muted {
+  opacity: 0.55;
+}
+
+.map-user-location-button.is-locating svg {
+  animation: mapUserLocationSpin 0.8s linear infinite;
+}
+
+@keyframes mapUserLocationSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Once located, a "My location" label + clear (x) sit to the left of the
+   button, positioned like the Search Radius active panel. */
+.map-user-location-panel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 0.5rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 30;
+}
+
+.map-user-location-label {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.map-user-location-clear {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.map-user-location-clear:hover {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+/* Out-of-area toast: reuse the placement hint's compact chip treatment
+   rather than .filter-notice-overlay's full-cover flash. */
+.map-user-location-notice-anchor {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.map-user-location-notice-anchor .filter-notice-overlay {
+  position: static;
+  inset: auto;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+}
+
+.map-user-location-notice-anchor .filter-notice-text {
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  /* Uppercase to match the placement-hint chip and the icon tooltips. */
+  text-transform: uppercase;
+}
+
 /* Positioning context for the placement hint. Overrides below shrink the
    full .filter-notice-overlay to a chip that stays put (shown only while
    placing a point). */
@@ -2760,6 +2900,13 @@ summary:focus-visible,
   font-size: var(--fs-md);
   font-weight: 600;
   color: var(--text-muted);
+}
+
+/* Map load failures read uppercase, matching the map's other overlays. */
+.map-view .error-fallback-message,
+.mobile-map .error-fallback-message,
+.map-load-error .error-fallback-message {
+  text-transform: uppercase;
 }
 
 .error-fallback-retry {
@@ -3090,7 +3237,8 @@ summary:focus-visible,
   }
 
   .mobile-dashboard .map-basemap-toggle-container,
-  .mobile-dashboard .map-search-radius-container {
+  .mobile-dashboard .map-search-radius-container,
+  .mobile-dashboard .map-user-location-container {
     right: 0.5rem;
   }
 
@@ -3108,6 +3256,10 @@ summary:focus-visible,
     top: calc(1rem + 40px);
   }
 
+  .mobile-dashboard .map-user-location-container {
+    top: calc(1rem + 80px);
+  }
+
   /* Touch's sticky :hover makes a control read as held -- pin controls to
      their resting look on hover (.active still shows). Also drop the
      post-tap pointer focus ring. */
@@ -3118,9 +3270,16 @@ summary:focus-visible,
 
   .mobile-dashboard .map-compass-button:hover:not(:disabled),
   .mobile-dashboard .map-basemap-toggle-button:hover,
-  .mobile-dashboard .map-search-radius-button:hover {
+  .mobile-dashboard .map-search-radius-button:hover,
+  .mobile-dashboard .map-user-location-button:hover:not(:disabled),
+  .mobile-dashboard .map-user-location-clear:hover {
     color: var(--text-muted);
     background-color: var(--bg-panel);
+  }
+
+  /* Keep the located/error tints on touch even under the sticky :hover. */
+  .mobile-dashboard .map-user-location-button.active:hover {
+    color: #1a85ff;
   }
 
   .mobile-dashboard .map-search-radius-button.active:hover {
@@ -3140,7 +3299,13 @@ summary:focus-visible,
     .map-basemap-toggle-button:focus,
   :root[data-input-modality="pointer"]
     .mobile-dashboard
-    .map-search-radius-button:focus {
+    .map-search-radius-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-user-location-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-user-location-clear:focus {
     outline: none;
   }
 

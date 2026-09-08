@@ -143,6 +143,13 @@ export default function Dashboard() {
   const [activeRadiusMiles, setActiveRadiusMiles] =
     useState<SearchRadiusMiles>(0.25);
 
+  // The mobile "locate me" dot's position (in-NYC fixes only), reported
+  // up from MapView. Drives the per-card Distance line without the Search
+  // Radius tool's scoping/sort behaviour. Not URL-synced -- transient
+  // device state.
+  const [userLocationPoint, setUserLocationPoint] =
+    useState<SearchRadiusPoint | null>(null);
+
   // A radius restored from the URL on first load. Passed to MapView so
   // its Search Radius hook can re-place the point, redraw the rings, and
   // re-frame the map; null unless the initial URL carried a ?radius.
@@ -299,6 +306,8 @@ export default function Dashboard() {
         searchRadiusPoint={searchRadiusPoint}
         activeRadiusMiles={activeRadiusMiles}
         onSearchRadiusChange={handleSearchRadiusChange}
+        userLocationPoint={userLocationPoint}
+        onUserLocationChange={setUserLocationPoint}
         initialSearchRadius={initialSearchRadius}
         pendingCamisFromUrl={pendingCamisFromUrl}
         onInitialSelectionResolved={() => setPendingCamisFromUrl(null)}

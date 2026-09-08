@@ -2,7 +2,8 @@
 //
 // Unit tests for sortRestaurants and its sort-key metadata: single- and
 // two-level ordering, per-field key semantics, null values always last,
-// the radius-only distance key, and the tiebreak fallback to name then id.
+// the distance-point-only distance key, and the tiebreak fallback to
+// name then id.
 
 import { describe, it, expect } from "vitest";
 import {
@@ -216,11 +217,13 @@ describe("sortRestaurants -- two-level", () => {
 });
 
 describe("sort key metadata", () => {
-  it("offers distance last and only as a radius-only key", () => {
+  it("offers distance last and only as a distance-point key", () => {
     expect(SORT_KEY_ORDER[SORT_KEY_ORDER.length - 1]).toBe("distance");
-    expect(SORT_KEYS.distance.radiusOnly).toBe(true);
+    expect(SORT_KEYS.distance.needsDistancePoint).toBe(true);
     for (const key of SORT_KEY_ORDER) {
-      if (key !== "distance") expect(SORT_KEYS[key].radiusOnly).toBeFalsy();
+      if (key !== "distance") {
+        expect(SORT_KEYS[key].needsDistancePoint).toBeFalsy();
+      }
     }
   });
 

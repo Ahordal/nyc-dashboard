@@ -21,9 +21,10 @@ type RestaurantCardProps = {
   isHovered?: boolean;
   onClick: (restaurant: RestaurantProperties) => void;
   onHover?: (restaurant: RestaurantProperties | null) => void;
-  // When a Search Radius point is active, the card shows the restaurant's
-  // distance from it. Null/undefined hides the Distance line entirely.
-  searchRadiusPoint?: SearchRadiusPoint | null;
+  // The point to measure this card's distance from: the Search Radius
+  // centre, or the mobile "locate me" dot. Null/undefined hides the
+  // Distance line entirely.
+  distanceOrigin?: SearchRadiusPoint | null;
 };
 
 // Local formatting helpers
@@ -64,7 +65,7 @@ export default function RestaurantCard({
   isHovered = false,
   onClick,
   onHover,
-  searchRadiusPoint = null,
+  distanceOrigin = null,
 }: RestaurantCardProps) {
   const category = getGradeCategory(
     restaurant.action,
@@ -77,10 +78,10 @@ export default function RestaurantCard({
   const address = formatAddress(restaurant);
 
   const distanceMiles =
-    searchRadiusPoint &&
+    distanceOrigin &&
     restaurant.latitude != null &&
     restaurant.longitude != null
-      ? haversineDistanceMiles(searchRadiusPoint, {
+      ? haversineDistanceMiles(distanceOrigin, {
           latitude: restaurant.latitude,
           longitude: restaurant.longitude,
         })
@@ -98,7 +99,7 @@ export default function RestaurantCard({
     gradeLabel,
     address && `at ${address}`,
     restaurant.cuisine && `${restaurant.cuisine} cuisine`,
-    distanceMiles != null && `${distanceMiles.toFixed(2)} miles from centre`,
+    distanceMiles != null && `${distanceMiles.toFixed(2)} miles away`,
   ]
     .filter(Boolean)
     .join(", ");

@@ -51,7 +51,9 @@ export default function SortDropdown<T extends string>({
 
   function closeMenu(returnFocus = true) {
     setIsOpen(false);
-    if (returnFocus) triggerRef.current?.focus();
+    // preventScroll: the trigger is already in view; without this the
+    // browser nudges the list to "reveal" it and the sort bar jumps.
+    if (returnFocus) triggerRef.current?.focus({ preventScroll: true });
   }
 
   function commit(index: number) {
@@ -61,8 +63,11 @@ export default function SortDropdown<T extends string>({
   }
 
   // Move focus into the menu once it opens so the arrow keys drive it.
+  // preventScroll: the menu is absolutely positioned below the trigger,
+  // so a plain focus() makes the browser scroll the list to fit it in
+  // view, jumping the sort bar up under the tabs.
   useEffect(() => {
-    if (isOpen) listRef.current?.focus();
+    if (isOpen) listRef.current?.focus({ preventScroll: true });
   }, [isOpen]);
 
   // Close on click outside, the same pattern PanelHeader.tsx uses for its

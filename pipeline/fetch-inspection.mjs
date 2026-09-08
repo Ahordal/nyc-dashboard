@@ -19,6 +19,7 @@ import {
   CLOSED_ACTIONS,
   UNINSPECTED_GRADE,
 } from "../shared/inspectionStatus.mjs";
+import { isWithinNYC } from "../shared/nycBounds.mjs";
 
 // Read-only geocode cache committed by scheduled backfill. If absent, falls back to raw DOHMH coords.
 const GEOCODE_CACHE_PATH = path.join(import.meta.dirname, "geocode-cache.json");
@@ -47,22 +48,8 @@ const BASE_RETRY_DELAY_MS = 1000; // Exponential backoff: 1s, 2s, 4s, 8s
 // Socrata default placeholder for uninspected entities; excluded from scored calculations.
 const NOT_YET_INSPECTED_DATE = "1900-01-01T00:00:00.000";
 
-// Bounding box filter to discard (0,0), inverted coordinates, or out-of-state bad data.
-const NYC_BOUNDS = {
-  minLat: 40.4,
-  maxLat: 41.0,
-  minLon: -74.3,
-  maxLon: -73.65,
-};
-
-function isWithinNYC(lat, lon) {
-  return (
-    lat >= NYC_BOUNDS.minLat &&
-    lat <= NYC_BOUNDS.maxLat &&
-    lon >= NYC_BOUNDS.minLon &&
-    lon <= NYC_BOUNDS.maxLon
-  );
-}
+// Bounding box filter (isWithinNYC, imported above) discards (0,0),
+// inverted coordinates, and out-of-state bad data.
 
 // Safety normalization map in case API casing drifts from expected filter values.
 const BORO_DISPLAY_NAMES = {

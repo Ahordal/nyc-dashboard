@@ -160,22 +160,9 @@ export function addressHash({ camis, building, street, boro, zip }) {
 
 // 5. NYC bounding box (for geographic sanity checks)
 //
-// Loose bounding box around NYC (including a small margin), used to catch
-// obviously-wrong coordinates: (0, 0), swapped lat/lon, or a
-// same-house-number match at a real address outside the five boroughs
-// (e.g. "25 Madison Avenue" also exists in Glen Cove, NY).
-export const NYC_BOUNDS = {
-  minLat: 40.4,
-  maxLat: 41.0,
-  minLon: -74.3,
-  maxLon: -73.65,
-};
-
-export function isWithinNYC(lat, lon) {
-  return (
-    lat >= NYC_BOUNDS.minLat &&
-    lat <= NYC_BOUNDS.maxLat &&
-    lon >= NYC_BOUNDS.minLon &&
-    lon <= NYC_BOUNDS.maxLon
-  );
-}
+// Loose bounding box around NYC, used to catch obviously-wrong
+// coordinates: (0, 0), swapped lat/lon, or a same-house-number match at a
+// real address outside the five boroughs (e.g. "25 Madison Avenue" also
+// exists in Glen Cove, NY). Defined in shared/ so the frontend's GPS
+// locate control tests against the exact same box.
+export { NYC_BOUNDS, isWithinNYC } from '../shared/nycBounds.mjs';
