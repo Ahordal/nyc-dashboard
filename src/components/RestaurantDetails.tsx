@@ -17,8 +17,10 @@ import type {
   RestaurantProperties,
   InspectionEvent,
 } from "../types/restaurant";
+import type { SearchRadiusPoint } from "../types/searchRadius";
 
 import { getGradeCategory, CATEGORY_COLORS, UNINSPECTED_GRADE } from "../utils/gradeCategory";
+import { haversineDistanceMiles, formatApproxMiles } from "../utils/distance";
 import { formatPhoneNumber } from "../utils/formatPhoneNumber";
 import { toTitleCase } from "../utils/toTitleCase";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -229,6 +231,13 @@ type RestaurantDetailsProps = {
 
   onHoverInspection: (inspectionId: string | null) => void;
 
+  // Point to measure the Distance row from: the Search Radius centre, or
+  // the mobile "locate me" dot. Null/undefined hides the row.
+  distanceOrigin?: SearchRadiusPoint | null;
+
+  // Which point distanceOrigin is, so the row can name its source.
+  distanceOriginKind?: "search-radius" | "your-location";
+
   // Set by the mobile pinned score chart on a dot tap: scroll this
   // inspection's history row into view. A fresh object (bumped nonce)
   // each tap, so re-tapping the same dot re-scrolls. Omitted on desktop.
@@ -246,6 +255,8 @@ export default function RestaurantDetails({
   selectedInspectionId,
   onSelectInspection,
   onHoverInspection,
+  distanceOrigin = null,
+  distanceOriginKind = "your-location",
   historyScrollTarget,
   isMobile = false,
 }: RestaurantDetailsProps) {
@@ -321,6 +332,18 @@ export default function RestaurantDetails({
   const isStale = category !== "uninspected" && inspectionAge >= 2;
 
   const historyDescending = [...history].reverse();
+
+  // Same measurement the list cards show; kept here so it survives the
+  // drawer expanding past the card view.
+  const distanceMiles =
+    distanceOrigin &&
+    restaurant.latitude != null &&
+    restaurant.longitude != null
+      ? haversineDistanceMiles(distanceOrigin, {
+          latitude: restaurant.latitude,
+          longitude: restaurant.longitude,
+        })
+      : null;
 
   return (
     <section className="panel restaurant-details-panel">
@@ -410,6 +433,19 @@ export default function RestaurantDetails({
 
               <td>{restaurant.zipcode}</td>
             </tr>
+
+            {distanceMiles != null && (
+              <tr>
+                <td>Distance</td>
+
+                <td>
+                  {formatApproxMiles(distanceMiles)} from{" "}
+                  {distanceOriginKind === "search-radius"
+                    ? "the Search Radius center"
+                    : "your location"}
+                </td>
+              </tr>
+            )}
 
             <tr>
               <td>Location</td>

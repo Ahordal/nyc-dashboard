@@ -10,6 +10,7 @@ import {
   buildSearchClause,
   buildDefinitionExpression,
   buildGradeWhereClause,
+  buildTwoPointFitBounds,
   queryVisibleRestaurants,
   queryRestaurantByCamis,
   filterRestaurantsByGradeCategory,
@@ -355,5 +356,57 @@ describe("findRestaurantGraphicHit", () => {
       asLayer,
     );
     expect(hit?.graphic.attributes).toEqual({ id: "first" });
+  });
+});
+
+describe("buildTwoPointFitBounds", () => {
+  const wide = { viewAspect: 0.5, bottomInsetRatio: 0 }; // portrait phone map
+
+  it("returns null when the two points are within ~150m", () => {
+    const a = { longitude: -73.99, latitude: 40.73 };
+    const b = { longitude: -73.9905, latitude: 40.7304 };
+    expect(buildTwoPointFitBounds(a, b, wide)).toBeNull();
+  });
+
+  it("returns a box that contains both points", () => {
+    const a = { longitude: -73.99, latitude: 40.73 };
+    const b = { longitude: -73.95, latitude: 40.7 };
+    const box = buildTwoPointFitBounds(a, b, wide)!;
+    for (const p of [a, b]) {
+      expect(p.longitude).toBeGreaterThanOrEqual(box.xmin);
+      expect(p.longitude).toBeLessThanOrEqual(box.xmax);
+      expect(p.latitude).toBeGreaterThanOrEqual(box.ymin);
+      expect(p.latitude).toBeLessThanOrEqual(box.ymax);
+    }
+  });
+
+  it("matches the box aspect to the view when there is no bottom inset", () => {
+    const box = buildTwoPointFitBounds(
+      { longitude: -73.99, latitude: 40.73 },
+      { longitude: -73.95, latitude: 40.7 },
+      { viewAspect: 0.5, bottomInsetRatio: 0 },
+    )!;
+    const ratio = (box.xmax - box.xmin) / (box.ymax - box.ymin);
+    expect(ratio).toBeCloseTo(0.5, 5);
+  });
+
+  it("grows only the south edge for a bottom inset, keeping both points in the top slice", () => {
+    const args = [
+      { longitude: -73.99, latitude: 40.73 },
+      { longitude: -73.95, latitude: 40.7 },
+    ] as const;
+    const bare = buildTwoPointFitBounds(...args, wide)!;
+    const inset = buildTwoPointFitBounds(...args, {
+      viewAspect: 0.5,
+      bottomInsetRatio: 0.4,
+    })!;
+
+    expect(inset.ymax).toBeCloseTo(bare.ymax, 10);
+    expect(inset.ymin).toBeLessThan(bare.ymin);
+
+    // Both points sit above the visible/hidden boundary: the sheet hides
+    // the bottom 40%, so everything real must be in the top 60%.
+    const cutoff = inset.ymin + (inset.ymax - inset.ymin) * 0.4;
+    for (const p of args) expect(p.latitude).toBeGreaterThan(cutoff);
   });
 });

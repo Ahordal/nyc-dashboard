@@ -335,9 +335,38 @@ export default function MobileDashboard({
     sheetScrollBodyRef.current?.scrollTo({ top: 0 });
   }, [activeExplorerTab]);
 
+  // Publish the sheet's live rendered height as --mobile-sheet-h so the
+  // map scale bar can pin 0.5rem above it. The peek card is now
+  // content-driven (grows when a name/address wraps), so a static offset
+  // no longer tracks it; half is a fixed height and open hides the bar.
+  const dashboardRef = useRef<HTMLElement | null>(null);
+  const sheetRef = useRef<HTMLElement | null>(null);
+  useEffect(() => {
+    const sheet = sheetRef.current;
+    const dashboard = dashboardRef.current;
+    if (!sheet || !dashboard || typeof ResizeObserver === "undefined") return;
+    const sync = () => {
+      dashboard.style.setProperty(
+        "--mobile-sheet-h",
+        `${sheet.getBoundingClientRect().height}px`,
+      );
+    };
+    sync();
+    const observer = new ResizeObserver(sync);
+    observer.observe(sheet);
+    return () => observer.disconnect();
+  }, []);
+
   function paneClass(tab: ExplorerTab, base: string) {
     return `${base} ${activeExplorerTab === tab ? "" : "explorer-pane-hidden"}`;
   }
+
+  // Pixels of map the sheet currently covers — MapView reads this when a
+  // GPS fix lands to fit the fix + selected restaurant above the sheet.
+  const getViewBottomInset = useCallback(
+    () => sheetRef.current?.getBoundingClientRect().height ?? 0,
+    [],
+  );
 
   // The peek row's browse prompt names whichever of search/filters/radius
   // are actually narrowing the results, rather than a generic "Browse
@@ -363,6 +392,7 @@ export default function MobileDashboard({
 
   return (
     <main
+      ref={dashboardRef}
       className="mobile-dashboard"
       data-detent={detent}
       data-front={frontSurface}
@@ -412,12 +442,16 @@ export default function MobileDashboard({
               showHoverCard={false}
               showHoverGlow={false}
               showLocateControl
+              getViewBottomInset={getViewBottomInset}
             />
           </Suspense>
         </ErrorBoundary>
       </div>
 
-      <section className="mobile-sheet" aria-label="Restaurant explorer">
+      <section
+        ref={sheetRef}
+        className="mobile-sheet"
+        aria-label="Restaurant explorer">
         <div className="mobile-sheet-handle">
           {detent !== "open" && (
             <button
@@ -502,6 +536,10 @@ export default function MobileDashboard({
                     className={paneClass("details", "restaurant-details")}>
                     <RestaurantDetails
                       restaurant={selectedRestaurant}
+                      distanceOrigin={distanceOrigin}
+                      distanceOriginKind={
+                        searchRadiusPoint ? "search-radius" : "your-location"
+                      }
                       history={history}
                       isLoadingHistory={isLoadingHistory}
                       selectedInspectionId={reportInspectionId}

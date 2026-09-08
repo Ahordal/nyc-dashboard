@@ -3208,26 +3208,20 @@ summary:focus-visible,
     display: none;
   }
 
-  /* Graphical scale bar rides just above the sheet through the peek and half
-     detents. At the open detent the map is fully covered, so hide it. */
+  /* Graphical scale bar rides 0.5rem above the sheet through the peek and
+     half detents, tracking its live height (--mobile-sheet-h, published
+     by MobileDashboard) so a peek card that wraps to extra lines pushes
+     the bar up with it. At the open detent the map is fully covered, so
+     hide it. */
   .mobile-dashboard .map-scale-bar-container {
     display: none;
-    bottom: calc(118px + env(safe-area-inset-bottom) + 0.5rem);
+    bottom: calc(var(--mobile-sheet-h, 118px) + 0.5rem);
     right: 0.5rem;
   }
 
   .mobile-dashboard[data-detent="peek"] .map-scale-bar-container,
   .mobile-dashboard[data-detent="half"] .map-scale-bar-container {
     display: block;
-  }
-
-  .mobile-dashboard[data-detent="peek"][data-peek="empty"]
-    .map-scale-bar-container {
-    bottom: calc(58px + env(safe-area-inset-bottom) + 0.5rem);
-  }
-
-  .mobile-dashboard[data-detent="half"] .map-scale-bar-container {
-    bottom: calc((100dvh - var(--appbar-h) - var(--strip-h)) * 0.4 + 0.5rem);
   }
 
   /* Tuck the remaining map control chips nearer the edges on a phone. */
@@ -3822,13 +3816,21 @@ summary:focus-visible,
   }
 
   /* Peek: handle chevron + the selected restaurant's card, or just
-     chevron + browse prompt. */
+     chevron + browse prompt. Content-driven height so a card that wraps
+     to extra lines (long name/address) grows the sheet upward instead of
+     being clipped; 118px is the floor, half the viewport the ceiling. */
   .mobile-dashboard[data-detent="peek"] .mobile-sheet {
-    height: calc(118px + env(safe-area-inset-bottom));
+    height: auto;
+    min-height: calc(118px + env(safe-area-inset-bottom));
+    max-height: calc(50dvh + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overflow-x: hidden;
   }
 
   .mobile-dashboard[data-detent="peek"][data-peek="empty"] .mobile-sheet {
     height: calc(58px + env(safe-area-inset-bottom));
+    min-height: 0;
+    overflow: hidden;
   }
 
   /* Half: the list (or a selected restaurant's Details) over a visible map. */

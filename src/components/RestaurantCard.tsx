@@ -10,7 +10,11 @@ import {
   getGradeCategory,
   CATEGORY_COLORS,
 } from "../utils/gradeCategory";
-import { haversineDistanceMiles } from "../utils/distance";
+import {
+  haversineDistanceMiles,
+  formatApproxMiles,
+  formatApproxMilesSpoken,
+} from "../utils/distance";
 import { toTitleCase } from "../utils/toTitleCase";
 
 type RestaurantCardProps = {
@@ -99,7 +103,7 @@ export default function RestaurantCard({
     gradeLabel,
     address && `at ${address}`,
     restaurant.cuisine && `${restaurant.cuisine} cuisine`,
-    distanceMiles != null && `${distanceMiles.toFixed(2)} miles away`,
+    distanceMiles != null && `${formatApproxMilesSpoken(distanceMiles)} away`,
   ]
     .filter(Boolean)
     .join(", ");
@@ -149,7 +153,7 @@ export default function RestaurantCard({
         {distanceMiles != null && (
           <div className="card-meta">
             <span className="card-meta-label">Distance:</span>{" "}
-            {distanceMiles.toFixed(2)} mi
+            {formatApproxMiles(distanceMiles)}
           </div>
         )}
       </div>

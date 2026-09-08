@@ -505,6 +505,8 @@ export default function Dashboard() {
               }`}>
               <RestaurantDetails
                 restaurant={selectedRestaurant}
+                distanceOrigin={searchRadiusPoint}
+                distanceOriginKind="search-radius"
                 history={history}
                 isLoadingHistory={isLoadingHistory}
                 selectedInspectionId={reportInspectionId}

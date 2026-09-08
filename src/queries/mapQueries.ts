@@ -335,6 +335,49 @@ export async function checkSelectionAgainstFilters(
   };
 }
 
+type LngLat = { longitude: number; latitude: number };
+type Bounds = { xmin: number; ymin: number; xmax: number; ymax: number };
+
+// Smallest lng/lat box that frames both points for a view.goTo(): 25%
+// breathing room, padded to the view's aspect so a near-collinear pair
+// doesn't collapse one axis, then grown southward so the bottom
+// `bottomInsetRatio` of the rendered view (the mobile bottom sheet)
+// hides neither point. Returns null when the two points are within
+// ~150m -- fitting them would slam to max zoom, so the caller should
+// just recentre on the fix instead. Pure math; the caller wraps the
+// result in an Extent.
+export function buildTwoPointFitBounds(
+  a: LngLat,
+  b: LngLat,
+  opts: { viewAspect: number; bottomInsetRatio: number },
+): Bounds | null {
+  const dLng = Math.abs(a.longitude - b.longitude);
+  const dLat = Math.abs(a.latitude - b.latitude);
+  if (Math.hypot(dLng, dLat) < 0.0018) return null;
+
+  const cx = (a.longitude + b.longitude) / 2;
+  const cy = (a.latitude + b.latitude) / 2;
+
+  let halfW = (dLng / 2) * 1.25;
+  let halfH = (dLat / 2) * 1.25;
+
+  const aspect = opts.viewAspect > 0 ? opts.viewAspect : 1;
+  if (halfW / halfH > aspect) halfH = halfW / aspect;
+  else halfW = halfH * aspect;
+
+  // South edge drops by height * r/(1-r) so the points occupy the top
+  // (1 - r) slice left visible above the sheet.
+  const r = Math.min(Math.max(opts.bottomInsetRatio, 0), 0.7);
+  const drop = 2 * halfH * (r / (1 - r));
+
+  return {
+    xmin: cx - halfW,
+    xmax: cx + halfW,
+    ymin: cy - halfH - drop,
+    ymax: cy + halfH,
+  };
+}
+
 // Resolves a single restaurant by its CAMIS (or feature `id`) against
 // the whole layer, deliberately ignoring the current map extent and the
 // display-only grade filter. Used to honour a `?camis=` deep link even

@@ -10,6 +10,7 @@ import MapView from "@arcgis/core/views/MapView";
 import GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
 import GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import FeatureFilter from "@arcgis/core/layers/support/FeatureFilter";
+import Extent from "@arcgis/core/geometry/Extent";
 
 import esriConfig from "@arcgis/core/config";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
@@ -49,6 +50,7 @@ import {
   queryVisibleRestaurants,
   queryRestaurantByCamis,
   checkSelectionAgainstFilters,
+  buildTwoPointFitBounds,
   queryFilterExtent,
   filterRestaurantsByGradeCategory,
   findRestaurantGraphicHit,
@@ -103,7 +105,80 @@ type MapViewProps = {
   showHoverGlow?: boolean;
   // The "locate me" chip. Mobile-only feature, so desktop leaves it off.
   showLocateControl?: boolean;
+  // Pixels of the map covered at the bottom by the mobile sheet, read at
+  // the moment a fix lands. When a restaurant is selected, the locate
+  // action fits both it and the fix into the slice of map above the
+  // sheet rather than just recentring on the fix. Omitted on desktop.
+  getViewBottomInset?: () => number;
 };
+
+// Camera move shared by both "locate + selection" paths -- tapping locate
+// with a restaurant already selected, and selecting a restaurant with a
+// GPS fix already down. Fits the fix and the selected point into the map
+// slice above the sheet, or recentres on the fix when there's no
+// selection geometry or the two points are near-coincident. Same
+// transition (600ms goTo) whichever path triggers it.
+async function fitToSelectionAndFix(
+  view: MapView,
+  layer: GeoJSONLayer,
+  selectedId: string,
+  fix: { latitude: number; longitude: number },
+  bottomInset: number,
+  isCancelled: () => boolean,
+): Promise<void> {
+  const recentreOnFix = () =>
+    view
+      .goTo(
+        { center: [fix.longitude, fix.latitude], zoom: 15 },
+        { duration: 600 },
+      )
+      .catch(() => {
+        // goTo rejects if the user interrupts the animation; ignore.
+      });
+
+  let selectedPoint = null;
+  try {
+    await layer.load();
+    const { geometry } = await checkSelectionAgainstFilters(
+      layer,
+      selectedId,
+      "",
+      { returnGeometry: true },
+    );
+    selectedPoint = geometry;
+  } catch (err) {
+    console.error("MapView: failed to query selection for locate fit", err);
+  }
+  if (isCancelled()) return;
+
+  const fitBounds =
+    selectedPoint != null &&
+    typeof selectedPoint.longitude === "number" &&
+    typeof selectedPoint.latitude === "number"
+      ? buildTwoPointFitBounds(
+          fix,
+          {
+            longitude: selectedPoint.longitude,
+            latitude: selectedPoint.latitude,
+          },
+          {
+            viewAspect: view.width / view.height,
+            bottomInsetRatio: view.height ? bottomInset / view.height : 0,
+          },
+        )
+      : null;
+
+  if (!fitBounds || !selectedPoint) {
+    recentreOnFix();
+    return;
+  }
+
+  const target = new Extent({
+    ...fitBounds,
+    spatialReference: selectedPoint.spatialReference,
+  });
+  view.goTo({ target }, { duration: 600 }).catch(() => {});
+}
 
 export default function InspectionMapView({
   filters,
@@ -122,6 +197,7 @@ export default function InspectionMapView({
   showHoverCard = true,
   showHoverGlow = true,
   showLocateControl = false,
+  getViewBottomInset,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
@@ -171,6 +247,14 @@ export default function InspectionMapView({
   const onSearchRadiusChangeRef = useRef(onSearchRadiusChange);
   const onUserLocationChangeRef = useRef(onUserLocationChange);
   const onInitialSelectionResolvedRef = useRef(onInitialSelectionResolved);
+  const getViewBottomInsetRef = useRef(getViewBottomInset);
+
+  // The current in-bounds GPS fix, or null when there's none / it's
+  // outside NYC. Lets the selection effect reframe on both the fix and a
+  // newly-selected restaurant, mirroring what the locate tap does.
+  const activeUserFixRef = useRef<{ latitude: number; longitude: number } | null>(
+    null,
+  );
 
   const prevBoroughsRef = useRef<string[]>(filters.boroughs);
   const prevSearchRef = useRef<string>(searchQuery);
@@ -223,6 +307,10 @@ export default function InspectionMapView({
   useEffect(() => {
     onInitialSelectionResolvedRef.current = onInitialSelectionResolved;
   }, [onInitialSelectionResolved]);
+
+  useEffect(() => {
+    getViewBottomInsetRef.current = getViewBottomInset;
+  }, [getViewBottomInset]);
 
   useEffect(() => {
     onSearchRadiusChangeRef.current?.(
@@ -455,7 +543,9 @@ export default function InspectionMapView({
 
   // Draw (or clear) the "you are here" graphics when a GPS fix lands. A
   // fix outside NYC draws nothing and raises the out-of-area toast; an
-  // in-bounds fix draws the dot + accuracy circle and flies there. Each
+  // in-bounds fix draws the dot + accuracy circle and reframes. With a
+  // restaurant selected, that reframe fits both it and the fix into the
+  // map above the sheet; otherwise it just recentres on the fix. Each
   // success is a fresh object, so a re-tap re-frames on the new fix.
   useEffect(() => {
     const locationLayer = userLocationLayerRef.current;
@@ -465,6 +555,7 @@ export default function InspectionMapView({
     const fix = geo.position;
     if (!fix) {
       setOutsideNyc(false);
+      activeUserFixRef.current = null;
       onUserLocationChangeRef.current?.(null);
       return;
     }
@@ -472,24 +563,50 @@ export default function InspectionMapView({
     if (!isWithinNYC(fix.latitude, fix.longitude)) {
       setOutsideNyc(true);
       setOutOfAreaNonce((n) => n + 1);
+      activeUserFixRef.current = null;
       onUserLocationChangeRef.current?.(null);
       return;
     }
 
     setOutsideNyc(false);
+    activeUserFixRef.current = {
+      latitude: fix.latitude,
+      longitude: fix.longitude,
+    };
     onUserLocationChangeRef.current?.({
       latitude: fix.latitude,
       longitude: fix.longitude,
     });
     locationLayer.addMany(buildUserLocationGraphics(fix));
-    viewRef.current
-      ?.goTo(
-        { center: [fix.longitude, fix.latitude], zoom: 15 },
-        { duration: 600 },
-      )
-      .catch(() => {
-        // goTo rejects if the user interrupts the animation; ignore.
-      });
+
+    let cancelled = false;
+    const view = viewRef.current;
+    const layer = layerRef.current;
+    const selectedId = selectedRestaurantIdRef.current;
+
+    if (view && layer && selectedId) {
+      void fitToSelectionAndFix(
+        view,
+        layer,
+        selectedId,
+        fix,
+        getViewBottomInsetRef.current?.() ?? 0,
+        () => cancelled,
+      );
+    } else {
+      view
+        ?.goTo(
+          { center: [fix.longitude, fix.latitude], zoom: 15 },
+          { duration: 600 },
+        )
+        .catch(() => {
+          // goTo rejects if the user interrupts the animation; ignore.
+        });
+    }
+
+    return () => {
+      cancelled = true;
+    };
   }, [geo.position]);
 
   // Clear a stale out-of-area flag as soon as a new request starts, so the
@@ -503,31 +620,54 @@ export default function InspectionMapView({
     const view = viewRef.current;
     if (!layer || !view) return;
 
+    let cancelled = false;
+
     const handleCameraMove = async () => {
-      if (selectedRestaurantId) {
-        try {
-          // checkSelectionAgainstFilters queries the layer directly and
-          // doesn't load it itself; match the other call sites.
-          await layer.load();
-          const { geometry } = await checkSelectionAgainstFilters(
-            layer,
-            selectedRestaurantId,
-            "",
-            { returnGeometry: true },
+      if (!selectedRestaurantId) return;
+
+      // With a GPS fix already down, reframe on both the fix and the new
+      // selection -- the exact move the locate tap makes in the reverse
+      // order, so a point tapped after panning away from the fix doesn't
+      // leave the fix off-screen.
+      const fix = activeUserFixRef.current;
+      if (fix) {
+        void fitToSelectionAndFix(
+          view,
+          layer,
+          selectedRestaurantId,
+          fix,
+          getViewBottomInsetRef.current?.() ?? 0,
+          () => cancelled,
+        );
+        return;
+      }
+
+      try {
+        // checkSelectionAgainstFilters queries the layer directly and
+        // doesn't load it itself; match the other call sites.
+        await layer.load();
+        const { geometry } = await checkSelectionAgainstFilters(
+          layer,
+          selectedRestaurantId,
+          "",
+          { returnGeometry: true },
+        );
+        if (geometry && !cancelled) {
+          view.goTo(
+            { target: geometry, zoom: Math.max(view.zoom, 14) },
+            { duration: 500, easing: "ease-in-out" },
           );
-          if (geometry) {
-            view.goTo(
-              { target: geometry, zoom: Math.max(view.zoom, 14) },
-              { duration: 500, easing: "ease-in-out" },
-            );
-          }
-        } catch (err) {
-          console.error("MapView: failed to query feature for pan/zoom", err);
         }
+      } catch (err) {
+        console.error("MapView: failed to query feature for pan/zoom", err);
       }
     };
 
     handleCameraMove();
+
+    return () => {
+      cancelled = true;
+    };
   }, [selectedRestaurantId]);
 
   useEffect(() => {

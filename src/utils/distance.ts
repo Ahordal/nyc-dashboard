@@ -28,3 +28,24 @@ export function haversineDistanceMiles(from: LatLng, to: LatLng): number {
 
   return EARTH_RADIUS_MILES * c;
 }
+
+// Coarse mileage string: tenths below ~10 mi, whole miles above, floored
+// at 0.1 so a near-coincident point never reads "0.0". Shared by the
+// display and spoken formatters so both round identically.
+function roundApproxMiles(miles: number): string {
+  return miles < 9.95
+    ? Math.max(0.1, Math.round(miles * 10) / 10).toFixed(1)
+    : String(Math.round(miles));
+}
+
+// Straight-line (great-circle) distance for display, e.g. "~2.3 mi". The
+// value is deliberately coarse and carries a leading "~": it's not a
+// walking or driving distance, and in NYC the two diverge a lot.
+export function formatApproxMiles(miles: number): string {
+  return `~${roundApproxMiles(miles)} mi`;
+}
+
+// Same rounding, phrased for aria-labels: "about 2.3 miles".
+export function formatApproxMilesSpoken(miles: number): string {
+  return `about ${roundApproxMiles(miles)} miles`;
+}
