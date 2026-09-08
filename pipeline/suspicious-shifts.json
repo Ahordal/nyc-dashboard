@@ -7558,5 +7558,17 @@
     "distanceMeters": 106.49017568078756,
     "matchType": "house+street",
     "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "50192044",
+    "dba": "FUEL THEORY",
+    "address": "1781 SOUTH AVENUE, Staten Island 10314",
+    "dohmhLat": 40.601604818817,
+    "dohmhLon": -74.193020381689,
+    "resolvedLat": 40.600246,
+    "resolvedLon": -74.192328,
+    "distanceMeters": 162.0071254535626,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
   }
 ]
