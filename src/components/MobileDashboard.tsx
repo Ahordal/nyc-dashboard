@@ -187,11 +187,12 @@ export default function MobileDashboard({
   // handle row: up goes peek -> open directly (half only earns its keep
   // when a selection or live search is showing the list/details over a
   // panned map, so it's never a stop on the way up), then open is the
-  // ceiling; down goes open -> half -> peek so a selection collapse keeps
-  // the graceful step-down, except it goes open -> peek directly when
-  // that just undoes an untouched peek -> open skip. peek shows only the
-  // up chevron, open only down, half both. Tapping the peek row/card
-  // itself also jumps straight to open.
+  // ceiling; down goes open -> half -> peek only while a selection is
+  // showing, to keep that collapse a graceful step-down — with nothing
+  // selected, or when open just undid an untouched peek -> open skip, it
+  // goes open -> peek directly. peek shows only the up chevron, open only
+  // down, half both. Tapping the peek row/card itself also jumps straight
+  // to open.
   const searching = activeDrawer === "search";
   // Set when the up chevron skips peek -> open directly (a committed
   // selection, nothing moved the map). While it holds, the first down
@@ -220,14 +221,18 @@ export default function MobileDashboard({
       setFrontSurface("sheet");
       setDetent((d) => {
         if (d !== "open") return "peek";
-        if (skippedToOpenRef.current) {
+        // Skip half on the way down when it has nothing to show: either
+        // this open undoes an untouched peek -> open skip, or there's no
+        // selection for a half view to sit over. Mirrors expandSheet, so
+        // with nothing selected the sheet just toggles peek <-> open.
+        if (skippedToOpenRef.current || !selectedRestaurant) {
           skippedToOpenRef.current = false;
           return "peek";
         }
         return "half";
       });
     },
-    [setDetent],
+    [setDetent, selectedRestaurant],
   );
 
   // Peek-row / peek-card tap: expand the sheet and bring it to the front.
