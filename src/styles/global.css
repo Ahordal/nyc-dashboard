@@ -1353,11 +1353,15 @@ summary:focus-visible,
 .details-hero-title {
   font-family: var(--font-display);
   font-weight: 700;
-  /* Matches .card-title in the restaurant list. */
+  /* Matches .card-title in the restaurant list: wrap to a second line
+     when one line can't hold the name, clamp and ellipsize only past
+     two. The flex header has no fixed height, so it grows to fit. */
   font-size: var(--fs-lg);
-  white-space: nowrap;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
   text-transform: uppercase;
   width: 100%;
   line-height: 1.1;
