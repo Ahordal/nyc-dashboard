@@ -184,14 +184,14 @@ export default function MobileDashboard({
   );
 
   // The sheet steps one detent at a time via centred chevrons in the
-  // handle row: up (peek -> half -> open when browsing, peek -> open
-  // directly once a restaurant is selected — half's list/browse stopover
-  // has nothing to add over a card the user already committed to) and
-  // down (open -> half -> peek, so collapsing keeps the graceful
-  // step-down — except it goes open -> peek directly when that just
-  // undoes an untouched peek -> open skip). peek shows only up, open only
-  // down, half both. Tapping the peek card itself jumps straight to open
-  // (a committed selection).
+  // handle row: up goes peek -> open directly (half only earns its keep
+  // when a selection or live search is showing the list/details over a
+  // panned map, so it's never a stop on the way up), then open is the
+  // ceiling; down goes open -> half -> peek so a selection collapse keeps
+  // the graceful step-down, except it goes open -> peek directly when
+  // that just undoes an untouched peek -> open skip. peek shows only the
+  // up chevron, open only down, half both. Tapping the peek row/card
+  // itself also jumps straight to open.
   const searching = activeDrawer === "search";
   // Set when the up chevron skips peek -> open directly (a committed
   // selection, nothing moved the map). While it holds, the first down
@@ -204,12 +204,16 @@ export default function MobileDashboard({
       setFrontSurface("sheet");
       setDetent((d) => {
         if (d !== "peek") return "open";
-        if (!selectedRestaurant) return "half";
+        // From peek the sheet always jumps straight to open. half is only
+        // useful when a selection (or live search) shows the list/details
+        // over a panned map; browsing with nothing selected wants the
+        // full height, not a cramped third of the screen. The jump skips
+        // half, so the next down chevron reverses it straight to peek.
         skippedToOpenRef.current = true;
         return "open";
       });
     },
-    [setDetent, selectedRestaurant],
+    [setDetent],
   );
   const collapseSheet = useCallback(
     () => {
