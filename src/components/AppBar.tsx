@@ -1,12 +1,13 @@
-// MobileAppBar.tsx
+// AppBar.tsx
 //
-// Slim top bar for the phone layout: compact wordmark, a Search button, a
-// Filters button (badged with the active filter count) and an Info button
-// — each slides down its own drawer. Search filters the map live while
-// the sheet sits at its half detent so the generated list stays visible.
-// The Info drawer is the single info surface on phones: dataset meta, the
-// map legend / how-to (folded in from MapView), then the attribution
-// footer as a detached panel.
+// Slim top bar shared by the phone layout and the 751–1750px tablet
+// layout: compact wordmark, a Search button, a Filters button (badged
+// with the active filter count) and an Info button — each slides down its
+// own drawer. Search filters the map live while the sheet sits at its
+// half detent so the generated list stays visible. The Info drawer is the
+// single info surface here: dataset meta, the map legend / how-to (folded
+// in from MapView), then the attribution footer as a detached panel. The
+// tablet layout passes `tagline` to keep the desktop tertiary title line.
 
 import { Fragment, useId } from "react";
 
@@ -88,7 +89,7 @@ function FilterSummary({ filters }: { filters: Filters }) {
 
 type MobileDrawer = "search" | "filters" | "info" | "grades" | null;
 
-type MobileAppBarProps = {
+type AppBarProps = {
   filters: Filters;
   setFilters: SetFilters;
   meta: DashboardMeta | null;
@@ -96,6 +97,9 @@ type MobileAppBarProps = {
   // A search query is committed — badge the button so it reads as a live
   // filter even with the drawer closed.
   searchActive: boolean;
+  // Tertiary title line under the subtitle. The tablet layout passes the
+  // desktop line; the phone bar omits it.
+  tagline?: string;
   // The one open top drawer across the whole mobile layout (see
   // MobileDashboard). Search/Filters/Info live here; "grades" is the
   // area-strip drawer and just means none of these is open.
@@ -103,7 +107,7 @@ type MobileAppBarProps = {
   onDrawerChange: (drawer: MobileDrawer) => void;
 };
 
-export default function MobileAppBar({
+export default function AppBar({
   filters,
   setFilters,
   meta,
@@ -111,7 +115,8 @@ export default function MobileAppBar({
   searchActive,
   activeDrawer,
   onDrawerChange,
-}: MobileAppBarProps) {
+  tagline,
+}: AppBarProps) {
   const searchDrawerId = useId();
   const filterDrawerId = useId();
   const infoDrawerId = useId();
@@ -144,6 +149,9 @@ export default function MobileAppBar({
           <h1 className="mobile-appbar-subtitle">
             Dining Under the Microscope
           </h1>
+          {tagline && (
+            <span className="mobile-appbar-tagline">{tagline}</span>
+          )}
         </div>
 
         <div className="mobile-appbar-actions">

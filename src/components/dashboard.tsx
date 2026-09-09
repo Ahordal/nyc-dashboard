@@ -8,14 +8,19 @@ import {
   lazy,
   Suspense,
   useCallback,
+  useId,
   useReducer,
   useState,
 } from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
+import {
+  faChevronRight,
+  faChevronDown,
+} from "@fortawesome/free-solid-svg-icons";
 
 import MobileDashboard from "./MobileDashboard";
+import AppBar from "./AppBar";
 import DashboardTitle from "./DashboardTitle";
 import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
@@ -105,7 +110,20 @@ export default function Dashboard() {
 
   // Below this width the desktop 3-pane grid is replaced by the phone
   // layout (app bar + full-bleed map + bottom sheet); see MobileDashboard.
-  const isPhone = useMediaQuery("(max-width: 640px)");
+  // The short-landscape clause keeps a phone turned sideways on the phone
+  // layout rather than flipping it to the stacked tablet grid.
+  const isPhone = useMediaQuery(
+    "(max-width: 750px), (max-height: 480px) and (orientation: landscape)",
+  );
+
+  // 751–1750px: the stacked two-column layout, which swaps the big title
+  // panel, the <details> filter bar, the Search row and the Dashboard
+  // Information panel for the shared AppBar (Search/Filters/Info drawers).
+  const isTablet = useMediaQuery("(max-width: 1750px)") && !isPhone;
+  const [activeDrawer, setActiveDrawer] = useState<
+    "search" | "filters" | "info" | "grades" | null
+  >(null);
+  const gradeDrawerId = useId();
 
   // Selection, hover, and the active Explorer tab move together — see
   // selectionReducer for the "selecting X clears Y, switches tab" rules.
@@ -319,78 +337,141 @@ export default function Dashboard() {
     );
   }
 
+  // Shared between the desktop grid cell and the tablet KPI's grade drawer.
+  const gradeChart = (
+    <ErrorBoundary
+      context="GradeChart"
+      fallback={
+        <ErrorFallback message="The grade breakdown chart failed to load." />
+      }>
+      <Suspense fallback={<ChartSkeleton label="Loading grade breakdown…" />}>
+        <GradeChart
+          counts={gradeCounts}
+          filters={filters}
+          searchQuery={searchQuery}
+          searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
+        />
+      </Suspense>
+    </ErrorBoundary>
+  );
+
+  const statsPanel = (
+    <div className="map-stats">
+      <StatsPanel
+        restaurants={visibleRestaurants}
+        searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
+      />
+    </div>
+  );
+
   return (
     <div className="dashboard-container">
       <main className="dashboard">
+        {isTablet && (
+          <div className="tablet-appbar-region">
+            <AppBar
+              filters={filters}
+              setFilters={setFilters}
+              meta={dashboardMeta}
+              onSearchChange={setSearchQuery}
+              searchActive={searchQuery.trim().length > 0}
+              activeDrawer={activeDrawer}
+              onDrawerChange={setActiveDrawer}
+              tagline="Restaurant Inspection Trends and Insights"
+            />
+          </div>
+        )}
+
         <div className="left-sidebar">
-          <div className="dashboard-title">
-            <DashboardTitle />
-          </div>
+          {!isTablet && (
+            <>
+              <div className="dashboard-title">
+                <DashboardTitle />
+              </div>
 
-          <div className="dashboard-guide">
-            <DashboardGuide meta={dashboardMeta} />
-          </div>
+              <div className="dashboard-guide">
+                <DashboardGuide meta={dashboardMeta} />
+              </div>
+            </>
+          )}
 
-          <div className="grade-chart">
-            <ErrorBoundary
-              context="GradeChart"
-              fallback={
-                <ErrorFallback message="The grade breakdown chart failed to load." />
-              }>
-              <Suspense
-                fallback={<ChartSkeleton label="Loading grade breakdown…" />}>
-                <GradeChart
-                  counts={gradeCounts}
-                  filters={filters}
-                  searchQuery={searchQuery}
-                  searchRadiusMiles={
-                    searchRadiusPoint ? activeRadiusMiles : null
-                  }
-                />
-              </Suspense>
-            </ErrorBoundary>
-          </div>
+          {!isTablet && <div className="grade-chart">{gradeChart}</div>}
         </div>
 
         <div className="map-column">
           <div className="map-top">
-            <details
-              className="filters-disclosure"
-              open={filtersExpanded}
-              onToggle={(event) => {
-                if (!isFilterBarInline) {
-                  setFiltersOpen(event.currentTarget.open);
-                }
-              }}>
-              <summary className="filters-disclosure-summary">
-                <FontAwesomeIcon
-                  icon={faChevronRight}
-                  className="filters-disclosure-chevron"
-                  aria-hidden="true"
-                />
-                <span className="filters-disclosure-label">Filters</span>
-                <span className="filters-disclosure-active">
-                  {filterSummary}
-                </span>
-              </summary>
+            {!isTablet && (
+              <details
+                className="filters-disclosure"
+                open={filtersExpanded}
+                onToggle={(event) => {
+                  if (!isFilterBarInline) {
+                    setFiltersOpen(event.currentTarget.open);
+                  }
+                }}>
+                <summary className="filters-disclosure-summary">
+                  <FontAwesomeIcon
+                    icon={faChevronRight}
+                    className="filters-disclosure-chevron"
+                    aria-hidden="true"
+                  />
+                  <span className="filters-disclosure-label">Filters</span>
+                  <span className="filters-disclosure-active">
+                    {filterSummary}
+                  </span>
+                </summary>
 
-              <div className="dashboard-filters">
-                <div className="dashboard-grade-filters">
-                  <GradeFilters filters={filters} setFilters={setFilters} />
+                <div className="dashboard-filters">
+                  <div className="dashboard-grade-filters">
+                    <GradeFilters filters={filters} setFilters={setFilters} />
+                  </div>
+
+                  <div className="dashboard-borough-filters">
+                    <BoroughFilters filters={filters} setFilters={setFilters} />
+                  </div>
                 </div>
+              </details>
+            )}
 
-                <div className="dashboard-borough-filters">
-                  <BoroughFilters filters={filters} setFilters={setFilters} />
+            {isTablet ? (
+              <div className="tablet-kpi-region">
+                <div className="tablet-kpi-bar">
+                  {statsPanel}
+                  <button
+                    type="button"
+                    className="tablet-kpi-chevron-box"
+                    data-open={activeDrawer === "grades"}
+                    aria-expanded={activeDrawer === "grades"}
+                    aria-controls={gradeDrawerId}
+                    aria-label={
+                      activeDrawer === "grades"
+                        ? "Hide the grade breakdown"
+                        : "Show the grade breakdown for the current view"
+                    }
+                    onClick={() =>
+                      setActiveDrawer(
+                        activeDrawer === "grades" ? null : "grades",
+                      )
+                    }>
+                    <FontAwesomeIcon
+                      icon={faChevronDown}
+                      className="tablet-kpi-chevron"
+                      aria-hidden="true"
+                    />
+                  </button>
+                </div>
+                <div
+                  id={gradeDrawerId}
+                  className="tablet-kpi-drawer"
+                  data-open={activeDrawer === "grades"}>
+                  {activeDrawer === "grades" && (
+                    <div className="tablet-kpi-drawer-chart">{gradeChart}</div>
+                  )}
                 </div>
               </div>
-            </details>
-
-            <div className="map-stats">
-              <StatsPanel
-                restaurants={visibleRestaurants}
-                searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
-              />
-            </div>
+            ) : (
+              statsPanel
+            )}
           </div>
 
           <div className="map-view">
@@ -419,9 +500,11 @@ export default function Dashboard() {
           </div>
         </div>
 
-        <div className="search-panel">
-          <ExplorerSearch onSearchChange={setSearchQuery} />
-        </div>
+        {!isTablet && (
+          <div className="search-panel">
+            <ExplorerSearch onSearchChange={setSearchQuery} />
+          </div>
+        )}
 
         <div className="explorer">
           <ExplorerTabs

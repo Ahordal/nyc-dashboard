@@ -52,8 +52,8 @@ The map is the heaviest part of the app (the ArcGIS SDK), so it loads on its own
 ### Responsive layout
 
 - **Above 1750px:** a three-pane layout — map, list, and charts side by side.
-- **640–1750px:** the panes stack into a scrolling two-column layout.
-- **Below 640px:** a dedicated phone layout — a slim top bar, a full-screen map, and a bottom sheet that steps between three heights (a peek, half, and full). Search, filters, and info each open as a drawer over the map.
+- **750–1750px:** the panes stack into a scrolling two-column layout, topped by the same slim app bar as the phone layout — a compact wordmark plus Search, Filters, and Info buttons that each open a drawer. The large title panel, the disclosure filter bar, the search row, and the standalone Dashboard Information panel fold into that bar. The grade-breakdown donut folds into a chevron drawer on the KPI bar (like the phone's area strip), and the score-history chart runs full-width along the bottom.
+- **Below 750px, or any phone held in landscape:** a dedicated phone layout — a slim top bar, a full-screen map, and a bottom sheet that steps between three heights (a peek, half, and full). Search, filters, and info each open as a drawer over the map. A short landscape viewport (≤480px tall) keeps this layout rather than the two-column one.
 
 ### Accessibility
 

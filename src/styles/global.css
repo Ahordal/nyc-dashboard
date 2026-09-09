@@ -3110,74 +3110,33 @@ summary:focus-visible,
     overflow: visible;
   }
 
+  /* The title panel, <details> filter bar, Search row and Dashboard
+     Information panel are replaced by the shared AppBar (dashboard.tsx,
+     isTablet); its drawers carry search / filters / info. The grade donut
+     folds into the KPI's chevron drawer, leaving the score-history chart
+     full-width along the bottom. */
   .dashboard {
     min-width: 0;
     min-height: 0;
     height: auto;
     grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(6, auto);
+    grid-template-rows: repeat(5, auto);
     grid-template-areas:
-      "title       guide"
+      "appbar      appbar"
       "map-column  map-column"
-      "search      search"
       "explorer    explorer"
-      "grade       performance"
+      "performance performance"
       "footer      footer";
   }
 
-  /* Title + Dashboard Information side by side next to the "NYC" wordmark.
-     .left-sidebar flattened so its children place into the grid directly. */
+  /* .left-sidebar flattened so its remaining child places into the grid
+     directly. */
   .left-sidebar {
     display: contents;
   }
 
-  .dashboard-title {
-    grid-area: title;
-  }
-
-  .dashboard-guide {
-    grid-area: guide;
-  }
-
-  .grade-chart {
-    grid-area: grade;
-  }
-
-  .dashboard-title-panel .panel-header {
-    display: none;
-  }
-
-  .h1-large {
-    font-size: clamp(4rem, 12vw, 9rem);
-  }
-
-  /* Dashboard Information: 2x2 label/value grid, centred against the title. */
-  .dashboard-guide-meta {
-    display: grid;
-    flex: 1;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-s) var(--space-m);
-    align-content: center;
-  }
-
-  .dashboard-guide-meta-row {
-    display: contents;
-  }
-
-  .dashboard-guide-meta-item {
-    min-width: 0;
-  }
-
-  .dashboard-guide-meta-divider {
-    display: none;
-  }
-
-  /* KPI stays a distinct panel, set off from the filter bar */
-  .map-stats {
-    margin-top: var(--space-xs);
-  }
-
-  /* Map column: drop the subgrid, let filters/stats/map flow */
+  /* Map column: drop the subgrid, let stats/map flow. KPI sits flush at
+     the top so the grid gap alone (0.5rem) separates it from the app bar. */
   .map-column {
     display: block;
   }
@@ -3191,9 +3150,8 @@ summary:focus-visible,
     height: min(65vh, 560px);
   }
 
-  /* Grade + performance share a row; tall enough for the donut's centre
-     summary to clear the ring. Restacked at phone width. */
-  .grade-chart,
+  /* Tall enough for the donut's centre summary to clear the ring.
+     Restacked at phone width. */
   .performance-chart {
     height: min(60vh, 460px);
   }
@@ -3224,12 +3182,384 @@ summary:focus-visible,
   }
 }
 
+/* 16.1 TABLET APP BAR (751-1750px)
+
+   The stacked layout's header: the same wordmark + Search/Filters/Info
+   buttons as the phone AppBar, wrapped by dashboard.tsx in
+   .tablet-appbar-region so the bar and its three drawers stack in flow
+   at the top of the grid. Drawers expand in place, pushing content down
+   (the layout already scrolls). Button/badge values mirror the phone
+   block (section 18.2). */
+@media (min-width: 751px) and (max-width: 1750px) {
+  .tablet-appbar-region {
+    grid-area: appbar;
+    position: relative;
+    z-index: 20;
+  }
+
+  /* 0.5rem side padding so the action buttons line up with the map's
+     right-side control column (also 0.5rem in). */
+  .tablet-appbar-region .mobile-appbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-s);
+    padding: 0.55rem var(--space-xs);
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+  }
+
+  .tablet-appbar-region .mobile-appbar-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    line-height: 1;
+  }
+
+  .tablet-appbar-region .mobile-appbar-wordmark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--fs-xl);
+    letter-spacing: -0.02em;
+    color: var(--text-muted);
+    text-shadow: -2px 2px 0 var(--bg-alt);
+  }
+
+  .tablet-appbar-region .mobile-appbar-subtitle {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--text-muted);
+  }
+
+  .tablet-appbar-region .mobile-appbar-tagline {
+    font-family: var(--font-body);
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    letter-spacing: 0.05rem;
+    text-transform: uppercase;
+    color: var(--text-muted);
+  }
+
+  .tablet-appbar-region .mobile-appbar-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .tablet-appbar-region .mobile-appbar-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    box-shadow: 0 2px 4px var(--shadow-controls);
+    color: var(--text-muted);
+    font-size: var(--fs-lg);
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  .tablet-appbar-region .mobile-appbar-button:hover,
+  .tablet-appbar-region .mobile-appbar-button[data-active] {
+    background-color: var(--link-background-hover);
+    color: var(--link-hover);
+  }
+
+  .tablet-appbar-region .mobile-appbar-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 8px;
+    background-color: var(--accent-blue);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  .tablet-appbar-region .mobile-appbar-badge-dot {
+    top: -4px;
+    right: -4px;
+    min-width: 8px;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+  }
+
+  /* Drawers: collapsed to nothing, expand under the bar on open. */
+  .tablet-appbar-region .mobile-search-drawer,
+  .tablet-appbar-region .mobile-filter-drawer,
+  .tablet-appbar-region .mobile-info-drawer {
+    max-height: 0;
+    overflow: hidden;
+  }
+
+  .tablet-appbar-region .mobile-search-drawer[data-open="true"],
+  .tablet-appbar-region .mobile-filter-drawer[data-open="true"],
+  .tablet-appbar-region .mobile-info-drawer[data-open="true"] {
+    margin-top: var(--space-xs);
+    max-height: min(80vh, 620px);
+    overflow-y: auto;
+  }
+
+  .tablet-appbar-region .mobile-search-drawer-card,
+  .tablet-appbar-region .mobile-filter-drawer-card,
+  .tablet-appbar-region .mobile-info-drawer-panel-body {
+    padding: var(--space-s);
+    border: 1px solid var(--border-panel);
+    background-color: var(--bg-panel);
+  }
+
+  /* Search holds a single input -- no need for it to span the page. The
+     Filters card is full-bleed (like the app bar / KPI above it); its
+     Grade + Borough groups split the width. */
+  .tablet-appbar-region .mobile-search-drawer-card {
+    max-width: 520px;
+  }
+
+  .tablet-appbar-region .mobile-info-drawer-panel + .mobile-info-drawer-panel {
+    margin-top: var(--space-xs);
+  }
+
+  /* Filters drawer content: font / size / spacing mirrored from section
+     18's .mobile-filter-* rules so it reads the same as on phones. The
+     touch-only sticky-hover pins are left out (tablet is a pointer). */
+  /* Grade + Borough sit side by side while the row fits two columns
+     (~750px+), then wrap to stacked — uses the drawer width instead of
+     leaving the right half empty. */
+  .tablet-appbar-region .mobile-filter-groups {
+    display: flex;
+    flex-flow: row wrap;
+    gap: 2rem var(--space-s);
+  }
+
+  .tablet-appbar-region .mobile-filter-groups .panel {
+    flex: 1 1 360px;
+    min-width: 0;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .tablet-appbar-region .mobile-filter-groups .filter-group {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.6rem;
+  }
+
+  .tablet-appbar-region .mobile-filter-groups .filter-label {
+    flex-basis: 100%;
+    margin: 0 0 0.4rem;
+    padding: 0.4rem 0 0.4rem 0.4rem;
+    background-color: var(--bg-alt);
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    letter-spacing: 0.05em;
+  }
+
+  .tablet-appbar-region .mobile-filter-groups .filter-label svg {
+    font-size: var(--fs-sm);
+    margin-right: 0.4rem;
+  }
+
+  .tablet-appbar-region .mobile-filter-groups .filter-clear {
+    margin: 0 0.6rem 0 0;
+  }
+
+  /* Content-width chips packed left (the phone's flex-grow only makes
+     sense when 2-3 fit per row); min-width is just a floor for A/B/C. */
+  .tablet-appbar-region .mobile-filter-groups .filter-button {
+    flex: 0 0 auto;
+    min-width: 3rem;
+    padding: 0.6rem 0.9rem;
+    font-size: var(--fs-xs);
+  }
+
+  .tablet-appbar-region .mobile-filter-notice-rule {
+    margin: var(--space-s) 0;
+    border: none;
+    border-top: 1px solid var(--border-panel);
+  }
+
+  .tablet-appbar-region .mobile-filter-notice {
+    margin: var(--space-s) 0 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+  }
+
+  .tablet-appbar-region .mobile-filter-notice-label {
+    color: var(--text-body);
+  }
+
+  .tablet-appbar-region .mobile-filter-notice-lead,
+  .tablet-appbar-region .mobile-filter-notice-borough {
+    color: var(--text-faded);
+  }
+
+  /* Compact dataset meta in the Info drawer (mirrors section 18's
+     [data-compact] rules, which are scoped to the phone width). */
+  .tablet-appbar-region .dashboard-guide-meta[data-compact="true"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem 1.25rem;
+    padding: 0 0 var(--space-s);
+    border-top: none;
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  .tablet-appbar-region
+    .dashboard-guide-meta[data-compact="true"]
+    .dashboard-guide-meta-item {
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .tablet-appbar-region
+    .dashboard-guide-meta[data-compact="true"]
+    .dashboard-guide-meta-label,
+  .tablet-appbar-region
+    .dashboard-guide-meta[data-compact="true"]
+    .dashboard-guide-meta-value {
+    font-size: var(--fs-sm);
+  }
+
+  /* Map's legend/info button dropped (the AppBar Info drawer carries the
+     same document as mobile, legend included); pull the top-right control
+     stack up into the slot it vacated. Controls sit 1rem from the top,
+     0.5rem from the sides, 0.5rem apart (zoom in/out stay adjacent). */
+  .dashboard .map-view-top-header {
+    display: none;
+  }
+
+  .dashboard .map-zoom-buttons-container,
+  .dashboard .map-compass-container {
+    left: var(--space-xs);
+  }
+
+  .dashboard .map-basemap-toggle-container,
+  .dashboard .map-search-radius-container {
+    right: var(--space-xs);
+  }
+
+  /* 0.5rem below the 64px zoom chip. */
+  .dashboard .map-compass-container {
+    top: calc(1rem + 64px + var(--space-xs));
+  }
+
+  .dashboard .map-basemap-toggle-container {
+    top: 1rem;
+  }
+
+  .dashboard .map-search-radius-container {
+    top: calc(1rem + 32px + var(--space-xs));
+  }
+
+  /* KPI: the desktop stats panel stays visible; a chevron pinned to its
+     right edge (in line with the map's right-side controls, 0.5rem in)
+     expands the grade donut in an in-flow drawer, mirroring the phone
+     area strip. */
+  .tablet-kpi-bar {
+    position: relative;
+  }
+
+  .tablet-kpi-bar .stats-panel-line {
+    padding-right: calc(32px + var(--space-xs) * 2);
+  }
+
+  .tablet-kpi-chevron-box {
+    position: absolute;
+    top: 50%;
+    right: var(--space-xs);
+    transform: translateY(-50%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    font-size: var(--fs-md);
+    cursor: pointer;
+  }
+
+  .tablet-kpi-chevron-box:hover {
+    color: var(--link-hover);
+  }
+
+  /* faChevronDown: points down to expand, flips up when open. */
+  .tablet-kpi-chevron {
+    transition: transform 0.15s ease;
+  }
+
+  .tablet-kpi-chevron-box[data-open="true"] .tablet-kpi-chevron {
+    transform: rotate(180deg);
+  }
+
+  .tablet-kpi-drawer {
+    max-height: 0;
+    overflow: hidden;
+  }
+
+  .tablet-kpi-drawer[data-open="true"] {
+    margin-top: var(--space-xs);
+    max-height: min(80vh, 600px);
+    overflow-y: auto;
+  }
+
+  .tablet-kpi-drawer-chart {
+    padding: var(--space-s);
+    border: 1px solid var(--border-panel);
+    background-color: var(--bg-panel);
+  }
+
+  /* No `.grade-chart` wrapper here -- recreate the flex column, give the
+     donut an explicit height, drop the panel's own chrome. Mirrors
+     section 18's .mobile-area-drawer-chart rules. */
+  .tablet-kpi-drawer-chart .grade-chart-panel {
+    display: flex;
+    flex-direction: column;
+    height: calc(min(46dvh, 380px) + 3.6125rem);
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .tablet-kpi-drawer-chart .grade-chart-panel > .panel-header {
+    flex-shrink: 0;
+  }
+}
+
 /*///////////////////////////////////////////// 18. MOBILE (PHONE) LAYOUT //////////////////////////////////////////////*/
 
-/* Below 640px dashboard.tsx renders <MobileDashboard>: app bar, area
+/* Below 750px -- or on a short landscape viewport, i.e. a phone turned
+   sideways -- dashboard.tsx renders <MobileDashboard>: app bar, area
    strip, full-bleed map, bottom sheet (peek/half/full on [data-detent]).
-   Classes below are mobile-only.*/
-@media (max-width: 640px) {
+   Classes below are mobile-only. Keep this query in sync with isPhone. */
+@media (max-width: 750px), (max-height: 480px) and (orientation: landscape) {
   body {
     padding: 0;
     overflow: hidden;

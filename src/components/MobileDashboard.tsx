@@ -1,6 +1,7 @@
 // MobileDashboard.tsx
 //
-// Phone layout (rendered by dashboard.tsx below ~640px): a slim app bar,
+// Phone layout (rendered by dashboard.tsx below ~750px wide, or on a
+// short landscape viewport -- a phone held sideways): a slim app bar,
 // an area-summary strip (count + grade mix for the current view), a
 // full-bleed map, and a bottom sheet that is purely restaurant info.
 // The sheet has three detents: peek shows the selected restaurant's list
@@ -29,7 +30,7 @@ import {
   faChevronUp,
 } from "@fortawesome/free-solid-svg-icons";
 
-import MobileAppBar from "./MobileAppBar";
+import AppBar from "./AppBar";
 import MobileAreaStrip from "./MobileAreaStrip";
 import ExplorerTabs from "./ExplorerTabs";
 import RestaurantList from "./RestaurantList";
@@ -407,7 +408,7 @@ export default function MobileDashboard({
       data-front={frontSurface}
       data-peek={selectedRestaurant ? "card" : "empty"}
       data-tab={activeExplorerTab}>
-      <MobileAppBar
+      <AppBar
         filters={filters}
         setFilters={setFilters}
         meta={dashboardMeta}
