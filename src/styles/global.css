@@ -3694,7 +3694,7 @@ summary:focus-visible,
 
   /* Static echo of the desktop filter-change notice so a tap registers. */
   .mobile-filter-notice-rule {
-    margin: var(--space-s) 0 0;
+    margin: var(--space-s) 0;
     border: none;
     border-top: 1px solid var(--border-panel);
   }

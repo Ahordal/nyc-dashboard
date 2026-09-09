@@ -221,15 +221,15 @@ export default function MobileAppBar({
             <h2 className="panel-header-title">Filters</h2>
           </div>
 
+          <p className="mobile-filter-notice" aria-live="polite">
+            <FilterSummary filters={filters} />
+          </p>
+          <hr className="mobile-filter-notice-rule" />
+
           <div className="mobile-filter-groups">
             <GradeFilters filters={filters} setFilters={setFilters} />
             <BoroughFilters filters={filters} setFilters={setFilters} />
           </div>
-
-          <hr className="mobile-filter-notice-rule" />
-          <p className="mobile-filter-notice" aria-live="polite">
-            <FilterSummary filters={filters} />
-          </p>
         </div>
       </div>
 
