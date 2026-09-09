@@ -51,6 +51,19 @@
     <!-- Map basemap tiles come from here once MapView lazy-loads; resolve
          DNS early without holding a connection open pre-emptively. -->
     <link rel="dns-prefetch" href="https://basemaps-api.arcgis.com" />
+
+    <!-- The single largest download. Its fetch would otherwise not start
+         until React has mounted and the lazy MapView (ArcGIS) chunk has
+         downloaded and parsed. Preloading runs it in parallel with the
+         app JS; the GeoJSONLayer's own fetch() then reuses this response.
+         crossorigin is required for as="fetch" preloads to be matched. -->
+    <link
+      rel="preload"
+      as="fetch"
+      type="application/geo+json"
+      href="/data/latest-inspections.geojson"
+      crossorigin
+    />
   </head>
   <body>
     <div id="root"></div>

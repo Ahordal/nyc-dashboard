@@ -22,12 +22,9 @@ import {
 } from "../utils/gradeCategory";
 
 // Fields actually read by the dashboard's components (list cards,
-// details panel, map filter logic). Deliberately excludes fields that
-// exist in the pipeline's GeoJSON but are never consumed client-side:
-// search_index (query-only; WHERE clauses can still filter on it
-// regardless of outFields), dohmh_latitude/dohmh_longitude,
-// neighbourhood, community_board, council_district, record_date,
-// grade_date, and display_address.
+// details panel, map filter logic). The pipeline's GeoJSON carries one
+// field this list omits: search_index (query-only; WHERE clauses can
+// still filter on it regardless of outFields).
 //
 // Violations aren't in the GeoJSON at all any more (they were ~4 MB of
 // per-feature arrays); they live only in history/{camis}.json, which the

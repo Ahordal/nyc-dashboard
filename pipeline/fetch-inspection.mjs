@@ -13,7 +13,7 @@ import { writeFile, readFile, mkdir, rm } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { loadCache } from "./cache.mjs";
-import { formatDisplayAddress, formatDisplayStreet } from "./normalize.mjs";
+import { formatDisplayStreet } from "./normalize.mjs";
 import {
   OPEN_ACTIONS,
   CLOSED_ACTIONS,
@@ -278,13 +278,9 @@ const SELECT_FIELDS = [
   "critical_flag",
   "score",
   "grade",
-  "grade_date",
-  "record_date",
   "inspection_type",
   "latitude",
   "longitude",
-  "community_board",
-  "council_district",
 ].join(",");
 
 // Queries dataset count aggregate to validate paginated pipeline completeness.
@@ -496,11 +492,6 @@ export function buildLatestInspectionsGeoJSON(
 
     const roundedLat = Math.round(displayLat * 1e6) / 1e6;
     const roundedLon = Math.round(displayLon * 1e6) / 1e6;
-    const roundedDohmhLat = dohmhValid ? Math.round(dohmhLatRaw * 1e6) / 1e6 : null;
-    const roundedDohmhLon = dohmhValid ? Math.round(dohmhLonRaw * 1e6) / 1e6 : null;
-    const neighbourhood = hasVerifiedResolution
-      ? cacheEntry.resolved.neighbourhood ?? null
-      : null;
 
     features.push({
       type: "Feature",
@@ -524,20 +515,11 @@ export function buildLatestInspectionsGeoJSON(
         building: primary.building ?? "",
         street: primary.street ?? "",
         display_street: formatDisplayStreet(primary.street ?? ""),
-        display_address: formatDisplayAddress({
-          building: primary.building ?? "",
-          street: primary.street ?? "",
-          neighbourhood,
-        }),
         zipcode: primary.zipcode ?? "",
         phone: primary.phone ?? "",
         cuisine: primary.cuisine_description ?? "",
-        dohmh_latitude: roundedDohmhLat,
-        dohmh_longitude: roundedDohmhLon,
         location_status: locationStatus,
-        neighbourhood,
         grade: isUninspected ? UNINSPECTED_GRADE : primary.grade || null,
-        grade_date: isUninspected ? null : (primary.grade_date ?? null),
         score: isUninspected ? null : Number(primary.score),
         inspection_date: latest.date,
         inspection_type: primary.inspection_type ?? "",
@@ -549,9 +531,6 @@ export function buildLatestInspectionsGeoJSON(
         // download and its main-thread parse lean.
         current_status_code: status.code,
         current_status_label: status.label,
-        record_date: primary.record_date ?? null,
-        community_board: primary.community_board ?? "",
-        council_district: primary.council_district ?? "",
       },
     });
   }
