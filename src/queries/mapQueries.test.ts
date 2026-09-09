@@ -261,6 +261,15 @@ describe("CATEGORY_CLAUSES", () => {
       expect(CATEGORY_CLAUSES[key]).toContain("'U'");
     }
   });
+
+  it("lets a null grade through the letter-grade clauses so a scored, gradeless row still matches", () => {
+    // getGradeCategory() buckets (null grade, real score) by score alone;
+    // a bare `grade NOT IN (...)` is NULL for a null grade in SQL, which
+    // silently dropped those rows from the map's grade filter.
+    for (const key of ["A", "B", "C"] as const) {
+      expect(CATEGORY_CLAUSES[key]).toContain("grade IS NULL OR grade NOT IN");
+    }
+  });
 });
 
 describe("filterRestaurantsByGradeCategory", () => {

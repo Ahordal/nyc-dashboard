@@ -75,14 +75,17 @@ const CLOSED_CLAUSE = buildClosedClause();
 // grade, then administrative Pending grades, then score bands. Each grade
 // button filters independently (see buildGradeWhereClause), so every
 // clause below stays self-contained rather than assuming the others have
-// already excluded a restaurant. The A/B/C clauses exclude the
-// Uninspected grade explicitly rather than relying on `score <= 13` to
-// fail for a null score, which isn't guaranteed across every client-side
-// query engine and once let Uninspected restaurants match A/B/C filters.
+// already excluded a restaurant. The A/B/C clauses spell out
+// `grade IS NULL OR grade NOT IN (...)` because a bare `grade NOT IN (...)`
+// is NULL (not TRUE) for a null grade in SQL three-valued logic, which
+// dropped the ~3,500 restaurants that carry a real score but no letter
+// grade — getGradeCategory() buckets those by score alone, so the filter
+// must too. The explicit '${UNINSPECTED_GRADE}' exclusion stays: it once
+// let Uninspected restaurants match A/B/C via a null score.
 export const CATEGORY_CLAUSES: Record<string, string> = {
-  A: `NOT (${CLOSED_CLAUSE}) AND grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}') AND score <= 13`,
-  B: `NOT (${CLOSED_CLAUSE}) AND grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}') AND score BETWEEN 14 AND 27`,
-  C: `NOT (${CLOSED_CLAUSE}) AND grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}') AND score >= 28`,
+  A: `NOT (${CLOSED_CLAUSE}) AND (grade IS NULL OR grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}')) AND score <= 13`,
+  B: `NOT (${CLOSED_CLAUSE}) AND (grade IS NULL OR grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}')) AND score BETWEEN 14 AND 27`,
+  C: `NOT (${CLOSED_CLAUSE}) AND (grade IS NULL OR grade NOT IN ('Z','P','N','${UNINSPECTED_GRADE}')) AND score >= 28`,
   Pending: `NOT (${CLOSED_CLAUSE}) AND (grade IN ('Z','P','N') OR (score IS NULL AND (grade IS NULL OR grade <> '${UNINSPECTED_GRADE}')))`,
   Uninspected: `NOT (${CLOSED_CLAUSE}) AND grade = '${UNINSPECTED_GRADE}'`,
   Closed: CLOSED_CLAUSE,
