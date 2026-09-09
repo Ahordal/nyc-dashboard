@@ -4,10 +4,65 @@
 
 /*///////////////////////////////////////////// 1. RESET & GLOBAL FOUNDATIONS //////////////////////////////////////////////*/
 
-/* 1.1 BOX SIZING */
+/* 1.0 FONTS
 
-/* Google Fonts (Public Sans, Archivo) are loaded via <link> in
-   index.html, not @import here - see the comment there. */
+   Public Sans (body) and Archivo (display) are self-hosted from
+   public/fonts/ -- no third-party request, no render-blocking stylesheet.
+   The above-the-fold faces are also <link rel="preload">-ed in
+   index.html; the rest arrive on demand under font-display: swap. Files
+   are the combined latin + latin-ext subsets from google-webfonts-helper. */
+
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/public-sans-v21-latin_latin-ext-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/public-sans-v21-latin_latin-ext-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/public-sans-v21-latin_latin-ext-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/public-sans-v21-latin_latin-ext-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/archivo-v25-latin_latin-ext-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/archivo-v25-latin_latin-ext-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/archivo-v25-latin_latin-ext-800.woff2') format('woff2');
+}
+
+/* 1.1 BOX SIZING */
 
 *,
 *::before,

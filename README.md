@@ -206,6 +206,7 @@ Frontend logic is tested with Vitest, colocated with the source it covers (`src/
 - **[ArcGIS Maps SDK for JavaScript](https://developers.arcgis.com/javascript/):** High-performance rendering for the interactive restaurant map.
 - **[Recharts](https://recharts.org/):** Data visualization library powering the grade breakdown donut chart and historical score time-series.
 - **[Font Awesome](https://fontawesome.com/):** UI iconography.
+- **Typography:** Public Sans (body) and Archivo (display), self-hosted from `public/fonts/` — no third-party font CDN or render-blocking stylesheet; above-the-fold faces are preloaded from `index.html`.
 
 ### Data Pipeline & Automation
 - **Node.js:** Powers the custom build-time data fetching, coordinate validation, and pure-logic geocoding scripts.
