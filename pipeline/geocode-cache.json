@@ -734839,6 +734839,78 @@
     "addressHash": "50192069|154|bleecker street|manhattan|10012",
     "resolverVersion": 1
   },
+  "50192077": {
+    "camis": "50192077",
+    "dohmh": {
+      "building": "5009",
+      "street": "BROADWAY",
+      "boro": "Manhattan",
+      "zip": "10034",
+      "lat": 40.869151521375,
+      "lon": -73.917071021305
+    },
+    "resolved": {
+      "lat": 40.8693733,
+      "lon": -73.9171298,
+      "neighbourhood": "Inwood"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 25.15106520911903,
+    "reason": null,
+    "resolvedAt": "2026-09-09T12:42:59.310Z",
+    "addressHash": "50192077|5009|broadway|manhattan|10034",
+    "resolverVersion": 1
+  },
+  "50192079": {
+    "camis": "50192079",
+    "dohmh": {
+      "building": "201",
+      "street": "7TH AVE",
+      "boro": "Manhattan",
+      "zip": "10011",
+      "lat": 40.743183818349,
+      "lon": -73.99629014785
+    },
+    "resolved": {
+      "lat": 40.743104,
+      "lon": -73.996046,
+      "neighbourhood": "Chelsea"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 22.401689328411425,
+    "reason": null,
+    "resolvedAt": "2026-09-09T12:43:00.627Z",
+    "addressHash": "50192079|201|7 avenue|manhattan|10011",
+    "resolverVersion": 1
+  },
+  "50192082": {
+    "camis": "50192082",
+    "dohmh": {
+      "building": "43-09",
+      "street": "GREENPOINT AVE",
+      "boro": "Queens",
+      "zip": "11104",
+      "lat": 40.740988856821,
+      "lon": -73.921788932568
+    },
+    "resolved": {
+      "lat": 40.741138,
+      "lon": -73.921726,
+      "neighbourhood": "Sunnyside"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 17.410886210025275,
+    "reason": null,
+    "resolvedAt": "2026-09-09T12:43:02.897Z",
+    "addressHash": "50192082|4309|greenpoint avenue|queens|11104",
+    "resolverVersion": 1
+  },
   "K79": {
     "camis": "K79",
     "dohmh": {
