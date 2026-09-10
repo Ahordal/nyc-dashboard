@@ -207,6 +207,7 @@ summary:focus-visible,
   --fs-lg: 1rem;        /* 16px - emphasis, icons, inline controls */
   --fs-xl: 1.1875rem;   /* 19px - hero / content titles */
   --fs-2xl: 1.375rem;   /* 22px - big stat numbers, h1 primary line */
+  --fs-3xl: 2.75rem;    /* 44px - tablet app-bar "NYC" masthead */
   --fs-display: 10rem;  /* decorative "NYC" wordmark only; reflow clamps it */
 
   --link-hover: #ffffff;
@@ -808,8 +809,21 @@ summary:focus-visible,
 
 .stats-breakdown-label {
   font-size: var(--fs-sm);
-  font-weight: 700;  
+  font-weight: 700;
   text-transform: uppercase;
+  /* Muted, so the count reads first -- matching the grade labels in the
+     grade chart's percentage line. */
+  color: var(--text-muted);
+}
+
+/* "/ 64%" share, shown next to the count where the donut's own
+   percentage line is folded into this row (phone drawer). Category
+   colour + weight match the count it sits beside (set inline). */
+.stats-breakdown-share {
+  margin-left: -0.2rem;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
 }
 
 /*///////////////////////////////////////////// 9. SEARCH PANEL //////////////////////////////////////////////*/
@@ -1832,18 +1846,63 @@ summary:focus-visible,
 
 /* 14.2 GRADE CHART CONTAINER */
 
+/* One bordered card holding the grade breakdown -- donut, per-grade
+   share line, divider, filters-applied summary -- mirroring the phone
+   area-strip drawer and the tablet KPI drawer. The inner donut panel
+   drops its own chrome. (No absolute-count row here: the stats panel
+   above the map already carries those on desktop.) */
 .grade-chart {
   flex: 1 1 0%;
   display: flex;
   flex-direction: column;
+  gap: var(--space-xs);
   min-height: 0;
   min-width: 0;
+  overflow: hidden;
+  padding: var(--space-s);
+  border: 1px solid var(--border-panel);
+  background-color: var(--bg-panel);
 }
 
-.grade-chart .panel {
+/* Donut panel fills the column; the divider and summary stack under it
+   at their natural height. */
+.grade-chart > .grade-chart-panel {
+  flex: 1 1 0%;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
   display: flex;
   flex-direction: column;
-  height: 100%;
+}
+
+.grade-chart > .mobile-filter-notice-rule {
+  flex-shrink: 0;
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--border-panel);
+}
+
+.grade-chart > .mobile-filter-notice {
+  flex-shrink: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.grade-chart .mobile-filter-notice-label {
+  color: var(--text-body);
+}
+
+.grade-chart .mobile-filter-notice-lead,
+.grade-chart .mobile-filter-notice-borough {
+  color: var(--text-faded);
 }
 
 /* Grade chart body — donut wrap, centre summary, legend */
@@ -1961,6 +2020,37 @@ summary:focus-visible,
 
 .grade-chart-count-value[data-emphasis="true"] {
   font-family: var(--font-display);
+}
+
+/* Per-category share line under the donut -- middot-separated, the
+   percentage in its category colour. The donut's own readout; absolute
+   counts live in the stats panel. */
+.grade-chart-percentages {
+  flex-shrink: 0;
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem 0.5rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.grade-chart-percentage:not(:first-child)::before {
+  content: "·";
+  margin-right: 0.5rem;
+  color: var(--text-faded);
+}
+
+.grade-chart-percentage-value {
+  font-weight: 700;
 }
 
 /* 14.3 DASHBOARD GUIDE PANEL */
@@ -3156,10 +3246,10 @@ summary:focus-visible,
     height: min(65vh, 560px);
   }
 
-  /* Tall enough for the donut's centre summary to clear the ring.
-     Restacked at phone width. */
+  /* Score-history chart, full-width along the bottom -- same height as
+     the desktop grid row. Restacked at phone width. */
   .performance-chart {
-    height: min(60vh, 460px);
+    height: 280px;
   }
 
   .explorer {
@@ -3203,51 +3293,70 @@ summary:focus-visible,
     z-index: 20;
   }
 
-  /* 0.5rem side padding so the action buttons line up with the map's
-     right-side control column (also 0.5rem in). */
+  /* 0.5rem padding all round: the action buttons line up with the map's
+     right-side control column (also 0.5rem in), and it's the breathing
+     room above/below the "NYC" masthead. */
   .tablet-appbar-region .mobile-appbar {
     display: flex;
     align-items: center;
     justify-content: space-between;
     gap: var(--space-s);
-    padding: 0.55rem var(--space-xs);
+    padding: var(--space-xs);
     background-color: var(--bg-panel);
     border: 1px solid var(--border-panel);
   }
 
+  /* Brand goes horizontal: the "NYC" wordmark is a masthead on the left,
+     sized to fill the bar between its 0.5rem top/bottom padding (tight
+     line-height trims the caps' leading so they actually reach it). The
+     subtitle + tagline stack in a compact column to its right, pinned to
+     meet at the shared centre line. */
   .tablet-appbar-region .mobile-appbar-brand {
-    display: flex;
-    flex-direction: column;
-    gap: 2px;
+    display: grid;
+    grid-template-columns: auto auto;
+    column-gap: 0.7rem;
+    align-items: center;
     min-width: 0;
     line-height: 1;
   }
 
   .tablet-appbar-region .mobile-appbar-wordmark {
+    grid-row: 1 / 3;
+    align-self: center;
     font-family: var(--font-display);
     font-weight: 800;
-    font-size: var(--fs-xl);
+    font-size: var(--fs-3xl);
+    line-height: 0.75;
     letter-spacing: -0.02em;
     color: var(--text-muted);
-    text-shadow: -2px 2px 0 var(--bg-alt);
+    text-shadow: -2px 3px 0 var(--bg-alt);
   }
 
   .tablet-appbar-region .mobile-appbar-subtitle {
+    grid-column: 2;
+    grid-row: 1;
+    align-self: end;
     margin: 0;
     font-family: var(--font-display);
-    font-size: var(--fs-xs);
+    font-size: var(--fs-sm);
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.08em;
+    white-space: nowrap;
     color: var(--text-muted);
   }
 
   .tablet-appbar-region .mobile-appbar-tagline {
+    grid-column: 2;
+    grid-row: 2;
+    align-self: start;
+    margin: 3px 0 0;
     font-family: var(--font-body);
-    font-size: var(--fs-2xs);
+    font-size: var(--fs-xs);
     font-weight: 700;
     letter-spacing: 0.05rem;
     text-transform: uppercase;
+    white-space: nowrap;
     color: var(--text-muted);
   }
 
@@ -3331,11 +3440,14 @@ summary:focus-visible,
     background-color: var(--bg-panel);
   }
 
-  /* Search holds a single input -- no need for it to span the page. The
-     Filters card is full-bleed (like the app bar / KPI above it); its
-     Grade + Borough groups split the width. */
-  .tablet-appbar-region .mobile-search-drawer-card {
-    max-width: 520px;
+  /* Search, like the Filters card, is full-bleed -- spans the page width
+     to line up with the app bar / KPI above it. Strip the inner .panel
+     chrome so its content sits against the drawer card's own border
+     rather than a second nested one. */
+  .tablet-appbar-region .mobile-search-drawer-card .panel {
+    padding: 0;
+    border: none;
+    background: transparent;
   }
 
   .tablet-appbar-region .mobile-info-drawer-panel + .mobile-info-drawer-panel {
@@ -3362,17 +3474,23 @@ summary:focus-visible,
     background: transparent;
   }
 
-  /* Gutter = Clear button width + the row gap. */
+  /* Each group flows as: a full-width label bar, then one wrapping row of
+     option buttons led by Clear (both .filter-options wrappers stay
+     display:contents, as on desktop, so every button is a direct child
+     here). At this width all six grade buttons fit on one line; they
+     still wrap cleanly when the drawer is narrow. */
   .tablet-appbar-region .mobile-filter-groups .filter-group {
-    --filter-clear-w: 3.75rem;
     display: flex;
-    flex-direction: column;
-    align-items: stretch;
+    flex-flow: row wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 0.5rem 0.6rem;
   }
 
   .tablet-appbar-region .mobile-filter-groups .filter-label {
+    flex-shrink: 0;
     width: 100%;
-    margin: 0 0 0.4rem;
+    margin: 0;
     padding: 0.4rem 0 0.4rem 0.4rem;
     background-color: var(--bg-alt);
     color: var(--text-muted);
@@ -3386,29 +3504,9 @@ summary:focus-visible,
     margin-right: 0.4rem;
   }
 
-  /* Hanging indent: Clear at the left edge on line 1, every option a
-     gutter in (first row and wrapped rows alike). */
-  .tablet-appbar-region .mobile-filter-groups .filter-options {
-    display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 0.5rem 0.6rem;
-    padding-left: calc(var(--filter-clear-w) + 0.6rem);
-  }
-
-  .tablet-appbar-region .mobile-filter-groups .filter-options + .filter-options {
-    margin-top: 0.5rem;
-  }
-
+  /* Clear leads the button row, with a small indent before the options. */
   .tablet-appbar-region .mobile-filter-groups .filter-clear {
-    margin: 0 0 0 calc(-1 * (var(--filter-clear-w) + 0.6rem));
-  }
-
-  .tablet-appbar-region .mobile-filter-groups .filter-clear .filter-button {
-    width: var(--filter-clear-w);
-    min-width: 0;
-    padding-left: 0;
-    padding-right: 0;
+    margin: 0 0.35rem 0 0;
   }
 
   /* Same padding / font size as the desktop filter bar, so A/B/C sit in
@@ -3461,7 +3559,8 @@ summary:focus-visible,
   }
 
   .dashboard .map-basemap-toggle-container,
-  .dashboard .map-search-radius-container {
+  .dashboard .map-search-radius-container,
+  .dashboard .map-user-location-container {
     right: var(--space-xs);
   }
 
@@ -3476,6 +3575,25 @@ summary:focus-visible,
 
   .dashboard .map-search-radius-container {
     top: calc(1rem + 32px + var(--space-xs));
+  }
+
+  /* "Locate me" chip below the Search Radius control (tablet-only, like
+     the phone layout). Legend button is hidden, so the 40px it reserved
+     drops out of the stack. */
+  .dashboard .map-user-location-container {
+    top: calc(1rem + 80px);
+  }
+
+  /* Scale readout (bottom-left) and graphical scale bar (bottom-right)
+     tucked to 0.5rem from their edges, matching the side controls. */
+  .dashboard .map-bottom-controls {
+    bottom: var(--space-xs);
+    left: var(--space-xs);
+  }
+
+  .dashboard .map-scale-bar-container {
+    bottom: var(--space-xs);
+    right: var(--space-xs);
   }
 
   /* KPI: the desktop stats panel stays visible; a chevron pinned to its
@@ -3533,6 +3651,9 @@ summary:focus-visible,
   }
 
   .tablet-kpi-drawer-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
     padding: var(--space-s);
     border: 1px solid var(--border-panel);
     background-color: var(--bg-panel);
@@ -3540,11 +3661,13 @@ summary:focus-visible,
 
   /* No `.grade-chart` wrapper here -- recreate the flex column, give the
      donut an explicit height, drop the panel's own chrome. Mirrors
-     section 18's .mobile-area-drawer-chart rules. */
+     section 18's .mobile-area-drawer-chart rules. This drawer hides the
+     chart's own filter-note, so no extra height is reserved. */
   .tablet-kpi-drawer-chart .grade-chart-panel {
     display: flex;
     flex-direction: column;
-    height: calc(min(46dvh, 380px) + 3.6125rem);
+    flex-shrink: 0;
+    height: min(46dvh, 380px);
     padding: 0;
     border: none;
     background: transparent;
@@ -3552,6 +3675,36 @@ summary:focus-visible,
 
   .tablet-kpi-drawer-chart .grade-chart-panel > .panel-header {
     flex-shrink: 0;
+  }
+
+  /* Rule + filters-applied summary below the donut (mirrors section 18's
+     .mobile-filter-notice* rules, phone-scoped there). The absolute
+     counts aren't repeated here -- the KPI bar above already carries
+     them. */
+  .tablet-kpi-drawer-chart .mobile-filter-notice-rule {
+    margin: var(--space-xs) 0 0;
+    border: none;
+    border-top: 1px solid var(--border-panel);
+  }
+
+  .tablet-kpi-drawer-chart .mobile-filter-notice {
+    margin: 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+  }
+
+  .tablet-kpi-drawer-chart .mobile-filter-notice-label {
+    color: var(--text-body);
+  }
+
+  .tablet-kpi-drawer-chart .mobile-filter-notice-lead,
+  .tablet-kpi-drawer-chart .mobile-filter-notice-borough {
+    color: var(--text-faded);
   }
 }
 
@@ -4067,6 +4220,7 @@ summary:focus-visible,
     font-family: var(--font-display);
     font-size: var(--fs-xs);
     font-weight: 600;
+    text-align: center;
     text-transform: uppercase;
     letter-spacing: 0.02em;
     color: var(--text-muted);

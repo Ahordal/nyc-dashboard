@@ -15,11 +15,11 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 - One dot per restaurant, coloured by grade (A, B, C) or by state (pending, uninspected, closed).
 - Hovering a dot when zoomed in shows a small card with the name, grade, and score.
 - A stats panel counts the restaurants currently in view, split by grade.
-- A donut chart shows that same split as proportions.
+- A donut chart shows that same split as proportions, with each category's percentage share listed beneath it.
 - Hovering or selecting a restaurant highlights it on the map, in the list, and in the chart at once.
 - Custom map controls: zoom buttons, a compass, a scale bar, a satellite-imagery toggle, and scale and zoom-level readouts you can click and type into to jump to an exact value.
 - **Search radius:** drop a point on the map and the list, stats, and chart re-scope to a 0.25 / 0.5 / 1 mile circle around it instead of the whole map view. The list gains a distance column.
-- **Locate me (phone only):** uses your device location to show where you are and sort the list by distance. The location is only held for the session — never saved, shared, or put in the URL.
+- **Locate me (phone and tablet):** uses your device location to show where you are and sort the list by distance. The location is only held for the session — never saved, shared, or put in the URL.
 
 ### Search and filtering
 

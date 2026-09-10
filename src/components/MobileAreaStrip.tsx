@@ -139,6 +139,8 @@ export default function MobileAreaStrip({
                   searchQuery={searchQuery}
                   searchRadiusMiles={searchRadiusMiles}
                   showCenterLegend={false}
+                  showCenterCount={false}
+                  showPercentages={false}
                   showFilterNote={false}
                 />
               </Suspense>
@@ -147,6 +149,7 @@ export default function MobileAreaStrip({
             <StatsPanel
               restaurants={visibleRestaurants}
               searchRadiusMiles={searchRadiusMiles}
+              showShare
             />
 
             <hr className="mobile-filter-notice-rule" />

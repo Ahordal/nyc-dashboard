@@ -25,6 +25,7 @@ import DashboardTitle from "./DashboardTitle";
 import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
 import StatsPanel from "./StatsPanel";
+import FilterSummary from "./FilterSummary";
 import DashboardGuide from "./DashboardGuide";
 import ExplorerSearch from "./ExplorerSearch";
 import RestaurantList from "./RestaurantList";
@@ -337,8 +338,11 @@ export default function Dashboard() {
     );
   }
 
-  // Shared between the desktop grid cell and the tablet KPI's grade drawer.
-  const gradeChart = (
+  // Bare donut + the per-grade share line, shared by the desktop sidebar
+  // and the tablet KPI drawer. Neither shows the absolute counts -- those
+  // live in the stats panel above the map (desktop) / in the KPI bar
+  // (tablet).
+  const gradeDonut = (
     <ErrorBoundary
       context="GradeChart"
       fallback={
@@ -350,9 +354,21 @@ export default function Dashboard() {
           filters={filters}
           searchQuery={searchQuery}
           searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
+          showCenterLegend={false}
+          showCenterCount={false}
+          showFilterNote={false}
         />
       </Suspense>
     </ErrorBoundary>
+  );
+
+  // Rule + "Filters applied: …" line that sits under the donut in both
+  // the desktop sidebar and the tablet KPI drawer.
+  const gradeFiltersSummary = (
+    <>
+      <hr className="mobile-filter-notice-rule" />
+      <FilterSummary filters={filters} />
+    </>
   );
 
   const statsPanel = (
@@ -363,6 +379,12 @@ export default function Dashboard() {
       />
     </div>
   );
+
+  // The "locate me" dot feeds the per-card / details Distance readout and
+  // the Distance sort on tablet, exactly as on phone. Desktop has no
+  // locate control, so it never contributes a distance origin there.
+  const locateDistanceOrigin = isTablet ? userLocationPoint : null;
+  const listDistanceOrigin = searchRadiusPoint ?? locateDistanceOrigin;
 
   return (
     <div className="dashboard-container">
@@ -395,7 +417,12 @@ export default function Dashboard() {
             </>
           )}
 
-          {!isTablet && <div className="grade-chart">{gradeChart}</div>}
+          {!isTablet && (
+            <div className="grade-chart">
+              {gradeDonut}
+              {gradeFiltersSummary}
+            </div>
+          )}
         </div>
 
         <div className="map-column">
@@ -465,7 +492,10 @@ export default function Dashboard() {
                   className="tablet-kpi-drawer"
                   data-open={activeDrawer === "grades"}>
                   {activeDrawer === "grades" && (
-                    <div className="tablet-kpi-drawer-chart">{gradeChart}</div>
+                    <div className="tablet-kpi-drawer-chart">
+                      {gradeDonut}
+                      {gradeFiltersSummary}
+                    </div>
                   )}
                 </div>
               </div>
@@ -489,11 +519,13 @@ export default function Dashboard() {
                   onVisibleRestaurantsChange={setVisibleRestaurants}
                   onGradeCountsChange={setGradeCounts}
                   onSearchRadiusChange={handleSearchRadiusChange}
+                  onUserLocationChange={setUserLocationPoint}
                   initialSearchRadius={initialSearchRadius}
                   initialSelectedCamis={pendingCamisFromUrl}
                   onInitialSelectionResolved={() =>
                     setPendingCamisFromUrl(null)
                   }
+                  showLocateControl={isTablet}
                 />
               </Suspense>
             </ErrorBoundary>
@@ -527,7 +559,8 @@ export default function Dashboard() {
                 hoveredRestaurantId={hoveredRestaurantId}
                 onSelectRestaurant={handleSelectRestaurant}
                 onHoverRestaurant={handleHoverRestaurant}
-                searchRadiusPoint={searchRadiusPoint}>
+                searchRadiusPoint={searchRadiusPoint}
+                userLocationPoint={locateDistanceOrigin}>
                 <NoticeOverlay
                   triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}-${radiusKey}`}
                   durationMs={FILTER_NOTICE_DURATION_MS}>
@@ -588,8 +621,10 @@ export default function Dashboard() {
               }`}>
               <RestaurantDetails
                 restaurant={selectedRestaurant}
-                distanceOrigin={searchRadiusPoint}
-                distanceOriginKind="search-radius"
+                distanceOrigin={listDistanceOrigin}
+                distanceOriginKind={
+                  searchRadiusPoint ? "search-radius" : "your-location"
+                }
                 history={history}
                 isLoadingHistory={isLoadingHistory}
                 selectedInspectionId={reportInspectionId}

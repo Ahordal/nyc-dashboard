@@ -18,6 +18,7 @@ import { scopeGradeCounts } from "../types/gradeCounts";
 import { SEARCH_RADIUS_LABELS } from "../types/searchRadius";
 import type { SearchRadiusMiles } from "../types/searchRadius";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
+import { largestRemainderPercents, formatShare } from "../utils/percentShare";
 
 function gradeChartInfoContent(withinRadius: boolean) {
   return (
@@ -34,10 +35,13 @@ function gradeChartInfoContent(withinRadius: boolean) {
       howToUse={
         <ul>
           <li>
-            This chart is read-only. When a grade or status filter is active,
-            the chart is limited to those grades and the center count is their
-            total; center labels for grades with no restaurants in the current
-            view are dimmed.
+            This chart is read-only. The centre shows the restaurant total;
+            the line beneath it gives each category&apos;s share of that
+            total.
+          </li>
+          <li>
+            When a grade or status filter is active, the chart, the centre
+            total, and the shares are all limited to the selected categories.
           </li>
         </ul>
       }
@@ -77,6 +81,12 @@ type GradeChartProps = {
   // summary below the donut instead); everywhere else keeps both.
   showCenterLegend?: boolean;
   showFilterNote?: boolean;
+  // Per-category share line under the donut -- the donut's own readout
+  // (proportion), separate from the absolute counts in the stats panel.
+  showPercentages?: boolean;
+  // The centre "N Restaurants" total. Dropped wherever a KPI row already
+  // carries the counts; the percentage line stays as the donut's readout.
+  showCenterCount?: boolean;
 };
 
 type ChartDataItem = {
@@ -113,6 +123,8 @@ export default function GradeChart({
   searchRadiusMiles = null,
   showCenterLegend = true,
   showFilterNote = true,
+  showPercentages = true,
+  showCenterCount = true,
 }: GradeChartProps) {
   const [showInfo, setShowInfo] = useState(false);
 
@@ -190,6 +202,19 @@ export default function GradeChart({
     return `Grade breakdown, ${scopeText.toLowerCase()}: ${parts}. ${totalCount.toLocaleString()} restaurants total.`;
   }, [data, scopeText, totalCount]);
 
+  // Per-slice share, largest-remainder rounded so the line sums to 100.
+  // A present-but-tiny slice that rounds to zero shows "<1%".
+  const percentages = useMemo(() => {
+    if (totalCount === 0) return [];
+    const pcts = largestRemainderPercents(data.map((item) => item.value));
+    return data.map((item, index) => ({
+      name: item.name,
+      label: item.label,
+      color: item.color,
+      display: formatShare(pcts[index], item.value),
+    }));
+  }, [data, totalCount]);
+
   return (
     <section className="panel grade-chart-panel">
       <PanelHeader
@@ -231,49 +256,68 @@ export default function GradeChart({
                   </PieChart>
                 </ResponsiveContainer>
 
-                <div className="grade-chart-center">
-                  {showCenterLegend && (
-                    <div className="grade-chart-legend">
-                      {SLICE_CONFIG.map(({ key, label, color }, index) => {
-                        // Coloured only when that category has restaurants
-                        // in the scoped view (which already excludes grades
-                        // not in the active filter). Everything else dims.
-                        const isDimmed = (scopedCounts[key] ?? 0) === 0;
-                        const isLast = index === SLICE_CONFIG.length - 1;
+                {(showCenterLegend || showCenterCount) && (
+                  <div className="grade-chart-center">
+                    {showCenterLegend && (
+                      <div className="grade-chart-legend">
+                        {SLICE_CONFIG.map(({ key, label, color }, index) => {
+                          // Coloured only when that category has restaurants
+                          // in the scoped view (which already excludes grades
+                          // not in the active filter). Everything else dims.
+                          const isDimmed = (scopedCounts[key] ?? 0) === 0;
+                          const isLast = index === SLICE_CONFIG.length - 1;
 
-                        return (
-                          <span
-                            key={key}
-                            className="grade-chart-legend-group"
-                            data-dimmed={isDimmed ? "true" : undefined}>
+                          return (
                             <span
-                              className="grade-chart-legend-item"
-                              style={
-                                { "--legend-color": color } as CSSProperties
-                              }>
-                              {label}
+                              key={key}
+                              className="grade-chart-legend-group"
+                              data-dimmed={isDimmed ? "true" : undefined}>
+                              <span
+                                className="grade-chart-legend-item"
+                                style={
+                                  { "--legend-color": color } as CSSProperties
+                                }>
+                                {label}
+                              </span>
+                              {!isLast && (
+                                <span className="grade-chart-legend-sep">,</span>
+                              )}
                             </span>
-                            {!isLast && (
-                              <span className="grade-chart-legend-sep">,</span>
-                            )}
-                          </span>
-                        );
-                      })}
-                    </div>
-                  )}
+                          );
+                        })}
+                      </div>
+                    )}
 
-                  <div className="grade-chart-count">
-                    <span
-                      className="grade-chart-count-value"
-                      data-emphasis={hasGradeFilter ? "true" : undefined}>
-                      {totalCount.toLocaleString()}
-                    </span>{" "}
-                    Restaurants
+                    {showCenterCount && (
+                      <div className="grade-chart-count">
+                        <span
+                          className="grade-chart-count-value"
+                          data-emphasis={hasGradeFilter ? "true" : undefined}>
+                          {totalCount.toLocaleString()}
+                        </span>{" "}
+                        Restaurants
+                      </div>
+                    )}
                   </div>
-                </div>
+                )}
               </>
             )}
           </div>
+
+          {showPercentages && data.length > 0 && (
+            <ul className="grade-chart-percentages" aria-label="Grade share">
+              {percentages.map(({ name, label, color, display }) => (
+                <li key={name} className="grade-chart-percentage">
+                  <span
+                    className="grade-chart-percentage-value"
+                    style={{ color }}>
+                    {display}
+                  </span>{" "}
+                  {label}
+                </li>
+              ))}
+            </ul>
+          )}
 
           {/* Always rendered so the rule and its reserved two-line space
               are permanent; only the text toggles, so the donut above

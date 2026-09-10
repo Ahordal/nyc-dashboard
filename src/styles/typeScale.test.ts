@@ -17,6 +17,7 @@ const VALID_TOKENS = [
   "--fs-lg",
   "--fs-xl",
   "--fs-2xl",
+  "--fs-3xl",
   "--fs-display",
 ];
 

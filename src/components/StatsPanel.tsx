@@ -15,6 +15,7 @@ import {
   CATEGORY_COLORS,
   type GradeCategory,
 } from "../utils/gradeCategory";
+import { largestRemainderPercents, formatShare } from "../utils/percentShare";
 
 // Display order and labels for the breakdown, mirroring
 // GRADE_FILTER_COLORS' key order in Dashboard.tsx (A, B, C, Pending, Closed).
@@ -36,11 +37,16 @@ type StatsPanelProps = {
   // Set while the Search Radius tool is active; switches the total's
   // label from "in map view" to "within <distance>".
   searchRadiusMiles?: SearchRadiusMiles | null;
+  // Show each category's share of the total next to its count
+  // ("18,276 / 64% A"). Used where the donut's own percentage line is
+  // dropped in favour of a single combined row (the phone drawer).
+  showShare?: boolean;
 };
 
 export default function StatsPanel({
   restaurants,
   searchRadiusMiles = null,
+  showShare = false,
 }: StatsPanelProps) {
   const counts = useMemo(() => {
     const tally: Record<GradeCategory, number> = {
@@ -63,6 +69,20 @@ export default function StatsPanel({
 
     return tally;
   }, [restaurants]);
+
+  // Each category's share of the total, only computed when it's shown.
+  const shares = useMemo(() => {
+    if (!showShare) return null;
+    const values = CATEGORY_ORDER.map(({ category }) => counts[category]);
+    const pcts = largestRemainderPercents(values);
+    return CATEGORY_ORDER.reduce(
+      (acc, { category }, index) => {
+        acc[category] = formatShare(pcts[index], values[index]);
+        return acc;
+      },
+      {} as Record<GradeCategory, string>,
+    );
+  }, [counts, showShare]);
 
   return (
     <section className="panel stats-panel">
@@ -100,6 +120,14 @@ export default function StatsPanel({
               >
                 {counts[category].toLocaleString()}
               </span>
+              {shares && (
+                <span
+                  className="stats-breakdown-share"
+                  style={{ color: CATEGORY_COLORS[category] }}
+                >
+                  / {shares[category]}
+                </span>
+              )}
               <span className="stats-breakdown-label">{label}</span>
             </span>
           ))}
