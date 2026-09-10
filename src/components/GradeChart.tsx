@@ -72,6 +72,11 @@ type GradeChartProps = {
   // Set while the Search Radius tool is active; switches the panel title
   // (and info copy) from "Map View" to "Within <distance>".
   searchRadiusMiles?: SearchRadiusMiles | null;
+  // The mobile grade-breakdown drawer drops the centre grade labels and
+  // the borough/search footnote (it shows its own KPI row + filter
+  // summary below the donut instead); everywhere else keeps both.
+  showCenterLegend?: boolean;
+  showFilterNote?: boolean;
 };
 
 type ChartDataItem = {
@@ -106,6 +111,8 @@ export default function GradeChart({
   filters,
   searchQuery = "",
   searchRadiusMiles = null,
+  showCenterLegend = true,
+  showFilterNote = true,
 }: GradeChartProps) {
   const [showInfo, setShowInfo] = useState(false);
 
@@ -225,33 +232,35 @@ export default function GradeChart({
                 </ResponsiveContainer>
 
                 <div className="grade-chart-center">
-                  <div className="grade-chart-legend">
-                    {SLICE_CONFIG.map(({ key, label, color }, index) => {
-                      // Coloured only when that category has restaurants in
-                      // the scoped view (which already excludes grades not
-                      // in the active filter). Everything else dims.
-                      const isDimmed = (scopedCounts[key] ?? 0) === 0;
-                      const isLast = index === SLICE_CONFIG.length - 1;
+                  {showCenterLegend && (
+                    <div className="grade-chart-legend">
+                      {SLICE_CONFIG.map(({ key, label, color }, index) => {
+                        // Coloured only when that category has restaurants
+                        // in the scoped view (which already excludes grades
+                        // not in the active filter). Everything else dims.
+                        const isDimmed = (scopedCounts[key] ?? 0) === 0;
+                        const isLast = index === SLICE_CONFIG.length - 1;
 
-                      return (
-                        <span
-                          key={key}
-                          className="grade-chart-legend-group"
-                          data-dimmed={isDimmed ? "true" : undefined}>
+                        return (
                           <span
-                            className="grade-chart-legend-item"
-                            style={
-                              { "--legend-color": color } as CSSProperties
-                            }>
-                            {label}
+                            key={key}
+                            className="grade-chart-legend-group"
+                            data-dimmed={isDimmed ? "true" : undefined}>
+                            <span
+                              className="grade-chart-legend-item"
+                              style={
+                                { "--legend-color": color } as CSSProperties
+                              }>
+                              {label}
+                            </span>
+                            {!isLast && (
+                              <span className="grade-chart-legend-sep">,</span>
+                            )}
                           </span>
-                          {!isLast && (
-                            <span className="grade-chart-legend-sep">,</span>
-                          )}
-                        </span>
-                      );
-                    })}
-                  </div>
+                        );
+                      })}
+                    </div>
+                  )}
 
                   <div className="grade-chart-count">
                     <span
@@ -269,9 +278,11 @@ export default function GradeChart({
           {/* Always rendered so the rule and its reserved two-line space
               are permanent; only the text toggles, so the donut above
               never shifts when a filter is added or cleared. */}
-          <div className="grade-chart-filter-note" aria-live="polite">
-            {filterNote && `Filters applied: ${filterNote}`}
-          </div>
+          {showFilterNote && (
+            <div className="grade-chart-filter-note" aria-live="polite">
+              {filterNote && `Filters applied: ${filterNote}`}
+            </div>
+          )}
         </div>
       )}
     </section>

@@ -651,6 +651,12 @@ summary:focus-visible,
   height: 100%;
 }
 
+/* Transparent on desktop: Clear + option buttons act as direct children
+   of .filter-group. The mobile drawer overrides this to a real flex row. */
+.filter-options {
+  display: contents;
+}
+
 .filter-label {
   display: flex;
   align-items: center;
@@ -3356,15 +3362,16 @@ summary:focus-visible,
     background: transparent;
   }
 
+  /* Gutter = Clear button width + the row gap. */
   .tablet-appbar-region .mobile-filter-groups .filter-group {
+    --filter-clear-w: 3.75rem;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 0.6rem;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   .tablet-appbar-region .mobile-filter-groups .filter-label {
-    flex-basis: 100%;
+    width: 100%;
     margin: 0 0 0.4rem;
     padding: 0.4rem 0 0.4rem 0.4rem;
     background-color: var(--bg-alt);
@@ -3379,42 +3386,37 @@ summary:focus-visible,
     margin-right: 0.4rem;
   }
 
-  .tablet-appbar-region .mobile-filter-groups .filter-clear {
-    margin: 0 0.6rem 0 0;
+  /* Hanging indent: Clear at the left edge on line 1, every option a
+     gutter in (first row and wrapped rows alike). */
+  .tablet-appbar-region .mobile-filter-groups .filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem 0.6rem;
+    padding-left: calc(var(--filter-clear-w) + 0.6rem);
   }
 
-  /* Content-width chips packed left (the phone's flex-grow only makes
-     sense when 2-3 fit per row); min-width is just a floor for A/B/C. */
+  .tablet-appbar-region .mobile-filter-groups .filter-options + .filter-options {
+    margin-top: 0.5rem;
+  }
+
+  .tablet-appbar-region .mobile-filter-groups .filter-clear {
+    margin: 0 0 0 calc(-1 * (var(--filter-clear-w) + 0.6rem));
+  }
+
+  .tablet-appbar-region .mobile-filter-groups .filter-clear .filter-button {
+    width: var(--filter-clear-w);
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Same padding / font size as the desktop filter bar, so A/B/C sit in
+     proportion to the wider labels. */
   .tablet-appbar-region .mobile-filter-groups .filter-button {
     flex: 0 0 auto;
-    min-width: 3rem;
-    padding: 0.6rem 0.9rem;
-    font-size: var(--fs-xs);
-  }
-
-  .tablet-appbar-region .mobile-filter-notice-rule {
-    margin: var(--space-s) 0;
-    border: none;
-    border-top: 1px solid var(--border-panel);
-  }
-
-  .tablet-appbar-region .mobile-filter-notice {
-    margin: var(--space-s) 0 0;
-    font-family: var(--font-display);
-    font-size: var(--fs-xs);
-    font-weight: 600;
-    text-transform: uppercase;
-    letter-spacing: 0.02em;
-    color: var(--text-muted);
-  }
-
-  .tablet-appbar-region .mobile-filter-notice-label {
-    color: var(--text-body);
-  }
-
-  .tablet-appbar-region .mobile-filter-notice-lead,
-  .tablet-appbar-region .mobile-filter-notice-borough {
-    color: var(--text-faded);
+    padding: 0.5rem 0.6rem;
+    font-size: var(--fs-sm);
   }
 
   /* Compact dataset meta in the Info drawer (mirrors section 18's
@@ -3958,7 +3960,7 @@ summary:focus-visible,
   .mobile-filter-groups {
     display: flex;
     flex-direction: column;
-    gap: 2.5rem;
+    gap: 1.5rem;
   }
 
   .mobile-filter-groups .panel {
@@ -3967,16 +3969,17 @@ summary:focus-visible,
     background: transparent;
   }
 
+  /* Gutter = Clear button width + the row gap. */
   .mobile-filter-groups .filter-group {
+    --filter-clear-w: 3.75rem;
     display: flex;
-    flex-wrap: wrap;
-    justify-content: flex-start;
-    gap: 0.6rem;
+    flex-direction: column;
+    align-items: stretch;
   }
 
   /* Mirror .section-header from Restaurant Details: size, bar, tracking. */
   .mobile-filter-groups .filter-label {
-    flex-basis: 100%;
+    width: 100%;
     margin: 0 0 0.4rem;
     padding: 0.4rem 0 0.4rem 0.4rem;
     background-color: var(--bg-alt);
@@ -3991,16 +3994,41 @@ summary:focus-visible,
     margin-right: 0.4rem;
   }
 
-  /* Clear sits right after the label, wider gap before the first option. */
-  .mobile-filter-groups .filter-clear {
-    margin: 0 0.6rem 0 0;
+  /* Option row. padding-left + the negative margin on Clear below make a
+     hanging indent: Clear sits at the left edge on the first line, every
+     option (first row and wrapped rows) lines up one gutter in. */
+  .mobile-filter-groups .filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem 0.6rem;
+    padding-left: calc(var(--filter-clear-w) + 0.6rem);
   }
 
+  /* Second option row from `breakBefore` (Pending onward). 0.5rem clear of
+     the first row -- nothing else contributes, so it matches a wrap gap. */
+  .mobile-filter-groups .filter-options + .filter-options {
+    margin-top: 0rem;
+  }
+
+  .mobile-filter-groups .filter-clear {
+    margin: 0 0 0 calc(-1 * (var(--filter-clear-w) + 0.6rem));
+  }
+
+  .mobile-filter-groups .filter-clear .filter-button {
+    width: var(--filter-clear-w);
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Same padding / font size as the desktop filter bar, so A/B/C sit in
+     proportion to the wider labels. No flex-grow, so a wrapped row
+     (Uninspected + Closed, Staten Island) stays chip-sized. */
   .mobile-filter-groups .filter-button {
-    flex: 1 0 auto;
-    min-width: 4.5rem;
-    padding: 0.6rem 0.5rem;
-    font-size: var(--fs-xs);
+    flex: 0 0 auto;
+    padding: 0.5rem 0.6rem;
+    font-size: var(--fs-sm);
   }
 
   /* Touch's sticky :hover reads as selected -- pin non-.active filter
@@ -4026,7 +4054,8 @@ summary:focus-visible,
     outline: none;
   }
 
-  /* Static echo of the desktop filter-change notice so a tap registers. */
+  /* "Filters applied: …" summary shown under the grade-breakdown drawer's
+     KPI row (see FilterSummary), plus its divider rule. */
   .mobile-filter-notice-rule {
     margin: var(--space-s) 0;
     border: none;
@@ -4148,7 +4177,8 @@ summary:focus-visible,
     box-shadow: 0 6px 16px var(--shadow-overlay);
   }
 
-  /* Donut + the per-grade KPI, stacked inside the card. */
+  /* Donut, then the per-grade KPI row, then a rule + the filters-applied
+     summary, stacked inside the card. */
   .mobile-area-drawer-chart {
     display: flex;
     flex-direction: column;
@@ -4156,18 +4186,26 @@ summary:focus-visible,
   }
 
   /* No `.grade-chart` wrapper here -- recreate the flex column, give the
-     donut an explicit height, drop the panel border/fill. */
+     donut an explicit height, drop the panel border/fill. This drawer
+     hides the chart's own filter-note, so no extra height is reserved. */
   .mobile-area-drawer-chart .grade-chart-panel {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
-    /* min(46dvh, 380px) is the donut's own height; + the permanent
-       filter-note footprint (its margin + reserved two lines) so the
-       donut keeps that size instead of giving room back to the note. */
-    height: calc(min(46dvh, 380px) + 3.6125rem);
+    height: min(46dvh, 380px);
     padding: 0;
     border: none;
     background: transparent;
+  }
+
+  /* Rule + summary sit under the KPI row; the column gap already spaces
+     them, so drop the notice's own margins and thin the rule's. */
+  .mobile-area-drawer-chart .mobile-filter-notice {
+    margin: 0;
+  }
+
+  .mobile-area-drawer-chart .mobile-filter-notice-rule {
+    margin: var(--space-xs) 0 0;
   }
 
   .mobile-area-drawer-chart .grade-chart-panel > .panel-header {

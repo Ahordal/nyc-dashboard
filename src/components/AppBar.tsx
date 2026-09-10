@@ -9,7 +9,7 @@
 // in from MapView), then the attribution footer as a detached panel. The
 // tablet layout passes `tagline` to keep the desktop tertiary title line.
 
-import { Fragment, useId } from "react";
+import { useId } from "react";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -26,66 +26,8 @@ import DashboardGuideMeta from "./DashboardGuideMeta";
 import DashboardFooter from "./DashboardFooter";
 import MOBILE_INFO_CONTENT from "./MobileInfoContent";
 
-import { getFilterNoticeParts } from "../utils/filterNotice";
-import { CATEGORY_COLORS } from "../utils/gradeCategory";
 import type { Filters, SetFilters } from "../types/filters";
 import type { DashboardMeta } from "../types/dashboardMeta";
-
-// Grade-filter labels -> their category colour (boroughs stay muted),
-// matching the desktop filter-change notice.
-const GRADE_LABEL_COLORS: Record<string, string> = {
-  A: CATEGORY_COLORS.A,
-  B: CATEGORY_COLORS.B,
-  C: CATEGORY_COLORS.C,
-  Pending: CATEGORY_COLORS.pending,
-  Uninspected: CATEGORY_COLORS.uninspected,
-  Closed: CATEGORY_COLORS.closed,
-};
-
-// The same summary the desktop RestaurantList flashes as an overlay when
-// filters change, rendered here as static (coloured) text so a mobile
-// user gets confirmation their selection took effect.
-function FilterSummary({ filters }: { filters: Filters }) {
-  const parts = getFilterNoticeParts({
-    grades: filters.grades,
-    boroughs: filters.boroughs,
-    searchQuery: "",
-    hasSearchRadius: false,
-  });
-
-  return (
-    <>
-      <span className="mobile-filter-notice-lead">Filters applied:</span>{" "}
-      {parts.map((part, index) => (
-        <Fragment key={part.kind}>
-          {index > 0 && " · "}
-          {part.kind === "grades" && (
-            <>
-              <span className="mobile-filter-notice-label">Grade:</span>{" "}
-              {part.grades.map((grade, gradeIndex) => (
-                <Fragment key={grade}>
-                  {gradeIndex > 0 && ", "}
-                  <span style={{ color: GRADE_LABEL_COLORS[grade] }}>
-                    {grade}
-                  </span>
-                </Fragment>
-              ))}
-            </>
-          )}
-          {part.kind === "boroughs" && (
-            <>
-              <span className="mobile-filter-notice-label">Borough:</span>{" "}
-              <span className="mobile-filter-notice-borough">
-                {part.boroughs.join(", ")}
-              </span>
-            </>
-          )}
-          {part.kind === "all" && <>All Restaurants</>}
-        </Fragment>
-      ))}
-    </>
-  );
-}
 
 type MobileDrawer = "search" | "filters" | "info" | "grades" | null;
 
@@ -228,11 +170,6 @@ export default function AppBar({
           <div className="panel-header">
             <h2 className="panel-header-title">Filters</h2>
           </div>
-
-          <p className="mobile-filter-notice" aria-live="polite">
-            <FilterSummary filters={filters} />
-          </p>
-          <hr className="mobile-filter-notice-rule" />
 
           <div className="mobile-filter-groups">
             <GradeFilters filters={filters} setFilters={setFilters} />

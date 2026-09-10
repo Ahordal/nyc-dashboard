@@ -12,6 +12,7 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUtensils, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 
 import StatsPanel from "./StatsPanel";
+import FilterSummary from "./FilterSummary";
 import ChartSkeleton from "./ChartSkeleton";
 import ErrorBoundary from "./ErrorBoundary";
 import ErrorFallback from "./ErrorFallback";
@@ -137,6 +138,8 @@ export default function MobileAreaStrip({
                   filters={filters}
                   searchQuery={searchQuery}
                   searchRadiusMiles={searchRadiusMiles}
+                  showCenterLegend={false}
+                  showFilterNote={false}
                 />
               </Suspense>
             </ErrorBoundary>
@@ -145,6 +148,9 @@ export default function MobileAreaStrip({
               restaurants={visibleRestaurants}
               searchRadiusMiles={searchRadiusMiles}
             />
+
+            <hr className="mobile-filter-notice-rule" />
+            <FilterSummary filters={filters} />
           </div>
         )}
       </div>
