@@ -4,7 +4,7 @@
 // the Search Radius circle when that tool is active): total count plus a
 // breakdown by grade category.
 
-import { useMemo } from "react";
+import { useMemo, type ReactNode } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUtensils } from "@fortawesome/free-solid-svg-icons";
 import type { RestaurantProperties } from "../types/restaurant";
@@ -41,12 +41,18 @@ type StatsPanelProps = {
   // ("18,276 / 64% A"). Used where the donut's own percentage line is
   // dropped in favour of a single combined row (the phone drawer).
   showShare?: boolean;
+  // Compact-desktop only: the Filters trigger button + popover, absolutely
+  // positioned inside this panel (see .desktop-filters-button-wrap) so it
+  // shares the panel's own border/background instead of sitting in an
+  // adjacent box.
+  filtersButton?: ReactNode;
 };
 
 export default function StatsPanel({
   restaurants,
   searchRadiusMiles = null,
   showShare = false,
+  filtersButton,
 }: StatsPanelProps) {
   const counts = useMemo(() => {
     const tally: Record<GradeCategory, number> = {
@@ -85,8 +91,9 @@ export default function StatsPanel({
   }, [counts, showShare]);
 
   return (
-    <section className="panel stats-panel">
-     
+    <section
+      className="panel stats-panel"
+      data-has-filters-button={filtersButton ? true : undefined}>
       <div className="stats-panel-line">
         <span className="stats-total">
           <FontAwesomeIcon
@@ -133,6 +140,8 @@ export default function StatsPanel({
           ))}
         </span>
       </div>
+
+      {filtersButton}
     </section>
   );
 }

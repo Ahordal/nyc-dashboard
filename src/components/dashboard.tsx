@@ -15,8 +15,9 @@ import {
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faChevronRight,
   faChevronDown,
+  faSliders,
+  faXmark,
 } from "@fortawesome/free-solid-svg-icons";
 
 import MobileDashboard from "./MobileDashboard";
@@ -102,13 +103,6 @@ export default function Dashboard() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // The inline filter bar only fits on one line at ~2360px+; below that
-  // it collapses into a <details> disclosure. At/above it the bar is
-  // always shown and the summary is hidden via CSS.
-  const isFilterBarInline = useMediaQuery("(min-width: 2360px)");
-  const [filtersOpen, setFiltersOpen] = useState(false);
-  const filtersExpanded = isFilterBarInline || filtersOpen;
-
   // Below this width the desktop 3-pane grid is replaced by the phone
   // layout (app bar + full-bleed map + bottom sheet); see MobileDashboard.
   // The short-landscape clause keeps a phone turned sideways on the phone
@@ -125,6 +119,13 @@ export default function Dashboard() {
     "search" | "filters" | "info" | "grades" | null
   >(null);
   const gradeDrawerId = useId();
+
+  // Below this the Grade/Borough buttons no longer fit on one line, so
+  // the inline filter row (below) is swapped for a small button that
+  // opens the same filters in a popover instead.
+  const isFullDesktop = useMediaQuery("(min-width: 2360px)");
+  const desktopFiltersPopoverId = useId();
+  const activeFilterCount = filters.grades.length + filters.boroughs.length;
 
   // Selection, hover, and the active Explorer tab move together — see
   // selectionReducer for the "selecting X clears Y, switches tab" rules.
@@ -352,6 +353,75 @@ export default function Dashboard() {
     </div>
   );
 
+  // Compact desktop only: the Filters trigger, nested inside the KPI
+  // panel itself (see StatsPanel's filtersButton prop) rather than a
+  // separate adjacent box -- that way the panel's own outer edge still
+  // lines up with the search panel above it, while the button's 0.5rem
+  // inset from the panel's *inner* edge lines up with the map's own
+  // control chips (same inset, same edge).
+  const desktopFiltersButton = (
+    <>
+      <div className="desktop-filters-button-wrap">
+        <button
+          type="button"
+          className="desktop-filters-button"
+          aria-expanded={activeDrawer === "filters"}
+          aria-controls={desktopFiltersPopoverId}
+          aria-label={
+            activeDrawer === "filters"
+              ? "Close filters"
+              : activeFilterCount > 0
+                ? `Filters (${activeFilterCount} active)`
+                : "Filters"
+          }
+          onClick={() =>
+            setActiveDrawer(activeDrawer === "filters" ? null : "filters")
+          }>
+          <FontAwesomeIcon
+            icon={activeDrawer === "filters" ? faXmark : faSliders}
+            aria-hidden="true"
+          />
+          {activeFilterCount > 0 && (
+            <span className="desktop-filters-badge">{activeFilterCount}</span>
+          )}
+        </button>
+      </div>
+
+      {/* Positioned relative to .stats-panel (the nearest positioned
+         ancestor above this fragment), not the button -- so it lands
+         0.5rem below the panel's own bottom edge and flush with the
+         map's right edge, regardless of where the button sits inside
+         the panel. */}
+      {activeDrawer === "filters" && (
+        <div id={desktopFiltersPopoverId} className="desktop-filters-popover">
+          <div className="panel-header">
+            <h2 className="panel-header-title">Filters</h2>
+          </div>
+
+          <div className="dashboard-filters">
+            <div className="dashboard-grade-filters">
+              <GradeFilters filters={filters} setFilters={setFilters} />
+            </div>
+
+            <div className="dashboard-borough-filters">
+              <BoroughFilters filters={filters} setFilters={setFilters} />
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+
+  const compactDesktopStatsPanel = (
+    <div className="map-stats">
+      <StatsPanel
+        restaurants={visibleRestaurants}
+        searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
+        filtersButton={desktopFiltersButton}
+      />
+    </div>
+  );
+
   // The "locate me" dot feeds the per-card / details Distance readout and
   // the Distance sort on tablet, exactly as on phone. Desktop has no
   // locate control, so it never contributes a distance origin there.
@@ -398,35 +468,22 @@ export default function Dashboard() {
         </div>
 
         <div className="map-column">
-          <div className="map-top">
-            {!isTablet && (
-              <details
-                className="filters-disclosure"
-                open={filtersExpanded}
-                onToggle={(event) => {
-                  if (!isFilterBarInline) {
-                    setFiltersOpen(event.currentTarget.open);
-                  }
-                }}>
-                <summary className="filters-disclosure-summary">
-                  <FontAwesomeIcon
-                    icon={faChevronRight}
-                    className="filters-disclosure-chevron"
-                    aria-hidden="true"
-                  />
-                  <span className="filters-disclosure-label">Filters</span>
-                </summary>
-
-                <div className="dashboard-filters">
-                  <div className="dashboard-grade-filters">
-                    <GradeFilters filters={filters} setFilters={setFilters} />
-                  </div>
-
-                  <div className="dashboard-borough-filters">
-                    <BoroughFilters filters={filters} setFilters={setFilters} />
-                  </div>
+          <div
+            className={
+              !isTablet && !isFullDesktop
+                ? "map-top map-top-single-row"
+                : "map-top"
+            }>
+            {!isTablet && isFullDesktop && (
+              <div className="dashboard-filters">
+                <div className="dashboard-grade-filters">
+                  <GradeFilters filters={filters} setFilters={setFilters} />
                 </div>
-              </details>
+
+                <div className="dashboard-borough-filters">
+                  <BoroughFilters filters={filters} setFilters={setFilters} />
+                </div>
+              </div>
             )}
 
             {isTablet ? (
@@ -468,8 +525,10 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
-            ) : (
+            ) : isFullDesktop ? (
               statsPanel
+            ) : (
+              compactDesktopStatsPanel
             )}
           </div>
 

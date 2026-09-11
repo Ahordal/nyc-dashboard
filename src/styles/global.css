@@ -202,7 +202,7 @@ summary:focus-visible,
   --fs-md: 0.875rem;    /* 14px - body copy, panel headers (h2), controls */
   --fs-lg: 1rem;        /* 16px - emphasis, icons, inline controls */
   --fs-xl: 1.1875rem;   /* 19px - hero / content titles */
-  --fs-2xl: 1.375rem;   /* 22px - big stat numbers, h1 primary line */
+  --fs-2xl: 1.25rem;   /* 20px - big stat numbers, h1 primary line */
   --fs-3xl: 2.75rem;    /* 44px - tablet app-bar "NYC" masthead */
   --fs-display: 6.5rem;  /* decorative "NYC" wordmark only; reflow clamps it */
 
@@ -234,10 +234,10 @@ summary:focus-visible,
   width: 100%;
   height: 100%;
   /* 3-pane floor; reflow block resets these below 1750px. */
-  min-width: 1246px;
+  min-width: 1176px;
   min-height: 800px;
-  grid-template-columns: clamp(350px, 25vw, 450px) minmax(480px, 1fr) clamp(400px, 28vw, 550px);
-  grid-template-rows: auto minmax(0, 1fr) 280px 60px;
+  grid-template-columns: clamp(320px, 22vw, 400px) minmax(480px, 1fr) clamp(360px, 25vw, 480px);
+  grid-template-rows: auto minmax(0, 1fr) clamp(200px, 20vh, 280px) auto;
   grid-template-areas:
     "sidebar map-column  search"
     "sidebar map-column  explorer"
@@ -255,6 +255,10 @@ summary:focus-visible,
   gap: var(--space-xs);
   min-width: 0;
   min-height: 0;
+  /* Fallback if title + guide ever outgrow the sidebar's grid-allocated
+     height (e.g. unusually long guide content): scroll instead of
+     squeezing grade-chart's flex remainder to nothing. */
+  overflow-y: auto;
 }
 
 .dashboard-title,
@@ -271,24 +275,49 @@ summary:focus-visible,
   min-height: 0;
 }
 
+/* Flex, not subgrid: map-top's row1 no longer needs to match whatever
+   height search/sidebar's row1 happens to need (it can vary a lot --
+   e.g. the filters row not rendering at all in the compact-desktop
+   band). map-top takes only what its own content needs; map-view (flex:1)
+   absorbs the rest, so the gap above the map is always this row-gap,
+   not leftover subgrid-row slack. */
 .map-column {
   grid-area: map-column;
-  display: grid;
-  grid-template-rows: subgrid;
-  row-gap: var(--space-xs);
-}
-
-.map-top {
-  grid-row: 1;
-  display: grid;  
-  grid-template-rows: auto minmax(0, 1fr);
+  display: flex;
+  flex-direction: column;
   gap: var(--space-xs);
   min-width: 0;
   min-height: 0;
 }
 
+.map-top {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-xs);
+  min-width: 0;
+  min-height: 0;
+  /* Neither this nor .map-view has its own stacking context, so without
+     an explicit z-index here the (later-painted, unpositioned) map wins
+     ties against this row's contents -- including the filters popover.
+     30 matches the app's existing "overlays the map" convention (search
+     radius panel, locate-me panel) and clears the map's own top-right
+     control chips (20 at most). */
+  position: relative;
+  z-index: 30;
+}
+
+/* Compact desktop: the filters row above doesn't render at all here (see
+   .desktop-filters-button), so the row-gap above has nothing to
+   separate -- it was just adding 0.5rem of dead space before the KPI
+   row. One row, no gap. */
+.map-top-single-row {
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+}
+
 .map-view {
-  grid-row: 2;
+  flex: 1;
   min-width: 0;
   min-height: 0;
 }
@@ -703,6 +732,133 @@ summary:focus-visible,
   margin-right: var(--space-s);
 }
 
+/* 7.2 COMPACT-DESKTOP FILTERS BUTTON (1751-2359px)
+   Below the width the inline row above fits on one line, Grade/Borough
+   move behind this small button instead -- sized and styled like
+   MapView's own 32px control chips (mirrors .mobile-appbar-button /
+   .mobile-appbar-badge, which live in phone/tablet-scoped media queries
+   and so aren't reachable at this width). Nested inside the KPI panel
+   itself (StatsPanel's filtersButton prop) rather than an adjacent box:
+   the panel's own outer edge keeps lining up with the search panel
+   beside it, and the button's 0.5rem inset from the panel's inner edge
+   lines up with the map's own control chips (same inset, same edge). */
+
+.desktop-filters-button-wrap {
+  position: absolute;
+  top: 50%;
+  right: var(--space-xs);
+  transform: translateY(-50%);
+}
+
+.desktop-filters-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  font-size: var(--fs-lg);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* Only aria-expanded drives the highlighted look, not :hover -- otherwise
+   closing the popover while the cursor is still resting on the button
+   (the normal case right after a click) leaves it looking selected. */
+.desktop-filters-button[aria-expanded="true"] {
+  background-color: var(--link-background-hover);
+  color: var(--link-hover);
+}
+
+.desktop-filters-badge {
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background-color: var(--accent-blue);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Floating popover, not an inline push -- overlays the map, doesn't
+   resize it. Positioned off .stats-panel (its nearest positioned
+   ancestor, a sibling here, not the button) so it sits 0.5rem below the
+   KPI panel's own bottom edge and flush with the map's right edge,
+   independent of where the button sits inside that panel. Reuses
+   .dashboard-filters (the >=2360px inline row) rather than duplicating
+   filter markup; stacked/left-aligned here since even at this width
+   it's narrower than that row. */
+.desktop-filters-popover {
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 20;
+  /* Sized to whatever the Grade/Borough rows actually need (each row is
+     already width:auto below) plus this box's own padding -- not a
+     guessed fixed width. Capped well under the map's narrowest
+     available width (~955px at 1751px) as a safety net, not a target. */
+  width: max-content;
+  max-width: 720px;
+  padding: var(--space-xs);
+  border: 1px solid var(--border-panel);
+  background-color: var(--bg-panel);
+  box-shadow: 0 6px 16px var(--shadow-overlay);
+}
+
+.desktop-filters-popover .panel-header {
+  margin-bottom: 0;
+}
+
+.desktop-filters-popover .dashboard-filters {
+  flex-direction: column;
+  border: none;
+  width: auto;
+}
+
+.desktop-filters-popover .dashboard-grade-filters .panel,
+.desktop-filters-popover .dashboard-borough-filters .panel {
+  justify-content: flex-start;
+  /* The popover's own padding already provides the left inset; this
+     section's own left padding would stack on top of it (1rem total). */
+  padding-left: 0;
+}
+
+.desktop-filters-popover .dashboard-grade-filters .panel {
+  border-bottom: 1px solid var(--border-panel);
+  padding-bottom: var(--space-xs);
+}
+
+.desktop-filters-popover .dashboard-borough-filters .panel {
+  padding-top: var(--space-xs);
+}
+
+.desktop-filters-popover .filter-group {
+  justify-content: flex-start;
+}
+
+/* Fixed label column so Clear (and the buttons after it) start at the
+   same x position in both rows, regardless of "Grade" vs "Borough"
+   being different lengths -- text stays left-aligned within the wider
+   box. */
+.desktop-filters-popover .filter-label {
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
 /*///////////////////////////////////////////// 8. STATS PANEL //////////////////////////////////////////////*/
 
 /* 8.1 STATS LAYOUT & COUNTERS */
@@ -710,10 +866,20 @@ summary:focus-visible,
 .map-stats {
   min-width: 0;
   min-height: 0;
+  /* In .map-top's grid this is a fr-track item that would otherwise
+     stretch to match the taller Filters/Search row, padding out the
+     panel's border well past its own content. Hug its content instead
+     (a no-op in .tablet-kpi-bar, which isn't a flex/grid container). */
+  align-self: start;
 }
 
 .map-stats > .panel {
-  height: 100%;
+  /* No height:100% -- .map-stats now hugs its own content (align-self:
+     start above), so stretching this to match would just reopen the same
+     gap through the height:100% chain below (.stats-panel,
+     .stats-panel-line). Sizing from content here is deterministic
+     everywhere, instead of depending on how tall the row1 track ends up
+     at a given width. */
   padding: var(--space-xs) var(--space-s);
 }
 
@@ -724,6 +890,9 @@ summary:focus-visible,
   height: 100%;
   width: 100%;
   font-family: var(--font-display);
+  /* Positioning context for .desktop-filters-button-wrap (compact desktop
+     only, via the filtersButton prop). No-op otherwise. */
+  position: relative;
 }
 
 .stats-panel-line {
@@ -736,6 +905,21 @@ summary:focus-visible,
   height: 100%;
   min-width: 0;
   padding: 0 var(--space-s);
+}
+
+/* Room for the nested Filters button: taller panel (0.5rem more top and
+   bottom than .map-stats > .panel's usual var(--space-xs), so the 32px
+   button isn't cramped against the border; horizontal unchanged) and
+   right-padding on the content so the breakdown doesn't run under it. */
+.stats-panel[data-has-filters-button] {
+  padding: var(--space-s) var(--space-s);
+  /* Base .panel clips overflow; the popover extends below this panel's
+     own box, so it needs to escape that clip. */
+  overflow: visible;
+}
+
+.stats-panel[data-has-filters-button] .stats-panel-line {
+  padding-right: 3rem;
 }
 
 .stats-total {
@@ -822,6 +1006,13 @@ summary:focus-visible,
 /*///////////////////////////////////////////// 9. SEARCH PANEL //////////////////////////////////////////////*/
 
 /* 9.1 SEARCH BAR & INPUT CONTROLS */
+
+/* .search-panel only wraps ExplorerSearch in the desktop 3-column layout
+   (dashboard.tsx, !isTablet); the phone/tablet search drawer reuses
+   ExplorerSearch under a different wrapper, so this doesn't touch it. */
+.search-panel .panel-header {
+  margin-bottom: var(--space-xs);
+}
 
 .search-panel-body {
   display: flex;
@@ -926,7 +1117,7 @@ summary:focus-visible,
   border: none;
   border-bottom: 2px solid transparent;
   color: var(--text-muted);
-  padding: 1rem var(--space-s);
+  padding: var(--space-xs) var(--space-s);
   font-family: var(--font-display);
   font-size: var(--fs-xs);
   font-weight: 700;
@@ -1844,7 +2035,9 @@ summary:focus-visible,
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
-  min-height: 0;
+  /* Floor so title/guide wrapping can't squeeze this to nothing; past it,
+     .left-sidebar scrolls instead. */
+  min-height: 160px;
   min-width: 0;
   overflow: hidden;
   padding: var(--space-s);
@@ -2949,13 +3142,20 @@ summary:focus-visible,
   font-family: var(--font-display) !important;
   text-transform: uppercase !important;
   font-size: var(--fs-xs) !important;
-  /* Horizontal padding 0 -- the esri child elements carry their own 1rem. */
+  /* Horizontal padding 0 -- the esri child elements carry their own edge
+     padding (trimmed to 0.5rem below; the 4px inner gap between them is
+     untouched). */
   padding: 4px 0 !important;
 }
 
 .esri-attribution__sources {
   color: var(--text-muted) !important;
   text-transform: uppercase !important;
+  padding-left: var(--space-xs) !important;
+}
+
+.esri-attribution__powered-by {
+  padding-right: var(--space-xs) !important;
 }
 
 /* Suppress the focus ring on ArcGIS internals only; custom controls sit
@@ -3095,71 +3295,6 @@ summary:focus-visible,
 
 /*///////////////////////////////////////////// 16. RESPONSIVE REFLOW //////////////////////////////////////////////*/
 
-/* Two independent breakpoints: <=2359px folds the filter bar into a
-   <details> disclosure, <=1750px stacks the 3-pane grid -- so disclosure
-   rules also apply from 1751-2359px. */
-@media (max-width: 2359px) {
-  /* Filter sections stack and left-align in the disclosure. */
-  .filters-disclosure {
-    border: 1px solid var(--border-panel);
-    background-color: var(--bg-panel);
-  }
-
-  .filters-disclosure-summary {
-    display: flex;
-    align-items: center;
-    gap: var(--space-xs);
-    padding: 0.65rem 0.75rem;
-    background-color: var(--bg-alt);
-    color: var(--text-muted);
-    font-family: var(--font-display);
-    font-size: var(--fs-xs);
-    font-weight: 700;
-    letter-spacing: 0.05em;
-    text-transform: uppercase;
-    cursor: pointer;
-    list-style: none;
-    user-select: none;
-  }
-
-  .filters-disclosure-summary::-webkit-details-marker {
-    display: none;
-  }
-
-  .filters-disclosure-summary:hover,
-  .filters-disclosure-summary:focus-visible {
-    color: var(--text-heading);
-  }
-
-  .filters-disclosure-chevron {
-    flex-shrink: 0;
-    font-size: var(--fs-xs);
-    transition: transform 0.15s ease;
-  }
-
-  .filters-disclosure[open] .filters-disclosure-chevron {
-    transform: rotate(90deg);
-  }
-
-  .dashboard-filters {
-    flex-direction: column;
-    border: none;
-  }
-
-  .dashboard-grade-filters .panel,
-  .dashboard-borough-filters .panel {
-    justify-content: flex-start;
-  }
-
-  .dashboard-grade-filters .panel {
-    border-bottom: 1px solid var(--border-panel);
-  }
-
-  .filter-group {
-    justify-content: flex-start;
-  }
-}
-
 @media (max-width: 1750px) {
   body {
     overflow: auto;
@@ -3224,10 +3359,106 @@ summary:focus-visible,
   }
 }
 
-/* Inline filter bar fits on one line; disclosure wrapper inert, summary hidden. */
-@media (min-width: 2360px) {
-  .filters-disclosure-summary {
-    display: none;
+/* Compact desktop (1751-2359px): the 3-pane grid's column widths were
+   tuned against >=2360px, where the columns' vw caps are a small slice of
+   the total width. Below that the same fixed type scale wraps more,
+   which can starve the sidebar's flexible grade-chart. Every font-size in
+   this file resolves to one of these tokens (guarded by
+   typeScale.test.ts), so shrinking them here is a single-point fix that
+   reaches every desktop panel without a chain of per-component overrides. */
+@media (min-width: 1751px) and (max-width: 2359px) {
+  :root {
+    --fs-2xs: 0.5625rem;
+    --fs-xs: 0.6875rem;
+    --fs-sm: 0.75rem;
+    --fs-md: 0.8125rem;
+    --fs-lg: 0.9375rem;
+    --fs-xl: 1.0625rem;
+    --fs-2xl: 1.1875rem;
+    --fs-display: 5.5rem;
+  }
+
+  /* Right column (explorer/search) ~10% narrower than the base clamp,
+     giving the map a bit more of this band's width. */
+  .dashboard {
+    grid-template-columns: clamp(320px, 22vw, 400px) minmax(480px, 1fr) clamp(325px, 22.5vw, 430px);
+  }
+
+  /* Filter row compressed so Grade + Borough have a better chance of
+     staying on one line at this band's narrower widths (>=2360px has
+     the room to spare); .dashboard-filters still wraps them if not. */
+  .dashboard-grade-filters .panel,
+  .dashboard-borough-filters .panel {
+    padding: 0.4rem 0.5rem;
+  }
+
+  .filter-clear {
+    margin-right: var(--space-xs);
+  }
+}
+
+/* Tighter panel chrome across the whole desktop range (>=1751px), not just
+   the compact band above: the base 1rem padding reads as too much
+   whitespace at any desktop width once compared against it. Each selector
+   here matches (or outranks) the specificity of the rule it's trimming,
+   so this wins without touching those rules. */
+@media (min-width: 1751px) {
+  .panel,
+  .dashboard-title .panel,
+  .grade-chart,
+  .dashboard-footer {
+    padding: var(--space-xs);
+  }
+
+  /* Its own 1rem bottom padding stacked on top of the panel's (now
+     0.5rem), leaving a bigger gap under the meta block than under
+     everything else. The panel's own padding already covers it. */
+  .dashboard-guide-meta {
+    padding-bottom: 0;
+  }
+
+  /* Map control chips tucked to 0.5rem from the view's edges, matching
+     the panel chrome above -- 1rem (tablet/phone already use 0.5rem
+     here, so this only affects desktop). Only the edge each group
+     actually touches; the stacking offsets between chips in the same
+     group are untouched. */
+  .map-bottom-controls {
+    left: var(--space-xs);
+  }
+
+  .map-zoom-buttons-container,
+  .map-compass-container {
+    left: var(--space-xs);
+  }
+
+  .map-compass-container {
+    top: calc(var(--space-xs) + 64px + 8px);
+  }
+
+  .map-zoom-buttons-container {
+    top: var(--space-xs);
+  }
+
+  .map-view-top-header,
+  .map-basemap-toggle-container,
+  .map-search-radius-container {
+    right: var(--space-xs);
+  }
+
+  .map-view-top-header {
+    top: var(--space-xs);
+  }
+
+  .map-basemap-toggle-container {
+    top: calc(var(--space-xs) + 40px);
+  }
+
+  .map-search-radius-container {
+    top: calc(var(--space-xs) + 40px + 32px + 8px);
+  }
+
+  .map-scale-bar-container {
+    right: var(--space-xs);
   }
 }
 
