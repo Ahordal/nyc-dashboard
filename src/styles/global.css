@@ -1920,6 +1920,13 @@ summary:focus-visible,
 .performance-chart-panel {
   display: flex;
   flex-direction: column;
+  /* Base .panel clips overflow; a tooltip near the chart's bottom edge
+     (footer sits right below, in the next grid row) needs to escape
+     that clip and outrank the footer, which -- like this panel until
+     now -- has no stacking context of its own. */
+  overflow: visible;
+  position: relative;
+  z-index: 10;
 }
 
 .performance-chart-panel .panel-header {
@@ -1966,7 +1973,7 @@ summary:focus-visible,
   pointer-events: none;
   background: var(--bg-panel);
   border: 1px solid var(--border-panel);
-  padding: 8px 12px;
+  padding: var(--space-xs);
   z-index: 10;
   white-space: nowrap;
 }
@@ -1974,8 +1981,9 @@ summary:focus-visible,
 .performance-tooltip-date {
   margin-bottom: 4px;
   color: var(--text-muted);
-  font-size: var(--fs-md);
+  font-size: var(--fs-xs);
   font-weight: 700;
+  text-transform: uppercase;
 }
 
 .performance-tooltip-score {
