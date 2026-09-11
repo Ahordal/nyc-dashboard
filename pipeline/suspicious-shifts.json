@@ -7570,5 +7570,29 @@
     "distanceMeters": 162.0071254535626,
     "matchType": "house+street",
     "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "50192170",
+    "dba": "RED HOOK DISTILLERY LLC",
+    "address": "175 VAN DYKE STREET, Brooklyn 11231",
+    "dohmhLat": 40.676644035467,
+    "dohmhLon": -74.016172887325,
+    "resolvedLat": 40.677076,
+    "resolvedLon": -74.018126,
+    "distanceMeters": 171.56672935493475,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "50192219",
+    "dba": "JUST SALAD STORE 151",
+    "address": "446 E FORDHAM RD, Bronx 10458",
+    "dohmhLat": 40.860911010969,
+    "dohmhLon": -73.889927413777,
+    "resolvedLat": 40.8603099,
+    "resolvedLon": -73.8887376,
+    "distanceMeters": 120.33134612997027,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
   }
 ]
