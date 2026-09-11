@@ -195,34 +195,6 @@ export default function Dashboard() {
 
   const radiusKey = searchRadiusPoint ? `radius-${activeRadiusMiles}` : "";
 
-  // Active grade/borough filters, summarised for the collapsed filter
-  // bar. Grade names carry their category colour; boroughs stay muted.
-  const hasGradeFilter = filters.grades.length > 0;
-  const hasBoroughFilter = filters.boroughs.length > 0;
-
-  const filterSummary =
-    !hasGradeFilter && !hasBoroughFilter ? (
-      "All grades & boroughs"
-    ) : (
-      <>
-        {hasGradeFilter && (
-          <>
-            Grade:{" "}
-            {filters.grades.map((grade, index) => (
-              <Fragment key={grade}>
-                {index > 0 && ", "}
-                <span style={{ color: GRADE_FILTER_COLORS[grade] }}>
-                  {grade}
-                </span>
-              </Fragment>
-            ))}
-          </>
-        )}
-        {hasGradeFilter && hasBoroughFilter && " · "}
-        {hasBoroughFilter && `Borough: ${filters.boroughs.join(", ")}`}
-      </>
-    );
-
   const reportInspectionId = resolveReportInspectionId(
     selectedInspectionId,
     history,
@@ -399,7 +371,7 @@ export default function Dashboard() {
               searchActive={searchQuery.trim().length > 0}
               activeDrawer={activeDrawer}
               onDrawerChange={setActiveDrawer}
-              tagline="Restaurant Inspection Trends and Insights"
+              tagline="Mapping Restaurant Health Inspections"
             />
           </div>
         )}
@@ -443,9 +415,6 @@ export default function Dashboard() {
                     aria-hidden="true"
                   />
                   <span className="filters-disclosure-label">Filters</span>
-                  <span className="filters-disclosure-active">
-                    {filterSummary}
-                  </span>
                 </summary>
 
                 <div className="dashboard-filters">

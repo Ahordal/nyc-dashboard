@@ -43,7 +43,6 @@ export default function GradeFilters({
       selected={filters.grades}
       onChange={(grades) => setFilters({ ...filters, grades })}
       getActiveColor={(option) => GRADE_FILTER_COLORS[option]}
-      breakBefore={["Pending"]}
     />
   );
 }

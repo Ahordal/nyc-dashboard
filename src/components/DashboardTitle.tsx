@@ -20,10 +20,7 @@ export default function DashboardTitle() {
               
               aria-hidden="true"
             /></span>
-          <span className="h1-small">
-            Restaurant Inspection Trends and Insights{" "}
-           
-          </span>
+          <span className="h1-small">Mapping Restaurant Health Inspections</span>
         </h1>
       </div>
     </section>

@@ -416,6 +416,7 @@ export default function MobileDashboard({
         searchActive={hasActiveQuery}
         activeDrawer={activeDrawer}
         onDrawerChange={handleDrawerChange}
+        tagline="Mapping Restaurant Health Inspections"
       />
 
       <MobileAreaStrip

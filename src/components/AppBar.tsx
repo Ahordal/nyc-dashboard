@@ -6,8 +6,8 @@
 // own drawer. Search filters the map live while the sheet sits at its
 // half detent so the generated list stays visible. The Info drawer is the
 // single info surface here: dataset meta, the map legend / how-to (folded
-// in from MapView), then the attribution footer as a detached panel. The
-// tablet layout passes `tagline` to keep the desktop tertiary title line.
+// in from MapView), then the attribution footer as a detached panel. Both
+// layouts pass `tagline` for the tertiary "what this is" title line.
 
 import { useId } from "react";
 
@@ -39,8 +39,8 @@ type AppBarProps = {
   // A search query is committed — badge the button so it reads as a live
   // filter even with the drawer closed.
   searchActive: boolean;
-  // Tertiary title line under the subtitle. The tablet layout passes the
-  // desktop line; the phone bar omits it.
+  // Tertiary title line under the subtitle: the plain-language "what this
+  // is" line. Both the phone and tablet layouts pass it.
   tagline?: string;
   // The one open top drawer across the whole mobile layout (see
   // MobileDashboard). Search/Filters/Info live here; "grades" is the

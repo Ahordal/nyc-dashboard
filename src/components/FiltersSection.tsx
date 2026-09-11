@@ -14,11 +14,6 @@ type FilterSectionProps = {
   selected: string[];
   onChange: (next: string[]) => void;
   getActiveColor?: (option: string) => string | undefined;
-  // First option label found here starts a fresh row in the mobile
-  // drawers: it and the options after it render in a second flex row.
-  // No effect on desktop, where both rows are display:contents and flow
-  // inline.
-  breakBefore?: readonly string[];
 };
 
 export default function FilterSection({
@@ -28,14 +23,7 @@ export default function FilterSection({
   selected,
   onChange,
   getActiveColor,
-  breakBefore,
 }: FilterSectionProps) {
-  const breakIndex = breakBefore
-    ? options.findIndex((option) => breakBefore.includes(option))
-    : -1;
-  const firstRow = breakIndex >= 0 ? options.slice(0, breakIndex) : options;
-  const secondRow = breakIndex >= 0 ? options.slice(breakIndex) : [];
-
   function renderButton(option: string) {
     const isActive = selected.includes(option);
     const activeColor = isActive ? getActiveColor?.(option) : undefined;
@@ -71,17 +59,14 @@ export default function FilterSection({
           <span>{label}</span>
         </span>
         {/* Wrapper is display:contents on desktop (no layout effect); on the
-           mobile drawer each becomes a flex row -- the first hangs Clear
-           into the gutter, and a `breakBefore` split adds a second row. */}
+           mobile drawer it becomes a flex row that hangs Clear into the
+           gutter and wraps the options as space runs out. */}
         <div className="filter-options">
           <span className="filter-clear">
             <FilterButton onClick={() => onChange([])}>Clear</FilterButton>
           </span>
-          {firstRow.map(renderButton)}
+          {options.map(renderButton)}
         </div>
-        {secondRow.length > 0 && (
-          <div className="filter-options">{secondRow.map(renderButton)}</div>
-        )}
       </div>
     </section>
   );
