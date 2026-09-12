@@ -340,7 +340,7 @@ export default function Dashboard() {
   const gradeFiltersSummary = (
     <>
       <hr className="mobile-filter-notice-rule" />
-      <FilterSummary filters={filters} />
+      <FilterSummary filters={filters} searchQuery={searchQuery} />
     </>
   );
 

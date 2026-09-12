@@ -23,11 +23,17 @@ const GRADE_LABEL_COLORS: Record<string, string> = {
   Closed: CATEGORY_COLORS.closed,
 };
 
-export default function FilterSummary({ filters }: { filters: Filters }) {
+export default function FilterSummary({
+  filters,
+  searchQuery = "",
+}: {
+  filters: Filters;
+  searchQuery?: string;
+}) {
   const parts = getFilterNoticeParts({
     grades: filters.grades,
     boroughs: filters.boroughs,
-    searchQuery: "",
+    searchQuery,
     hasSearchRadius: false,
   });
 
@@ -56,6 +62,12 @@ export default function FilterSummary({ filters }: { filters: Filters }) {
               <span className="mobile-filter-notice-borough">
                 {part.boroughs.join(", ")}
               </span>
+            </>
+          )}
+          {part.kind === "search" && (
+            <>
+              <span className="mobile-filter-notice-label">Search:</span>{" "}
+              &quot;{part.query}&quot;
             </>
           )}
           {part.kind === "all" && <>All Restaurants</>}

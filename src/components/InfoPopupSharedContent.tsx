@@ -171,11 +171,20 @@ export function NYCHealthResources() {
 // What the dashboard as a whole covers.
 export function DashboardOverview() {
   return (
-    <p>
-      Explores NYC restaurant inspection records through the map, grade and
-      borough filters, search, restaurant list, restaurant details, inspection
-      reports, performance chart and the grade breakdown chart.
-    </p>
+    <>
+      <p>
+        This dashboard explores New York City restaurant inspection records
+        through:
+      </p>
+      <ul>
+        <li>An interactive map of geocoded restaurant locations</li>
+        <li>Grade and Borough filters, plus restaurant search</li>
+        <li>A Restaurant List and Restaurant Details panel</li>
+        <li>Full Inspection Reports, including cited violations</li>
+        <li>A Restaurant Performance Over Time chart</li>
+        <li>A Grade Breakdown chart for the current view</li>
+      </ul>
+    </>
   );
 }
 
