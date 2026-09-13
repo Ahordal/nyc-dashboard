@@ -180,6 +180,27 @@ async function fitToSelectionAndFix(
   view.goTo({ target }, { duration: 600 }).catch(() => {});
 }
 
+// Fits the camera to every restaurant point in the layer -- the full
+// 5-borough extent -- rather than a fixed center/zoom. Used for the
+// initial view and whenever filters/search are cleared back to none, so
+// the starting view is correct for the view's actual aspect ratio
+// (mobile portrait vs. desktop landscape) instead of a single tuned
+// zoom number.
+async function goToFullExtent(
+  view: MapView,
+  layer: GeoJSONLayer,
+  options?: Parameters<MapView["goTo"]>[1],
+): Promise<void> {
+  try {
+    const { extent } = await queryFilterExtent(layer, "1=1");
+    if (extent) {
+      await view.goTo(extent.expand(1.2), options);
+    }
+  } catch (err) {
+    console.error("MapView: failed to fit view to full data extent", err);
+  }
+}
+
 export default function InspectionMapView({
   filters,
   searchQuery = "",
@@ -431,11 +452,20 @@ export default function InspectionMapView({
     // view.when() can still resolve when only the GeoJSON layer fails
     // (e.g. a 404 on latest-inspections.geojson), so load it explicitly
     // and surface that rejection too.
-    layer.load().catch((err) => {
-      if (disposed) return;
-      console.error("MapView: inspection layer failed to load", err);
-      setLoadError(true);
-    });
+    layer
+      .load()
+      .then(() => {
+        if (disposed) return;
+        // No animation: this replaces the placeholder camera set above
+        // before the real data extent was known, so it should look like
+        // the initial view rather than a visible zoom-out.
+        return goToFullExtent(view, layer, { duration: 0 });
+      })
+      .catch((err) => {
+        if (disposed) return;
+        console.error("MapView: inspection layer failed to load", err);
+        setLoadError(true);
+      });
 
     const stationaryWatchHandle = reactiveUtils.watch(
       () => view.stationary,
@@ -776,7 +806,7 @@ export default function InspectionMapView({
           }
         } else {
           cameraWillMove = true;
-          view.goTo({ center: DEFAULT_CENTER, zoom: DEFAULT_ZOOM });
+          await goToFullExtent(view, layer);
         }
       }
 

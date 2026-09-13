@@ -171,7 +171,7 @@ summary:focus-visible,
 
   --status-positive-bg: #3cb44b;
   --status-positive-text: #ffffff;
-  --status-negative-bg: #8b0000;
+  --status-negative-bg: #dc2626;
   --status-negative-text: #ffffff;
   --status-warning-bg: #e6b800;
   --status-warning-text: #1a1a1a;
@@ -1790,7 +1790,6 @@ summary:focus-visible,
 }
 
 .violation-tag.severity-tag {
-  border: 0.5px solid var(--highlight-border);
   white-space: nowrap;
 }
 
