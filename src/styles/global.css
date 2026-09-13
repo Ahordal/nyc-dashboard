@@ -171,7 +171,7 @@ summary:focus-visible,
 
   --status-positive-bg: #3cb44b;
   --status-positive-text: #ffffff;
-  --status-negative-bg: #dc2626;
+  --status-negative-bg: #b81d13;
   --status-negative-text: #ffffff;
   --status-warning-bg: #e6b800;
   --status-warning-text: #1a1a1a;
@@ -970,7 +970,7 @@ summary:focus-visible,
   gap: 0.45rem;
   padding: 0 0.75rem;
   height: 100%;
-  border-left: 1px solid var(--border-panel);
+  border-left: 1px solid var(--text-faded);
   white-space: nowrap;
 }
 
@@ -2229,7 +2229,7 @@ summary:focus-visible,
 }
 
 .grade-chart-percentage:not(:first-child)::before {
-  content: "·";
+  content: "|";
   margin-right: 0.5rem;
   color: var(--text-faded);
 }
@@ -3245,8 +3245,9 @@ summary:focus-visible,
 .error-fallback-message {
   max-width: 42ch;
   font-family: var(--font-display);
-  font-size: var(--fs-md);
+  font-size: var(--fs-sm);
   font-weight: 600;
+  letter-spacing: 0.06em;
   text-transform: uppercase;
   color: var(--text-muted);
 }

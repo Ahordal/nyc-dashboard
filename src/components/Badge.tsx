@@ -26,7 +26,7 @@ type SeverityStyle = {
 // Central source of truth for violation severity colours.
 // eslint-disable-next-line react-refresh/only-export-components
 export const SEVERITY_STYLES: Record<"critical" | "not-critical", SeverityStyle> = {
-  critical: { background: "#DC2626", color: "#000000" },
+  critical: { background: "#B81D13", color: "#ffffff" },
   "not-critical": { background: "#E6B800", color: "#1a1a1a" },
 };
 

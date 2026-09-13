@@ -15,6 +15,6 @@ export const CATEGORY_COLORS: Record<GradeCategory, string> = {
   B: "#3CB44B",
   C: "#F58231",
   pending: "#E6007E",
-  closed: "#DC2626",
+  closed: "#B81D13",
   uninspected: "#959595",
 };
