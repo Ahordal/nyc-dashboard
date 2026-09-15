@@ -9,7 +9,7 @@
 import type { RestaurantProperties } from "../types/restaurant";
 import type { SearchRadiusPoint } from "../types/searchRadius";
 import { getGradeCategory } from "./gradeCategory";
-import { haversineDistanceMiles } from "./distance";
+import { haversineDistanceMiles, roundApproxMilesValue } from "./distance";
 
 export type SortKeyId =
   | "inspection_date"
@@ -75,12 +75,19 @@ export const SORT_KEYS: Record<
   distance: {
     label: "Distance",
     needsDistancePoint: true,
+    // Rounded to the same precision shown on each card (see
+    // roundApproxMilesValue), so restaurants that display the same
+    // distance actually tie here and a secondary sort field (e.g. Grade)
+    // can meaningfully order between them, instead of every restaurant
+    // having a distinct raw float that never ties with anything.
     keyOf: (restaurant, point) =>
       point && restaurant.latitude != null && restaurant.longitude != null
-        ? haversineDistanceMiles(point, {
-            latitude: restaurant.latitude,
-            longitude: restaurant.longitude,
-          })
+        ? roundApproxMilesValue(
+            haversineDistanceMiles(point, {
+              latitude: restaurant.latitude,
+              longitude: restaurant.longitude,
+            }),
+          )
         : null,
   },
 };

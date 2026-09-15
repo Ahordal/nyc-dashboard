@@ -97,10 +97,11 @@ type RestaurantListProps = {
   // is already scoped to the circle upstream (MapView's query); this is
   // only used to show/sort each card's distance from the point.
   searchRadiusPoint?: SearchRadiusPoint | null;
-  // The mobile "locate me" dot, if placed. Adds the per-card Distance
-  // line (measured from it) without unlocking the Distance sort key or
-  // re-scoping the list the way searchRadiusPoint does. searchRadiusPoint
-  // wins when both are set.
+  // The phone/tablet "locate me" dot, if placed. Adds the per-card
+  // Distance line and unlocks the Distance sort key, same as
+  // searchRadiusPoint, but doesn't re-scope the list itself (the
+  // restaurants shown stay whatever the map view already produced).
+  // searchRadiusPoint wins when both are set.
   userLocationPoint?: SearchRadiusPoint | null;
   // Mobile: the search field lives in the app-bar drawer, not directly
   // above the list, so the info panel drops the "above" wording.

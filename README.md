@@ -18,13 +18,13 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 - A donut chart shows that same split as proportions, with each category's percentage share listed beneath it.
 - Hovering or selecting a restaurant highlights it on the map, in the list, and in the chart at once.
 - Custom map controls: zoom buttons, a compass, a scale bar, a satellite-imagery toggle, and scale and zoom-level readouts you can click and type into to jump to an exact value.
-- **Search radius:** drop a point on the map and the list, stats, and chart re-scope to a 0.25 / 0.5 / 1 mile circle around it instead of the whole map view. The list gains a distance column.
+- **Search radius:** drop a point on the map and the list, stats, and chart re-scope to a 0.25 / 0.5 / 1 mile circle around it instead of the whole map view. Each card in the list gains a distance line.
 - **Locate me (phone and tablet):** uses your device location to show where you are and sort the list by distance. The location is only held for the session — never saved, shared, or put in the URL.
 
 ### Search and filtering
 
 - Search by name, cuisine, or address. Handles accents, company suffixes like "INC" and "LLC", and street abbreviations ("St" matches "Street").
-- Filter by grade and borough; sort the list by date, name, cuisine, grade, score, or distance.
+- Filter by grade and borough; sort the list by date, name, cuisine, grade, score, or distance, with a secondary sort field to break ties.
 - The active filters, search text, selected restaurant, and any placed search radius are all kept in the URL, so any view can be bookmarked or shared.
 
 ### Restaurant details

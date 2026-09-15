@@ -168,6 +168,37 @@ describe("sortRestaurants -- distance key", () => {
       ids(sortRestaurants(list, { ...base, primary: "distance", point })),
     ).toEqual(["near", "nocoords"]);
   });
+
+  it("rounds distance to display precision, so a secondary key can break a near-tie", () => {
+    // ~1.002 mi and ~1.023 mi respectively -- different raw distances,
+    // but both round to the same "~1 mi" shown on the card. Distance
+    // then Grade should put the better grade first despite "worse-grade"
+    // being marginally closer by the raw (unrounded) distance.
+    const list = [
+      mk("worse-grade-closer", {
+        latitude: 40.7645,
+        longitude: -73.99,
+        grade: "C",
+        score: 40,
+      }),
+      mk("better-grade-farther", {
+        latitude: 40.7648,
+        longitude: -73.99,
+        grade: "A",
+        score: 5,
+      }),
+    ];
+    expect(
+      ids(
+        sortRestaurants(list, {
+          ...base,
+          primary: "distance",
+          secondary: "grade",
+          point,
+        }),
+      ),
+    ).toEqual(["better-grade-farther", "worse-grade-closer"]);
+  });
 });
 
 describe("sortRestaurants -- two-level", () => {

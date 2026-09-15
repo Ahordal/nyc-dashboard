@@ -9,6 +9,7 @@ import {
   haversineDistanceMiles,
   formatApproxMiles,
   formatApproxMilesSpoken,
+  roundApproxMilesValue,
 } from "./distance";
 
 // Earth radius in miles, matching distance.ts. Moving due north (same
@@ -75,6 +76,17 @@ describe("formatApproxMiles", () => {
   it("floors at ~0.1 mi so a near-coincident point never reads 0.0", () => {
     expect(formatApproxMiles(0)).toBe("~0.1 mi");
     expect(formatApproxMiles(0.03)).toBe("~0.1 mi");
+  });
+});
+
+describe("roundApproxMilesValue", () => {
+  it("matches the numeric value formatApproxMiles displays", () => {
+    expect(roundApproxMilesValue(0.42)).toBe(0.4);
+    expect(roundApproxMilesValue(31.2)).toBe(31);
+  });
+
+  it("rounds two close-but-distinct distances to the same value", () => {
+    expect(roundApproxMilesValue(1.002)).toBe(roundApproxMilesValue(1.023));
   });
 });
 

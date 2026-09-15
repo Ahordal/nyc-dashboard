@@ -29,13 +29,23 @@ export function haversineDistanceMiles(from: LatLng, to: LatLng): number {
   return EARTH_RADIUS_MILES * c;
 }
 
-// Coarse mileage string: tenths below ~10 mi, whole miles above, floored
-// at 0.1 so a near-coincident point never reads "0.0". Shared by the
-// display and spoken formatters so both round identically.
-function roundApproxMiles(miles: number): string {
+// Coarse mileage value: tenths below ~10 mi, whole miles above, floored
+// at 0.1 so a near-coincident point never reads "0.0". Also used as the
+// Distance sort key (see restaurantSort.ts) so two restaurants that
+// display the same distance actually tie, letting a secondary sort field
+// order between them, rather than every restaurant having a distinct raw
+// float that never ties with anything.
+export function roundApproxMilesValue(miles: number): number {
   return miles < 9.95
-    ? Math.max(0.1, Math.round(miles * 10) / 10).toFixed(1)
-    : String(Math.round(miles));
+    ? Math.max(0.1, Math.round(miles * 10) / 10)
+    : Math.round(miles);
+}
+
+// String form, shared by the display and spoken formatters so both round
+// identically.
+function roundApproxMiles(miles: number): string {
+  const rounded = roundApproxMilesValue(miles);
+  return miles < 9.95 ? rounded.toFixed(1) : String(rounded);
 }
 
 // Straight-line (great-circle) distance for display, e.g. "~2.3 mi". The
