@@ -155,22 +155,33 @@ export default function GradeChart({
     [searchRadiusMiles],
   );
 
-  const { data, totalCount, scopedCounts } = useMemo<{
+  const { data, totalCount, scopedCounts, percentItems } = useMemo<{
     data: ChartDataItem[];
     totalCount: number;
     // The tally restricted to the selected grades (unchanged when none
     // are selected). Drives the slices, the centre count, and which
     // centre labels stay coloured.
     scopedCounts: GradeCounts;
+    // Categories in scope for the percentage line -- every category when
+    // no grade filter is active, else just the selected ones -- kept even
+    // at zero count so e.g. "Closed 0%" still shows rather than vanishing.
+    percentItems: ChartDataItem[];
   }>(() => {
     const scoped = scopeGradeCounts(counts, filters.grades);
+    const activeLabels =
+      filters.grades.length === 0 ? null : new Set(filters.grades);
 
-    const chartData = SLICE_CONFIG.map(({ key, label, color }) => ({
+    const allItems = SLICE_CONFIG.map(({ key, label, color }) => ({
       name: key,
       label,
       value: scoped[key] ?? 0,
       color,
-    })).filter((item) => item.value > 0);
+    }));
+
+    const chartData = allItems.filter((item) => item.value > 0);
+    const inScope = allItems.filter(
+      (item) => activeLabels === null || activeLabels.has(item.label),
+    );
 
     const total =
       scoped.A +
@@ -180,7 +191,12 @@ export default function GradeChart({
       scoped.uninspected +
       scoped.closed;
 
-    return { data: chartData, totalCount: total, scopedCounts: scoped };
+    return {
+      data: chartData,
+      totalCount: total,
+      scopedCounts: scoped,
+      percentItems: inScope,
+    };
   }, [counts, filters.grades]);
 
   const chartAriaLabel = useMemo(() => {
@@ -195,18 +211,22 @@ export default function GradeChart({
     return `Grade breakdown, ${scopeText.toLowerCase()}: ${parts}. ${totalCount.toLocaleString()} restaurants total.`;
   }, [data, scopeText, totalCount]);
 
-  // Per-slice share, largest-remainder rounded so the line sums to 100.
-  // A present-but-tiny slice that rounds to zero shows "<1%".
+  // Per-category share, largest-remainder rounded so the line sums to 100.
+  // A present-but-tiny category rounds to "<1%"; a genuinely empty one
+  // (e.g. no closed restaurants in view) still shows "0%" rather than
+  // being dropped from the line entirely.
   const percentages = useMemo(() => {
     if (totalCount === 0) return [];
-    const pcts = largestRemainderPercents(data.map((item) => item.value));
-    return data.map((item, index) => ({
+    const pcts = largestRemainderPercents(
+      percentItems.map((item) => item.value),
+    );
+    return percentItems.map((item, index) => ({
       name: item.name,
       label: item.label,
       color: item.color,
       display: formatShare(pcts[index], item.value),
     }));
-  }, [data, totalCount]);
+  }, [percentItems, totalCount]);
 
   return (
     <section className="panel grade-chart-panel">
