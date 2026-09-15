@@ -2,7 +2,7 @@
 //
 // Reusable pill badge for violation severity, codes, categories, and
 // status flags. Single source of truth for severity colours; base sizing
-// and other variant styles live in global.css.
+// and other variant styles live in styles/explorer.css.
 
 import type { CSSProperties, ReactNode } from "react";
 
@@ -30,7 +30,7 @@ export const SEVERITY_STYLES: Record<"critical" | "not-critical", SeverityStyle>
   "not-critical": { background: "#E6B800", color: "#1a1a1a" },
 };
 
-// Maps variants to their shared base and modifier CSS classes in global.css.
+// Maps variants to their shared base and modifier CSS classes in styles/explorer.css.
 const VARIANT_CLASSES: Record<BadgeVariant, string> = {
   critical: "violation-tag severity-tag",
   "not-critical": "violation-tag severity-tag",

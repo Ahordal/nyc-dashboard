@@ -1,13 +1,21 @@
 // typeScale.test.ts
 //
-// Guards the type scale: every font-size in global.css must resolve to a
-// --fs-* token (or `inherit`), never a raw length. This is what keeps the
-// scale from drifting back into ~20 hand-picked sizes. If you genuinely
-// need a new step, add it to :root and to VALID_TOKENS below.
+// Guards the type scale: every font-size across the split style modules
+// must resolve to a --fs-* token (or `inherit`), never a raw length. This
+// is what keeps the scale from drifting back into ~20 hand-picked sizes.
+// If you genuinely need a new step, add it to :root and to VALID_TOKENS
+// below.
 
 import { describe, expect, it } from "vitest";
 
-import css from "./global.css?raw";
+// global.css is just the @import barrel now; read every module it pulls in
+// (the barrel itself has no font-size rules, so including it is harmless).
+const modules = import.meta.glob("./*.css", {
+  query: "?raw",
+  import: "default",
+  eager: true,
+}) as Record<string, string>;
+const css = Object.values(modules).join("\n");
 
 const VALID_TOKENS = [
   "--fs-2xs",

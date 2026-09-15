@@ -1,0 +1,1069 @@
+/* mobile.css - phone layout (<=640px): app bar, bottom sheet, drawers. */
+
+/*///////////////////////////////////////////// 18. MOBILE (PHONE) LAYOUT //////////////////////////////////////////////*/
+
+/* Below 750px, or a short landscape viewport (phone turned sideways),
+   dashboard.tsx renders <MobileDashboard>: app bar, area strip, full-bleed
+   map, bottom sheet (peek/half/full on [data-detent]). Classes below are
+   mobile-only; keep this query in sync with isPhone. */
+@media (max-width: 750px), (max-height: 480px) and (orientation: landscape) {
+  body {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* 18.1 SHELL */
+
+  .mobile-dashboard {
+    --appbar-h: calc(60px + env(safe-area-inset-top));
+    --strip-h: 34px;
+    --sheet-handle-h: 32px;
+    /* .explorer-tabs floor (18.5) so its footprint doesn't drift with font
+       metrics; tall enough for a two-line label plus the tab's 0.5rem
+       top/bottom padding. */
+    --explorer-tabs-h: 52px;
+    position: relative;
+    width: 100%;
+    height: 100dvh;
+    overflow: hidden;
+    background-color: var(--bg);
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* Starts below the app bar + area strip so the map's control clusters clear them. */
+  .mobile-map {
+    position: absolute;
+    top: calc(var(--appbar-h) + var(--strip-h));
+    left: 0;
+    right: 0;
+    bottom: 0;
+  }
+
+  /* Editable scale/zoom readouts are a desktop pointer affordance; drop
+     them on phones (zoom buttons stay). */
+  .mobile-dashboard .map-bottom-controls {
+    display: none;
+  }
+
+  /* Scale bar rides 0.5rem above the sheet in the peek/half detents,
+     tracking its live height (--mobile-sheet-h, set by MobileDashboard) so
+     a wrapped peek card pushes it up. Hidden at the open detent (map
+     covered). */
+  .mobile-dashboard .map-scale-bar-container {
+    display: none;
+    bottom: calc(var(--mobile-sheet-h, 118px) + 0.5rem);
+    right: 0.5rem;
+  }
+
+  .mobile-dashboard[data-detent="peek"] .map-scale-bar-container,
+  .mobile-dashboard[data-detent="half"] .map-scale-bar-container {
+    display: block;
+  }
+
+  /* Tuck the remaining map control chips nearer the edges on a phone. */
+  .mobile-dashboard .map-zoom-buttons-container,
+  .mobile-dashboard .map-compass-container {
+    left: 0.5rem;
+  }
+
+  .mobile-dashboard .map-basemap-toggle-container,
+  .mobile-dashboard .map-search-radius-container,
+  .mobile-dashboard .map-user-location-container {
+    right: 0.5rem;
+  }
+
+  /* Legend/info button dropped on phones (folded into the app-bar Info
+     drawer); pull the buttons below it up to the zoom pair. */
+  .mobile-dashboard .map-view-top-header {
+    display: none;
+  }
+
+  .mobile-dashboard .map-basemap-toggle-container {
+    top: 1rem;
+  }
+
+  .mobile-dashboard .map-search-radius-container {
+    top: calc(1rem + 40px);
+  }
+
+  .mobile-dashboard .map-user-location-container {
+    top: calc(1rem + 80px);
+  }
+
+  /* Touch's sticky :hover reads as held: pin controls to their resting
+     look (.active still shows), and drop the post-tap focus ring. */
+  .mobile-dashboard .map-zoom-button:hover:not(:disabled) {
+    color: var(--text-muted);
+    background-color: transparent;
+  }
+
+  .mobile-dashboard .map-compass-button:hover:not(:disabled),
+  .mobile-dashboard .map-basemap-toggle-button:hover,
+  .mobile-dashboard .map-search-radius-button:hover,
+  .mobile-dashboard .map-user-location-button:hover:not(:disabled),
+  .mobile-dashboard .map-user-location-clear:hover {
+    color: var(--text-muted);
+    background-color: var(--bg-panel);
+  }
+
+  /* Keep the located/error tints on touch even under the sticky :hover. */
+  .mobile-dashboard .map-user-location-button.active:hover {
+    color: #1a85ff;
+  }
+
+  .mobile-dashboard .map-search-radius-button.active:hover {
+    color: var(--text-body);
+  }
+
+  .mobile-dashboard .map-control-button:hover {
+    color: var(--text-body);
+  }
+
+  :root[data-input-modality="pointer"] .mobile-dashboard .map-zoom-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-compass-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-basemap-toggle-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-search-radius-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-user-location-button:focus,
+  :root[data-input-modality="pointer"]
+    .mobile-dashboard
+    .map-user-location-clear:focus {
+    outline: none;
+  }
+
+  /* 18.2 APP BAR */
+
+  .mobile-appbar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 30;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--space-xs);
+    height: var(--appbar-h);
+    padding: env(safe-area-inset-top) 0.5rem 0;
+    background-color: var(--bg-panel);
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  .mobile-appbar-brand {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    min-width: 0;
+    line-height: 1;
+  }
+
+  .mobile-appbar-wordmark {
+    font-family: var(--font-display);
+    font-weight: 800;
+    font-size: var(--fs-xl);
+    letter-spacing: -0.02em;
+    color: var(--text-muted);
+    text-shadow: -2px 2px 0 var(--bg-alt);
+  }
+
+  .mobile-appbar-subtitle {
+    max-width: 60vw;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-muted);
+  }
+
+  /* Tertiary "what this is" line under the name. */
+  .mobile-appbar-tagline {
+    max-width: 80vw;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-muted);
+  }
+
+  .mobile-appbar-actions {
+    display: flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  /* Sized and styled to match MapView's own 32px control chips. */
+  .mobile-appbar-button {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-panel);
+    box-shadow: 0 2px 4px var(--shadow-controls);
+    color: var(--text-muted);
+    font-size: var(--fs-lg);
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  .mobile-appbar-button:hover,
+  .mobile-appbar-button[data-active] {
+    background-color: var(--link-background-hover);
+    color: var(--link-hover);
+  }
+
+  /* Touch's sticky :hover reads as open: pin non-[data-active] buttons to
+     their resting look. */
+  .mobile-appbar-button:not([data-active]):hover {
+    background-color: var(--bg-panel);
+    color: var(--text-muted);
+  }
+
+  :root[data-input-modality="pointer"] .mobile-appbar-button:focus {
+    outline: none;
+  }
+
+  .mobile-appbar-badge {
+    position: absolute;
+    top: -6px;
+    right: -6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 16px;
+    height: 16px;
+    padding: 0 3px;
+    border-radius: 8px;
+    background-color: var(--accent-blue);
+    color: #fff;
+    font-family: var(--font-body);
+    font-size: var(--fs-2xs);
+    font-weight: 700;
+    line-height: 1;
+  }
+
+  /* Bare dot for on/off state, not a tally. */
+  .mobile-appbar-badge-dot {
+    top: -4px;
+    right: -4px;
+    min-width: 8px;
+    width: 8px;
+    height: 8px;
+    padding: 0;
+    border: 1px solid var(--bg-panel);
+  }
+
+  /* Search / Filters / Info drawers drop from below the area strip:
+     full-bleed --bg-panel, bordered card 0.5rem in, content 0.5rem inside.
+     Info stacks two panels; Search stays short so the sheet's half detent
+     shows below it. */
+  .mobile-search-drawer,
+  .mobile-filter-drawer,
+  .mobile-info-drawer {
+    position: absolute;
+    top: calc(var(--appbar-h) + var(--strip-h));
+    left: 0;
+    right: 0;
+    z-index: 26;
+    max-height: 0;
+    overflow: hidden;
+  }
+
+  /* Recency stacking: the most recently opened surface wins. A drawer sits
+     above the sheet (z-index 40) until moving the sheet flips data-front
+     back. */
+  .mobile-dashboard[data-front="drawer"] .mobile-search-drawer,
+  .mobile-dashboard[data-front="drawer"] .mobile-filter-drawer,
+  .mobile-dashboard[data-front="drawer"] .mobile-info-drawer,
+  .mobile-dashboard[data-front="drawer"] .mobile-area-drawer {
+    z-index: 45;
+  }
+
+  /* Fill only when open; a closed max-height:0 drawer would draw a sliver. */
+  .mobile-search-drawer[data-open="true"],
+  .mobile-filter-drawer[data-open="true"] {
+    max-height: min(82dvh, 640px);
+    overflow-y: auto;
+    background-color: var(--bg-panel);
+    box-shadow: 0 6px 16px var(--shadow-overlay);
+  }
+
+  /* Capped flex column, no whole-drawer scroll. Transparent wrapper shows
+     the map through the gap; the guide panel scrolls in its card. */
+  .mobile-info-drawer {
+    display: flex;
+    flex-direction: column;
+    pointer-events: none;
+  }
+
+  .mobile-info-drawer[data-open="true"] {
+    max-height: min(82dvh, 640px);
+  }
+
+  .mobile-info-drawer-panel {
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-panel);
+    box-shadow: 0 6px 16px var(--shadow-overlay);
+    pointer-events: auto;
+  }
+
+  .mobile-info-drawer > .mobile-info-drawer-panel:first-child {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .mobile-info-drawer > .mobile-info-drawer-footer-panel {
+    flex-shrink: 0;
+  }
+
+  .mobile-info-drawer-panel + .mobile-info-drawer-panel {
+    margin-top: var(--space-xs);
+  }
+
+  /* Shared inner card: 0.5rem in from the panel edge, content 0.5rem inside. */
+  .mobile-search-drawer-card,
+  .mobile-filter-drawer-card,
+  .mobile-area-drawer-chart,
+  .mobile-info-drawer-panel-body {
+    margin: var(--space-xs);
+    padding: var(--space-xs);
+    border: 1px solid var(--border-panel);
+    background-color: var(--bg-panel);
+  }
+
+  /* The guide card scrolls inside its border; the footer card doesn't. */
+  .mobile-info-drawer-panel:first-child .mobile-info-drawer-panel-body {
+    flex: 1;
+    min-height: 0;
+    overflow-y: auto;
+  }
+
+  /* Compact dataset meta: 2x2 label-over-value grid, hairline under it. */
+  .dashboard-guide-meta[data-compact="true"] {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.7rem 1.25rem;
+    padding: 0 0 var(--space-s);
+    border-top: none;
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  .dashboard-guide-meta[data-compact="true"] .dashboard-guide-meta-item {
+    flex-direction: column;
+    gap: 1px;
+    min-width: 0;
+  }
+
+  .dashboard-guide-meta[data-compact="true"] .dashboard-guide-meta-label {
+    font-size: var(--fs-sm);
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+  }
+
+  .dashboard-guide-meta[data-compact="true"] .dashboard-guide-meta-value {
+    font-size: var(--fs-sm);
+    font-variant-numeric: tabular-nums;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  /* Space between the dataset meta and the folded-in map legend/how-to. */
+  .mobile-info-drawer-panel .info-popup-content {
+    margin-top: var(--space-s);
+  }
+
+  .mobile-info-drawer-footer-panel .dashboard-footer {
+    border: none;
+    padding: 0;
+    background: transparent;
+  }
+
+  .mobile-info-drawer-footer-panel .dashboard-footer-bar {
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    height: auto;
+    font-size: var(--fs-xs);
+    letter-spacing: 0.04em;
+    text-align: center;
+  }
+
+  .mobile-info-drawer-footer-panel .footer-location,
+  .mobile-info-drawer-footer-panel .footer-links,
+  .mobile-info-drawer-footer-panel .footer-copyright {
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .mobile-filter-groups {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .mobile-filter-groups .panel {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  /* Gutter = Clear button width + the row gap. */
+  .mobile-filter-groups .filter-group {
+    --filter-clear-w: 3.75rem;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  /* Mirror .section-header from Restaurant Details: size, bar, tracking. */
+  .mobile-filter-groups .filter-label {
+    width: 100%;
+    margin: 0 0 0.4rem;
+    padding: 0.4rem 0 0.4rem 0.4rem;
+    background-color: var(--bg-alt);
+    color: var(--text-muted);
+    font-weight: 700;
+    font-size: var(--fs-sm);
+    letter-spacing: 0.05em;
+  }
+
+  .mobile-filter-groups .filter-label svg {
+    font-size: var(--fs-sm);
+    margin-right: 0.4rem;
+  }
+
+  /* Hanging indent: padding-left here plus the negative margin on Clear
+     below put Clear at the left edge and every option one gutter in. */
+  .mobile-filter-groups .filter-options {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    gap: 0.5rem 0.6rem;
+    padding-left: calc(var(--filter-clear-w) + 0.6rem);
+  }
+
+  .mobile-filter-groups .filter-clear {
+    margin: 0 0 0 calc(-1 * (var(--filter-clear-w) + 0.6rem));
+  }
+
+  .mobile-filter-groups .filter-clear .filter-button {
+    width: var(--filter-clear-w);
+    min-width: 0;
+    padding-left: 0;
+    padding-right: 0;
+  }
+
+  /* Desktop filter-bar padding / font size, so A/B/C sit in proportion to
+     the wider labels. No flex-grow, so a wrapped row stays chip-sized. */
+  .mobile-filter-groups .filter-button {
+    flex: 0 0 auto;
+    padding: 0.5rem 0.6rem;
+    font-size: var(--fs-sm);
+  }
+
+  /* Touch's sticky :hover reads as selected: pin non-.active filter
+     buttons to their resting look (.active = toggled, :active = press),
+     and drop the post-tap focus ring. */
+  .mobile-filter-groups .filter-button:not(.active):hover {
+    background-color: transparent;
+    color: var(--text-muted);
+  }
+
+  .mobile-filter-groups .filter-button:not(.active):active {
+    background-color: var(--bg-alt);
+    color: var(--link-hover);
+  }
+
+  :root[data-input-modality="pointer"] .mobile-filter-groups .filter-button:focus {
+    outline: none;
+  }
+
+  /* Clear never toggles, so no focus ring even for keyboard. */
+  .mobile-filter-groups .filter-clear .filter-button:focus,
+  .mobile-filter-groups .filter-clear .filter-button:focus-visible {
+    outline: none;
+  }
+
+  /* "Filters applied: …" summary under the grade-breakdown drawer's KPI
+     row (see FilterSummary), plus its divider rule. */
+  .mobile-filter-notice-rule {
+    margin: var(--space-s) 0;
+    border: none;
+    border-top: 1px solid var(--border-panel);
+  }
+
+  .mobile-filter-notice {
+    margin: var(--space-s) 0 0;
+    font-family: var(--font-display);
+    font-size: var(--fs-xs);
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--text-muted);
+  }
+
+  /* Field labels at --text-body, grade values keep their category colour,
+     lead-in and borough names faded. */
+  .mobile-filter-notice-label {
+    color: var(--text-body);
+  }
+
+  .mobile-filter-notice-lead,
+  .mobile-filter-notice-borough {
+    color: var(--text-faded);
+  }
+
+  /* 18.2b AREA STRIP — count + grade mix for the view; opens the donut in a modal. */
+
+  .mobile-area-strip {
+    position: absolute;
+    top: var(--appbar-h);
+    left: 0;
+    right: 0;
+    z-index: 25;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    width: 100%;
+    height: var(--strip-h);
+    padding: 0 0.5rem 0 0.75rem;
+    background-color: var(--bg-alt);
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+
+  .mobile-area-strip-icon {
+    flex-shrink: 0;
+    font-size: var(--fs-md);
+  }
+
+  .mobile-area-strip-count {
+    flex-shrink: 0;
+    color: var(--text-body);
+    font-family: var(--font-body);
+    font-size: var(--fs-sm);
+  }
+
+  .mobile-area-strip-scope {
+    flex-shrink: 0;
+  }
+
+  .mobile-area-strip-bar {
+    display: flex;
+    flex: 1;
+    min-width: 40px;
+    height: 8px;
+    overflow: hidden;
+    background-color: var(--bg-panel);
+  }
+
+  .mobile-area-strip-bar > span {
+    display: block;
+    min-width: 0;
+  }
+
+  /* Invisible 32px box (like the app-bar buttons) so the narrow glyph
+     centres on the same column. */
+  .mobile-area-strip-chevron-box {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+  }
+
+  .mobile-area-strip-chevron {
+    flex-shrink: 0;
+    font-size: var(--fs-md);
+  }
+
+  /* faChevronDown: points down to expand the drawer, up to collapse it. */
+  .mobile-area-strip[data-open="true"] .mobile-area-strip-chevron {
+    transform: rotate(180deg);
+  }
+
+  /* Drops from under the strip over the map (top-area counterpart of the
+     sheet). Full-bleed --bg-panel, card 0.5rem in, filled only when open. */
+  .mobile-area-drawer {
+    position: absolute;
+    top: calc(var(--appbar-h) + var(--strip-h));
+    left: 0;
+    right: 0;
+    z-index: 24;
+    max-height: 0;
+    overflow: hidden;
+  }
+
+  .mobile-area-drawer[data-open="true"] {
+    max-height: min(74dvh, 560px);
+    overflow-y: auto;
+    background-color: var(--bg-panel);
+    box-shadow: 0 6px 16px var(--shadow-overlay);
+  }
+
+  /* Donut, then the per-grade KPI row, then a rule + filters-applied
+     summary, stacked in the card. */
+  .mobile-area-drawer-chart {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+  }
+
+  /* No `.grade-chart` wrapper: recreate the flex column, give the donut an
+     explicit height, drop the panel border/fill. This drawer hides the
+     chart's filter-note. */
+  .mobile-area-drawer-chart .grade-chart-panel {
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    height: min(46dvh, 380px);
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  /* Rule + summary under the KPI row; the column gap spaces them, so drop
+     the notice's margins and thin the rule's. */
+  .mobile-area-drawer-chart .mobile-filter-notice {
+    margin: 0;
+  }
+
+  .mobile-area-drawer-chart .mobile-filter-notice-rule {
+    margin: var(--space-xs) 0 0;
+  }
+
+  .mobile-area-drawer-chart .grade-chart-panel > .panel-header {
+    flex-shrink: 0;
+  }
+
+  /* Under the donut: drop the redundant total, strip panel chrome, centre
+     the breakdown when it wraps. */
+  .mobile-area-drawer .stats-panel.panel {
+    height: auto;
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  .mobile-area-drawer .stats-panel-line {
+    height: auto;
+  }
+
+  .mobile-area-drawer .stats-total {
+    display: none;
+  }
+
+  .mobile-area-drawer .stats-breakdown {
+    justify-content: center;
+  }
+
+  /* 18.3 BOTTOM SHEET */
+
+  .mobile-sheet {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 40;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--bg-panel);
+    border-top: 1px solid var(--border-panel);
+    box-shadow: 0 -4px 16px var(--shadow-overlay);
+  }
+
+  /* Peek: handle chevron + the selected card, or chevron + browse prompt.
+     Content-driven height so a wrapped card grows the sheet upward instead
+     of clipping; floor 118px, ceiling 50dvh. */
+  .mobile-dashboard[data-detent="peek"] .mobile-sheet {
+    height: auto;
+    min-height: calc(118px + env(safe-area-inset-bottom));
+    max-height: calc(50dvh + env(safe-area-inset-bottom));
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  .mobile-dashboard[data-detent="peek"][data-peek="empty"] .mobile-sheet {
+    height: calc(58px + env(safe-area-inset-bottom));
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Half: the list (or a selected restaurant's Details) over a visible map. */
+  .mobile-dashboard[data-detent="half"] .mobile-sheet {
+    height: calc((100dvh - var(--appbar-h) - var(--strip-h)) * 0.4);
+  }
+
+  .mobile-dashboard[data-detent="open"] .mobile-sheet {
+    height: calc(100dvh - var(--appbar-h) - var(--strip-h) - 16px);
+  }
+
+  /* Handle row: centred chevrons stepping one detent -- peek up only, open
+     down only, half both. */
+  .mobile-sheet-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1.5rem;
+    width: 100%;
+    height: var(--sheet-handle-h);
+    flex-shrink: 0;
+  }
+
+  .mobile-sheet-handle-arrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex: 1;
+    max-width: 6rem;
+    padding: 9px 12px 7px;
+    font-size: var(--fs-md);
+    background: transparent;
+    border: none;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+
+  /* Keyboard focus rings, tap doesn't (like .search-input, section 9). */
+  :root[data-input-modality="pointer"] .mobile-sheet-handle-arrow:focus,
+  :root[data-input-modality="pointer"] .mobile-sheet-peek:focus,
+  :root[data-input-modality="pointer"] .mobile-area-strip:focus {
+    outline: none;
+  }
+
+  /* Peek content: the restaurant card (own border + --bg-alt fill), or the
+     browse prompt. */
+  .mobile-sheet-peek-card {
+    flex-shrink: 0;
+    padding: 0 0.625rem 8px;
+  }
+
+  .mobile-sheet-peek {
+    width: 100%;
+    flex-shrink: 0;
+    padding: 0 0.5rem 10px;
+    background: transparent;
+    border: none;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .mobile-sheet-peek-label {
+    display: inline-block;
+    max-width: 90vw;
+    overflow: hidden;
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    color: var(--text-faded);
+  }
+
+  /* Non-scrolling tab list above the one scroll region
+     (.mobile-sheet-scroll-body), so the scrollbar never runs beside the
+     tabs. */
+  .mobile-sheet-scroll {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 0 0.625rem;
+  }
+
+  .mobile-sheet-scroll-body {
+    flex: 1;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-xs);
+    overflow-y: auto;
+    overflow-x: hidden;
+    padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
+    -webkit-overflow-scrolling: touch;
+  }
+
+  /* Half (and open on Details/Report) overflow the sheet, so wrap the
+     scroll in the drawers' bordered --bg-panel card, inset 0.5rem, no
+     padding -- the card border doubles as the tab group's edge. Open's
+     List tab is self-bordered (18.5), excluded. */
+  .mobile-dashboard[data-detent="half"] .mobile-sheet-scroll,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-sheet-scroll,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-sheet-scroll {
+    margin: var(--space-xs);
+    margin-bottom: calc(var(--space-xs) + env(safe-area-inset-bottom));
+    padding: 0;
+    border: 1px solid var(--border-panel);
+    background-color: var(--bg-panel);
+  }
+
+  /* At open, Details/Report sit flush under the handle like List; only
+     half needs the 4-side inset. */
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-sheet-scroll,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-sheet-scroll {
+    margin-top: 0;
+  }
+
+  .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-content .panel,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-content .panel,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-content .panel {
+    border: none;
+  }
+
+  /* Border off — the card supplies the tab group's outer edge. */
+  .mobile-dashboard[data-detent="half"] .mobile-explorer .explorer-tabs,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-tabs,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-tabs {
+    border: none;
+  }
+
+  /* 18.4 SHEET CONTENT — reused desktop panels, stripped of panel chrome. */
+
+  /* Search moved to the app-bar drawer, where it keeps the desktop .panel chrome. */
+  .mobile-search-drawer-card .panel {
+    padding: 0;
+    border: none;
+    background: transparent;
+  }
+
+  /* 18.5 EXPLORER — every tab flows in .mobile-sheet-scroll-body (18.3):
+     the list at its fixed page height, Details/Report with record, history
+     and chart stacked. Nothing here scrolls on its own. */
+
+  .mobile-explorer {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* Floor the strip at --explorer-tabs-h (18.1) so its footprint doesn't
+     drift with font metrics; it grows if a label wraps past two lines. */
+  .mobile-explorer .explorer-tabs {
+    min-height: var(--explorer-tabs-h);
+  }
+
+  .mobile-explorer .explorer-tab {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0.5rem 0.35rem;
+    font-size: var(--fs-xs);
+  }
+
+  /* Inactive tabs get a 1px border continuing the pane's top border (a 2px
+     transparent one showed a gap); the selected tab keeps its 2px
+     underline. */
+  .mobile-explorer .explorer-tab:not(.active) {
+    border-bottom: 1px solid var(--border-panel);
+  }
+
+  /* No border -- the inner .panel border provides it; both doubled the edge. */
+  .mobile-explorer .explorer-content {
+    position: relative;
+    flex: 1;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  /* Tighter content inset than desktop, matching the app-bar drawers. */
+  .mobile-explorer .explorer-content .panel {
+    padding: var(--space-xs);
+  }
+
+  /* Details/Report: move the panel's right pad to the children -- 0.5rem
+     header, 0.75rem scroll area so the scrollbar clears content. */
+  .mobile-explorer .explorer-content .restaurant-details-panel,
+  .mobile-explorer .explorer-content .restaurant-report-panel {
+    padding-right: 0;
+  }
+
+  /* Header right edge at 0.75rem, aligned with the section-header bars in
+     the scroll area. */
+  .mobile-explorer .restaurant-details-panel > .panel-header,
+  .mobile-explorer .restaurant-report-panel > .panel-header {
+    margin-right: 0.75rem;
+  }
+
+  .mobile-explorer .restaurant-details-panel > .panel-scroll-content,
+  .mobile-explorer .restaurant-report-panel > .panel-scroll-content {
+    padding-right: 0.75rem;
+  }
+
+  /* Unbind the active pane so its content flows in
+     .mobile-sheet-scroll-body (that is what scrolls; .mobile-explorer
+     stays flex:1). List: the fixed-size page. Details/Report: record,
+     history and chart stacked. */
+  .mobile-dashboard[data-tab="list"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-tab="list"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .explorer-content,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .explorer-content > div,
+  .mobile-dashboard[data-detent="open"][data-tab="details"] .mobile-explorer .panel-scroll-content,
+  .mobile-dashboard[data-detent="open"][data-tab="report"] .mobile-explorer .panel-scroll-content,
+  .mobile-dashboard[data-detent="half"][data-tab="details"] .mobile-explorer .panel-scroll-content,
+  .mobile-dashboard[data-detent="half"][data-tab="report"] .mobile-explorer .panel-scroll-content {
+    flex: 0 0 auto;
+    min-height: 0;
+    height: auto;
+    overflow: visible;
+  }
+
+  /* List flows at its fixed page height and the sheet scrolls it (above).
+     .restaurant-card-list must not scroll on its own — a nested scroll
+     region traps touch drags. */
+  .mobile-explorer .restaurant-list-container {
+    height: auto;
+  }
+
+  .mobile-explorer .restaurant-card-list {
+    flex: none;
+    min-height: auto;
+    overflow: visible;
+  }
+
+  /* Pagination: Prev/Next on the edges, status text centred, count on its own line. */
+  .mobile-explorer .restaurant-list-pagination .pagination-text {
+    flex: 1;
+    min-width: 0;
+    text-align: center;
+  }
+
+  .mobile-explorer .restaurant-list-pagination .pagination-count {
+    display: block;
+  }
+
+  /* One line, full width. Labels + toggle natural size; the two dropdowns
+     split the rest equally (flex-basis 0) so they match and the row
+     reaches both edges. */
+  .mobile-explorer .restaurant-list-sort-bar {
+    flex-wrap: nowrap;
+    gap: 0.5rem;
+    /* No side padding, to line up with the flush cards; extra bottom
+       padding sets it off. */
+    padding-left: 0;
+    padding-right: 0;
+    padding-bottom: 1rem;
+  }
+
+  .mobile-explorer .restaurant-list-sort-bar .sort-label,
+  .mobile-explorer .restaurant-list-sort-bar .sort-then-label,
+  .mobile-explorer .restaurant-list-sort-bar .sort-direction-toggle-icon {
+    flex-shrink: 0;
+  }
+
+  .mobile-explorer .restaurant-list-sort-bar .sort-dropdown {
+    flex: 1 1 0;
+    min-width: 0;
+  }
+
+  .mobile-explorer .restaurant-list-sort-bar .sort-dropdown-trigger {
+    width: 100%;
+    min-width: 0;
+    gap: 0.3rem;
+    padding: 0.4rem 0.45rem;
+  }
+
+  .mobile-explorer .restaurant-list-sort-bar .sort-dropdown-trigger-label {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Inspection history rows: tighten column widths, gaps and badge padding
+     for a phone-width pane. */
+  .mobile-explorer .inspection-history-list li {
+    gap: 0.3rem;
+    padding: 0.4rem 0.2rem;
+    /* Desktop's auto-margin centring (13.2) is off for the mobile grid;
+       distribute leftover space here instead of a dead right gap. */
+    justify-content: space-between;
+  }
+
+  /* Fixed column widths (smaller than desktop) so rows still align. */
+  .mobile-explorer .inspection-row-date {
+    width: 4.75rem;
+    min-width: 0;
+  }
+
+  .mobile-explorer .inspection-row-grade,
+  .mobile-explorer .inspection-row-score {
+    width: 1.6rem;
+  }
+
+  .mobile-explorer .inspection-violation-counts {
+    grid-template-columns: 72px 116px;
+    gap: 0.25rem;
+    margin: 0;
+  }
+
+  .mobile-explorer .inspection-history-list .violation-tag {
+    padding: 2px 4px;
+    font-size: var(--fs-xs);
+  }
+
+  .mobile-explorer .inspection-history-list .violation-count-val {
+    font-size: var(--fs-xs);
+  }
+
+  /* 18.6 SCORE HISTORY — Details tab, flows at the end of the sheet scroll
+     (18.5). No border; relies on the card's own edge. */
+  .mobile-perf-chart {
+    flex-shrink: 0;
+    height: 240px;
+  }
+
+  /* Info takeover: swaps the 240px chart for its info content, filling the
+     pane like the Details/Report info panels (record hidden alongside). */
+  .mobile-perf-chart-info-open {
+    height: auto;
+  }
+
+  /* Match the explorer panes' tighter content inset. */
+  .mobile-perf-chart .panel {
+    padding: var(--space-xs);
+    border: none;
+  }
+
+  .mobile-perf-chart-info-open > .panel > .panel-header {
+    margin-right: 0.75rem;
+  }
+
+  .mobile-perf-chart-info-open > .panel > .panel-scroll-content {
+    padding-right: 0.75rem;
+  }
+}

@@ -1,0 +1,468 @@
+/* charts.css - performance chart, grade chart, dashboard guide and meta. */
+
+/*///////////////////////////////////////////// 14. PERFORMANCE CHARTS & GUIDES //////////////////////////////////////////////*/
+
+/* 14.1 PERFORMANCE CHART UI */
+
+.performance-chart-panel {
+  display: flex;
+  flex-direction: column;
+  /* Base .panel clips overflow; a tooltip near the chart's bottom edge
+     (footer sits right below, in the next grid row) needs to escape
+     that clip and outrank the footer, which -- like this panel until
+     now -- has no stacking context of its own. */
+  overflow: visible;
+  position: relative;
+  z-index: 10;
+}
+
+.performance-chart-panel .panel-header {
+  margin-left: 0;
+  margin-right: 0;
+}
+
+.performance-chart-body {
+  flex: 1;
+  min-height: 0;
+  overflow: visible;
+}
+
+/* Chart-group focus: a white inset instead of the global ring, suppressed
+   for pointer focus via the modality attribute (like .search-input). */
+.performance-chart-body:focus,
+.performance-chart-body:focus-visible {
+  outline: none;
+}
+
+.performance-chart-body:focus-visible {
+  box-shadow: inset 0 0 0 2px var(--text-heading);
+}
+
+:root[data-input-modality="pointer"] .performance-chart-body:focus-visible {
+  box-shadow: none;
+}
+
+/* Recharts focuses its own SVG layers on click; the HTML wrapper owns
+   keyboard nav. PerformanceDot cancels this on mousedown, but touch fires
+   none, so suppress it here for tap too. */
+.performance-chart-body svg:focus,
+.performance-chart-body svg *:focus {
+  outline: none;
+}
+
+.performance-chart-body circle:focus-visible {
+  outline: 2px solid var(--accent-blue);
+  outline-offset: 2px;
+}
+
+.performance-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: var(--space-xs);
+  z-index: 10;
+  white-space: nowrap;
+}
+
+.performance-tooltip-date {
+  margin-bottom: 4px;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.performance-tooltip-score {
+  color: var(--text-body);
+  font-size: var(--fs-md);
+}
+
+.performance-tooltip-score span {
+  font-family: var(--font-body);
+  font-weight: 600;
+  color: var(--text-heading);
+}
+
+/* Compact variant (mobile chart): grade + score blocks side by side, no card. */
+.performance-tooltip-compact {
+  display: flex;
+  gap: 0.25rem;
+  padding: 0;
+  background: none;
+  border: none;
+}
+
+.performance-tooltip-compact-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  background: var(--bg-score);
+  border: 0.5px solid;
+  border-color: color-mix(in srgb, currentColor 80%, transparent);
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.chart-dot {
+  transition: all 0.2s ease-in-out;
+}
+
+.chart-dot-hovered {
+  transition: all 0.2s ease-in-out;
+  filter: drop-shadow(0 0 6px var(--highlight-glow));
+  z-index: 10;
+}
+
+/* 14.2 GRADE CHART CONTAINER */
+
+/* One bordered card for the grade breakdown: donut, per-grade share line,
+   divider, filters-applied summary. Mirrors the phone area-strip and
+   tablet KPI drawers; the inner donut panel drops its own chrome. No
+   absolute-count row -- the stats panel above the map carries those. */
+.grade-chart {
+  flex: 1 1 0%;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  /* Floor so title/guide wrapping can't squeeze this to nothing; past it,
+     .left-sidebar scrolls instead. */
+  min-height: 160px;
+  min-width: 0;
+  overflow: hidden;
+  padding: var(--space-s);
+  border: 1px solid var(--border-panel);
+  background-color: var(--bg-panel);
+}
+
+/* Donut panel fills the column; divider and summary stack under it. */
+.grade-chart > .grade-chart-panel {
+  flex: 1 1 0%;
+  min-height: 0;
+  height: auto;
+  padding: 0;
+  border: none;
+  background: transparent;
+  display: flex;
+  flex-direction: column;
+}
+
+.grade-chart > .mobile-filter-notice-rule {
+  flex-shrink: 0;
+  margin: 0;
+  border: none;
+  border-top: 1px solid var(--border-panel);
+}
+
+.grade-chart > .mobile-filter-notice {
+  flex-shrink: 0;
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 600;
+  text-align: center;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.grade-chart .mobile-filter-notice-label {
+  color: var(--text-body);
+}
+
+.grade-chart .mobile-filter-notice-lead,
+.grade-chart .mobile-filter-notice-borough {
+  color: var(--text-faded);
+}
+
+/* Grade chart body — donut wrap, centre summary, legend */
+
+.grade-chart-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  padding: 1rem;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.grade-chart-svg-wrap {
+  flex: 1;
+  min-height: 0;
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+/* Recharts focuses its own SVG on click; the HTML wrapper owns keyboard nav. */
+.grade-chart-svg-wrap svg:focus,
+.grade-chart-svg-wrap svg *:focus {
+  outline: none;
+}
+
+/* Footnote naming the borough/search narrowing the donut can't show on
+   its own. Rule + a reserved two-line space are permanent so the donut
+   doesn't shift when the text toggles. --fs-sm is the nearest scale step
+   to ~0.8rem (raw lengths fail the type-scale guard). */
+.grade-chart-filter-note {
+  flex-shrink: 0;
+  width: 100%;
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  min-height: calc(0.75rem + 2.6em); /* padding-top + two lines at 1.3 */
+  border-top: 1px solid var(--border-panel);
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.3;
+  text-transform: uppercase;
+  text-align: center;
+  text-wrap: balance;
+}
+
+.grade-chart-empty {
+  text-align: center;
+  padding: 2rem;
+}
+
+.grade-chart-center {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 65%;
+  max-width: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  pointer-events: none;
+}
+
+.grade-chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0 0.25rem;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1.35;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}
+
+.grade-chart-legend-item {
+  color: var(--legend-color);
+  transition: opacity 0.15s ease, color 0.15s ease;
+}
+
+.grade-chart-legend-sep {
+  color: var(--text-muted);
+}
+
+.grade-chart-legend-group[data-dimmed="true"] .grade-chart-legend-item {
+  color: var(--text-muted);
+  opacity: 0.45;
+}
+
+.grade-chart-legend-group[data-dimmed="true"] .grade-chart-legend-sep {
+  opacity: 0.45;
+}
+
+/* Per-category share line under the donut, middot-separated, percentage
+   in its category colour. Absolute counts live in the stats panel. */
+.grade-chart-percentages {
+  flex-shrink: 0;
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.15rem 0.5rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  line-height: 1.3;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+  color: var(--text-muted);
+}
+
+.grade-chart-percentage:not(:first-child)::before {
+  content: "|";
+  margin-right: 0.5rem;
+  color: var(--text-faded);
+}
+
+.grade-chart-percentage-value {
+  font-weight: 700;
+}
+
+/* 14.3 DASHBOARD GUIDE PANEL */
+
+.dashboard-guide-panel {
+  display: flex;
+  flex-direction: column;
+  min-height: 0; 
+  overflow-y: auto;
+}
+
+.dashboard-guide-panel > .panel-header {
+  flex-shrink: 0;
+}
+
+.dashboard-guide-content {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.dashboard-guide-section {
+  border: 1px solid var(--border-panel);
+  border-bottom: none;
+  background-color: var(--bg-panel);
+}
+
+.dashboard-guide-section:last-child {
+  border-bottom: 1px solid var(--border-panel);
+}
+
+.dashboard-guide-section summary {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.55rem 0.65rem;
+  background-color: var(--bg-alt);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style: none;
+  user-select: none;
+}
+
+.dashboard-guide-section summary::-webkit-details-marker {
+  display: none;
+}
+
+.dashboard-guide-chevron {
+  flex-shrink: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-xs);
+  transition: transform 0.15s ease;
+}
+
+.dashboard-guide-section[open] .dashboard-guide-chevron {
+  transform: rotate(90deg);
+}
+
+.dashboard-guide-section summary:hover,
+.dashboard-guide-section summary:focus-visible {
+  color: var(--text-heading);
+  background-color: var(--link-background-hover);
+}
+
+.dashboard-guide-section-content {
+  padding: 0.65rem 0.75rem 0.75rem;
+  font-size: var(--fs-sm);
+  line-height: 1.55;
+}
+
+.dashboard-guide-section-content ul {
+  margin: 0;
+  padding-left: 1.15rem;
+}
+
+.dashboard-guide-section-content li + li {
+  margin-top: 0.35rem;
+}
+
+.dashboard-guide-note {
+  margin-top: 0.65rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.panel-scroll-content {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+}
+
+/* 14.4 DASHBOARD META */
+
+.dashboard-guide-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border-top: 1px solid var(--border-panel);
+}
+
+/* Grid, not flex-wrap: a fixed 2-column split always keeps the pair
+   side by side, wrapping each label's own text instead of bumping the
+   whole item to its own line once the sidebar narrows. */
+.dashboard-guide-meta-row {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem 1.25rem;
+}
+
+.dashboard-guide-meta-item {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.dashboard-guide-meta-divider {
+  width: 100%;
+  border-top: 1px solid var(--border-panel);
+  margin: 0.1rem 0;
+}
+
+.dashboard-guide-meta-label {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+}
+
+.dashboard-guide-meta-value {
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text-body);
+}
+
+.dashboard-guide-meta-delta {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  margin-left: 0.4rem;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.dashboard-guide-meta-delta-positive {
+  color: var(--status-delta-positive);
+}
+
+.dashboard-guide-meta-delta-negative {
+  color: var(--status-delta-negative);
+}
+

@@ -1,0 +1,744 @@
+/* map.css - map view container, legends, controls and hover cards. */
+
+/*///////////////////////////////////////////// 15. MAP VIEW, LEGENDS & CONTROLS //////////////////////////////////////////////*/
+
+/* 15.1 MAP VIEW CONTAINER & HEADERS */
+
+.map-view-container {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0;
+  min-height: 0;
+}
+
+.map-view-top-header {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  z-index: 20;
+  width: max-content !important;
+  pointer-events: auto;
+}
+
+.map-view-top-header .panel-header-title {
+  display: none !important;
+}
+
+.map-view-top-header .panel-header {
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 4px 12px var(--shadow-overlay);
+  width: 32px !important;
+  height: 32px !important;
+  padding: 0 !important;
+}
+
+.map-view-top-header .panel-header-info-button {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0 !important;
+}
+
+.map-view-top-header .panel-header-popup {
+  width: 250px;
+  right: 0;
+  left: auto;
+}
+
+/* 15.2 MAP LEGENDS */
+
+.legend-info-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.legend-grade-text {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-md);
+  text-transform: uppercase;
+}
+
+.legend-scale-visual {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.25rem;
+}
+
+.dot-sample {
+  display: inline-block;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.legend-arrow {
+  font-size: var(--fs-2xs);
+  color: var(--text-muted);
+}
+
+.single-dot-align {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.legend-score-text {
+  font-size: var(--fs-md);
+  line-height: 1.35;
+  color: var(--text-body);
+  font-variant-numeric: tabular-nums;
+}
+
+.legend-table td {
+  padding: 0.3rem 0.3rem;
+  vertical-align: middle;
+}
+
+.legend-table td:first-child {
+  width: 1%;
+  white-space: nowrap;
+}
+
+.legend-table td:nth-child(2) {
+  width: 3.25rem;
+  text-align: center;
+}
+
+.legend-sizing-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.legend-sizing-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--fs-md);
+  color: var(--text-body);
+}
+
+.legend-grade-label {
+  font-weight: 700;
+  font-family: var(--font-display);
+  width: 55px;
+  text-transform: uppercase;
+}
+
+.legend-range {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  color: var(--text-muted);
+  width: 50px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* 15.3 MAP CONTROLS & HOVER CARDS */
+
+.map-canvas-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Shown when the ArcGIS view or GeoJSON fails -- async rejections the
+   ErrorBoundary can't catch. "Retry" rebuilds the view in place. */
+.map-load-error {
+  position: absolute;
+  inset: 0;
+  z-index: 15;
+}
+
+.map-hover-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 4px 12px var(--shadow-overlay);
+  padding: 0.4rem 0.6rem;
+  z-index: 15;
+}
+
+.map-hover-card-name {
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.map-hover-card-stats {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+/* Size/layout/type come from shared .badge-box/.badge-label/.badge-val;
+   only the square corner is specific here. */
+.map-hover-card .badge-box {
+  border-radius: 0;
+}
+
+.map-bottom-controls {
+  position: absolute;
+  bottom: 1.5rem;
+  left: 1rem;
+  z-index: 10;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  pointer-events: auto;
+}
+
+.map-control-label {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: 0 0.5rem;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-variant-numeric: tabular-nums;
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  box-sizing: border-box;
+  text-transform: uppercase;
+}
+
+.map-control-button {
+  background: transparent;
+  border: none;
+  color: var(--text-body);
+  font-family: inherit;
+  font-size: inherit;
+  padding: 2px 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  text-decoration: underline dotted;
+  text-underline-offset: 3px;
+  transition: color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.map-control-button:hover {
+  color: var(--link-hover);
+}
+
+.map-control-input {
+  background: var(--bg-alt);
+  color: var(--text-muted);
+  border: 1px solid var(--border-panel);
+  font-family: inherit;
+  font-size: inherit;
+  padding: 2px 4px;
+  box-sizing: border-box;
+  font-variant-numeric: tabular-nums;
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.map-control-input::-webkit-outer-spin-button,
+.map-control-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.map-control-input.scale-input {
+  width: 85px;
+}
+
+.map-control-input.zoom-input {
+  width: 48px;
+}
+
+.map-zoom-buttons-container {
+  position: absolute;
+  top: 1rem;
+  left: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-zoom-buttons-chip {
+  display: flex;
+  flex-direction: column;
+  /* 32 wide, 64 tall (two stacked) to align with the 32x32 control chips. */
+  width: 32px;
+  height: 64px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  box-sizing: border-box;
+}
+
+.map-zoom-button {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid var(--border-panel);
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: var(--fs-lg);
+  font-weight: 700;
+  width: 100%;
+  flex: 1;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.map-zoom-button:last-child {
+  border-bottom: none;
+}
+
+.map-zoom-button:hover:not(:disabled) {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+.map-zoom-button:disabled {
+  color: var(--text-muted);
+  cursor: not-allowed;
+}
+
+.map-compass-container {
+  position: absolute;
+  top: calc(1rem + 64px + 8px);
+  left: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-compass-button {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.map-compass-button:hover:not(:disabled) {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+.map-compass-button:disabled {
+  color: var(--text-muted);
+  cursor: default;
+}
+
+.map-compass-button svg {
+  transition: transform 0.2s ease;
+}
+
+.map-basemap-toggle-container {
+  position: absolute;
+  top: calc(1rem + 40px);
+  right: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-basemap-toggle-button {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.map-basemap-toggle-button:hover {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+.map-search-radius-container {
+  position: absolute;
+  top: calc(1rem + 40px + 32px + 8px);
+  right: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-search-radius-button {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.map-search-radius-button.active {
+  color: var(--text-body);
+}
+
+.map-search-radius-button:hover {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+/* Replaces the idle hover pill while placing or once a point is set, same
+   position (left of the button, top: 0). Column flex + stretch keeps the
+   header label and picker row equal width. */
+.map-search-radius-panel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 0.5rem);
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 0.5rem;
+  z-index: 30;
+}
+
+.map-search-radius-header-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 32px;
+  box-sizing: border-box;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0 8px;
+}
+
+.search-radius-picker {
+  display: flex;
+  gap: 4px;
+}
+
+.search-radius-picker .filter-button {
+  flex: 1;
+  height: 32px;
+  padding: 0 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg-panel);
+  color: var(--text-muted);
+  /* Keep the "mi" unit lowercase, not .filter-button's uppercase. */
+  text-transform: none;
+}
+
+/* Selected = brightened text-body, not the usual link-hover. Inset
+   box-shadow, not border-bottom, so the line doesn't grow the box and
+   shift the centred text. */
+.search-radius-picker .filter-button.active {
+  color: var(--text-body);
+  border-bottom: none;
+  box-shadow: inset 0 -2px 0 0 var(--border-panel);
+}
+
+/* "Locate me" chip: same 32x32 shell as the other map controls, below the
+   Search Radius button. Mobile-only, but the base rule carries desktop
+   coords for consistency. */
+.map-user-location-container {
+  position: absolute;
+  top: calc(1rem + 40px + 32px + 8px + 32px + 8px);
+  right: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-user-location-button {
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.map-user-location-button:hover:not(:disabled) {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+.map-user-location-button:disabled {
+  cursor: default;
+}
+
+/* Located: the blue of the map marker. Error / out-of-area: dimmed. */
+.map-user-location-button.active {
+  color: #1a85ff;
+}
+
+.map-user-location-button.muted {
+  opacity: 0.55;
+}
+
+.map-user-location-button.is-locating svg {
+  animation: mapUserLocationSpin 0.8s linear infinite;
+}
+
+@keyframes mapUserLocationSpin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* Once located, a "My location" label + clear (x) sit left of the button,
+   like the Search Radius active panel. */
+.map-user-location-panel {
+  position: absolute;
+  top: 0;
+  right: calc(100% + 0.5rem);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  z-index: 30;
+}
+
+.map-user-location-label {
+  display: flex;
+  align-items: center;
+  height: 32px;
+  box-sizing: border-box;
+  padding: 0 10px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.map-user-location-clear {
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  cursor: pointer;
+}
+
+.map-user-location-clear:hover {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+/* Out-of-area toast: reuse the placement hint's compact chip, not
+   .filter-notice-overlay's full-cover flash. */
+.map-user-location-notice-anchor {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+.map-user-location-notice-anchor .filter-notice-overlay {
+  position: static;
+  inset: auto;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+}
+
+.map-user-location-notice-anchor .filter-notice-text {
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+  /* Uppercase to match the placement-hint chip and the icon tooltips. */
+  text-transform: uppercase;
+}
+
+/* Positioning context for the placement hint; overrides below shrink the
+   full .filter-notice-overlay to a fixed chip (shown only while placing). */
+.map-placement-hint-anchor {
+  position: absolute;
+  top: 1rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 20;
+  pointer-events: none;
+}
+
+/* Match the Search Radius header chip, not the full-panel filter-notice. */
+.map-placement-hint-anchor .filter-notice-overlay {
+  position: static;
+  inset: auto;
+  height: 32px;
+  padding: 0 10px;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  animation: placementHintFadeIn 0.2s ease forwards;
+}
+
+@keyframes placementHintFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.map-placement-hint-anchor .filter-notice-text {
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0.03em;
+  white-space: nowrap;
+}
+
+/* Styled tooltip for map icon buttons, replacing the native title attribute. */
+[data-tooltip] {
+  position: relative;
+}
+
+[data-tooltip]::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  height: 32px;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  color: var(--text-body);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 0 8px;
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  z-index: 30;
+}
+
+[data-tooltip]:focus-visible::after {
+  opacity: 1;
+}
+
+/* Hover reveal only on real hover; touch's sticky :hover pins it open. */
+@media (hover: hover) {
+  [data-tooltip]:hover::after {
+    opacity: 1;
+  }
+}
+
+[data-tooltip].tooltip-right::after {
+  left: calc(100% + 0.5rem);
+}
+
+/* Offsets map-control-label's 0.5rem right padding so the gap clears its border. */
+.map-control-button.tooltip-right::after {
+  left: calc(100% + 1rem);
+}
+
+[data-tooltip].tooltip-left::after {
+  right: calc(100% + 0.5rem);
+}
+
+.map-scale-bar-container {
+  position: absolute;
+  bottom: 1.5rem;
+  right: 1rem;
+  z-index: 10;
+  pointer-events: none;
+}
+
+.map-scale-bar-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: 0.25rem 0.5rem;
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  box-sizing: border-box;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+}
+
+.map-scale-bar-graphic {
+  height: 6px;
+  border-left: 2px solid var(--text-body);
+  border-right: 2px solid var(--text-body);
+  border-bottom: 2px solid var(--text-body);
+  box-sizing: border-box;
+  transition: width 0.15s ease;
+}
+
+.map-scale-bar-text {
+  font-variant-numeric: tabular-nums;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+

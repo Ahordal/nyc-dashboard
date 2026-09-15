@@ -1,0 +1,457 @@
+/* filters-stats.css - grade/borough filters, the KPI stats panel, and search bar. */
+
+/*///////////////////////////////////////////// 7. DASHBOARD FILTERS //////////////////////////////////////////////*/
+
+/* 7.1 FILTER BAR & BUTTONS */
+
+.dashboard-filters {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: stretch;
+  width: 100%;
+  min-width: 0;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+}
+
+.dashboard-grade-filters,
+.dashboard-borough-filters {
+  min-width: 0;
+}
+
+.dashboard-grade-filters .panel,
+.dashboard-borough-filters .panel {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  height: 100%;
+  padding: 0.4rem 1rem;
+  background: transparent;
+  border: none;
+}
+
+.filter-group {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  width: 100%;
+  height: 100%;
+}
+
+/* Desktop: display:contents makes buttons direct children of .filter-group.
+   The mobile drawer overrides to a real flex row. */
+.filter-options {
+  display: contents;
+}
+
+.filter-label {
+  display: flex;
+  align-items: center;
+  margin-right: var(--space-xs);
+  font-family: var(--font-display);
+  font-size: var(--fs-md);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.filter-label svg {
+  font-size: var(--fs-lg);
+  margin-right: 0.5rem;
+}
+
+.filter-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-panel);
+  padding: 0.5rem 0.6rem;  
+  font-family: var(--font-display);
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: var(--fs-sm);
+}
+
+.filter-button:hover {
+  color: var(--link-hover);
+  background-color: var(--link-background-hover);
+}
+
+.filter-button.active {
+  background-color: var(--bg-alt);
+  border-color: var(--border-panel);
+  color: var(--link-hover);
+  font-weight: bold;
+  border-bottom: 3px solid var(--border-panel);
+}
+
+.filter-clear {
+  margin-right: var(--space-s);
+}
+
+/* 7.2 COMPACT-DESKTOP FILTERS BUTTON (1751-2359px)
+   Below the width the inline row above fits on one line, Grade/Borough
+   move behind this small button instead -- sized and styled like
+   MapView's own 32px control chips (mirrors .mobile-appbar-button /
+   .mobile-appbar-badge, which live in phone/tablet-scoped media queries
+   and so aren't reachable at this width). Nested inside the KPI panel
+   itself (StatsPanel's filtersButton prop) rather than an adjacent box:
+   the panel's own outer edge keeps lining up with the search panel
+   beside it, and the button's 0.5rem inset from the panel's inner edge
+   lines up with the map's own control chips (same inset, same edge). */
+
+.desktop-filters-button-wrap {
+  position: absolute;
+  top: 50%;
+  right: var(--space-xs);
+  transform: translateY(-50%);
+}
+
+.desktop-filters-button {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  font-size: var(--fs-lg);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* Only aria-expanded drives the highlighted look, not :hover -- otherwise
+   closing the popover while the cursor is still resting on the button
+   (the normal case right after a click) leaves it looking selected. */
+.desktop-filters-button[aria-expanded="true"] {
+  background-color: var(--link-background-hover);
+  color: var(--link-hover);
+}
+
+.desktop-filters-badge {
+  position: absolute;
+  bottom: -6px;
+  left: -6px;
+  z-index: 30;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background-color: var(--accent-blue);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  line-height: 1;
+}
+
+/* Floating popover, not an inline push -- overlays the map, doesn't
+   resize it. Positioned off .stats-panel (its nearest positioned
+   ancestor, a sibling here, not the button) so it sits 0.5rem below the
+   KPI panel's own bottom edge and flush with the map's right edge,
+   independent of where the button sits inside that panel. Reuses
+   .dashboard-filters (the >=2360px inline row) rather than duplicating
+   filter markup; stacked/left-aligned here since even at this width
+   it's narrower than that row. */
+.desktop-filters-popover {
+  position: absolute;
+  top: calc(100% + var(--space-xs));
+  right: 0;
+  z-index: 20;
+  /* Sized to whatever the Grade/Borough rows actually need (each row is
+     already width:auto below) plus this box's own padding -- not a
+     guessed fixed width. Capped well under the map's narrowest
+     available width (~955px at 1751px) as a safety net, not a target. */
+  width: max-content;
+  max-width: 720px;
+  padding: var(--space-xs);
+  border: 1px solid var(--border-panel);
+  background-color: var(--bg-panel);
+  box-shadow: 0 6px 16px var(--shadow-overlay);
+}
+
+.desktop-filters-popover .panel-header {
+  margin-bottom: 0;
+}
+
+.desktop-filters-popover .dashboard-filters {
+  flex-direction: column;
+  border: none;
+  width: auto;
+}
+
+.desktop-filters-popover .dashboard-grade-filters .panel,
+.desktop-filters-popover .dashboard-borough-filters .panel {
+  justify-content: flex-start;
+  /* The popover's own padding already provides the left inset; this
+     section's own left padding would stack on top of it (1rem total). */
+  padding-left: 0;
+}
+
+.desktop-filters-popover .dashboard-grade-filters .panel {
+  border-bottom: 1px solid var(--border-panel);
+  padding-bottom: var(--space-xs);
+}
+
+.desktop-filters-popover .dashboard-borough-filters .panel {
+  padding-top: var(--space-xs);
+}
+
+.desktop-filters-popover .filter-group {
+  justify-content: flex-start;
+}
+
+/* Fixed label column so Clear (and the buttons after it) start at the
+   same x position in both rows, regardless of "Grade" vs "Borough"
+   being different lengths -- text stays left-aligned within the wider
+   box. */
+.desktop-filters-popover .filter-label {
+  width: 5.5rem;
+  flex-shrink: 0;
+}
+
+/*///////////////////////////////////////////// 8. STATS PANEL //////////////////////////////////////////////*/
+
+/* 8.1 STATS LAYOUT & COUNTERS */
+
+.map-stats {
+  min-width: 0;
+  min-height: 0;
+  /* In .map-top's grid this is a fr-track item that would otherwise
+     stretch to match the taller Filters/Search row, padding out the
+     panel's border well past its own content. Hug its content instead
+     (a no-op in .tablet-kpi-bar, which isn't a flex/grid container). */
+  align-self: start;
+}
+
+.map-stats > .panel {
+  /* No height:100% -- .map-stats now hugs its own content (align-self:
+     start above), so stretching this to match would just reopen the same
+     gap through the height:100% chain below (.stats-panel,
+     .stats-panel-line). Sizing from content here is deterministic
+     everywhere, instead of depending on how tall the row1 track ends up
+     at a given width. */
+  padding: var(--space-xs) var(--space-s);
+}
+
+.stats-panel {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  height: 100%;
+  width: 100%;
+  font-family: var(--font-display);
+  /* Positioning context for .desktop-filters-button-wrap (compact desktop
+     only, via the filtersButton prop). No-op otherwise. */
+  position: relative;
+}
+
+.stats-panel-line {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs) var(--space-m);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  padding: 0 var(--space-s);
+}
+
+/* Room for the nested Filters button: taller panel (0.5rem more top and
+   bottom than .map-stats > .panel's usual var(--space-xs), so the 32px
+   button isn't cramped against the border; horizontal unchanged) and
+   right-padding on the content so the breakdown doesn't run under it. */
+.stats-panel[data-has-filters-button] {
+  padding: var(--space-s) var(--space-s);
+  /* Base .panel clips overflow; the popover extends below this panel's
+     own box, so it needs to escape that clip. */
+  overflow: visible;
+}
+
+.stats-panel[data-has-filters-button] .stats-panel-line {
+  padding-right: 3rem;
+}
+
+.stats-total {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-width: 0;
+  white-space: nowrap;
+}
+
+.stats-total-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-muted);
+  font-size: var(--fs-xl);
+  background: transparent;
+  border: none;
+  padding: 0;
+}
+
+.stats-total-label {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  text-transform: uppercase;  
+  font-weight: 700;
+}
+
+.stats-total-count {
+  color: var(--text-body);  
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  line-height: 1;
+  font-family: var(--font-body);
+}
+
+.stats-breakdown {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: 0.25rem;
+  min-width: 0;
+}
+
+.stats-breakdown-item {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0 0.75rem;
+  height: 100%;
+  border-left: 1px solid var(--text-faded);
+  white-space: nowrap;
+}
+
+.stats-breakdown-item:first-child {
+  border-left: none;
+}
+
+.stats-breakdown-value {  
+  color: var(--text-body);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;  
+  font-family: var(--font-body);
+}
+
+.stats-breakdown-label {
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  /* Muted so the count reads first, like the grade-chart percentage line. */
+  color: var(--text-muted);
+}
+
+/* "/ 64%" share beside the count in the phone drawer (donut's percentage
+   line folded in). Colour + weight match the count, set inline. */
+.stats-breakdown-share {
+  margin-left: -0.2rem;
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+/*///////////////////////////////////////////// 9. SEARCH PANEL //////////////////////////////////////////////*/
+
+/* 9.1 SEARCH BAR & INPUT CONTROLS */
+
+/* .search-panel only wraps ExplorerSearch in the desktop 3-column layout
+   (dashboard.tsx, !isTablet); the phone/tablet search drawer reuses
+   ExplorerSearch under a different wrapper, so this doesn't touch it. */
+.search-panel .panel-header {
+  margin-bottom: var(--space-xs);
+}
+
+.search-panel-body {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  background-color: var(--bg-alt);
+  border: 1px solid var(--border-panel);
+  color: var(--text-body);
+  padding: 0.4rem var(--space-xs);
+  font: inherit;
+  font-size: var(--fs-md);
+}
+
+.search-input::placeholder {
+  color: var(--text-muted);
+}
+
+/* Drop the ring for pointer focus only (inputs always match
+   :focus-visible); gated on data-input-modality from inputModality.ts. */
+:root[data-input-modality="pointer"] .search-input:focus {
+  outline: none;
+}
+
+.search-filter-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  background: transparent;
+  border: 1px solid var(--border-panel);
+  color: var(--text-body);
+  font-size: var(--fs-xl);
+  cursor: pointer;
+}
+
+.search-filter-toggle:hover {
+  background-color: var(--border-panel);
+  color: var(--link-hover);
+}
+
+.search-input-wrapper {
+  position: relative;
+  flex: 1;
+}
+
+.search-input-wrapper .search-input {
+  width: 100%;
+  padding-right: 2rem;
+}
+
+.search-clear-button {
+  position: absolute;
+  right: 0.5rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-clear-button:hover {
+  color: var(--link-hover);
+}
+

@@ -1,0 +1,192 @@
+/* layout.css - dashboard grid layout and footer. */
+
+/*///////////////////////////////////////////// 3. APP & GRID LAYOUT //////////////////////////////////////////////*/
+
+/* 3.1 CONTAINER & DASHBOARD CSS GRID */
+
+.dashboard-container {
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  min-height: 0;
+  /* Scroll, not clip, below the desktop floor; reflow block resets it. */
+  overflow: auto;
+}
+
+.dashboard {
+  display: grid;
+  width: 100%;
+  height: 100%;
+  /* 3-pane floor; reflow block resets these below 1750px. */
+  min-width: 1176px;
+  min-height: 800px;
+  grid-template-columns: clamp(320px, 22vw, 400px) minmax(480px, 1fr) clamp(360px, 25vw, 480px);
+  grid-template-rows: auto minmax(0, 1fr) clamp(200px, 20vh, 280px) auto;
+  grid-template-areas:
+    "sidebar map-column  search"
+    "sidebar map-column  explorer"
+    "sidebar performance explorer"
+    "footer  footer      footer";
+  gap: var(--space-xs);
+}
+
+/* 3.2 SIDEBAR & STRUCTURAL AREAS */
+
+.left-sidebar {
+  grid-area: sidebar;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  min-height: 0;
+  /* Fallback if title + guide ever outgrow the sidebar's grid-allocated
+     height (e.g. unusually long guide content): scroll instead of
+     squeezing grade-chart's flex remainder to nothing. */
+  overflow-y: auto;
+}
+
+.dashboard-title,
+.dashboard-guide,
+.grade-chart,
+.map-column,
+.map-top,
+.map-stats,
+.map-view,
+.performance-chart,
+.search-panel,
+.explorer {
+  min-width: 0;
+  min-height: 0;
+}
+
+/* Flex, not subgrid: map-top's row1 no longer needs to match whatever
+   height search/sidebar's row1 happens to need (it can vary a lot --
+   e.g. the filters row not rendering at all in the compact-desktop
+   band). map-top takes only what its own content needs; map-view (flex:1)
+   absorbs the rest, so the gap above the map is always this row-gap,
+   not leftover subgrid-row slack. */
+.map-column {
+  grid-area: map-column;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+  min-width: 0;
+  min-height: 0;
+}
+
+.map-top {
+  flex-shrink: 0;
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+  gap: var(--space-xs);
+  min-width: 0;
+  min-height: 0;
+  /* Neither this nor .map-view has its own stacking context, so without
+     an explicit z-index here the (later-painted, unpositioned) map wins
+     ties against this row's contents -- including the filters popover.
+     30 matches the app's existing "overlays the map" convention (search
+     radius panel, locate-me panel) and clears the map's own top-right
+     control chips (20 at most). */
+  position: relative;
+  z-index: 30;
+}
+
+/* Compact desktop: the filters row above doesn't render at all here (see
+   .desktop-filters-button), so the row-gap above has nothing to
+   separate -- it was just adding 0.5rem of dead space before the KPI
+   row. One row, no gap. */
+.map-top-single-row {
+  grid-template-rows: minmax(0, 1fr);
+  gap: 0;
+}
+
+.map-view {
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.performance-chart {
+  grid-area: performance;
+}
+
+.search-panel {
+  grid-area: search;
+}
+
+.explorer {
+  grid-area: explorer;
+}
+
+/*///////////////////////////////////////////// 4. FOOTER //////////////////////////////////////////////*/
+
+/* 4.1 FOOTER BAR & LAYOUT */
+
+.dashboard-footer {
+  grid-area: footer;
+  min-width: 0;
+  min-height: 0;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: var(--space-s);
+  overflow: hidden;
+}
+
+.dashboard-footer-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-s);
+  width: 100%;
+  height: 100%;
+  min-width: 0;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+/* 4.2 FOOTER CONTENT & SOCIAL LINKS */
+
+.footer-location {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.footer-location-coords {
+  color: var(--text-muted);
+  text-transform: none;
+}
+
+.footer-links {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  min-width: 0;
+}
+
+.footer-links a {
+  color: var(--text-muted);
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.15s ease;
+}
+
+.footer-links a:hover {
+  color: var(--link-hover);
+}
+
+.footer-divider {
+  color: var(--border-panel);
+}
+
+.footer-copyright {
+  white-space: nowrap;
+  flex-shrink: 0;
+  color: var(--text-muted);
+}
+

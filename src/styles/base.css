@@ -1,0 +1,218 @@
+/* base.css - fonts, reset, base elements, focus/a11y utilities, design tokens. */
+
+/*///////////////////////////////////////////// 1. RESET & GLOBAL FOUNDATIONS //////////////////////////////////////////////*/
+
+/* 1.0 FONTS
+
+   Public Sans (body) + Archivo (display), self-hosted from public/fonts/,
+   latin + latin-ext subsets. Above-the-fold faces preloaded in index.html;
+   the rest load on demand under font-display: swap. */
+
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url('/fonts/public-sans-v21-latin_latin-ext-regular.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 500;
+  font-display: swap;
+  src: url('/fonts/public-sans-v21-latin_latin-ext-500.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/public-sans-v21-latin_latin-ext-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Public Sans';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/public-sans-v21-latin_latin-ext-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 600;
+  font-display: swap;
+  src: url('/fonts/archivo-v25-latin_latin-ext-600.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url('/fonts/archivo-v25-latin_latin-ext-700.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Archivo';
+  font-style: normal;
+  font-weight: 800;
+  font-display: swap;
+  src: url('/fonts/archivo-v25-latin_latin-ext-800.woff2') format('woff2');
+}
+
+/* 1.1 BOX SIZING */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 1.2 BASE ELEMENTS & SCROLLBARS */
+
+body,
+h1, h2, h3, h4, h5, h6,
+p, ul, ol, figure {
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body,
+#root {
+  width: 100%;
+  height: 100%;
+}
+
+html {
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--text-body);
+  font-family: var(--font-body);
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  padding: var(--space-s);
+  overflow: hidden;
+}
+
+/* 1.3 GLOBAL LINKS & POPUPS */
+
+a {
+  color: var(--text-body);
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+a:hover,
+a:focus-visible {
+  color: var(--link-hover);
+}
+
+/* 1.4 FOCUS INDICATOR & SCREEN-READER UTILITIES */
+
+/* One keyboard-focus ring for every control, role-based ones included. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:focus-visible,
+[role="button"]:focus-visible,
+[role="tab"]:focus-visible,
+[role="option"]:focus-visible {
+  outline: 2px solid var(--focus-ring);
+  outline-offset: 2px;
+}
+
+/* Hidden visually, still read by assistive tech. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* 1.5 REDUCED MOTION */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/*///////////////////////////////////////////// 2. VARIABLES //////////////////////////////////////////////*/
+
+/* 2.1 COLOR PALETTE & DESIGN TOKENS */
+
+:root {
+  --bg: #212121;
+  --bg-alt: #252525;
+  --bg-panel: #2b2b2b;
+  --bg-row-alt: #292929;
+  
+  --text-body: #d6d8d4;
+  --text-heading: #ffffff;
+  --text-muted: #a0a0a0;
+  --text-faded: #767676;
+
+  --border-panel: #424242;
+
+  --status-positive-bg: #3cb44b;
+  --status-positive-text: #ffffff;
+  --status-negative-bg: #b81d13;
+  --status-negative-text: #ffffff;
+  --status-warning-bg: #e6b800;
+  --status-warning-text: #1a1a1a;
+  
+  --status-delta-positive: #66bb6a;
+  --status-delta-negative: #ef5350;
+
+  --bg-score: #272727;
+  --shadow-overlay: rgba(0, 0, 0, 0.4);
+  --shadow-modal: rgba(0, 0, 0, 0.6);
+  --shadow-controls: rgba(0, 0, 0, 0.3);
+
+  --scrollbar-thumb: #4a4a4a;
+  --scrollbar-track: #2b2b2b;
+
+  --space-xs: 0.5rem;
+  --space-s: 1rem;
+  --space-m: 2rem;
+  --space-l: 4rem;
+
+  --font-body: 'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-display: 'Archivo', var(--font-body);
+
+  /* Type scale. Every font-size resolves to one of these; CI guards it. */
+  --fs-2xs: 0.625rem;   /* 10px - micro badge labels */
+  --fs-xs: 0.75rem;     /* 12px - tags, tab labels, tooltips, fine print */
+  --fs-sm: 0.8125rem;   /* 13px - dense rows, section headers (h3) */
+  --fs-md: 0.875rem;    /* 14px - body copy, panel headers (h2), controls */
+  --fs-lg: 1rem;        /* 16px - emphasis, icons, inline controls */
+  --fs-xl: 1.1875rem;   /* 19px - hero / content titles */
+  --fs-2xl: 1.25rem;   /* 20px - big stat numbers, h1 primary line */
+  --fs-3xl: 2.75rem;    /* 44px - tablet app-bar "NYC" masthead */
+  --fs-display: 6.5rem;  /* decorative "NYC" wordmark only; reflow clamps it */
+
+  --link-hover: #ffffff;
+  --link-background-hover: #424242;
+  --link-selected: #ffffff;
+  --accent-blue: #0066cc;
+  --focus-ring: #5aa2ff;
+
+  --highlight-border: rgba(255, 255, 255, 0.2);
+  --highlight-glow: rgba(255, 255, 255, 0.6);
+}
+

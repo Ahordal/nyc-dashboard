@@ -1,0 +1,230 @@
+/* panels.css - shared panel/modal chrome and the dashboard title. */
+
+/*///////////////////////////////////////////// 5. PANELS, HEADERS & MODALS //////////////////////////////////////////////*/
+
+/* 5.1 PANEL CONTAINERS & HEADERS */
+
+.panel {
+  width: 100%;
+  height: 100%;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: var(--space-s);
+  overflow: hidden;
+}
+
+/* Fallback for a bare <h2> in a panel; real ones use .panel-header-title. */
+.panel h2 {
+  color: var(--text-heading);
+  font-family: var(--font-display);
+}
+
+.dashboard-title .panel {
+  height: 100%;
+  padding: var(--space-s);
+}
+
+.search-panel > .panel {
+  height: 100%;
+}
+
+.panel-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-s);
+  background-color: var(--bg-alt);
+  padding-top: 0.25rem;
+  padding-bottom: 0.25rem;
+}
+
+/* <h2> via PanelHeader; compound selector outranks .panel h2. */
+.panel-header .panel-header-title {
+  margin: 0;
+  color: var(--text-muted);
+  font-size: var(--fs-md);
+  line-height: 1.5;
+  text-transform: uppercase;
+  font-weight: 700;
+  font-family: var(--font-display);
+  padding-left: 0.4rem;
+}
+
+/* "section" variant: <h3> matching .section-header, not a panel name. */
+.panel-header .panel-header-title-section {
+  font-size: var(--fs-sm);
+  letter-spacing: 0.05em;
+}
+
+/* Keeps the "mi" unit lowercase inside uppercased text. */
+.unit-mi {
+  text-transform: none;
+}
+
+.panel-header-info-button {
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 0.2rem var(--space-s);
+  font-size: var(--fs-lg);
+}
+
+.panel-header-info-button:hover {
+  color: var(--text-heading);
+}
+
+.panel-header-popup {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 10;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  padding: var(--space-s);
+  font-size: var(--fs-md);
+  line-height: 1.6;
+  box-shadow: 0 4px 12px var(--shadow-overlay);
+}
+
+.panel-header-popup ul,
+.info-modal-content ul {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+}
+
+/* Shared InfoPopupContent typography: identical in popup, modal, or inline body. */
+.info-popup-content {
+  font-size: var(--fs-md);
+  line-height: 1.6;
+}
+
+.info-popup-content ul {
+  margin: 0.5rem 0;
+  padding-left: 1.2rem;
+}
+
+.info-popup-section {
+  margin-bottom: var(--space-s);
+}
+
+.info-popup-section:last-child {
+  margin-bottom: 0;
+}
+
+/* 5.2 MODALS & POPUPS */
+
+.info-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: var(--shadow-modal);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10001;
+}
+
+.info-modal {
+  width: min(700px, calc(100vw - 32px));
+  max-height: calc(100vh - 64px);
+  overflow-y: auto;
+  background: var(--bg-panel);
+  font-family: var(--font-body);
+  box-sizing: border-box;
+  font-size: var(--fs-md);
+  color: var(--text-body);
+}
+
+.info-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem;
+  position: sticky;
+  top: 0;
+  background: inherit;
+}
+
+.info-modal-title {
+  font-weight: 700;
+  font-family: var(--font-display);
+}
+
+.info-modal-close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--text-muted);
+}
+
+.info-modal-close-button:hover {
+  color: var(--link-hover);
+}
+
+.info-modal-content {
+  padding: 0 16px 16px;
+}
+
+/* Panel-header bar reused as a modal heading. */
+.info-modal-panel-header {
+  margin-bottom: 1.5rem;
+  border-radius: 4px;
+}
+
+/*///////////////////////////////////////////// 6. DASHBOARD TITLE //////////////////////////////////////////////*/
+
+/* 6.1 TITLE TYPOGRAPHY & WRAPPER */
+
+.dashboard-title-panel {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  padding: var(--space-s);
+}
+
+.dashboard-title-panel .panel-header {
+  margin-bottom: 0;
+}
+
+.title-wrapper {
+  display: flex;
+  flex-direction: column;
+  padding-left: 0.4rem; 
+  width: 100%;
+}
+
+.title-wrapper h1 {
+  text-transform: uppercase;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+
+.h1-large {
+  font-family: var(--font-display);
+  font-size: var(--fs-display);
+  font-weight: bold;
+  color: var(--text-muted);
+  line-height: 1;
+  letter-spacing: -0.05em; 
+  margin-left: -0.06em; 
+  text-shadow: -3px 4px 0px var(--bg-alt);
+}
+
+.h1-med {
+  font-family: var(--font-body);
+  font-size: var(--fs-2xl);
+  font-weight: 700;
+  color: var(--text-muted);
+}
+
+.h1-small {
+  font-family: var(--font-body);
+  font-size: var(--fs-md);
+  font-weight: 700;
+  color: var(--text-muted);
+  letter-spacing: 0.05rem;
+}
+

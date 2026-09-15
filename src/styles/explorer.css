@@ -1,0 +1,825 @@
+/* explorer.css - restaurant list, details, status/violation badges, inspection history. */
+
+/*///////////////////////////////////////////// 10. RESTAURANT EXPLORER & LIST //////////////////////////////////////////////*/
+
+/* 10.1 EXPLORER TABS */
+
+.explorer {
+  grid-area: explorer;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  width: 100%;
+}
+
+.explorer-tabs {
+  display: flex;
+  border: 1px solid var(--border-panel);
+  border-bottom: none;
+  background-color: var(--bg-panel);
+  flex-shrink: 0;
+}
+
+.explorer-tab {
+  flex: 1;
+  background: transparent;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--text-muted);
+  padding: var(--space-xs) var(--space-s);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  cursor: pointer;
+}
+
+.explorer-tab:hover {
+  color: var(--text-heading);
+  background-color: var(--link-background-hover);
+}
+
+.explorer-tab.active {
+  color: var(--text-heading);
+  border-bottom-color: var(--border-panel);
+  background-color: var(--bg-alt);
+}
+
+.explorer-tab:first-child,
+.explorer-tab:nth-child(2) {
+  border-right: 1px solid var(--border-panel);
+}
+
+.explorer-content {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  min-width: 0;
+  width: 100%;
+}
+
+.explorer-content > div {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.explorer-pane-hidden {
+  display: none;
+}
+
+.restaurant-list-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.restaurant-list-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+  width: 100%;
+  min-width: 0;
+  position: relative;
+}
+
+.restaurant-list-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-style: italic;
+  padding: var(--space-s);
+}
+
+/* 10.2 LIST PAGINATION */
+
+.restaurant-list-pagination {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  text-transform: uppercase;
+}
+
+.restaurant-list-pagination button {
+  background: transparent;
+  color: var(--text-muted);
+  border: 1px solid var(--border-panel);
+  padding: 0.25rem 0.6rem;
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 700;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: color 0.15s ease, background-color 0.15s ease;
+}
+
+.restaurant-list-pagination button:hover:not(:disabled) {
+  background-color: var(--link-background-hover);
+  color: var(--link-hover);
+}
+
+.restaurant-list-pagination button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
+.pagination-text {
+  font-family: var(--font-display);
+  color: var(--text-muted);
+  text-transform: uppercase;
+}
+
+.pagination-num {
+  font-family: var(--font-body);
+  color: var(--text-body);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+/* 10.3 LIST SORTING & CARDS */
+
+.restaurant-list-sort-bar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  row-gap: 0.35rem;
+  padding: 0.25rem 0.5rem 0.5rem;
+  font-size: var(--fs-md);
+  flex-shrink: 0;
+}
+
+.sort-label,
+.sort-then-label {
+  color: var(--text-muted);
+  font-weight: 600;
+  font-size: var(--fs-md);
+}
+
+.sort-then-label {
+  font-weight: 500;
+}
+
+/* Two dropdowns per row, tighter than the standalone default. */
+.restaurant-list-sort-bar .sort-dropdown-trigger {
+  min-width: 118px;
+}
+
+/* Direction toggle is icon-only here (label moved to a tooltip). */
+.sort-direction-toggle-icon {
+  width: 2.25rem;
+  padding: 0;
+  gap: 0;
+}
+
+.sort-select,
+.sort-direction-toggle {
+  background: var(--bg-panel);
+  color: var(--text-body);
+  border: 1px solid var(--border-panel);
+  padding: 0.25rem 0.5rem;
+  font-weight: 600;
+  line-height: 1.2;
+  box-sizing: border-box;
+  height: 2.25rem;
+  cursor: pointer;
+}
+
+.sort-direction-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+}
+
+.sort-direction-toggle:hover,
+.sort-select:hover {
+  background-color: var(--link-background-hover);
+  color: var(--link-hover);
+}
+
+.sort-dropdown {
+  position: relative;
+}
+
+.sort-dropdown-trigger {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  min-width: 160px;
+  background: var(--bg-panel);
+  color: var(--text-body);  
+  border: 1px solid var(--border-panel);
+  padding: 0.4rem 0.6rem;
+  font: inherit;
+  cursor: pointer;
+  height: 2.25rem;
+  box-sizing: border-box;
+}
+
+.sort-dropdown-trigger:hover {
+  background-color: var(--link-background-hover);
+}
+
+.sort-dropdown-chevron {
+  font-size: var(--fs-xs);
+  transition: transform 0.15s ease;
+}
+
+.sort-dropdown-chevron.open {
+  transform: rotate(180deg);
+}
+
+.sort-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 20;
+  background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* Listbox takes programmatic focus for arrow keys; .active marks the
+   option, so no container ring. */
+.sort-dropdown-menu:focus {
+  outline: none;
+}
+
+.sort-dropdown-option {
+  padding: 0.45rem 0.6rem;
+  color: var(--text-body);
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sort-dropdown-option:hover,
+.sort-dropdown-option.active,
+.sort-dropdown-option.selected {
+  background-color: var(--link-background-hover);
+  color: var(--link-hover);
+}
+
+.sort-dropdown-option.selected {
+  background-color: var(--bg-alt);
+}
+
+.sort-dropdown-trigger-label {
+  font-weight: 600;
+}
+
+.sort-direction-arrow {
+  transition: transform 0.15s ease;
+}
+
+.sort-direction-arrow.flipped {
+  transform: rotate(180deg);
+}
+
+.restaurant-card-list {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  /* A full PAGE_SIZE (RestaurantList.tsx) usually overflows this pane, so
+     scroll it with the pagination row pinned below; min-height:0 lets it
+     shrink below content. Mobile flows instead (18.5). */
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin-bottom: 0.5rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.card-meta-label {
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.restaurant-card {
+  /* min, not fixed: a name that wraps to two lines grows the card. */
+  min-height: 80px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-alt);
+  border: 1px solid var(--border-panel);
+  padding: 0.5rem 0.75rem;
+  cursor: pointer;
+  min-width: 0;
+  width: 100%;
+  opacity: 0.85;
+}
+
+/* Extra Distance line when Search Radius is active. */
+.restaurant-list-container.with-distance .restaurant-card {
+  min-height: 100px;
+}
+
+.restaurant-card.hovered {
+  background: var(--bg-alt);
+  border-color: var(--card-grade-color);
+  opacity: 1;
+}
+
+/* Hover reveal only on real hover; touch's sticky :hover mimics selection. */
+@media (hover: hover) {
+  .restaurant-card:hover {
+    background: var(--bg-alt);
+    border-color: var(--card-grade-color);
+    opacity: 1;
+  }
+}
+
+.restaurant-card.selected {
+  opacity: 1;
+  background: var(--bg-alt);
+}
+
+.card-main {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-right: 0.5rem;
+  flex: 1;
+  min-width: 0;
+  justify-content: center;
+  height: 100%;
+}
+
+.card-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  /* Wrap to a second line when one line can't hold the name; clamp
+     and ellipsize only past two. */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-transform: uppercase;
+  width: 100%;
+  line-height: 1.1;
+}
+
+.card-subtext,
+.card-meta {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  line-height: 1.2;
+}
+
+.card-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-shrink: 0;
+}
+
+/* One size for the grade/score box everywhere (list cards, hover card,
+   details/report hero, chart popup); per-context rules tweak only
+   non-size details. */
+.badge-box {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: var(--bg-score);
+  /* borderColor set inline by each consumer to the grade colour at 80% */
+  border: 0.5px solid var(--border-panel);
+}
+
+.badge-label {
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+  line-height: 1;
+  margin-bottom: 2px;
+}
+
+.badge-val {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--fs-lg);
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+/*///////////////////////////////////////////// 11. RESTAURANT DETAILS & REPORTS //////////////////////////////////////////////*/
+
+/* 11.1 DETAILS HEADER & TABLES */
+
+.restaurant-details-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.details-empty {
+  color: var(--text-muted);
+  font-style: italic;
+  margin-top: var(--space-s);
+}
+
+.details-hero-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: 0.4rem;
+  margin-bottom: 1rem;
+  width: 100%;
+  min-width: 0;
+}
+
+.details-hero-main {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow: hidden;
+  padding-right: 0.75rem;
+  flex: 1;
+  min-width: 0;
+}
+
+.details-hero-title {
+  font-family: var(--font-display);
+  font-weight: 700;
+  /* Like .card-title: wrap to a second line, clamp past two. The flex
+     header has no fixed height, so it grows to fit. */
+  font-size: var(--fs-lg);
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+  text-transform: uppercase;
+  width: 100%;
+  line-height: 1.1;
+}
+
+.details-hero-badges {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+.details-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--fs-md);
+  margin-bottom: var(--space-xs);
+}
+
+.details-table td {
+  padding: 0.4rem var(--space-xs);
+}
+
+.details-table td:first-child {
+  color: var(--text-muted);
+  width: 40%;
+}
+
+.restaurant-details-panel .details-table td:first-child {
+  text-transform: uppercase;
+  font-size: var(--fs-sm);
+  font-weight: 600;
+}
+
+.details-table td:last-child {
+  color: var(--text-body);
+}
+
+.details-table tr:nth-child(even) {
+  background-color: var(--bg-row-alt);
+}
+
+.details-stale-note {
+  font-size: var(--fs-md);
+  color: var(--status-warning-bg);
+}
+
+.details-pending-note {
+  display: block;
+  text-align: left;
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.details-loading {
+  color: var(--text-muted);
+  font-style: italic;
+  font-size: var(--fs-md);
+  padding: var(--space-xs) 0.4rem;
+}
+
+.section-header {
+  background-color: var(--bg-alt);
+  padding: 0.4rem 0 0.4rem 0.4rem;
+  margin-bottom: 0.4rem;
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-muted);
+}
+.status-cell-content {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.35rem;
+  width: 100%;
+}
+
+.status-notes-block {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+/* 11.2 INSPECTION REPORTS NAVIGATION */
+
+.restaurant-report-panel {
+  display: flex;
+  flex-direction: column;
+}
+
+.report-nav {
+  display: flex;
+  border: 1px solid var(--border-panel);
+  margin: 1rem 0;
+  overflow: hidden;
+}
+
+.report-nav-btn,
+.report-nav-placeholder {
+  flex: 1;
+  text-align: center;
+  padding: 0.4rem 0.6rem;
+  font-size: var(--fs-sm);
+}
+
+.report-nav-btn {
+  background: transparent;
+  color: var(--text-muted);
+  border: none;
+  border-right: 1px solid var(--border-panel);
+  font-size: var(--fs-md);
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.report-nav-btn:last-child {
+  border-right: none;
+}
+
+.report-nav-btn:hover {
+  background-color: var(--link-background-hover);
+  color: var(--link-hover);
+}
+
+.report-nav-placeholder {
+  color: var(--text-muted);
+  opacity: 0.6;
+  border-right: 1px solid var(--border-panel);
+}
+
+.report-nav-placeholder:last-child {
+  border-right: none;
+}
+
+/*///////////////////////////////////////////// 12. STATUS FLAGS & VIOLATIONS //////////////////////////////////////////////*/
+
+/* 12.1 STATUS BADGES & TAGS */
+
+.status-flag {
+  margin-left: -0.1rem;
+}
+
+.status-open {
+  background-color: var(--status-positive-bg);
+  color: var(--status-positive-text);
+}
+
+.status-closed {
+  background-color: var(--status-negative-bg);
+  color: var(--status-negative-text);
+}
+
+.status-unknown {
+  background-color: var(--border-panel);
+  color: var(--text-muted);
+}
+
+.status-location-verified {
+  background-color: var(--status-positive-bg);
+  color: var(--status-positive-text);
+}
+
+.status-location-unverified {
+  background-color: var(--status-warning-bg);
+  color: var(--status-warning-text);
+}
+
+.status-location-pending {
+  background-color: var(--border-panel);
+  color: var(--text-muted);
+}
+
+/* 12.2 VIOLATION LISTS & FORMATTING */
+
+.violations-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.violations-list li {
+  background-color: var(--bg-row-alt);
+  border-left: 3px solid var(--border-panel);
+  padding: var(--space-xs);
+  font-size: var(--fs-sm);
+}
+
+.violations-list li.violation-item {
+  background-color: var(--bg-row-alt);
+  border-left: 3px solid var(--border-panel);
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.violation-code {
+  font-weight: 700;
+  margin-right: 0.5rem;
+}
+
+.violation-header-row {
+  display: flex;
+  align-items: center;
+  gap: 6px; 
+  flex-wrap: wrap;
+}
+
+.violation-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px 6px;
+  font-size: var(--fs-xs);
+  font-weight: 700;
+  border-radius: 3px;
+  text-transform: uppercase;
+  font-family: var(--font-display);
+  line-height: 1.2;
+}
+
+.violation-tag.severity-tag {
+  white-space: nowrap;
+}
+
+.violation-tag.violation-code-tag {
+  background-color: var(--bg-alt);
+  color: var(--text-body);
+  letter-spacing: 0.05em;
+  border: 0.5px solid var(--border-panel);
+  font-family: var(--font-display);
+}
+
+.violation-tag.category-tag {
+  background-color: var(--bg-alt);
+  color: var(--text-body);
+  border: 0.5px solid var(--border-panel);
+}
+
+.violation-description {
+  color: var(--text-muted);
+  font-size: var(--fs-md);
+  line-height: 1.45;
+  text-align: justify;
+}
+
+/*///////////////////////////////////////////// 13. INSPECTION HISTORY //////////////////////////////////////////////*/
+
+/* 13.1 HISTORY LIST & ROWS */
+
+.inspection-history-list {
+  list-style: none;
+  display: flex;
+  flex-direction: column;
+}
+
+.inspection-history-list li {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.4rem var(--space-xs);
+  font-size: var(--fs-sm);
+  cursor: pointer;
+}
+
+.inspection-history-list li:nth-child(even) {
+  background-color: var(--bg-row-alt);
+}
+
+.inspection-history-list li:hover {
+  background-color: var(--border-panel);
+}
+
+.inspection-row-selected {
+  outline: 1px solid; 
+  outline-offset: -1px; 
+}
+
+.inspection-row-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.inspection-row-date {
+  flex: 0 0 auto;
+  min-width: 5.25rem;
+}
+
+.inspection-row-grade {
+  font-family: var(--font-body);
+  font-weight: 700;
+  width: 2rem;
+  text-align: center;
+}
+
+.inspection-row-score {
+  font-family: var(--font-body);
+  width: 2rem;
+  text-align: right;
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+/* 13.2 VIOLATION COUNTERS */
+
+.inspection-violation-counts {
+  display: grid;
+  grid-template-columns: 88px 122px;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin: 0 auto;
+}
+
+.violation-slot {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  min-width: 0;
+}
+
+.violation-slot-full {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.violation-count-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.violation-count-val {
+  font-family: var(--font-body);
+  font-weight: 700;
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+  font-variant-numeric: tabular-nums;
+}
+
