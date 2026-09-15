@@ -173,11 +173,15 @@ export function DashboardOverview() {
   return (
     <>
       <p>
-        This dashboard explores New York City restaurant inspection records
-        through:
+        This dashboard lets you explore New York City restaurant inspection
+        records with:
       </p>
       <ul>
-        <li>An interactive map of geocoded restaurant locations</li>
+        <li>An interactive map of restaurant locations</li>
+        <li>
+          A search radius tool to find restaurants within a chosen distance
+          of a point
+        </li>
         <li>Grade and Borough filters, plus restaurant search</li>
         <li>A Restaurant List and Restaurant Details panel</li>
         <li>Full Inspection Reports, including cited violations</li>
@@ -194,29 +198,34 @@ export function DashboardHowToUse({ extra }: { extra?: ReactNode }) {
   return (
     <ul>
       <li>
-        Grade and Borough controls can be combined to narrow the restaurants
+        Combine the Grade and Borough filters to narrow down the restaurants
         shown.
       </li>
 
       <li>
-        Search further narrows the current results by restaurant name or
-        cuisine.
+        Search narrows results further by restaurant name, cuisine, or
+        address.
       </li>
 
       <li>
-        Restaurant lists and dashboard summaries update with the current map
-        view, filters, and search.
+        Use the target icon in the map&apos;s top-right corner to place a
+        search radius point, then pick a distance to see restaurants within
+        range.
       </li>
 
       <li>
-        Select a restaurant on the map or in the list to view its details,
+        The restaurant list and dashboard summaries update automatically as
+        you move the map, filter, search, or set a search radius.
+      </li>
+
+      <li>
+        Select a restaurant on the map or in the list to see its details,
         inspection history, and performance chart.
       </li>
 
       <li>
         Panning or zooming the map changes which restaurants are &quot;in
-        view&quot;. The list, stats panel, and grade chart then dynamically
-        update to match.
+        view&quot;. The list, stats, and grade chart update to match.
       </li>
 
       <li>
@@ -256,41 +265,37 @@ export function DataNotes() {
   return (
     <ul>
       <li>
-        The underlying dataset is provided by DOHMH and may not reflect
-        inspections in real time.
+        Data comes from NYC&apos;s Department of Health and Mental Hygiene
+        (DOHMH) and may not include the most recent inspections yet.
       </li>
 
       <li>
-        Historical inspection reports may differ from a restaurant&apos;s latest
-        grade, score, or recorded status.
+        Older inspection reports may show a different grade, score, or status
+        than what&apos;s shown for the restaurant today.
       </li>
 
       <li>
-        Inspections without numerical scores may be excluded from score-based
-        charts and summaries.
+        Inspections that didn&apos;t get a numeric score aren&apos;t included
+        in score-based charts and summaries.
       </li>
 
       <li>
-        Restaurants with no scored inspection on record (including ones never
-        inspected) appear as a distinct &quot;Uninspected&quot; category on the
-        map and in the grade breakdown.
+        The &quot;latest&quot; inspection shown is the most recent one that
+        got a grade, not necessarily the restaurant&apos;s very last visit;
+        visits that didn&apos;t result in a score are skipped.
       </li>
 
       <li>
-        The &quot;latest&quot; inspection shown may not be a restaurant&apos;s
-        most recent visit — non-substantive administrative or compliance checks
-        without a score are skipped in favor of the last scored inspection.
+        Restaurant addresses are matched to a map location automatically
+        (geocoding). When that match couldn&apos;t be confirmed, the
+        restaurant is flagged on the map as &quot;Location Unverified&quot;
+        instead of assumed correct.
       </li>
 
       <li>
-        Restaurant locations are geocoded; some could not be automatically
-        confirmed and are flagged on the map as &quot;Location Unverified&quot;
-        rather than assumed correct.
-      </li>
-
-      <li>
-        Displayed addresses are reformatted from the source dataset (ordinal
-        suffixes, casing) and may differ slightly from official listings.
+        Addresses are cleaned up for display (for example, turning
+        &quot;1ST&quot; into &quot;1st&quot;) and may differ slightly from
+        official listings.
       </li>
     </ul>
   );

@@ -40,27 +40,23 @@ function formatDate(raw: string | null): string {
 const REPORT_INFO_CONTENT = (
   <InfoPopupContent
     overview={
-      <>
-        <p>
-          Shows the full inspection report for whichever inspection was last
-          selected from the Inspection History list on the Details tab.
-        </p>
-
-        <br />
-
-        <p>
-          When a restaurant is selected, the most recent inspection report is
-          shown here.
-        </p>
-      </>
-    }
-    howToUse={
       <ul>
         <li>
-          Use the newer and older report buttons to move between available
-          inspections without returning to the Details tab.
+          The Inspection Report shows the selected restaurant&apos;s most
+          recent inspection by default.
+        </li>
+
+        <li>
+          Selecting a different inspection from the Inspection History list
+          on the Details tab shows that report here instead.
         </li>
       </ul>
+    }
+    howToUse={
+      <p>
+        Use the newer and older report buttons to move between available
+        inspections without returning to the Details tab.
+      </p>
     }
     violations={
       <ul>
@@ -86,21 +82,17 @@ const REPORT_INFO_CONTENT = (
       </ul>
     }
     statuses={
-      <ul>
-        <li>
-          <Badge variant="status-closed">Closed by DOHMH</Badge> — The displayed
-          inspection resulted in a closure.
-        </li>
-      </ul>
+      <p>
+        <Badge variant="status-closed">Closed by DOHMH</Badge> — The displayed
+        inspection resulted in a closure.
+      </p>
     }
     dataNotes={
-      <ul>
-        <li>
-          The grade, score, action, and violations shown belong to the displayed
-          inspection and may not reflect the restaurant&apos;s current recorded
-          status.
-        </li>
-      </ul>
+      <p>
+        The grade, score, action, and violations shown belong to the displayed
+        inspection and may not reflect the restaurant&apos;s current recorded
+        status.
+      </p>
     }
   />
 );

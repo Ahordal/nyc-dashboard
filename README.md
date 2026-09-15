@@ -4,7 +4,7 @@
 
 An interactive map for exploring New York City health-department restaurant inspection data. Built with Vite, React, TypeScript, the ArcGIS Maps SDK, and Recharts.
 
-**Live site:** [nyc-teal.vercel.app](https://nyc-teal.vercel.app)
+**Live site:** [nyc.alexhordal.ca](https://nyc.alexhordal.ca)
 
 ## What it does
 
@@ -57,7 +57,7 @@ The map is the heaviest part of the app (the ArcGIS SDK), so it loads on its own
 
 ### Accessibility
 
-The dashboard works with a keyboard and a screen reader: visible focus outlines on every control, the restaurant panel is a proper tab set, the list cards and sort menu follow standard keyboard patterns, the info dialog keeps focus inside it, the charts have arrow-key navigation, and animations switch off when the system asks for reduced motion.
+The dashboard works with a keyboard and a screen reader: visible focus outlines on every control, the restaurant panel is a proper tab set, the list cards and sort menu follow standard keyboard patterns, the info dialog keeps focus inside it, the charts have arrow-key navigation, and animations switch off when the system asks for reduced motion. The map itself isn't keyboard-navigable — there's no way to tab between individual dots — so the Restaurant List is the keyboard-accessible equivalent for browsing and selecting restaurants.
 
 ## Data pipeline
 
@@ -138,7 +138,7 @@ Create a `.env` file in the project root:
 | `LOCATIONIQ_API_KEY` | `pipeline/run-geocode-backfill.mjs` | Only needed to run the geocode backfill locally |
 | `SOCRATA_APP_TOKEN` | `pipeline/fetch-inspection.mjs` | Optional — raises the Socrata rate limit |
 
-Vite only exposes `VITE_`-prefixed variables to the app by default; `PUBLIC_ARCGIS_API_KEY` is added explicitly through `envPrefix` in `vite.config.ts`.
+Vite only exposes `VITE_`-prefixed variables to the app by default; `PUBLIC_ARCGIS_API_KEY` is added explicitly through `envPrefix` in `vite.config.ts`. That key ships in the client bundle, which is expected for ArcGIS — it's restricted by HTTP referrer and scoped to only the services this app uses, in the ArcGIS platform dashboard, so its presence in the bundle isn't a leak.
 
 ### Scripts
 

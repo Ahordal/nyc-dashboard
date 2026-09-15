@@ -122,8 +122,9 @@ const restaurantInfoContent = (isMobile: boolean) => (
     overview={
       <ul>
         <li>
-          Shows the selected restaurant&apos;s latest grade, score, recorded
-          status, location, contact information, and inspection history.
+          The Restaurant Details shows the selected restaurant&apos;s latest
+          grade, score, recorded status, location, contact information, and
+          inspection history.
         </li>
 
         <li>Each Inspection History row represents a separate inspection.</li>
@@ -182,19 +183,20 @@ const restaurantInfoContent = (isMobile: boolean) => (
         </li>
 
         <li>
-          <Badge variant="location-verified">Verified</Badge> — An independent
-          geocoder confirmed this location.
+          <Badge variant="location-verified">Verified</Badge> — An automatic
+          check confirmed this restaurant&apos;s address matches the location
+          shown.
         </li>
 
         <li>
-          <Badge variant="location-unverified">Unverified</Badge> — Geocoding
+          <Badge variant="location-unverified">Unverified</Badge> — That check
           ran but couldn&apos;t confirm a match. The coordinate shown falls back
           to DOHMH&apos;s on-file location.
         </li>
 
         <li>
-          <Badge variant="location-pending">Pending</Badge> — Not yet checked by
-          the geocoder. The coordinate shown is DOHMH&apos;s on-file location
+          <Badge variant="location-pending">Pending</Badge> — Not yet checked
+          automatically. The coordinate shown is DOHMH&apos;s on-file location
           for now.
         </li>
       </ul>
@@ -208,10 +210,10 @@ const restaurantInfoContent = (isMobile: boolean) => (
         </li>
 
         <li>
-          Restaurant locations are independently geocoded and checked against
-          DOHMH&apos;s on-file address where possible. See the Location badge under
-          Geographical Information — Verified, Unverified, or Pending (described
-          above).
+          Restaurant locations are checked automatically against DOHMH&apos;s
+          on-file address where possible. See the Location badge under
+          Geographical Information: Verified, Unverified, or Pending
+          (described above).
         </li>
       </ul>
     }

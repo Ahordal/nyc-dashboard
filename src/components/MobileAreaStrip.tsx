@@ -139,7 +139,6 @@ export default function MobileAreaStrip({
                   searchQuery={searchQuery}
                   searchRadiusMiles={searchRadiusMiles}
                   showCenterLegend={false}
-                  showCenterCount={false}
                   showPercentages={false}
                   showFilterNote={false}
                 />

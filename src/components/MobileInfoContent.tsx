@@ -34,9 +34,17 @@ const MOBILE_INFO_CONTENT = (
       <DashboardHowToUse
         extra={
           <>
-            <li>Tap a dot on the map to open that restaurant.</li>
             <li>
-              Pinch to zoom; the layers button toggles satellite imagery.
+              Tap a dot on the map to preview that restaurant, then tap its
+              card to see full details.
+            </li>
+            <li>
+              Pinch to zoom; tap the satellite/map icon to toggle satellite
+              imagery.
+            </li>
+            <li>
+              Tap the location arrow icon in the map&apos;s top-right corner
+              to show your position on the map as a blue dot.
             </li>
           </>
         }

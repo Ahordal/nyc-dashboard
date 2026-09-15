@@ -30,20 +30,19 @@ function restaurantListInfoContent(withinRadius: boolean, isMobile: boolean) {
     <InfoPopupContent
       overview={
         <p>
-          Shows restaurants{" "}
+          The Restaurant List shows restaurants{" "}
           {withinRadius
             ? "within the active Search Radius"
             : "currently visible in the map view"}
-          , respecting any active Grade and Borough filters and the search
-          field{isMobile ? "" : " above"}.
+          , narrowed further by any active Grade and Borough filters and the
+          search field{isMobile ? "" : " above"}.
         </p>
       }
       howToUse={
         <ul>
           <li>
-            Select a restaurant card to display that restaurant&apos;s details
-            and inspection history, and to pan and zoom the map to its
-            location.
+            Select a restaurant card to see its details and inspection
+            history; the map pans and zooms to its location too.
           </li>
 
           <li>
@@ -51,17 +50,20 @@ function restaurantListInfoContent(withinRadius: boolean, isMobile: boolean) {
             results.
           </li>
 
+          <li>
+            When a Search Radius or your location is set, each card shows its
+            distance, and Distance becomes available as a sort option.
+          </li>
+
           <li>Use the pagination controls to move between pages of results.</li>
         </ul>
       }
       dataNotes={
-        <ul>
-          <li>
-            The number of available results and pages updates as the{" "}
-            {withinRadius ? "Search Radius" : "map view"}, active filters, or
-            search results change.
-          </li>
-        </ul>
+        <p>
+          The number of available results and pages updates as the{" "}
+          {withinRadius ? "Search Radius" : "map view"}, active filters, or
+          search results change.
+        </p>
       }
     />
   );

@@ -109,12 +109,10 @@ const performanceChartInfoContent = (isMobile: boolean) => (
     }
     howToUse={
       isMobile ? (
-        <ul>
-          <li>
-            Tap a point to highlight its inspection in the Inspection History
-            list on the Details tab and scroll that row into view.
-          </li>
-        </ul>
+        <p>
+          Tap a point to highlight its inspection in the Inspection History
+          list on the Details tab and scroll that row into view.
+        </p>
       ) : (
         <ul>
           <li>
@@ -133,16 +131,16 @@ const performanceChartInfoContent = (isMobile: boolean) => (
       )
     }
     statuses={
-      <ul>
-        <li>
+      isMobile ? undefined : (
+        <p>
           <span className="violation-tag status-flag status-closed">
             Closed by DOHMH
           </span>{" "}
-          identifies an inspection that resulted in a closure. It describes that
-          historical inspection, not necessarily the restaurant&apos;s current
-          status.
-        </li>
-      </ul>
+          identifies an inspection that resulted in a closure. It describes
+          that historical inspection, not necessarily the restaurant&apos;s
+          current status.
+        </p>
+      )
     }
     dataNotes={
       <ul>

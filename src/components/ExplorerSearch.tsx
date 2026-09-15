@@ -1,6 +1,6 @@
 // ExplorerSearch.tsx
 //
-// Search panel for filtering restaurants by name or cuisine.
+// Search panel for filtering restaurants by name, cuisine, or address.
 // Debounces text input before updating the parent dashboard query.
 
 import { useEffect, useState } from "react";
@@ -41,8 +41,8 @@ export default function ExplorerSearch({
           <input
             type="text"
             className="search-input"
-            aria-label="Search restaurants by name or cuisine"
-            placeholder="Search restaurants by name, or cuisine"
+            aria-label="Search restaurants by name, cuisine, or address"
+            placeholder="Search restaurants by name, cuisine, or address"
             value={inputValue}
             onChange={(e) => setInputValue(e.target.value)}
           />

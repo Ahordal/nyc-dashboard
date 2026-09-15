@@ -328,7 +328,6 @@ export default function Dashboard() {
           searchQuery={searchQuery}
           searchRadiusMiles={searchRadiusPoint ? activeRadiusMiles : null}
           showCenterLegend={false}
-          showCenterCount={false}
           showFilterNote={false}
         />
       </Suspense>

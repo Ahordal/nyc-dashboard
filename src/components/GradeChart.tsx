@@ -35,13 +35,12 @@ function gradeChartInfoContent(withinRadius: boolean) {
       howToUse={
         <ul>
           <li>
-            This chart is read-only. The centre shows the restaurant total;
-            the line beneath it gives each category&apos;s share of that
-            total.
+            This chart is read-only. Each category&apos;s share of the total
+            appears in the panel below it.
           </li>
           <li>
-            When a grade or status filter is active, the chart, the centre
-            total, and the shares are all limited to the selected categories.
+            When a grade or status filter is active, the chart and the shares
+            are both limited to the selected categories.
           </li>
         </ul>
       }
@@ -84,9 +83,6 @@ type GradeChartProps = {
   // Per-category share line under the donut -- the donut's own readout
   // (proportion), separate from the absolute counts in the stats panel.
   showPercentages?: boolean;
-  // The centre "N Restaurants" total. Dropped wherever a KPI row already
-  // carries the counts; the percentage line stays as the donut's readout.
-  showCenterCount?: boolean;
 };
 
 type ChartDataItem = {
@@ -124,7 +120,6 @@ export default function GradeChart({
   showCenterLegend = true,
   showFilterNote = true,
   showPercentages = true,
-  showCenterCount = true,
 }: GradeChartProps) {
   const [showInfo, setShowInfo] = useState(false);
 
@@ -159,8 +154,6 @@ export default function GradeChart({
     () => gradeChartInfoContent(searchRadiusMiles != null),
     [searchRadiusMiles],
   );
-
-  const hasGradeFilter = filters.grades.length > 0;
 
   const { data, totalCount, scopedCounts } = useMemo<{
     data: ChartDataItem[];
@@ -256,48 +249,35 @@ export default function GradeChart({
                   </PieChart>
                 </ResponsiveContainer>
 
-                {(showCenterLegend || showCenterCount) && (
+                {showCenterLegend && (
                   <div className="grade-chart-center">
-                    {showCenterLegend && (
-                      <div className="grade-chart-legend">
-                        {SLICE_CONFIG.map(({ key, label, color }, index) => {
-                          // Coloured only when that category has restaurants
-                          // in the scoped view (which already excludes grades
-                          // not in the active filter). Everything else dims.
-                          const isDimmed = (scopedCounts[key] ?? 0) === 0;
-                          const isLast = index === SLICE_CONFIG.length - 1;
+                    <div className="grade-chart-legend">
+                      {SLICE_CONFIG.map(({ key, label, color }, index) => {
+                        // Coloured only when that category has restaurants
+                        // in the scoped view (which already excludes grades
+                        // not in the active filter). Everything else dims.
+                        const isDimmed = (scopedCounts[key] ?? 0) === 0;
+                        const isLast = index === SLICE_CONFIG.length - 1;
 
-                          return (
+                        return (
+                          <span
+                            key={key}
+                            className="grade-chart-legend-group"
+                            data-dimmed={isDimmed ? "true" : undefined}>
                             <span
-                              key={key}
-                              className="grade-chart-legend-group"
-                              data-dimmed={isDimmed ? "true" : undefined}>
-                              <span
-                                className="grade-chart-legend-item"
-                                style={
-                                  { "--legend-color": color } as CSSProperties
-                                }>
-                                {label}
-                              </span>
-                              {!isLast && (
-                                <span className="grade-chart-legend-sep">,</span>
-                              )}
+                              className="grade-chart-legend-item"
+                              style={
+                                { "--legend-color": color } as CSSProperties
+                              }>
+                              {label}
                             </span>
-                          );
-                        })}
-                      </div>
-                    )}
-
-                    {showCenterCount && (
-                      <div className="grade-chart-count">
-                        <span
-                          className="grade-chart-count-value"
-                          data-emphasis={hasGradeFilter ? "true" : undefined}>
-                          {totalCount.toLocaleString()}
-                        </span>{" "}
-                        Restaurants
-                      </div>
-                    )}
+                            {!isLast && (
+                              <span className="grade-chart-legend-sep">,</span>
+                            )}
+                          </span>
+                        );
+                      })}
+                    </div>
                   </div>
                 )}
               </>
