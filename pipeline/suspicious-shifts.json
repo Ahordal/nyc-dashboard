@@ -2269,7 +2269,7 @@
   },
   {
     "camis": "50044720",
-    "dba": "TAO SUSHI CONCESSION/FRATELLI",
+    "dba": "TAO SUSHI / FRATELLI",
     "address": "4 PENN PLAZA, Manhattan 10121",
     "dohmhLat": 40.750654836632,
     "dohmhLon": -73.991944239076,
@@ -7594,5 +7594,17 @@
     "distanceMeters": 120.33134612997027,
     "matchType": "house+street",
     "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "50192249",
+    "dba": "LA KUEVA BAR AND LOUNGE",
+    "address": "40-17 BROADWAY, Queens 11103",
+    "dohmhLat": 40.758877127241,
+    "dohmhLon": -73.918782657941,
+    "resolvedLat": 40.7499308,
+    "resolvedLon": -73.8990519,
+    "distanceMeters": 1936.931004055342,
+    "matchType": "house+street",
+    "resolvedVia": "no-hyphen"
   }
 ]
