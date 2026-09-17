@@ -1,8 +1,7 @@
 // lruMap.ts
 //
-// Least-recently-used helpers over a plain Map, used for dashboard.tsx's
-// per-CAMIS inspection-history cache. Recency is the Map's own insertion
-// order: the oldest key is the first one iteration yields.
+// LRU helpers over a plain Map, for dashboard.tsx's per-CAMIS cache.
+// Recency is just the Map's own insertion order.
 
 // Reads key, moving it to the most-recently-used position on a hit.
 export function lruGet<K, V>(map: Map<K, V>, key: K): V | undefined {
@@ -14,9 +13,8 @@ export function lruGet<K, V>(map: Map<K, V>, key: K): V | undefined {
   return value;
 }
 
-// Writes key as most-recently-used, evicting the oldest entry once the
-// map is full. Deleting first means overwriting an existing key never
-// counts as growth and never triggers an eviction.
+// Writes key as MRU, evicting the oldest entry once full. Deletes first,
+// so overwriting a key never counts as growth.
 export function lruSet<K, V>(
   map: Map<K, V>,
   key: K,

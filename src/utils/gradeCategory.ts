@@ -1,7 +1,6 @@
 // gradeCategory.ts
 //
-// Maps raw NYC DOHMH inspection data to the dashboard's display
-// categories and re-exports the shared grade colour definitions.
+// Maps raw DOHMH inspection data to display categories; re-exports the shared grade colours.
 
 import { CATEGORY_COLORS } from "./gradeColours";
 import type { GradeCategory } from "./gradeColours";
@@ -15,26 +14,19 @@ export type { GradeCategory };
 
 export { UNINSPECTED_GRADE };
 
-// DOHMH closure actions take precedence over any letter grade. Sourced
-// from shared/inspectionStatus.mjs, the same plain-JS module the Node
-// pipeline (fetch-inspection.mjs) imports directly, rather than being
-// hand-copied here. Exported as a Set so mapQueries.ts can build its
-// "closed" SQL clause from it.
+// Closure beats any letter grade. From shared/inspectionStatus.mjs — same
+// module the pipeline imports — as a Set so mapQueries.ts can build SQL from it.
 export const CLOSED_ACTIONS = new Set(CLOSED_ACTIONS_LIST);
 
-// Whether an inspection action resulted in a DOHMH closure. Kept here so
-// charts, reports, and grade categorization share one closure-action set.
+// Shared by charts, reports, and categorization, so they agree on closures.
 export function isClosedInspection(
   action: string,
 ): boolean {
   return CLOSED_ACTIONS.has(action);
 }
 
-// Normalizes raw inspection data into the dashboard's display categories.
-// Single source of truth for this precedence: CATEGORY_CLAUSES in
-// mapQueries.ts mirrors it in SQL (via the shared CLOSED_ACTIONS and
-// UNINSPECTED_GRADE above), and MapView.tsx's reportVisibleRestaurants
-// calls this function directly rather than re-implementing it a third time.
+// Single source of truth for category precedence. CATEGORY_CLAUSES
+// mirrors it in SQL; MapView.tsx calls this instead of a third copy.
 export function getGradeCategory(
   action: string,
   grade: string | null,
@@ -56,9 +48,7 @@ export function getGradeCategory(
     return "pending";
   }
 
-  // A null score normally only occurs with an administrative grade. Treat
-  // unexpected nulls as pending, so null isn't coerced to zero and
-  // wrongly returned as Grade A.
+  // Treat a null score as pending rather than coercing it to zero (Grade A).
   if (score == null) {
     return "pending";
   }

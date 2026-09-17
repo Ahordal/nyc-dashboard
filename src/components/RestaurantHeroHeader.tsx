@@ -20,7 +20,6 @@ export default function RestaurantHeroHeader({
   grade,
   action,
 }: RestaurantHeroHeaderProps) {
-  // Determine the color based on the provided score/grade/action
   const category = getGradeCategory(action ?? "", grade, score ?? 0);
   const categoryColor = CATEGORY_COLORS[category];
   const displayName = toTitleCase(name);

@@ -1,18 +1,12 @@
 // mapRenderer.ts
 //
-// The ArcGIS unique-value renderer for the restaurant points layer in
-// MapView: inspection grade drives dot colour, inspection score drives
-// dot size and opacity (a closed restaurant is weighted like a very high
-// score so it always reads large). Pulled out of MapView.tsx to keep
-// that file scannable; nothing here changes at runtime.
+// Grade drives dot colour, score drives size/opacity — closed restaurants
+// weight like a very high score so they read large. Pulled out of
+// MapView.tsx to stay scannable.
 //
-// gradeCategoryExpression is an Arcade re-statement of
-// getGradeCategory()'s precedence (see gradeCategory.ts), the third
-// mirror alongside CATEGORY_CLAUSES in mapQueries.ts. It reads
-// current_status_code == "closed" (pipeline-derived from the same
-// CLOSED_ACTIONS set) and grade == "U" (UNINSPECTED_GRADE). Keep the
-// closed -> uninspected -> pending -> A/B/C order in step with the other
-// two if any of them changes.
+// gradeCategoryExpression mirrors getGradeCategory()'s precedence in
+// Arcade — third copy alongside CATEGORY_CLAUSES. Keep the closed ->
+// uninspected -> pending -> A/B/C order in sync across all three.
 
 import type { UniqueValueRendererProperties } from "@arcgis/core/renderers/UniqueValueRenderer";
 
@@ -33,8 +27,7 @@ const gradeCategoryExpression = `
   }
 
   var s = $feature.score;
-  // Mirror getGradeCategory(): only a missing score is treated as
-  // Pending, not silently bucketed into "C" by the comparisons below.
+  // Mirrors getGradeCategory(): missing score -> Pending, not "C".
   if (IsEmpty(s)) {
     return "pending";
   }

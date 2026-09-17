@@ -74,34 +74,28 @@ const NO_SECONDARY = "none";
 
 const SORT_NOTICE_DURATION_MS = 1300;
 
-// Fixed page size. The card area scrolls when a page overflows it
-// (.restaurant-card-list on desktop, the bottom sheet on mobile), so the
-// count no longer tracks viewport height and page N always holds the
-// same restaurants.
+// Fixed page size. The card area scrolls on overflow, so this ignores
+// viewport height — page N always holds the same restaurants.
 const PAGE_SIZE = 10;
 
 type RestaurantListProps = {
   restaurants: RestaurantProperties[];
   selectedRestaurantId?: string | null;
   // The full record for selectedRestaurantId. Folded into the list when
-  // the map-view query doesn't (yet) contain it - e.g. selection came
-  // from a map click and the extent re-query hasn't landed - so the
-  // selected restaurant always has a card to highlight and page to.
+  // the map-view query doesn't yet contain it (e.g. a map-click
+  // selection before the extent re-query lands), so it always has a card.
   selectedRestaurant?: RestaurantProperties | null;
   // Highlights the matching card, whether the hover came from the list
   // itself or from a restaurant dot on the map.
   hoveredRestaurantId?: string | null;
   onSelectRestaurant?: (restaurant: RestaurantProperties) => void;
   onHoverRestaurant?: (restaurant: RestaurantProperties | null) => void;
-  // Present when the Search Radius tool is active. The `restaurants` prop
-  // is already scoped to the circle upstream (MapView's query); this is
-  // only used to show/sort each card's distance from the point.
+  // Present when Search Radius is active. `restaurants` is already
+  // scoped to the circle upstream; this only drives each card's distance/sort.
   searchRadiusPoint?: SearchRadiusPoint | null;
   // The phone/tablet "locate me" dot, if placed. Adds the per-card
-  // Distance line and unlocks the Distance sort key, same as
-  // searchRadiusPoint, but doesn't re-scope the list itself (the
-  // restaurants shown stay whatever the map view already produced).
-  // searchRadiusPoint wins when both are set.
+  // Distance line and unlocks Distance sort like searchRadiusPoint, but
+  // doesn't re-scope the list. searchRadiusPoint wins when both are set.
   userLocationPoint?: SearchRadiusPoint | null;
   // Mobile: the search field lives in the app-bar drawer, not directly
   // above the list, so the info panel drops the "above" wording.
@@ -121,9 +115,8 @@ function RestaurantList({
   isMobile = false,
   children,
 }: RestaurantListProps) {
-  // The point distances are measured from -- for the per-card readout and
-  // the Distance sort key alike: the Search Radius centre if set,
-  // otherwise the "locate me" dot.
+  // Distance origin for both the per-card readout and the sort key:
+  // Search Radius centre, else the locate dot.
   const distanceOrigin = useMemo(
     () => searchRadiusPoint ?? userLocationPoint,
     [searchRadiusPoint, userLocationPoint],
@@ -135,10 +128,9 @@ function RestaurantList({
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
 
-  // The map-view query is the list's source, plus the selected restaurant
-  // if that query doesn't carry it. Everything below (sort, pagination,
-  // navigate-to-selection) works off this so a map-click selection always
-  // resolves to a real card even before the extent re-query catches up.
+  // Everything below (sort, pagination, navigate-to-selection) works off
+  // this, so a map-click selection always resolves to a real card even
+  // before the extent re-query catches up.
   const listRestaurants = useMemo(() => {
     if (!selectedRestaurant) return restaurants;
     const alreadyListed = restaurants.some(
@@ -170,10 +162,8 @@ function RestaurantList({
     ],
   );
 
-  // Distance only makes sense with a distance origin (Search Radius point
-  // or locate dot) set. Remember the primary field chosen before
-  // Distance, so losing the origin restores that rather than a hardcoded
-  // default.
+  // Remembers the primary field chosen before Distance, so losing the
+  // distance origin restores that rather than a hardcoded default.
   useEffect(() => {
     if (distanceOrigin && primarySort !== "distance") {
       preDistancePrimarySortRef.current = primarySort;
@@ -200,8 +190,7 @@ function RestaurantList({
     }
   }, [primarySort, secondarySort]);
 
-  // Automatically navigate pagination to the page holding
-  // selectedRestaurantId.
+  // Navigates to the page holding selectedRestaurantId.
   useEffect(() => {
     const countChanged =
       prevRestaurantCountRef.current !== listRestaurants.length;
@@ -216,21 +205,17 @@ function RestaurantList({
     prevSelectedIdRef.current = selectedRestaurantId;
     prevSortRef.current = { primarySort, secondarySort, sortDirection };
 
-    // With no restaurant selected, the list's page is always the top of
-    // the current ordering - never stranded on wherever a since-cleared
-    // selection last pushed it. Clearing the selection, or changing the
-    // sort while nothing is selected, returns to page 1.
+    // With nothing selected, clearing the selection or changing sort
+    // always returns to page 1, rather than stranding on wherever a
+    // since-cleared selection left it.
     if (!selectedRestaurantId) {
       if (selectedChanged || sortChanged) setPage(1);
       return;
     }
 
-    // With a restaurant selected, keep tracking its page on every relevant
-    // change - not just a fresh selection or a sort change, but also the
-    // list's contents shifting under it (e.g. the map re-centering on the
-    // selection re-queries the visible set once the camera settles).
-    // Without this, the selected card can silently end up on a page that
-    // no longer holds it.
+    // Keeps tracking the selected card's page on any relevant change —
+    // not just selection/sort, but the list shifting under it too (e.g. a
+    // re-centering re-query). Otherwise the card can end up on the wrong page.
     if (sorted.length > 0) {
       const index = sorted.findIndex((r) => r.id === selectedRestaurantId);
       if (index !== -1) {
@@ -252,10 +237,9 @@ function RestaurantList({
     sortDirection,
   ]);
 
-  // Safety net: if the current page fell out of range because the list
-  // shrank (grade/borough/search/radius filter, or a smaller map view),
-  // return to page 1 rather than stranding the user on a partial page
-  // that reads as "the list is shorter than it should be".
+  // If the list shrank (a filter, or a smaller map view) and the current
+  // page fell out of range, return to page 1 rather than stranding on a
+  // partial page.
   useEffect(() => {
     const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
     if (page > pageCount) setPage(1);
@@ -266,10 +250,9 @@ function RestaurantList({
   const pageStart = (clampedPage - 1) * PAGE_SIZE;
   const pageItems = sorted.slice(pageStart, pageStart + PAGE_SIZE);
 
-  // A page change swaps the whole card set; return to the top of it.
-  // Desktop: the card list scrolls its own overflow. Mobile: the bottom
-  // sheet is the scroller (pagination sits below the fold) - closest()
-  // finds it there and returns null elsewhere.
+  // A page change swaps the whole card set; return to the top. Desktop
+  // scrolls the card list itself; mobile scrolls the bottom sheet —
+  // closest() finds it there and returns null elsewhere.
   useEffect(() => {
     cardListRef.current?.scrollTo({ top: 0 });
     cardListRef.current
@@ -277,8 +260,7 @@ function RestaurantList({
       ?.scrollTo({ top: 0 });
   }, [clampedPage]);
 
-  // Distance only appears as a sort field once a distance origin (Search
-  // Radius point or locate dot) is set; it's meaningless otherwise.
+  // Distance only appears as a sort field once a distance origin is set.
   const availableSortKeys = useMemo<SortKeyId[]>(
     () =>
       SORT_KEY_ORDER.filter(

@@ -103,19 +103,15 @@ export default function PerformanceDot({
   const handlePointerDown = (
     event: PointerEvent<SVGGElement>,
   ) => {
-    // Prevent Recharts' parent SVG layers from treating this as a generic
-    // pointer interaction.
+    // Stops Recharts' parent SVG layers from treating this as a generic pointer event.
     event.stopPropagation();
   };
 
   const handleMouseDown = (
     event: MouseEvent<SVGGElement>,
   ) => {
-    // Cancel the browser's default SVG focus behaviour. Without this, Chrome
-    // can focus Recharts' line layer and draw an outline around its complete
-    // bounding box after a dot is clicked.
-    //
-    // Preventing mouse-down does not prevent the following click event.
+    // Cancels Chrome's default SVG focus, which would otherwise outline
+    // Recharts' whole line layer after a click. Doesn't block the click that follows.
     event.preventDefault();
     event.stopPropagation();
   };
@@ -123,8 +119,7 @@ export default function PerformanceDot({
   const handleClick = (
     event: MouseEvent<SVGGElement>,
   ) => {
-    // Prevent Recharts from also processing the dot click as a line or chart
-    // interaction.
+    // Stops Recharts from also processing this as a line/chart click.
     event.stopPropagation();
 
     // Clear the temporary pointer tooltip once the report is opened.
@@ -146,8 +141,8 @@ export default function PerformanceDot({
           ? "pointer"
           : "default",
 
-        // This element is intentionally excluded from keyboard navigation.
-        // PerformanceChart's HTML wrapper provides the accessible focus target.
+        // Excluded from keyboard nav; PerformanceChart's HTML wrapper is
+        // the accessible focus target.
         outline: "none",
       }}
       onPointerEnter={

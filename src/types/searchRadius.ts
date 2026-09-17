@@ -1,9 +1,7 @@
 // searchRadius.ts
 //
-// Shared types for the map's Search Radius tool: a user-placed point
-// plus one of a fixed set of walking-distance radii, used to filter and
-// sort the restaurant list without ever spatially filtering the map
-// itself. See MapView.tsx's useSearchRadiusTool hook.
+// A user-placed point + a fixed walking radius. Filters/sorts the list
+// only — never spatially filters the map. See useSearchRadiusTool.
 
 export type SearchRadiusPoint = {
   longitude: number;
@@ -20,9 +18,7 @@ export const SEARCH_RADIUS_LABELS: Record<SearchRadiusMiles, string> = {
   1: "1 mi",
 };
 
-// Narrows an arbitrary number to one of the fixed radius options, used
-// when rehydrating a radius from an untrusted source (the URL) so a
-// hand-edited ?radius=...,<miles> can't smuggle in an unsupported value.
+// Guards against a hand-edited ?radius= URL smuggling in an unsupported value.
 export function isSearchRadiusMiles(value: number): value is SearchRadiusMiles {
   return (SEARCH_RADIUS_OPTIONS_MILES as readonly number[]).includes(value);
 }

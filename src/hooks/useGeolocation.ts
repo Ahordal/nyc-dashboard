@@ -1,15 +1,14 @@
 // useGeolocation.ts
 //
-// One-shot device geolocation for the map's "locate me" control. Not a
-// live watch -- a tap asks once. Returns a small status machine plus the
-// coordinate; the NYC-bounds decision and map drawing live in MapView.
+// One-shot device geolocation for "locate me" — not a live watch, a tap
+// asks once. NYC-bounds checking and map drawing live in MapView.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type GeolocationStatus = "idle" | "locating" | "success" | "error";
 
 export type GeolocationErrorKind =
-  | "denied" // permission blocked -- can't be re-prompted from here
+  | "denied" // permission blocked — can't be re-prompted from here
   | "unavailable" // position source failed, or no geolocation API at all
   | "timeout" // no fix within the timeout
   | "insecure"; // non-secure context, so the API is unusable
@@ -28,9 +27,8 @@ export type UseGeolocationResult = {
   clearLocation: () => void;
 };
 
-// A recent OS fix is fine for the first acquisition (snappy on a cold
-// map). Once a pin is showing, a re-tap means "that's wrong, update it",
-// so force a fresh hardware read and allow a little longer for it.
+// A recent OS fix is fine first time (snappy on a cold map). A re-tap
+// means "that's wrong" — force a fresh read, give it more time.
 const FIRST_FIX_MAX_AGE_MS = 30_000;
 const FIRST_FIX_TIMEOUT_MS = 10_000;
 const REFRESH_TIMEOUT_MS = 15_000;
@@ -40,10 +38,8 @@ export function useGeolocation(): UseGeolocationResult {
   const [position, setPosition] = useState<GeolocationFix | null>(null);
   const [errorKind, setErrorKind] = useState<GeolocationErrorKind | null>(null);
 
-  // Bumped on every request and on unmount. A resolving callback whose id
-  // is stale is ignored -- covers both an unmount mid-request and a
-  // second tap landing before the first resolves. Mirrors MapView's
-  // queryRequestIdRef ratchet.
+  // Bumped per request and on unmount, so stale callbacks are ignored —
+  // mirrors MapView's ratchet.
   const requestIdRef = useRef(0);
   const hasFixRef = useRef(false);
 
@@ -103,9 +99,7 @@ export function useGeolocation(): UseGeolocationResult {
     );
   }, []);
 
-  // Drop the fix and go back to idle. Bumps the request id so any
-  // in-flight callback is ignored, and resets the "have a fix" flag so
-  // the next locate uses the fast cached-fix path again.
+  // Bumps the id to ignore in-flight callbacks; resets the fix flag for the cached-fix path.
   const clearLocation = useCallback(() => {
     requestIdRef.current++;
     hasFixRef.current = false;

@@ -1,17 +1,15 @@
 // ErrorFallback.tsx
 //
-// The visible state an ErrorBoundary drops in when its subtree throws.
-// The compact default fills a single dashboard panel; `fullPage` is the
-// app-root version rendered from main.tsx. Reload preserves the view -
-// filters, search, selection, and radius all live in the URL.
+// What ErrorBoundary shows when a subtree throws. Compact fills one
+// panel, `fullPage` is the app-root version; reload preserves the view
+// since filters/search/selection/radius all live in the URL.
 
 type ErrorFallbackProps = {
   // Shown above the button, e.g. "The map failed to load."
   message: string;
   fullPage?: boolean;
-  // When set, the button retries in place (and reads "Retry") instead of
-  // reloading the page. Used for async failures a caller can recover from
-  // without a full reload, e.g. the map view rebuilding after a load error.
+  // When set, retries in place instead of reloading — for failures a
+  // caller can recover from, e.g. the map view rebuilding.
   onRetry?: () => void;
 };
 

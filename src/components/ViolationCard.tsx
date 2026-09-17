@@ -40,7 +40,6 @@ export default function ViolationCard({
 
   return (
     <li className="violation-item" style={{ borderLeftColor: borderColor }}>
-      {/* Header row containing severity tag, violation code, and category */}
       <div className="violation-header-row">
         {variant && <Badge variant={variant}>{violation.critical_flag}</Badge>}
 
@@ -51,7 +50,6 @@ export default function ViolationCard({
         )}
       </div>
 
-      {/* Justified description text */}
       <div className="violation-description">
         {description}
       </div>

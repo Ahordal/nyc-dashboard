@@ -1,8 +1,7 @@
 // getViolationDescription.ts
 //
-// Resolves a violation-code entry (a plain string, or an object with
-// description + category) to a single displayable string, so
-// ViolationCard and ViolationList don't each repeat the handling.
+// Normalizes a string-or-{description,category} entry to one string, so
+// callers skip the branching.
 
 import type { ViolationCodeDetails } from "../types/restaurant";
 

@@ -1,7 +1,6 @@
 // restaurant.ts
 //
-// Shared TypeScript models for restaurants, inspection history,
-// violations, and related lookup data, used throughout the dashboard.
+// Shared models: restaurants, inspection history, violations, lookups.
 
 // Status types
 
@@ -14,10 +13,7 @@ export type Violation = {
   critical_flag: string;
 };
 
-// Maps each violation code to its full description and official DOHMH category.
-// Stored separately from individual inspection records because the same code
-// descriptions and categories are reused across tens of thousands of violations.
-// See pipeline notes.
+// Reused across tens of thousands of violations — kept separate, not duplicated per record.
 export type ViolationCodeDetails = {
   description: string;
   category: string;
@@ -39,25 +35,18 @@ export type RestaurantProperties = {
   boro: string;
   building: string;
   street: string;
-  // Just the street name, formatted for display (ordinal suffixes,
-  // expanded abbreviations, e.g. "5 STREET" becomes "5th Street"). No
-  // neighbourhood included; compose with `boro` separately as needed.
-  // See normalize.mjs's formatDisplayStreet().
+  // Formatted for display ("5 STREET" -> "5th Street"), no neighbourhood —
+  // pair with `boro`. See formatDisplayStreet() in normalize.mjs.
   display_street: string;
   zipcode: string;
   phone: string;
   cuisine: string;
-  // "verified":   an independent geocoder confirmed this location;
-  //               latitude/longitude above come from that resolution.
-  // "unverified": geocoding ran and found no acceptable match;
-  //               latitude/longitude fall back to DOHMH's own.
-  // "pending":    not yet attempted, or a prior attempt hit a transient
-  //               error and will be retried on a future run.
+  // "verified": geocoder confirmed the location; lat/lon come from that match.
+  // "unverified": no acceptable match; lat/lon fall back to DOHMH's.
+  // "pending": not yet attempted, or retrying after a transient error.
   location_status: LocationStatus;
   grade: string | null;
-  // Null for restaurants in the "Uninspected" category (see
-  // gradeCategory.ts's UNINSPECTED_GRADE): DOHMH has never recorded a
-  // real inspection for them, so there's no score to report.
+  // Null for "Uninspected" (UNINSPECTED_GRADE) — no real inspection to score.
   score: number | null;
   inspection_date: string;
   inspection_type: string;
@@ -66,20 +55,14 @@ export type RestaurantProperties = {
   current_status_label: string;
 };
 
-// One inspection event from history/{camis}.json, loaded with fetch +
-// JSON.parse. This is the only place violation data lives on the client:
-// the current inspection's violations are read from the matching event
-// here, not from the GeoJSON feature (which no longer carries them).
-
 // Inspection history
 
+// From history/{camis}.json — the only place violation data lives client-side.
 export type InspectionEvent = {
   id: string;
   date: string;
-  // Administrative grades (N, Not Yet Graded, in particular) often have
-  // no computed score. The pipeline can emit `null` or omit the key
-  // entirely for these, so this is genuinely nullable; consumers must
-  // check before using it numerically (see PerformanceChart.tsx).
+  // Administrative grades (N, Not Yet Graded) often lack a score — check
+  // before using numerically (see PerformanceChart.tsx).
   score: number | null;
   grade: string | null;
   inspection_type: string;

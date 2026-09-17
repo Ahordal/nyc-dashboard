@@ -20,7 +20,6 @@ export default function ViolationList({
     return null;
   }
 
-  // Sort critical violations to the top
   const sortedViolations = [...violations].sort((a, b) => {
     const rank = (flag: string) =>
       flag === "Critical" ? 0 : flag === "Not Critical" ? 1 : 2;

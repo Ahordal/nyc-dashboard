@@ -1,9 +1,7 @@
 // useChartKeyboardNav.ts
 //
-// Keyboard navigation for PerformanceChart's chart body: tracks which point
-// has keyboard focus, whether keyboard mode / the focus ring are active, and
-// handles focus, blur, and arrow/Enter/Space key interaction. Extracted from
-// PerformanceChart so this logic is independently testable.
+// Keyboard nav for PerformanceChart — focus, focus-ring mode,
+// arrow/Enter/Space. Split out for independent testing.
 
 import { useCallback, useEffect, useState } from "react";
 import type { FocusEvent, KeyboardEvent } from "react";
@@ -33,22 +31,21 @@ export function useChartKeyboardNav({
     chartData[0] ??
     null;
 
-  // Reset keyboard-nav state whenever the underlying chart data changes.
+  // Resets nav state when chart data changes.
   useEffect(() => {
     setFocusedPointId(chartData[0]?.id ?? null);
     setIsKeyboardModeActive(false);
     setIsChartFocusVisible(false);
   }, [chartData]);
 
-  // A newly selected report becomes the keyboard-navigation starting point.
+  // A new selection becomes the nav starting point.
   useEffect(() => {
     if (selectedChartPoint) {
       setFocusedPointId(selectedChartPoint.id);
     }
   }, [selectedChartPoint]);
 
-  // Exposed so other interactions (e.g. a direct pointer hover) can cancel
-  // keyboard mode without reaching into this hook's internals.
+  // Lets other interactions (pointer hover) cancel keyboard mode from outside.
   const exitKeyboardMode = useCallback(() => {
     setIsKeyboardModeActive(false);
   }, []);

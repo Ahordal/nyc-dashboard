@@ -17,8 +17,7 @@ const gradeCategories = [
   "Closed",
 ] as const;
 
-// Maps the displayed button labels to the corresponding CATEGORY_COLORS
-// keys ("Pending" to "pending", and so on).
+// Maps button labels to CATEGORY_COLORS keys ("Pending" -> "pending").
 const GRADE_FILTER_COLORS: Record<string, string> = {
   A: CATEGORY_COLORS.A,
   B: CATEGORY_COLORS.B,

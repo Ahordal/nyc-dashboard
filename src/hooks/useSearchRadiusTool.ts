@@ -1,8 +1,7 @@
 // useSearchRadiusTool.ts
 //
-// Hook managing Search Radius state, point placement, radius selection, and
-// concentric-ring GraphicsLayer rendering. Uses ref-based access for callbacks
-// to prevent stale closures in MapView's mount effect.
+// Manages Search Radius state, placement, and ring rendering. Uses refs
+// for callbacks, avoiding stale closures in MapView's mount effect.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import type MapView from "@arcgis/core/views/MapView";
@@ -18,15 +17,14 @@ const DEFAULT_RADIUS_MILES: SearchRadiusMiles = 0.25;
 const METERS_PER_MILE = 1609.344;
 // ArcGIS scale = (projected metres per pixel) * 96 dpi / 0.0254 m per inch.
 const SCALE_PER_METER_PER_PIXEL = 96 / 0.0254;
-// Extra margin around the circle so it always sits fully inside the view.
+// Margin so the circle always sits fully inside the view.
 const FRAMING_PADDING = 1.4;
 
 export function useSearchRadiusTool(
   view: MapView | null,
   ringsLayer: GraphicsLayer | null,
-  // A radius restored from the URL. Applied exactly once, as soon as the
-  // view and rings layer are both ready; ignored afterwards so it never
-  // fights the user's own placement.
+  // Radius restored from the URL, applied once the view and rings layer
+  // are ready. Ignored after that, so it never fights the user's own placement.
   initialRadius?: { point: SearchRadiusPoint; miles: SearchRadiusMiles } | null,
 ) {
   const [isPlacingPoint, setIsPlacingPoint] = useState(false);
@@ -71,10 +69,8 @@ export function useSearchRadiusTool(
     [],
   );
 
-  // Pans and zooms so the whole circle for the selected distance is
-  // visible (fits the diameter, plus FRAMING_PADDING, to the shorter view
-  // axis). Runs on placement and on distance changes so the view matches
-  // the panel's scope, without disturbing a manual pan/zoom.
+  // Pans/zooms to fit the radius circle (plus FRAMING_PADDING) to the
+  // shorter view axis. Runs on placement and distance changes.
   const frameRadiusCircle = useCallback(
     (point: SearchRadiusPoint, miles: SearchRadiusMiles) => {
       const view = viewRef.current;
@@ -88,9 +84,8 @@ export function useSearchRadiusTool(
         }),
       ) as Point;
 
-      // Circle radius in *projected* (Web Mercator) metres: Mercator
-      // inflates ground distance by 1 / cos(latitude), and ArcGIS `scale`
-      // is defined against projected metres per pixel.
+      // Projected (Web Mercator) metres: Mercator inflates ground distance
+      // by 1/cos(latitude), and ArcGIS `scale` is metres-per-pixel in that projection.
       const latRadians = (point.latitude * Math.PI) / 180;
       const radiusProjectedMeters =
         (miles * METERS_PER_MILE * FRAMING_PADDING) / Math.cos(latRadians);
@@ -108,11 +103,8 @@ export function useSearchRadiusTool(
     [],
   );
 
-  // One-shot restore of a radius carried in on the URL. Waits for both
-  // the view and rings layer, then re-places the point, redraws the
-  // rings, and frames the circle once the view has a size (goTo needs
-  // view.width/height). The didRestore guard keeps it from re-firing when
-  // `initialRadius`'s identity changes or the view remounts.
+  // One-shot: waits for view + rings layer, re-places the point, redraws
+  // rings, frames once sized. Guarded against re-firing on identity changes or remounts.
   const didRestoreRef = useRef(false);
   useEffect(() => {
     if (didRestoreRef.current) return;
@@ -142,8 +134,7 @@ export function useSearchRadiusTool(
     }
   }, []);
 
-  // Exits placement mode without clearing an existing point (used when a
-  // relocation is cancelled mid-placement).
+  // Exits placement without clearing an existing point — for a cancelled relocation.
   const handleCancelPlacement = useCallback(() => {
     isPlacingPointRef.current = false;
     setIsPlacingPoint(false);
@@ -157,8 +148,7 @@ export function useSearchRadiusTool(
     setIsPlacingPoint(false);
     searchRadiusPointRef.current = null;
     setSearchRadiusPoint(null);
-    // Closing the tool resets the radius, so reopening always starts at
-    // the default rather than the last-picked distance.
+    // Resets radius on close, so reopening starts at the default, not the last pick.
     activeRadiusMilesRef.current = DEFAULT_RADIUS_MILES;
     setActiveRadiusMiles(DEFAULT_RADIUS_MILES);
     ringsLayerRef.current?.removeAll();
@@ -180,8 +170,7 @@ export function useSearchRadiusTool(
     [drawRings, frameRadiusCircle],
   );
 
-  // Called from MapView's click handler while isPlacingPointRef.current
-  // is true; see the note above on why this reads everything via refs.
+  // Called from MapView's click handler while placing a point; reads via refs per the note above.
   const placePointAt = useCallback(
     (mapPoint: { longitude: number; latitude: number }) => {
       const point: SearchRadiusPoint = {

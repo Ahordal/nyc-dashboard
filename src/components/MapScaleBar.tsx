@@ -1,9 +1,9 @@
 // MapScaleBar.tsx
 //
-// Graphical imperial ground-distance scale bar for MapView, replacing
-// the deprecated esri/widgets/ScaleBar. Converts the view's Web Mercator
-// resolution to true ground distance with a cos(latitude) correction,
-// then snaps to a round foot/mile value.
+// Graphical imperial scale bar, replacing the deprecated
+// esri/widgets/ScaleBar. Converts the view's Web Mercator resolution to
+// true ground distance with a cos(latitude) correction, then snaps to a
+// round foot/mile value.
 
 import { useEffect, useState } from "react";
 import type MapView from "@arcgis/core/views/MapView";

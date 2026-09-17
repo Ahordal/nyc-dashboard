@@ -1,8 +1,7 @@
 // InfoPopupContent.tsx
 //
 // Shared layout template for dashboard info popups: consistent section
-// names and ordering, with sections omitted when a panel doesn't need
-// them.
+// names and ordering, with sections omitted when a panel doesn't need them.
 
 import type { ReactNode } from "react";
 

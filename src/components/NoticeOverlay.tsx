@@ -1,12 +1,12 @@
 // NoticeOverlay.tsx
 //
-// Generic self-dismissing notification overlay. Shows on each change to
-// triggerKey and auto-hides after durationMs, forcing a reflow between
-// re-triggers so the CSS fade replays.
+// Self-dismissing notification: shows on each change to triggerKey,
+// auto-hides after durationMs, forcing a reflow between re-triggers so
+// the CSS fade replays.
 //
-// The role="status" live region stays mounted at all times; only its
-// inner overlay toggles. Unmounting and remounting a live region that
-// already contains text stops many screen readers from announcing it.
+// The role="status" region stays mounted; only its inner overlay
+// toggles — unmounting/remounting a live region that already has text
+// stops many screen readers from announcing it.
 
 import { useEffect, useRef, useState, type ReactNode } from "react";
 

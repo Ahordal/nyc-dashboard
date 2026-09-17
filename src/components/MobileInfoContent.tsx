@@ -1,10 +1,9 @@
 // MobileInfoContent.tsx
 //
-// The single info document shown in the phone Info drawer. Combines the
-// desktop Dashboard Information sections with the map's legend (the
-// map's own info button is hidden at this width). Map-corner-only and
-// desktop-only how-to items are left out; a couple of touch lines are
-// added instead.
+// The single info document shown in the phone Info drawer: desktop's
+// Dashboard Information sections plus the map's legend (its own info
+// button is hidden at this width). Map-corner-only/desktop-only how-to
+// items are dropped; a couple of touch lines are added instead.
 
 import InfoPopupContent from "./InfoPopupContent";
 import {

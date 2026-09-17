@@ -25,9 +25,8 @@ type RestaurantCardProps = {
   isHovered?: boolean;
   onClick: (restaurant: RestaurantProperties) => void;
   onHover?: (restaurant: RestaurantProperties | null) => void;
-  // The point to measure this card's distance from: the Search Radius
-  // centre, or the mobile "locate me" dot. Null/undefined hides the
-  // Distance line entirely.
+  // Distance origin: Search Radius centre or the locate dot.
+  // Null/undefined hides the Distance line.
   distanceOrigin?: SearchRadiusPoint | null;
 };
 
@@ -40,12 +39,8 @@ function formatDate(raw: string | null): string {
 }
 
 function formatAddress(restaurant: RestaurantProperties): string {
-  // Uses the pipeline's pre-formatted display_street (ordinal suffixes,
-  // e.g. "5th Street" instead of "5 Street") rather than reconstructing
-  // that logic here, keeping street-number formatting in exactly one
-  // place. Falls back to the raw street name (title-cased) only if
-  // display_street is somehow missing, e.g. stale cached data from
-  // before this field existed.
+  // Uses the pipeline's display_street ("5th Street", not "5 Street") to
+  // keep formatting in one place. Falls back to the raw name (title-cased) only if missing.
   const formattedStreet =
     restaurant.display_street?.trim() ||
     (restaurant.street ? toTitleCase(restaurant.street.trim()) : "");
@@ -55,8 +50,8 @@ function formatAddress(restaurant: RestaurantProperties): string {
   );
   const street = streetParts.join(" ");
 
-  // boro is already correctly cased by the pipeline (normalizeBoro()),
-  // e.g. "Queens", "Staten Island", so it's used as-is, not re-title-cased.
+  // boro is already correctly cased by the pipeline (normalizeBoro()) —
+  // used as-is, not re-title-cased.
   const boro = restaurant.boro?.trim();
 
   if (street && boro) return `${street}, ${boro}`;

@@ -1,12 +1,11 @@
 // selectionReducer.ts
 //
 // The dashboard's selection/hover/tab cluster, lifted out of
-// dashboard.tsx so the "selecting X also clears Y and switches tab"
-// rules live in one place instead of being spread across handlers.
+// dashboard.tsx so "selecting X clears Y, switches tab" rules live in
+// one place instead of spread across handlers.
 //
-// Every restaurant selection flows through the `selectRestaurant`
-// action, so it owns the "restaurant changed -> drop the stale
-// inspection selection" reset that used to be a separate effect.
+// Every restaurant selection flows through `selectRestaurant`, which
+// owns the "restaurant changed -> drop the stale inspection selection" reset.
 
 import type { RestaurantProperties } from "../types/restaurant";
 import type { ExplorerTab } from "../utils/explorerTabs";
@@ -66,10 +65,8 @@ export function selectionReducer(
         activeTab: "report",
       };
 
-    // Like selectInspection but stays on the current tab — the mobile
-    // score chart uses this so a dot tap highlights the matching
-    // Inspection History row (and scrolls it into view) instead of
-    // jumping to the report and hiding the chart.
+    // Like selectInspection but stays on the tab — the mobile chart uses
+    // this so a dot tap highlights the history row instead of jumping to the report.
     case "previewInspection":
       return {
         ...state,

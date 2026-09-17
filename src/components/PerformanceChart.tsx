@@ -1,14 +1,14 @@
 // PerformanceChart.tsx
 //
 // Line chart of a restaurant's inspection scores over time. Uses custom
-// point-only tooltips instead of Recharts' built-in Tooltip, with direct
-// pointer hover, history-row preview, keyboard navigation, and pinned
-// report selection tracked independently.
+// point-only tooltips instead of Recharts' built-in Tooltip, with
+// pointer hover, history-row preview, keyboard nav, and pinned selection
+// tracked independently.
 //
-// Tooltip priority lives in useTooltipPriority; keyboard navigation in
-// useChartKeyboardNav. This component wires chart-data derivation,
-// sizing, and rendering, plus the one bit of cross-hook coordination: a
-// pointer hover cancels keyboard mode.
+// Tooltip priority lives in useTooltipPriority; keyboard nav in
+// useChartKeyboardNav. This component derives chart data, handles
+// sizing/rendering, and the one cross-hook bit: pointer hover cancels
+// keyboard mode.
 
 import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
@@ -47,13 +47,10 @@ type PerformanceChartProps = {
   hoveredInspectionId?: string | null;
   selectedInspectionId?: string | null;
   // Mobile passes "compact" — the full date + badges card is too large
-  // for the short pinned chart, so it drops to a small grade + score
-  // label on the active dot.
+  // for the short pinned chart, so it drops to a small grade + score label.
   tooltipVariant?: "full" | "compact";
-  // Mobile: when set, the info button calls this (a full-pane takeover
-  // wired up by MobileDashboard) instead of opening the centred modal,
-  // and this component swaps its body for the info content while
-  // isInfoOpen is true.
+  // Mobile: routes the info button to a full-pane takeover instead of
+  // the modal; body swaps to info content while isInfoOpen is true.
   onInfoClick?: () => void;
   isInfoOpen?: boolean;
   // Mobile drops the desktop hover/keyboard bullets from the info panel
@@ -443,8 +440,7 @@ function PerformanceChart({
     yMax,
   });
 
-  // Pulled out so the callback below depends on the (stable) functions
-  // themselves rather than calling through the hook-result objects.
+  // So the callback below depends on the stable functions, not the hook-result objects.
   const { exitKeyboardMode } = keyboardNav;
   const { setPointerPoint } = tooltipPriority;
 
@@ -483,8 +479,7 @@ function PerformanceChart({
     };
   }, [chartData.length]);
 
-  // The one bit of cross-hook coordination: a fresh pointer hover always
-  // wins, so it cancels keyboard mode rather than the other way around.
+  // A fresh pointer hover always wins, so it cancels keyboard mode.
   const handlePointerPointChange = useCallback(
     (point: TooltipPoint | null) => {
       if (point) {
@@ -496,15 +491,12 @@ function PerformanceChart({
     [exitKeyboardMode, setPointerPoint],
   );
 
-  // Mobile info takeover: replace the chart with its info content, filling
-  // the pane like the Restaurant Details / Inspection Reports info panels.
-  // MobileDashboard hides the record and unbinds the height around this.
+  // Mobile info takeover — fills the pane like Restaurant Details / Inspection Reports.
   if (isInfoOpen) {
     return (
       <section className="panel performance-chart-panel">
-        {/* Full info takeover reads as a standalone information panel, so
-            its header is the default H2 (unlike the chart-in-context
-            header below, which sits level with the section headers). */}
+        {/* Default H2 here, unlike the chart-in-context header below
+            which sits level with the section headers. */}
         <PanelHeader
           title="Restaurant Performance Over Time"
           infoContent={infoContent}

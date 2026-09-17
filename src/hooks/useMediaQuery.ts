@@ -1,7 +1,6 @@
 // useMediaQuery.ts
 //
-// Subscribes to a CSS media query and returns whether it currently matches,
-// re-rendering on change.
+// Subscribes to a CSS media query, re-rendering on change.
 
 import { useEffect, useState } from "react";
 

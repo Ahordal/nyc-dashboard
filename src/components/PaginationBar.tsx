@@ -21,9 +21,8 @@ export default function PaginationBar({
 }: PaginationBarProps) {
   const prevButtonRef = useRef<HTMLButtonElement | null>(null);
   const nextButtonRef = useRef<HTMLButtonElement | null>(null);
-  // Set when the user pages via one of the buttons while it holds focus.
-  // If that button then disables itself at an end, the browser would drop
-  // focus to <body>; the effect below hands it to the sibling instead.
+  // Set when paging via a focused button that then disables — hands focus
+  // to the sibling instead of losing it to <body>.
   const restoreFocusRef = useRef<"prev" | "next" | null>(null);
 
   useEffect(() => {
@@ -37,7 +36,6 @@ export default function PaginationBar({
     }
   }, [currentPage]);
 
-  // If there's nothing to paginate, render nothing.
   if (totalItems === 0) return null;
 
   function handlePrev() {

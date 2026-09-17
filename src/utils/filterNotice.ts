@@ -1,9 +1,7 @@
 // filterNotice.ts
 //
-// Decides which segments the RestaurantList's filter-change notice shows
-// ("Grade: A, Borough: Manhattan, ...") and in what order. Pure so the
-// gating/ordering is unit-tested; dashboard.tsx only maps parts to spans
-// and drops a separator between them.
+// Decides which filter-notice segments show (Grade, Borough, ...) and
+// their order. Pure for testing — dashboard.tsx just renders the parts.
 
 export type FilterNoticePart =
   | { kind: "grades"; grades: string[] }

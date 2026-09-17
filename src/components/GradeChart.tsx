@@ -63,10 +63,8 @@ const SLICE_CONFIG = [
 
 type GradeChartProps = {
   // Grade/status tally for the current map view, pre-computed in MapView
-  // (see reportVisibleRestaurants there). This used to be a full
-  // RestaurantProperties[] array, up to ~27,000 objects at city zoom, but
-  // this component only ever needed the five counts derived from it, so
-  // MapView now computes and passes just that instead.
+  // (reportVisibleRestaurants). Used to be a full RestaurantProperties[]
+  // (~27,000 objects at city zoom); this only ever needed the five counts.
   counts: GradeCounts;
   filters: Filters;
   // Current search text, if any. Used only for the footnote that flags
@@ -75,12 +73,11 @@ type GradeChartProps = {
   // Set while the Search Radius tool is active; switches the panel title
   // (and info copy) from "Map View" to "Within <distance>".
   searchRadiusMiles?: SearchRadiusMiles | null;
-  // The mobile grade-breakdown drawer drops the centre grade labels and
-  // the borough/search footnote (it shows its own KPI row + filter
-  // summary below the donut instead); everywhere else keeps both.
+  // The mobile drawer drops the centre grade labels and the footnote
+  // (it shows its own KPI row + filter summary instead); elsewhere keeps both.
   showCenterLegend?: boolean;
   showFilterNote?: boolean;
-  // Per-category share line under the donut -- the donut's own readout
+  // Per-category share line under the donut — the donut's own readout
   // (proportion), separate from the absolute counts in the stats panel.
   showPercentages?: boolean;
 };
@@ -162,9 +159,9 @@ function GradeChart({
     // are selected). Drives the slices, the centre count, and which
     // centre labels stay coloured.
     scopedCounts: GradeCounts;
-    // Categories in scope for the percentage line -- every category when
-    // no grade filter is active, else just the selected ones -- kept even
-    // at zero count so e.g. "Closed 0%" still shows rather than vanishing.
+    // Categories for the percentage line — all of them with no grade
+    // filter, else just the selected ones — kept at zero count so e.g.
+    // "Closed 0%" shows rather than vanishing.
     percentItems: ChartDataItem[];
   }>(() => {
     const scoped = scopeGradeCounts(counts, filters.grades);
@@ -211,10 +208,8 @@ function GradeChart({
     return `Grade breakdown, ${scopeText.toLowerCase()}: ${parts}. ${totalCount.toLocaleString()} restaurants total.`;
   }, [data, scopeText, totalCount]);
 
-  // Per-category share, largest-remainder rounded so the line sums to 100.
-  // A present-but-tiny category rounds to "<1%"; a genuinely empty one
-  // (e.g. no closed restaurants in view) still shows "0%" rather than
-  // being dropped from the line entirely.
+  // Largest-remainder rounded so the line sums to 100. A tiny nonzero
+  // category rounds to "<1%"; a genuinely empty one still shows "0%".
   const percentages = useMemo(() => {
     if (totalCount === 0) return [];
     const pcts = largestRemainderPercents(
@@ -273,9 +268,7 @@ function GradeChart({
                   <div className="grade-chart-center">
                     <div className="grade-chart-legend">
                       {SLICE_CONFIG.map(({ key, label, color }, index) => {
-                        // Coloured only when that category has restaurants
-                        // in the scoped view (which already excludes grades
-                        // not in the active filter). Everything else dims.
+                        // Coloured only when that category has restaurants in the scoped view.
                         const isDimmed = (scopedCounts[key] ?? 0) === 0;
                         const isLast = index === SLICE_CONFIG.length - 1;
 
@@ -319,9 +312,8 @@ function GradeChart({
             </ul>
           )}
 
-          {/* Always rendered so the rule and its reserved two-line space
-              are permanent; only the text toggles, so the donut above
-              never shifts when a filter is added or cleared. */}
+          {/* Reserved space is permanent; only the text toggles, so the
+              donut never shifts when a filter is added or cleared. */}
           {showFilterNote && (
             <div className="grade-chart-filter-note" aria-live="polite">
               {filterNote && `Filters applied: ${filterNote}`}

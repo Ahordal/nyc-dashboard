@@ -1,7 +1,6 @@
 // dashboard.tsx
 //
-// Top-level dashboard component. Owns the shared state, assembles the
-// layout, and coordinates data flow between the child panels.
+// Root component: owns shared state, wires the child panels together.
 
 import {
   Fragment,
@@ -74,17 +73,14 @@ import { getFilterNoticeParts } from "../utils/filterNotice";
 
 const MapView = lazy(() => import("./MapView"));
 
-// GradeChart and PerformanceChart both pull in Recharts (+ its d3
-// dependency tree), which was landing in the render-blocking entry
-// chunk. Loading them lazily keeps that weight off the critical path;
-// their layout areas are grid-sized, so the skeleton fallback causes no
-// layout shift.
+// Recharts + d3 were bloating the entry chunk, so these load lazily.
+// Grid-sized layout areas mean the skeleton causes no shift.
 const GradeChart = lazy(() => import("./GradeChart"));
 const PerformanceChart = lazy(() => import("./PerformanceChart"));
 
 const FILTER_NOTICE_DURATION_MS = 1300;
 
-// Stable fallback for the violation-codes fetch (see useJsonFetch).
+// Must stay referentially stable — useJsonFetch depends on that for its fallback.
 const EMPTY_VIOLATION_CODES: ViolationCodeLookup = {};
 
 const GRADE_FILTER_COLORS: Record<string, string> = {
@@ -104,32 +100,24 @@ export default function Dashboard() {
 
   const [searchQuery, setSearchQuery] = useState("");
 
-  // Below this width the desktop 3-pane grid is replaced by the phone
-  // layout (app bar + full-bleed map + bottom sheet); see MobileDashboard.
-  // The short-landscape clause keeps a phone turned sideways on the phone
-  // layout rather than flipping it to the stacked tablet grid.
+  // Below this, MobileDashboard's app-bar + sheet layout replaces the 3-pane grid.
   const isPhone = useMediaQuery(
     "(max-width: 750px), (max-height: 480px) and (orientation: landscape)",
   );
 
-  // 751–1750px: the stacked two-column layout, which swaps the big title
-  // panel, the <details> filter bar, the Search row and the Dashboard
-  // Information panel for the shared AppBar (Search/Filters/Info drawers).
+  // 751-1750px: two-column layout, using the shared AppBar drawers.
   const isTablet = useMediaQuery("(max-width: 1750px)") && !isPhone;
   const [activeDrawer, setActiveDrawer] = useState<
     "search" | "filters" | "info" | "grades" | null
   >(null);
   const gradeDrawerId = useId();
 
-  // Below this the Grade/Borough buttons no longer fit on one line, so
-  // the inline filter row (below) is swapped for a small button that
-  // opens the same filters in a popover instead.
+  // Below this, Grade/Borough buttons stop fitting one line — swap to a popover trigger instead.
   const isFullDesktop = useMediaQuery("(min-width: 2360px)");
   const desktopFiltersPopoverId = useId();
   const activeFilterCount = filters.grades.length + filters.boroughs.length;
 
-  // Selection, hover, and the active Explorer tab move together — see
-  // selectionReducer for the "selecting X clears Y, switches tab" rules.
+  // Selection, hover, and tab state move together — rules live in selectionReducer.
   const [selection, dispatchSelection] = useReducer(
     selectionReducer,
     INITIAL_SELECTION_STATE,
@@ -142,11 +130,8 @@ export default function Dashboard() {
     activeTab: activeExplorerTab,
   } = selection;
 
-  // A restaurant named in the initial URL (?camis=). MapView resolves it
-  // against the full layer once its layer is ready, hands it back via
-  // onSelectRestaurant, then reports done so this clears. Resolving it
-  // there (not by scanning visibleRestaurants) is what lets a shared
-  // link land on a restaurant that's off-screen or off the active grade.
+  // ?camis= from the URL. Matched against the full layer, not
+  // visibleRestaurants, so off-screen shared links still resolve.
   const [pendingCamisFromUrl, setPendingCamisFromUrl] = useState<string | null>(
     null,
   );
@@ -164,16 +149,12 @@ export default function Dashboard() {
   const [activeRadiusMiles, setActiveRadiusMiles] =
     useState<SearchRadiusMiles>(0.25);
 
-  // The mobile "locate me" dot's position (in-NYC fixes only), reported
-  // up from MapView. Drives the per-card Distance line without the Search
-  // Radius tool's scoping/sort behaviour. Not URL-synced -- transient
-  // device state.
+  // Mobile GPS fix (in-NYC only), feeding per-card Distance outside
+  // Search Radius's scoping. Not URL-synced — transient device state.
   const [userLocationPoint, setUserLocationPoint] =
     useState<SearchRadiusPoint | null>(null);
 
-  // A radius restored from the URL on first load. Passed to MapView so
-  // its Search Radius hook can re-place the point, redraw the rings, and
-  // re-frame the map; null unless the initial URL carried a ?radius.
+  // Radius restored from the URL, passed to MapView to re-place the point and re-frame.
   const [initialSearchRadius, setInitialSearchRadius] =
     useState<InitialRadiusState | null>(null);
 
@@ -197,9 +178,8 @@ export default function Dashboard() {
 
   const radiusKey = searchRadiusPoint ? `radius-${activeRadiusMiles}` : "";
 
-  // Memoized so its element reference stays stable across renders that
-  // don't touch filters/search/radius -- RestaurantList is memoized too,
-  // and a fresh children element every render would defeat that.
+  // Stable reference needed here since RestaurantList is memoized too —
+  // a fresh element every render would defeat that.
   const restaurantListFilterNotice = useMemo(
     () => (
       <NoticeOverlay
@@ -267,7 +247,6 @@ export default function Dashboard() {
     history,
   );
 
-  // Initialize state from URL params on first mount
   const handleInitialUrlState = useCallback((initial: InitialUrlState) => {
     if (initial.grades.length > 0 || initial.boroughs.length > 0) {
       setFilters({
@@ -291,7 +270,6 @@ export default function Dashboard() {
     }
   }, []);
 
-  // Sync state back to URL parameters
   useUrlSync(
     {
       grades: filters.grades,
@@ -304,10 +282,8 @@ export default function Dashboard() {
     handleInitialUrlState,
   );
 
-  // dispatchSelection is stable (useReducer), so these callbacks never need
-  // to change identity -- keeping them stable lets the memoized explorer
-  // panels (RestaurantList/Details/Report) skip re-rendering on unrelated
-  // hover/selection updates instead of just on prop-reference churn.
+  // dispatchSelection is stable, so these never change identity — keeps
+  // the memoized explorer panels from re-rendering needlessly.
   const handleSelectRestaurant = useCallback(
     (restaurant: RestaurantProperties | null) => {
       dispatchSelection({ type: "selectRestaurant", restaurant });
@@ -391,10 +367,8 @@ export default function Dashboard() {
     );
   }
 
-  // Bare donut + the per-grade share line, shared by the desktop sidebar
-  // and the tablet KPI drawer. Neither shows the absolute counts -- those
-  // live in the stats panel above the map (desktop) / in the KPI bar
-  // (tablet).
+  // Bare donut + share line, reused by the sidebar and tablet drawer.
+  // Counts live in StatsPanel instead.
   const gradeDonut = (
     <ErrorBoundary
       context="GradeChart"
@@ -414,8 +388,7 @@ export default function Dashboard() {
     </ErrorBoundary>
   );
 
-  // Rule + "Filters applied: …" line that sits under the donut in both
-  // the desktop sidebar and the tablet KPI drawer.
+  // Shared under the donut in both the sidebar and tablet drawer.
   const gradeFiltersSummary = (
     <>
       <hr className="mobile-filter-notice-rule" />
@@ -432,12 +405,8 @@ export default function Dashboard() {
     </div>
   );
 
-  // Compact desktop only: the Filters trigger, nested inside the KPI
-  // panel itself (see StatsPanel's filtersButton prop) rather than a
-  // separate adjacent box -- that way the panel's own outer edge still
-  // lines up with the search panel above it, while the button's 0.5rem
-  // inset from the panel's *inner* edge lines up with the map's own
-  // control chips (same inset, same edge).
+  // Compact desktop only. Nested in StatsPanel, not an adjacent box, so
+  // its inset matches the map's own control chips.
   const desktopFiltersButton = (
     <>
       <div className="desktop-filters-button-wrap">
@@ -466,11 +435,7 @@ export default function Dashboard() {
         </button>
       </div>
 
-      {/* Positioned relative to .stats-panel (the nearest positioned
-         ancestor above this fragment), not the button -- so it lands
-         0.5rem below the panel's own bottom edge and flush with the
-         map's right edge, regardless of where the button sits inside
-         the panel. */}
+      {/* Anchored to .stats-panel, not the button, so it stays flush with the map edge. */}
       {activeDrawer === "filters" && (
         <div id={desktopFiltersPopoverId} className="desktop-filters-popover">
           <div className="panel-header">
@@ -501,9 +466,7 @@ export default function Dashboard() {
     </div>
   );
 
-  // The "locate me" dot feeds the per-card / details Distance readout and
-  // the Distance sort on tablet, exactly as on phone. Desktop has no
-  // locate control, so it never contributes a distance origin there.
+  // Locate dot feeds Distance on tablet like phone; desktop has no locate control.
   const locateDistanceOrigin = isTablet ? userLocationPoint : null;
   const listDistanceOrigin = searchRadiusPoint ?? locateDistanceOrigin;
 

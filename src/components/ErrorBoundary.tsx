@@ -1,12 +1,10 @@
 // ErrorBoundary.tsx
 //
-// Catches render/lifecycle errors in a subtree so one failure doesn't
-// blank the whole dashboard. Used at the app root (main.tsx) and around
-// each lazy-loaded panel in dashboard.tsx, so e.g. a chart chunk that
-// fails to download leaves the map and the rest of the page usable.
+// Catches render/lifecycle errors in a subtree, so one failure doesn't
+// blank the dashboard. Wraps the app root and each lazy panel, so e.g. a
+// failed chart leaves the map usable.
 //
-// Error boundaries still have to be class components in React 19 - there
-// is no hook equivalent.
+// Must be a class component — React 19 has no hook equivalent for error boundaries.
 
 import { Component, type ErrorInfo, type ReactNode } from "react";
 
@@ -14,14 +12,10 @@ type ErrorBoundaryProps = {
   children: ReactNode;
   // What to render in place of the subtree once it has thrown.
   fallback: ReactNode;
-  // Tag for the console.error, so a swallowed error still names the
-  // subtree it came from.
+  // Tags the console.error, so a swallowed error still names its subtree.
   context?: string;
-  // When this value changes after an error, the boundary clears itself
-  // and re-renders its children. Key it to something that represents
-  // "the input changed" (e.g. the selected restaurant) so a panel that
-  // choked on one record recovers when the user moves on, without a
-  // full page reload.
+  // Clears the boundary when this changes after an error. Key it to "the
+  // input changed" (selected restaurant) so panels recover without a reload.
   resetKey?: unknown;
 };
 

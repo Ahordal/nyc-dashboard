@@ -170,7 +170,7 @@ describe("sortRestaurants -- distance key", () => {
   });
 
   it("rounds distance to display precision, so a secondary key can break a near-tie", () => {
-    // ~1.002 mi and ~1.023 mi respectively -- different raw distances,
+    // ~1.002 mi and ~1.023 mi respectively — different raw distances,
     // but both round to the same "~1 mi" shown on the card. Distance
     // then Grade should put the better grade first despite "worse-grade"
     // being marginally closer by the raw (unrounded) distance.

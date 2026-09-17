@@ -1,7 +1,4 @@
 // toTitleCase.ts
-//
-// Lower-cases a string, then capitalizes the first letter of each
-// space-separated word.
 
 export function toTitleCase(input: string): string {
   return input

@@ -1,4 +1,4 @@
-// FilterSection.tsx
+// FiltersSection.tsx
 //
 // Generic multi-select filter panel: toggle buttons, an optional custom
 // active colour per option, and a clear-all action.
@@ -58,9 +58,8 @@ export default function FilterSection({
           <FontAwesomeIcon icon={icon} />
           <span>{label}</span>
         </span>
-        {/* Wrapper is display:contents on desktop (no layout effect); on the
-           mobile drawer it becomes a flex row that hangs Clear into the
-           gutter and wraps the options as space runs out. */}
+        {/* display:contents on desktop; on the mobile drawer it becomes a
+           flex row hanging Clear into the gutter. */}
         <div className="filter-options">
           <span className="filter-clear">
             <FilterButton onClick={() => onChange([])}>Clear</FilterButton>

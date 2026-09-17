@@ -1,9 +1,7 @@
 // FilterSummary.tsx
 //
-// Static "Filters applied: Grade: A, B · Borough: …" line — the same
-// summary the desktop RestaurantList flashes as an overlay when filters
-// change, rendered here as plain (colour-coded) text so a mobile user
-// gets confirmation their selection took effect. Lives in the grade
+// Same summary desktop flashes as an overlay, rendered as plain
+// colour-coded text for mobile confirmation. Lives in the grade
 // breakdown drawer, under the KPI row.
 
 import { Fragment, memo } from "react";

@@ -1,7 +1,7 @@
 // FilterButton.tsx
 //
-// Reusable filter-control button: toggles an `active` class and forwards
-// standard HTML button attributes.
+// Reusable filter-control button: toggles an `active` class and
+// forwards standard HTML button attributes.
 
 import type {
   ButtonHTMLAttributes,

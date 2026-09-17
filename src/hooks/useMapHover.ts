@@ -1,15 +1,11 @@
 // useMapHover.ts
 //
-// Owns the map's pointer-move behaviour: a trailing-edge throttle over
-// pointer-move events, a hit test against the restaurant layer, the
-// pointer cursor, the `onHoverRestaurant` callback, and the on-canvas
-// hover card (shown only once zoomed in past HOVER_CARD_MAX_SCALE).
+// Owns the map's pointer-move behaviour: throttled hit-testing, cursor,
+// `onHoverRestaurant`, and the hover card (past HOVER_CARD_MAX_SCALE).
 //
-// MapView passes the `view` (once it exists), the layer ref, and the
-// stable refs/setter this needs. Listeners attach when `view` becomes
-// non-null and detach on unmount, one render tick later than the map's
-// own mount effect, which is harmless since the map isn't interactive
-// until it settles anyway.
+// MapView passes `view` plus stable refs once it exists. Listeners
+// attach then and detach on unmount — fine since the map isn't
+// interactive until it settles anyway.
 
 import { useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
@@ -21,9 +17,8 @@ import type { HoverCardState } from "../components/MapHoverCard";
 import { getGradeCategory } from "../utils/gradeCategory";
 import { findRestaurantGraphicHit } from "../queries/mapQueries";
 
-// Hover cards only make sense when individual dots are distinguishable.
-// Zoomed further out than this the pointer-move handler still runs (for
-// the cursor and the hover callback) but never shows a card.
+// Hover cards need distinguishable dots; below this scale the handler
+// still runs (cursor, hover callback) but shows no card.
 const HOVER_CARD_MAX_SCALE = 18056;
 
 const POINTER_MOVE_THROTTLE_MS = 60;
@@ -50,8 +45,8 @@ export function useMapHover({
     if (!view || !layer) return;
 
     let pointerMoveTimeoutId: number | null = null;
-    // Only the screen coordinates are read here and passed to hitTest;
-    // the full ArcGIS pointer-move event assigns cleanly to this subset.
+    // Only screen coords are needed; the full pointer-move event assigns
+    // cleanly to this subset.
     let latestPointerMoveEvent: { x: number; y: number } | null = null;
     let latestHitTestToken = 0;
 

@@ -192,7 +192,7 @@ describe("useUrlSync", () => {
       expect.objectContaining({ camis: "41234567" }),
     );
     // The write-effect's first pass runs in the same commit as onInit,
-    // before the parent has applied onInit's state -- it must not fire
+    // before the parent has applied onInit's state — it must not fire
     // replaceState with the pre-init default (empty) query here.
     expect(replaceStateSpy).not.toHaveBeenCalled();
 

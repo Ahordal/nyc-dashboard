@@ -165,10 +165,9 @@ function RestaurantReport({
   const selectedEvent =
     history.find((event) => event.id === selectedInspectionId) ?? null;
 
-  // The default view shows the restaurant's current inspection. Its
-  // grade/score/date/action still come off the GeoJSON record, but its
-  // violations now come from the matching history event (falling back to
-  // the most recent one), since the feature no longer carries them.
+  // Default view: grade/score/date/action come off the GeoJSON record;
+  // violations come from the matching history event (or the most recent),
+  // since the feature no longer carries them.
   const currentEvent =
     history.find((event) => event.id === restaurant.id) ??
     (history.length > 0 ? history[history.length - 1] : null);
@@ -217,8 +216,7 @@ function RestaurantReport({
 
   const olderEvent = currentIndex > 0 ? history[currentIndex - 1] : null;
 
-  // This reflects the displayed historical inspection, not the restaurant's
-  // present-day status.
+  // Reflects the displayed historical inspection, not present-day status.
   const isClosure = isClosedInspection(displayed.action ?? "");
 
   return (

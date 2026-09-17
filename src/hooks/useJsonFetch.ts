@@ -1,9 +1,8 @@
 // useJsonFetch.ts
 //
-// Fetches a JSON document once on mount, returning the parsed value or the
-// fallback on any failure (non-ok response or parse/network error). Aborts
-// the in-flight request on unmount. `fallback` must be a stable reference —
-// it's only read when the fetch fails and is not a dependency.
+// Fetches JSON once on mount, falling back to `fallback` on any failure;
+// aborts on unmount. `fallback` must stay referentially stable — it's
+// read only on failure, never a dependency.
 
 import { useEffect, useState } from "react";
 

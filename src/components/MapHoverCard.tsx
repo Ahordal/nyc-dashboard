@@ -1,12 +1,10 @@
 // MapHoverCard.tsx
 //
-// The small floating card shown next to a restaurant dot on hover, once
-// the map is zoomed in past MapView's HOVER_CARD_MAX_SCALE. MapView owns
-// the hover state and the show/hide logic; this file is just the markup.
+// The floating card next to a restaurant dot on hover, past
+// HOVER_CARD_MAX_SCALE. MapView owns hover state and show/hide; this is just the markup.
 //
-// The card is measured after render and flipped to whichever side of the
-// cursor has room, so it never gets clipped by .map-canvas-wrapper's
-// overflow: hidden near a map edge.
+// Measured after render and flipped to whichever side of the cursor has
+// room, so it never clips against .map-canvas-wrapper's overflow: hidden.
 
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";

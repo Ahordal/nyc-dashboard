@@ -1,18 +1,11 @@
 // useSelectionHighlight.ts
 //
-// Owns the white glow drawn around the click-selected and list-hovered
-// restaurant on the map. ArcGIS allows only one FeatureEffect per layer
-// view, so a single effect is shared and its `.filter` is mutated to the
-// union of the two object IDs. The effect string itself is never
-// reassigned, because ArcGIS doesn't reliably pick up a replaced effect
-// on a live layer view.
+// White glow around the click-selected / list-hovered restaurant. ArcGIS
+// allows one FeatureEffect per layer view, so it's shared — only
+// `.filter` mutates, since ArcGIS won't reliably pick up a replaced effect string.
 //
-// MapView creates the layer and view in its mount effect and passes
-// their refs in; this hook reads `.current` lazily, only when a
-// highlight is actually applied. `applyHighlightForId` is returned
-// because MapView also calls it from two other places: the view.when()
-// bootstrap, and the filter/search sync effect (which already knows the
-// object ID and passes it in to skip the lookup).
+// MapView passes layer/view refs; exposes `applyHighlightForId` since
+// MapView also calls it from the view.when() bootstrap and the filter/search sync effect.
 
 import { useCallback, useEffect, useRef } from "react";
 import type { RefObject } from "react";
@@ -42,8 +35,7 @@ export function useSelectionHighlight({
   selectedRestaurantId,
   hoveredRestaurantId,
 }: UseSelectionHighlightArgs) {
-  // Builds the glow FeatureEffect once with a fixed included effect
-  // string; only `.filter` is mutated afterwards.
+  // Built once with a fixed effect string; only `.filter` is mutated after.
   const glowEffectRef = useRef<FeatureEffect | null>(null);
   const layerViewRef = useRef<GeoJSONLayerView | null>(null);
   const hoverHighlightRequestIdRef = useRef(0);
@@ -51,8 +43,7 @@ export function useSelectionHighlight({
   const selectedObjectIdRef = useRef<number | null>(null);
   const hoveredObjectIdRef = useRef<number | null>(null);
 
-  // Resolves and caches the layer view, lazily building the shared glow
-  // FeatureEffect the first time it's needed.
+  // Resolves and caches the layer view, building the glow effect on first use.
   const ensureLayerView = useCallback(async () => {
     if (layerViewRef.current) return layerViewRef.current;
 
@@ -84,9 +75,7 @@ export function useSelectionHighlight({
     return layerView;
   }, [layerRef, viewRef]);
 
-  // Installs the glow FeatureEffect on the layer view and updates its
-  // object ID filter to the union of the click-selected and list-hovered
-  // restaurants, mutating `.filter` without changing the effect string.
+  // Sets the filter to the union of selected + hovered IDs, without touching the effect string.
   const applyCombinedHighlight = useCallback(() => {
     const layerView = layerViewRef.current;
     const glowEffect = glowEffectRef.current;

@@ -1,7 +1,7 @@
 // PanelHeader.tsx
 //
-// Reusable panel header: the panel title and an optional info button that
-// opens an auto-positioning, portal-rendered tooltip.
+// Reusable panel header: the panel title and an optional info button
+// that opens an auto-positioning, portal-rendered tooltip.
 
 import {
   useEffect,
@@ -29,29 +29,20 @@ type ResolvedPlacement = "up" | "down";
 type PanelHeaderProps = {
   title?: ReactNode;
   // Plain-text form of `title` for aria labels, needed when `title` is
-  // passed as markup (e.g. to keep a "mi" unit lowercase inside the
-  // otherwise-uppercased title).
+  // markup (e.g. keeping "mi" lowercase inside an otherwise-uppercased title).
   titleText?: string;
   infoContent?: ReactNode;
   infoPlacement?: InfoPlacement;
-  // "panel" (default) renders the title as the panel's <h2>. "section"
-  // renders an <h3> at the .section-header size, for a companion panel
-  // whose title should sit level with in-scroll section headers rather
-  // than read as a top-level panel name (the score-history chart, which
-  // flows beside Inspection History).
+  // "panel": <h2>. "section": <h3> at .section-header size, for a panel
+  // that should sit level with in-scroll headers (the score-history chart beside Inspection History).
   titleVariant?: "panel" | "section";
-  // "popup" (default): the button toggles PanelHeader's own anchored
-  // popup. "modal": the button opens a centred PanelInfoModal instead —
-  // for content too tall to sit beside the trigger on a short viewport
-  // (see MapView). Ignored when onInfoClick is set.
+  // "popup" (default) toggles PanelHeader's own popup; "modal" opens a
+  // centred PanelInfoModal instead, for content too tall on a short
+  // viewport (see MapView). Ignored when onInfoClick is set.
   infoVariant?: "popup" | "modal";
-  // When provided, the info button no longer opens PanelHeader's own
-  // anchored popup; it just calls this instead, and isInfoOpen drives
-  // the button's expanded/close-icon state. Used by panels that swap
-  // infoContent in for their own body content inline rather than
-  // showing it in a floating popup (see RestaurantDetails,
-  // RestaurantReport, GradeChart). infoContent is still passed in this
-  // mode purely to decide whether the info button renders at all.
+  // When set, the button calls this instead of PanelHeader's own popup;
+  // isInfoOpen drives its expanded state. Used by panels that swap
+  // infoContent inline instead of a popup (RestaurantDetails, RestaurantReport, GradeChart).
   onInfoClick?: () => void;
   isInfoOpen?: boolean;
 };
@@ -104,7 +95,7 @@ export default function PanelHeader({
   const buttonRef = useRef<HTMLButtonElement | null>(null);
   const popupRef = useRef<HTMLDivElement | null>(null);
 
-  // Position and clamp the portal popup relative to the button and viewport before paint
+  // Positions and clamps the popup relative to button + viewport, before paint.
   useLayoutEffect(() => {
     if (
       isModal ||
@@ -268,8 +259,7 @@ export default function PanelHeader({
     infoContent,
   ]);
 
-  // Handle outside clicks and Escape key presses (anchored popup only;
-  // PanelInfoModal manages its own dismissal in modal mode).
+  // Outside clicks + Escape (anchored popup only — modal mode dismisses itself).
   useEffect(() => {
     if (!showInfo || isModal) {
       return;

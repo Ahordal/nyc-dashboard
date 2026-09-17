@@ -1,6 +1,6 @@
 // DashboardGuideMeta.tsx
 //
-// The dataset-freshness / size / attribution rows shown in the Dashboard
+// Dataset-freshness / size / attribution rows shown in the Dashboard
 // Information panel (desktop) and the mobile info drawer.
 
 import type { DashboardMeta } from "../types/dashboardMeta";
@@ -58,8 +58,7 @@ function formatDelta(delta: number | null | undefined) {
 
 type DashboardGuideMetaProps = {
   meta: DashboardMeta | null;
-  // Tight single-column rows with short labels and no divider (mobile
-  // info drawer). Desktop keeps the roomy 2-column layout.
+  // Tight single-column rows, no divider (mobile). Desktop keeps the 2-column layout.
   compact?: boolean;
 };
 

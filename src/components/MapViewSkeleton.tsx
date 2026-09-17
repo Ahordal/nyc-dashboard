@@ -1,8 +1,8 @@
 // MapViewSkeleton.tsx
 //
-// Placeholder displayed while the lazy-loaded MapView chunk (including
+// Placeholder while the lazy-loaded MapView chunk (including
 // @arcgis/core) downloads and initializes. Mirrors MapView's dimensions
-// to prevent layout shift (CLS) and provide immediate visual feedback.
+// to avoid layout shift.
 
 export default function MapViewSkeleton() {
   return (

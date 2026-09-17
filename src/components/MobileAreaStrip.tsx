@@ -1,10 +1,9 @@
 // MobileAreaStrip.tsx
 //
-// Thin summary bar pinned under the app bar on phones: the restaurant
-// count for the current map view (or Search Radius) and a compact
-// stacked grade bar. Tapping it slides a drawer down over the map with
-// the full grade-breakdown donut and the per-grade tally — the top-area
-// equivalent of the bottom sheet.
+// Thin summary bar pinned under the app bar on phones: restaurant count
+// for the current view (or Search Radius) plus a compact grade bar.
+// Tapping it slides a drawer down with the full grade-breakdown donut
+// and per-grade tally — the top-area equivalent of the bottom sheet.
 
 import { lazy, Suspense, useId, useMemo, useRef } from "react";
 
@@ -41,8 +40,7 @@ type MobileAreaStripProps = {
   filters: Filters;
   searchQuery: string;
   searchRadiusMiles: SearchRadiusMiles | null;
-  // Drawer open/closed, controlled by MobileDashboard (mutually exclusive
-  // with the app-bar Filters / Info drawers).
+  // Controlled by MobileDashboard, mutually exclusive with the app-bar drawers.
   open: boolean;
   onToggle: () => void;
 };
@@ -64,15 +62,13 @@ export default function MobileAreaStrip({
     [gradeCounts],
   );
 
-  // Selecting a restaurant zooms the map hard onto it, which can briefly
-  // (or, in a sparse area, lastingly) drop the visible tally to zero.
-  // Keep showing the last real distribution instead of blanking out.
+  // Selecting a restaurant can zoom the tally to zero (briefly, or
+  // lastingly in a sparse area). Keep showing the last real distribution instead.
   const lastCountsRef = useRef(gradeCounts);
   if (total > 0) lastCountsRef.current = gradeCounts;
   const displayCounts = total > 0 ? gradeCounts : lastCountsRef.current;
 
-  // Restrict the bar + count to the selected grades so the strip matches
-  // the map, the list, and the (also-scoped) donut.
+  // Scopes the bar + count to selected grades, matching the map, list, and donut.
   const barCounts = scopeGradeCounts(displayCounts, filters.grades);
   const displayTotal = SEGMENTS.reduce((sum, key) => sum + barCounts[key], 0);
 

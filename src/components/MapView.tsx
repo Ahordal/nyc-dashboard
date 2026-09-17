@@ -75,9 +75,8 @@ type MapViewProps = {
     point: SearchRadiusPoint | null,
     radiusMiles: SearchRadiusMiles,
   ) => void;
-  // Reports the current in-NYC GPS fix (or null when cleared / out of
-  // area) so the dashboard can show per-card distances from it. Only
-  // meaningful with showLocateControl (mobile).
+  // Reports the current in-NYC GPS fix (null when cleared/out of area)
+  // so the dashboard can show per-card distances. Mobile only.
   onUserLocationChange?: (
     point: { latitude: number; longitude: number } | null,
   ) => void;
@@ -88,36 +87,31 @@ type MapViewProps = {
     miles: SearchRadiusMiles;
   } | null;
   // A CAMIS (or feature id) from the initial URL to select once the
-  // layer is ready. Resolved with a direct layer query rather than a
-  // scan of the visible set, so a shared link still lands even when the
-  // target is off-screen or filtered out by grade. Null in normal use.
+  // layer is ready. Resolved with a direct layer query, not a scan of
+  // the visible set, so a shared link lands even off-screen or
+  // off-grade. Null in normal use.
   initialSelectedCamis?: string | null;
   // Called once the deep-linked CAMIS has been resolved (matched or
   // not), so the parent can drop its pending state.
   onInitialSelectionResolved?: () => void;
-  // The on-canvas hover card doesn't suit touch -- a tap has no hover to
-  // preview before committing, so mobile suppresses it and relies on the
-  // sheet's own selection view instead.
+  // The on-canvas hover card doesn't suit touch — no hover before a tap
+  // commits — so mobile suppresses it for the sheet's own selection view.
   showHoverCard?: boolean;
-  // The white glow drawn around a list-hovered point. Pointless on touch
-  // (no hover state to preview), so mobile turns it off; the selected
-  // point still glows.
+  // The white glow around a list-hovered point. Pointless on touch, so
+  // mobile turns it off; the selected point still glows.
   showHoverGlow?: boolean;
-  // The "locate me" chip. Mobile-only feature, so desktop leaves it off.
+  // The "locate me" chip. Mobile-only, so desktop leaves it off.
   showLocateControl?: boolean;
-  // Pixels of the map covered at the bottom by the mobile sheet, read at
-  // the moment a fix lands. When a restaurant is selected, the locate
-  // action fits both it and the fix into the slice of map above the
-  // sheet rather than just recentring on the fix. Omitted on desktop.
+  // Pixels of map covered by the mobile sheet, read when a fix lands, so
+  // the locate action fits both the fix and a selected restaurant above
+  // the sheet rather than just recentring on the fix. Omitted on desktop.
   getViewBottomInset?: () => number;
 };
 
-// Camera move shared by both "locate + selection" paths -- tapping locate
-// with a restaurant already selected, and selecting a restaurant with a
-// GPS fix already down. Fits the fix and the selected point into the map
-// slice above the sheet, or recentres on the fix when there's no
-// selection geometry or the two points are near-coincident. Same
-// transition (600ms goTo) whichever path triggers it.
+// Shared by both "locate + selection" paths: locate with a restaurant
+// selected, or select with a fix already down. Fits both into the map
+// slice above the sheet, or recentres on the fix alone if there's no
+// geometry or the points are near-coincident.
 async function fitToSelectionAndFix(
   view: MapView,
   layer: GeoJSONLayer,
@@ -180,12 +174,9 @@ async function fitToSelectionAndFix(
   view.goTo({ target }, { duration: 600 }).catch(() => {});
 }
 
-// Fits the camera to every restaurant point in the layer -- the full
-// 5-borough extent -- rather than a fixed center/zoom. Used for the
-// initial view and whenever filters/search are cleared back to none, so
-// the starting view is correct for the view's actual aspect ratio
-// (mobile portrait vs. desktop landscape) instead of a single tuned
-// zoom number.
+// Fits the camera to every restaurant point (the full 5-borough extent),
+// not a fixed center/zoom, so the initial view — and after filters
+// clear — suits the actual aspect ratio.
 async function goToFullExtent(
   view: MapView,
   layer: GeoJSONLayer,
@@ -223,17 +214,15 @@ export default function InspectionMapView({
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
 
-  // Device GPS for the "locate me" chip. The fix is drawn on its own
-  // graphics layer below; a fix outside NYC is rejected (outsideNyc) with
-  // a toast rather than dropping a pin in empty space.
+  // Device GPS for the "locate me" chip. A fix outside NYC is rejected
+  // (outsideNyc) with a toast rather than dropping a pin in empty space.
   const geo = useGeolocation();
   const [outsideNyc, setOutsideNyc] = useState(false);
   const [outOfAreaNonce, setOutOfAreaNonce] = useState(0);
 
-  // The surrounding ErrorBoundary only catches render-time throws, so the
-  // async failures below (GeoJSON 404, missing/invalid/over-quota ArcGIS
-  // key -> view or layer promise rejects) need their own visible state.
-  // `retryNonce` re-runs the mount effect, rebuilding the map from scratch.
+  // ErrorBoundary only catches render-time throws, so async failures
+  // below (GeoJSON 404, bad ArcGIS key -> a rejected promise) need their
+  // own state. `retryNonce` re-runs the mount effect from scratch.
   const [loadError, setLoadError] = useState(false);
   const [retryNonce, setRetryNonce] = useState(0);
 
@@ -249,9 +238,7 @@ export default function InspectionMapView({
     initialSearchRadius,
   );
 
-  // The selected/hovered glow effect and its object-ID plumbing live in
-  // this hook; applyHighlightForId is also called from the mount effect
-  // and the filter/search sync effect below.
+  // Also called from the mount effect and the filter/search sync effect below.
   const { applyHighlightForId } = useSelectionHighlight({
     layerRef,
     viewRef,
@@ -270,9 +257,8 @@ export default function InspectionMapView({
   const onInitialSelectionResolvedRef = useRef(onInitialSelectionResolved);
   const getViewBottomInsetRef = useRef(getViewBottomInset);
 
-  // The current in-bounds GPS fix, or null when there's none / it's
-  // outside NYC. Lets the selection effect reframe on both the fix and a
-  // newly-selected restaurant, mirroring what the locate tap does.
+  // The current in-bounds GPS fix, null if none/outside NYC. Lets the
+  // selection effect reframe on both fix and selection, like locate does.
   const activeUserFixRef = useRef<{ latitude: number; longitude: number } | null>(
     null,
   );
@@ -282,9 +268,6 @@ export default function InspectionMapView({
 
   const queryRequestIdRef = useRef(0);
 
-  // Pointer-move throttling, the restaurant hit test, cursor styling, and
-  // the on-canvas hover card all live in this hook. It wires its own
-  // listeners once `mapView` exists.
   useMapHover({
     view: mapView,
     layerRef,
@@ -364,10 +347,9 @@ export default function InspectionMapView({
       const restaurants = await queryVisibleRestaurants(view, layer, radius);
       if (requestId !== queryRequestIdRef.current) return;
 
-      // GradeChart tallies restaurants before the grade filter so it can
-      // show the full distribution for the area (matching slices are
-      // highlighted instead of removed). RestaurantList and StatsPanel
-      // use filteredRestaurants for the active subset.
+      // GradeChart tallies before the grade filter so it shows the full
+      // distribution (matching slices highlighted, not removed);
+      // RestaurantList/StatsPanel use filteredRestaurants instead.
       if (onGradeCountsChange) {
         const counts: GradeCounts = { ...EMPTY_GRADE_COUNTS };
         for (const r of restaurants) {
@@ -393,9 +375,8 @@ export default function InspectionMapView({
   useEffect(() => {
     if (!mapDivRef.current) return;
 
-    // Clear any error from a previous attempt before rebuilding. `disposed`
-    // guards against a stale rejection from the torn-down view/layer
-    // flipping the error state back on after a retry.
+    // `disposed` guards against a stale rejection from the torn-down
+    // view/layer flipping the error state back on after a retry.
     setLoadError(false);
     let disposed = false;
 
@@ -416,9 +397,8 @@ export default function InspectionMapView({
 
     const map = new Map({
       basemap: "arcgis/dark-gray/base",
-      // ArcGIS draws array order bottom-to-top: ringsLayer under every
-      // restaurant point/highlight, userLocationLayer on top so the "you
-      // are here" dot is never buried in a dense cluster.
+      // ArcGIS draws array order bottom-to-top: rings under every
+      // restaurant point, user location on top so it's never buried in a cluster.
       layers: [ringsLayer, layer, userLocationLayer],
     });
 
@@ -428,8 +408,8 @@ export default function InspectionMapView({
       center: DEFAULT_CENTER,
       zoom: DEFAULT_ZOOM,
       constraints: { snapToZoom: false },
-      // Zoom in/out is handled by the custom MapScaleZoomControls chip instead;
-      // attribution isn't part of the toggleable component list, so it stays.
+      // Zoom is handled by MapScaleZoomControls instead; attribution
+      // isn't part of the toggleable component list, so it stays.
       ui: { components: [] },
     });
     viewRef.current = view;
@@ -456,9 +436,8 @@ export default function InspectionMapView({
       .load()
       .then(() => {
         if (disposed) return;
-        // No animation: this replaces the placeholder camera set above
-        // before the real data extent was known, so it should look like
-        // the initial view rather than a visible zoom-out.
+        // No animation: replaces the placeholder camera set before the
+        // real extent was known, so it reads as the initial view.
         return goToFullExtent(view, layer, { duration: 0 });
       })
       .catch((err) => {
@@ -470,9 +449,8 @@ export default function InspectionMapView({
     const stationaryWatchHandle = reactiveUtils.watch(
       () => view.stationary,
       (isStationary) => {
-        // While a Search Radius point is set the scope is the circle, not
-        // the viewport, so pan/zoom shouldn't re-query. Radius changes go
-        // through their own effect below.
+        // While a Search Radius point is set the scope is the circle,
+        // not the viewport, so pan/zoom shouldn't re-query.
         if (isStationary && !searchRadius.searchRadiusPointRef.current) {
           reportVisibleRestaurants(view, layer);
         }
@@ -501,12 +479,10 @@ export default function InspectionMapView({
 
       const graphicHit = findRestaurantGraphicHit(response, layer);
 
-      // The graphic already carries every field the dashboard reads
-      // (RESTAURANT_OUT_FIELDS); violations are fetched separately from
-      // history/{camis}.json on select, so there's no follow-up query
-      // here. A hit on the already-selected restaurant clears it: click
-      // tolerance (and the post-select pan sliding its dot toward centre)
-      // otherwise makes a dismiss click land back on that same dot.
+      // The graphic already carries every field the dashboard reads; no
+      // follow-up query is needed here. A hit on the already-selected
+      // restaurant clears it — click tolerance and the post-select pan
+      // otherwise make a dismiss click land back on the same dot.
       if (
         graphicHit &&
         graphicHit.graphic.attributes.id !== selectedRestaurantIdRef.current
@@ -524,17 +500,15 @@ export default function InspectionMapView({
       view.destroy();
       setMapView(null);
     };
-    // Excluded from the dependency array so the map isn't torn down and
-    // recreated on every render; the click handler safely reads stable
-    // refs and callbacks from the searchRadius hook. `retryNonce` is the
-    // one intentional rebuild trigger (the "Retry" button on load error).
+    // Deps excluded so the map isn't torn down and recreated on every
+    // render; the click handler reads stable refs and callbacks.
+    // `retryNonce` is the one intentional rebuild trigger (Retry button).
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [applyHighlightForId, retryNonce]);
 
-  // Resolve a ?camis= deep link once the layer is ready. Done here with a
-  // direct layer query, not by scanning dashboard's visibleRestaurants:
-  // that set is already extent- and grade-filtered, so a shared link to
-  // anything off-screen or off the active grade never matched.
+  // Resolves a ?camis= deep link once the layer is ready, via a direct
+  // layer query rather than scanning dashboard's already extent/grade-
+  // filtered visibleRestaurants, which would miss an off-screen match.
   const didResolveDeepLinkRef = useRef(false);
 
   useEffect(() => {
@@ -554,14 +528,12 @@ export default function InspectionMapView({
           initialSelectedCamis,
         );
         if (cancelled) return;
-        // The query ran, so we have a definitive answer (a match or a
-        // genuine miss) -- don't try again on a later render/retry.
+        // A definitive answer either way — don't retry on a later render.
         didResolveDeepLinkRef.current = true;
         if (restaurant) onSelectRestaurantRef.current?.(restaurant);
         onInitialSelectionResolvedRef.current?.();
       } catch (err) {
-        // View/layer never became ready. Leave the guard down so a
-        // successful Map "Retry" gets another chance at the link.
+        // Leave the guard down so a successful Retry gets another chance.
         console.error("MapView: failed to resolve deep-linked restaurant", err);
       }
     })();
@@ -571,12 +543,10 @@ export default function InspectionMapView({
     };
   }, [initialSelectedCamis, retryNonce]);
 
-  // Draw (or clear) the "you are here" graphics when a GPS fix lands. A
-  // fix outside NYC draws nothing and raises the out-of-area toast; an
-  // in-bounds fix draws the dot + accuracy circle and reframes. With a
-  // restaurant selected, that reframe fits both it and the fix into the
-  // map above the sheet; otherwise it just recentres on the fix. Each
-  // success is a fresh object, so a re-tap re-frames on the new fix.
+  // Draws (or clears) the "you are here" graphics on a GPS fix. Outside
+  // NYC draws nothing and raises the out-of-area toast; in-bounds draws
+  // the dot + accuracy circle and reframes (fitting a selected restaurant
+  // too, if any). Each success is a fresh object, so a re-tap re-frames.
   useEffect(() => {
     const locationLayer = userLocationLayerRef.current;
     if (!locationLayer) return;
@@ -639,8 +609,7 @@ export default function InspectionMapView({
     };
   }, [geo.position]);
 
-  // Clear a stale out-of-area flag as soon as a new request starts, so the
-  // chip and its tooltip don't keep saying "Outside NYC" while relocating.
+  // Clears a stale out-of-area flag once a new request starts.
   useEffect(() => {
     if (geo.status === "locating") setOutsideNyc(false);
   }, [geo.status]);
@@ -655,10 +624,8 @@ export default function InspectionMapView({
     const handleCameraMove = async () => {
       if (!selectedRestaurantId) return;
 
-      // With a GPS fix already down, reframe on both the fix and the new
-      // selection -- the exact move the locate tap makes in the reverse
-      // order, so a point tapped after panning away from the fix doesn't
-      // leave the fix off-screen.
+      // With a GPS fix already down, reframe on both — otherwise a point
+      // tapped after panning away from the fix would leave it off-screen.
       const fix = activeUserFixRef.current;
       if (fix) {
         void fitToSelectionAndFix(
@@ -777,9 +744,8 @@ export default function InspectionMapView({
 
       let cameraWillMove = false;
 
-      // Freeze map-extent tracking while a Search Radius point is active
-      // so it doesn't override the circle view. The query still re-runs
-      // so linked panels and charts reflect the circle scope.
+      // Freezes camera tracking while a Search Radius point is active so
+      // it doesn't override the circle view; the query still re-runs.
       const radiusActive = searchRadius.searchRadiusPointRef.current !== null;
 
       if (cameraTrigger && view && !radiusActive) {
@@ -816,10 +782,8 @@ export default function InspectionMapView({
     }
 
     syncSelectionAndZoom();
-    // reportVisibleRestaurants is a per-render function and
-    // searchRadius.searchRadiusPointRef is a stable ref; neither belongs
-    // in the dep array (listing the function would re-run this every
-    // render).
+    // reportVisibleRestaurants (per-render) and searchRadius's ref
+    // (stable) don't belong in the dep array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [
     filters,

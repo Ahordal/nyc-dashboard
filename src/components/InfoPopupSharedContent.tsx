@@ -1,9 +1,8 @@
 // InfoPopupSharedContent.tsx
 //
-// Content shared between dashboard info popups: grade definitions, NYC
-// health resources, the map legend table, and the dashboard overview /
-// how-to / attribution / data-notes blocks (used by DashboardGuide on
-// desktop and MobileInfoContent on phones).
+// Content shared between info popups: grade definitions, NYC resources,
+// the legend table, overview/how-to/attribution/notes blocks. Used by
+// DashboardGuide (desktop) and MobileInfoContent (phones).
 
 import type { ReactNode } from "react";
 
@@ -192,8 +191,7 @@ export function DashboardOverview() {
   );
 }
 
-// Dashboard interaction bullets. `extra` appends context-specific items
-// (e.g. touch gestures on mobile) to the end of the list.
+// `extra` appends context-specific items (touch gestures) to the end.
 export function DashboardHowToUse({ extra }: { extra?: ReactNode }) {
   return (
     <ul>
@@ -302,8 +300,7 @@ export function DataNotes() {
   );
 }
 
-// The map's grade / score / dot-size legend. One dot size shows a single
-// dot; two show small dot, arrow, large dot.
+// Grade/score/dot-size legend. One dot size = single dot; two = small dot, arrow, large dot.
 type LegendRowData = {
   label: string;
   color: string;

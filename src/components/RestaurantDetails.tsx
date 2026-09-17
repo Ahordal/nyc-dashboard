@@ -50,7 +50,6 @@ function yearsSince(dateString: string): number {
   return (now - then) / (1000 * 60 * 60 * 24 * 365.25);
 }
 
-// Extracts total counts of Critical and Not Critical violations for an inspection event
 function getViolationCounts(event: InspectionEvent): {
   critical: number;
   notCritical: number;
@@ -74,8 +73,8 @@ function getViolationCounts(event: InspectionEvent): {
   return { critical, notCritical };
 }
 
-// Maps a restaurant's current_status_code to the matching Badge variant,
-// falling back to "status-unknown" for any unrecognized code.
+// Maps current_status_code to the matching Badge variant, falling back
+// to "status-unknown" for any unrecognized code.
 function statusVariant(code: string): BadgeVariant {
   if (code === "open" || code === "closed" || code === "unknown") {
     return `status-${code}` as BadgeVariant;
@@ -240,9 +239,8 @@ type RestaurantDetailsProps = {
   // Which point distanceOrigin is, so the row can name its source.
   distanceOriginKind?: "search-radius" | "your-location";
 
-  // Set by the mobile pinned score chart on a dot tap: scroll this
-  // inspection's history row into view. A fresh object (bumped nonce)
-  // each tap, so re-tapping the same dot re-scrolls. Omitted on desktop.
+  // Set by the mobile pinned score chart on a dot tap, to scroll that
+  // row into view. Bumped nonce so re-tapping the same dot re-scrolls.
   historyScrollTarget?: { id: string; nonce: number } | null;
 
   // Mobile drops the hover/focus preview bullet from the info panel —
@@ -269,9 +267,8 @@ function RestaurantDetails({
     [isMobile],
   );
 
-  // Scroll a history row into view only when the mobile score chart asks
-  // for it (a dot tap), never just because the selection changed — so
-  // opening Details doesn't jump straight to the list.
+  // Only scrolls on a mobile score-chart dot tap, never just because the
+  // selection changed — so opening Details doesn't jump into the list.
   const historyListRef = useRef<HTMLUListElement>(null);
   useEffect(() => {
     if (!historyScrollTarget || isLoadingHistory) {
@@ -328,9 +325,8 @@ function RestaurantDetails({
 
   const inspectionAge = yearsSince(restaurant.inspection_date);
 
-  // The 1900-01-01 placeholder DOHMH uses for restaurants with no real
-  // inspection on record would otherwise compute as 100+ years stale,
-  // implying an inspection that never actually happened.
+  // Excludes uninspected restaurants: DOHMH's 1900-01-01 placeholder for
+  // "no inspection on record" would otherwise compute as 100+ years stale.
   const isStale = category !== "uninspected" && inspectionAge >= 2;
 
   const historyDescending = [...history].reverse();
@@ -558,7 +554,6 @@ function RestaurantDetails({
                       onSelectInspection(event.id);
                     }
                   }}>
-                  {/* 1. Dot */}
                   <span
                     className="inspection-row-dot"
                     style={{
@@ -567,10 +562,8 @@ function RestaurantDetails({
                     aria-hidden="true"
                   />
 
-                  {/* 2. Date */}
                   <span className="inspection-row-date">{eventDate}</span>
 
-                  {/* 3. Badges */}
                   <div className="inspection-violation-counts">
                     {critical === 0 &&
                     notCritical === 0 &&
@@ -605,7 +598,6 @@ function RestaurantDetails({
                     )}
                   </div>
 
-                  {/* 4. Grade */}
                   <span
                     className="inspection-row-grade"
                     style={{
@@ -614,7 +606,6 @@ function RestaurantDetails({
                     {eventGrade}
                   </span>
 
-                  {/* 5. Score */}
                   <span className="inspection-row-score">{event.score}</span>
                 </li>
               );

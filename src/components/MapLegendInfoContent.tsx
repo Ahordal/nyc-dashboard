@@ -1,9 +1,9 @@
 // MapLegendInfoContent.tsx
 //
-// The contents of the map panel's info popup (overview, how-to-use, the
-// grade/score legend table, and data notes). Lifted out of MapView.tsx
-// as a plain constant; it's static JSX passed straight to PanelHeader.
-// The legend table itself is shared (InfoPopupSharedContent).
+// Contents of the map panel's info popup (overview, how-to-use, the
+// grade/score legend table, data notes). Lifted out of MapView.tsx as a
+// plain constant of static JSX. The legend table is shared
+// (InfoPopupSharedContent).
 
 import InfoPopupContent from "./InfoPopupContent";
 import { LegendTable } from "./InfoPopupSharedContent";

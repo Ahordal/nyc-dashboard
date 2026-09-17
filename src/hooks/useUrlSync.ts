@@ -1,10 +1,8 @@
 // useUrlSync.ts
 //
-// Two-way sync between filter/search/selection/radius state and the URL
-// query string, so a given dashboard view is shareable and bookmarkable.
-// Reads the initial state from the URL once on mount, then writes state
-// back with history.replaceState on every change. The pure parse/build
-// helpers are exported so they can be unit-tested without the hook.
+// Two-way sync between dashboard state and the URL, for shareable,
+// bookmarkable views. Reads once on mount, writes back via
+// history.replaceState on every change; parse/build helpers are exported standalone for testing.
 
 import { useEffect, useRef } from "react";
 
@@ -38,13 +36,12 @@ export type InitialUrlState = {
   radius: InitialRadiusState | null;
 };
 
-// Coordinates are rounded to 5 decimal places (~1 m) on the way out,
-// enough to land the pin back on the same block without bloating the URL.
+// Rounded to 5 decimals (~1m) — enough to land back on the same block
+// without bloating the URL.
 const RADIUS_COORD_PRECISION = 5;
 
-// Parses `?radius=<lat>,<lng>,<miles>`. Returns null (rather than throwing
-// or partially applying) for anything malformed or out of range, since
-// the value can be hand-edited.
+// Parses `?radius=<lat>,<lng>,<miles>`. Null (never throws or partially
+// applies) for anything malformed — the value can be hand-edited.
 export function parseRadiusParam(raw: string | null): InitialRadiusState | null {
   if (!raw) return null;
 
@@ -72,8 +69,6 @@ export function parseRadiusParam(raw: string | null): InitialRadiusState | null 
   return { point: { latitude, longitude }, miles };
 }
 
-// Pure URL-string <-> state helpers, exported so they can be unit-tested
-// without rendering the hook.
 export function parseInitialUrlState(search: string): InitialUrlState {
   const params = new URLSearchParams(search);
 
@@ -136,9 +131,8 @@ export function useUrlSync(
   onInit: (initial: InitialUrlState) => void,
 ) {
   const isInitialized = useRef(false);
-  // Set when onInit fires, so the write-effect's first pass (same commit)
-  // doesn't briefly overwrite the URL with the pre-init default state
-  // before the render carrying onInit's applied state lands.
+  // Set when onInit fires, so the write effect's first pass doesn't
+  // overwrite the URL with pre-init defaults before the applied state renders.
   const skipNextWrite = useRef(false);
 
   const {
@@ -150,7 +144,6 @@ export function useUrlSync(
     searchRadiusMiles,
   } = state;
 
-  // 1. Read initial state from URL on first mount
   useEffect(() => {
     if (isInitialized.current) {
       return;
@@ -165,7 +158,6 @@ export function useUrlSync(
     }
   }, [onInit]);
 
-  // 2. Write state back to the URL whenever state updates
   useEffect(() => {
     if (!isInitialized.current) {
       return;

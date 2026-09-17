@@ -1,12 +1,9 @@
 // MapUserLocationControl.tsx
 //
-// Map-corner "locate me" chip (mobile only). Same 32x32 shell as the
-// other map controls; the glyph swaps to a spinner while a fix is in
-// flight and to a muted state on error / out-of-area, with the reason in
-// the tooltip. Once located, a "My location" label + clear (x) button
-// appears to its left -- mirroring the Search Radius control's active
-// panel -- and the arrow button then re-locates on tap. Out-of-area also
-// raises a NoticeOverlay in MapView.
+// Map-corner "locate me" chip (mobile only), same shell as other
+// controls. Glyph spins in flight, mutes on error/out-of-area (also
+// raising a NoticeOverlay in MapView); once located, a "My location"
+// label + clear button appear, and the arrow re-locates on tap.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {

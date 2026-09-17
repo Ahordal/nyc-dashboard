@@ -4,11 +4,8 @@
 
 import type { InspectionEvent } from "../types/restaurant";
 
-// Uses the explicitly selected inspection when it belongs to the current
-// history; otherwise falls back to the most recent event. selectedId can
-// lag a restaurant switch (it still holds the previous restaurant's
-// inspection while history has already updated), so the membership check
-// matters. Returns null for empty history with nothing selected.
+// Uses selectedId if it's still in this history, else the most recent
+// event — selectedId can lag a restaurant switch. Null only for empty history.
 export function resolveReportInspectionId(
   selectedId: string | null,
   history: InspectionEvent[],

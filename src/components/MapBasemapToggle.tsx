@@ -1,28 +1,16 @@
 // MapBasemapToggle.tsx
 //
-// Top-right basemap toggle for MapView. Swaps between the default dark-gray
-// map and satellite imagery. The button icon indicates the mode a click will 
-// switch *to*, matching Google Maps' layer toggle pattern.
+// Top-right toggle between dark-gray and satellite. Icon shows the mode
+// a click switches *to* (Google Maps convention).
 //
-// Implementation Notes & Workarounds:
-// 1. Basemap Persistence: The dark-gray vector basemap (`arcgis/dark-gray/base`,
-//    configured in MapView) remains mounted in both modes. Satellite mode overlays 
-//    Esri World Imagery as the bottom-most operational layer via a keyless 
-//    WebTileLayer (`services.arcgisonline.com`).
-// 2. Why Custom Overlays vs. Built-in Basemap Swapping: Swapping `map.basemap` 
-//    directly proved unreliable:
-//    - Basemap-styles v2 `arcgis/imagery/*` variants require an entitlement missing 
-//      from this app's API key.
-//    - `Basemap.fromId("satellite")` fails because its tiled MapServer load rejects tokens 
-//      when `esriConfig.apiKey` is set, causing the basemap to fail silently.
-// 3. Label Stacking Strategy: Esri's composited styles place labels in 
-//    `Basemap.referenceLayers`, which the ArcGIS SDK always renders above every 
-//    operational layer. To allow restaurant dots to render between street labels 
-//    and place/water labels, we extract labels out of the basemap entirely:
-//    - Split into two VectorTileLayers per style.
-//    - Street/road-name layers (prefixed "Road/label/" or "Road tunnel/label/") 
-//      render below restaurant markers.
-//    - Everything else (places, neighborhoods, water bodies) renders above them.
+// Dark-gray stays mounted in both modes; satellite overlays Esri World
+// Imagery via a keyless WebTileLayer. Swapping `map.basemap` directly
+// fails here — `arcgis/imagery/*` needs an entitlement this key lacks,
+// and `Basemap.fromId("satellite")`'s MapServer rejects tokens with esriConfig.apiKey set.
+//
+// Esri's composited styles render labels above every operational layer,
+// burying restaurant dots. So each style splits into two
+// VectorTileLayers — road/street below the markers, everything else above.
 
 import { useEffect, useRef, useState } from "react";
 import type MapView from "@arcgis/core/views/MapView";
@@ -31,14 +19,12 @@ import WebTileLayer from "@arcgis/core/layers/WebTileLayer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSatellite, faMap } from "@fortawesome/free-solid-svg-icons";
 
-// Esri World Imagery referenced as raw tiles to prevent token/metadata requests
-// and avoid triggering esriConfig.apiKey rejections.
+// Raw tiles avoid triggering token/metadata requests via esriConfig.apiKey.
 const WORLD_IMAGERY_TILE_URL =
   "https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{level}/{row}/{col}";
 
-// Visual tuning for satellite imagery to ensure high contrast for restaurant dots:
-// - Opacity allows the dark-gray basemap underneath to blend through.
-// - CSS brightness/saturation effects tone down harsh highlights in the aerial imagery.
+// Opacity blends the dark-gray basemap through; brightness/saturate keeps
+// dots legible over harsh highlights.
 const SATELLITE_IMAGERY_OPACITY = 0.6;
 const SATELLITE_IMAGERY_EFFECT = "brightness(70%) saturate(95%)";
 
@@ -56,11 +42,9 @@ type LabelLayerPair = {
   placeLayer: VectorTileLayer;
 };
 
-// Loads a single labels style into two VectorTileLayer instances, then culls 
-// complementary style layers from each. One instance retains only road/street 
-// labels; the other retains all remaining labels. Both are initialized from 
-// the style URL (rather than a raw style object) so the SDK properly resolves 
-// sprites, glyphs, tile URLs, and esriConfig.apiKey authorization.
+// Loads one style into two VectorTileLayers, culling complementary
+// layers from each — one keeps road/street, the other keeps the rest.
+// From the style URL, not a raw object, so the SDK resolves sprites/glyphs/tiles and apiKey auth.
 async function createSplitLabelLayers(styleUrl: string): Promise<LabelLayerPair> {
   const streetLayer = new VectorTileLayer({ url: styleUrl });
   const placeLayer = new VectorTileLayer({ url: styleUrl });
@@ -87,12 +71,10 @@ export default function MapBasemapToggle({ view }: MapBasemapToggleProps) {
   const defaultLabelsRef = useRef<LabelLayerPair | null>(null);
   const satelliteLabelsRef = useRef<LabelLayerPair | null>(null);
   const imageryLayerRef = useRef<WebTileLayer | null>(null);
-  // Synchronous in-flight guard: state updates from the previous click may
-  // not have re-rendered (and disabled the button) before a fast second
-  // click's handler runs, so a ref is used rather than isToggling itself.
+  // Ref, not isToggling — a fast second click can fire before the button disables.
   const inFlightRef = useRef(false);
 
-  // Mount default label layers on initialization since the map defaults to the standard view.
+  // Mounts default labels on init, since the map starts on the standard view.
   useEffect(() => {
     if (!view?.map) return;
     const map = view.map;
@@ -142,8 +124,8 @@ export default function MapBasemapToggle({ view }: MapBasemapToggleProps) {
       map.layers.add(activeRef.current.streetLayer, 0);
       map.layers.add(activeRef.current.placeLayer);
 
-      // Toggle the satellite imagery layer. Index 0 keeps it below street labels
-      // and operational layers, directly sitting atop the dark-gray basemap.
+      // Index 0 keeps imagery below street labels/operational layers, atop
+      // the dark-gray basemap.
       if (next) {
         if (!imageryLayerRef.current) {
           imageryLayerRef.current = new WebTileLayer({

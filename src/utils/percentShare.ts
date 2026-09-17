@@ -1,8 +1,7 @@
 // percentShare.ts
 //
-// Turns a set of counts into integer percentages that sum to exactly 100
-// (largest-remainder / Hamilton rounding), plus a display formatter that
-// shows "<1%" for a nonzero count that rounds down to zero.
+// Integer percentages that sum to exactly 100 (largest-remainder /
+// Hamilton rounding). Formatter shows "<1%" for a nonzero count that rounds to zero.
 
 export function largestRemainderPercents(values: number[]): number[] {
   const total = values.reduce((sum, value) => sum + value, 0);

@@ -1,8 +1,7 @@
 // searchRadiusRings.ts
 //
-// Pure graphics builder for the Search Radius tool: given a centre point
-// and the active radius, returns the ring, label, and centre-pin
-// graphics. Decoupled from MapView.
+// Ring/label/centre-pin graphics for Search Radius, from a centre point
+// and radius. Decoupled from MapView.
 
 import Graphic from "@arcgis/core/Graphic";
 import Circle from "@arcgis/core/geometry/Circle";
@@ -18,7 +17,7 @@ import {
 } from "../types/searchRadius";
 import type { SearchRadiusPoint, SearchRadiusMiles } from "../types/searchRadius";
 
-// Earth radius in miles, used for calculating northern label offsets.
+// Earth radius in miles, for the label offset math.
 const EARTH_RADIUS_MILES = 3958.8;
 
 // Inlined color constants since ArcGIS symbols cannot reference CSS vars.
@@ -31,7 +30,7 @@ function northOffsetDegrees(miles: number): number {
   return (miles / EARTH_RADIUS_MILES) * (180 / Math.PI);
 }
 
-// Outward offset to keep label halos from visually clipping the ring stroke.
+// Keeps label halos from clipping the ring stroke.
 const LABEL_OUTWARD_OFFSET_MILES = 0.04;
 
 export function buildSearchRadiusGraphics(
@@ -40,7 +39,7 @@ export function buildSearchRadiusGraphics(
 ): Graphic[] {
   const graphics: Graphic[] = [];
 
-  // Draw largest rings first so smaller ring borders remain crisp on top.
+  // Largest rings first, so smaller borders stay crisp on top.
   const ringsLargestFirst = [...SEARCH_RADIUS_OPTIONS_MILES].reverse();
 
   for (const miles of ringsLargestFirst) {
@@ -68,7 +67,7 @@ export function buildSearchRadiusGraphics(
     );
   }
 
-  // Draw labels after rings to prevent fills from obscuring text.
+  // Labels after rings, so fills don't obscure the text.
   for (const miles of SEARCH_RADIUS_OPTIONS_MILES) {
     const isActive = miles === activeMiles;
 
@@ -91,7 +90,6 @@ export function buildSearchRadiusGraphics(
     );
   }
 
-  // Add the centre-point pin graphic.
   graphics.push(
     new Graphic({
       geometry: new Point({

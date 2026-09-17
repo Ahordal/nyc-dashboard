@@ -33,8 +33,8 @@ export default function PanelInfoModal({
   const closeButtonRef = useRef<HTMLButtonElement | null>(null);
   const dialogRef = useRef<HTMLDivElement | null>(null);
 
-  // Focus the close button on open, restore focus to the trigger on
-  // close, and lock body scrolling while the modal is up.
+  // Focuses the close button on open, restores the trigger on close,
+  // locks body scroll while up.
   useEffect(() => {
     if (!isOpen) {
       return;

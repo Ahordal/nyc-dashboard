@@ -3,8 +3,7 @@
 // Map-corner tool chip for the Search Radius feature, controlled by
 // useSearchRadiusTool via props. The 32x32 icon button stays put,
 // swapping its icon (bullseye/X) and behaviour; when active, the hover
-// tooltip becomes a persistent label to its left with the radius picker
-// stacked beneath.
+// tooltip becomes a persistent label with the radius picker stacked beneath.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBullseye, faXmark } from "@fortawesome/free-solid-svg-icons";

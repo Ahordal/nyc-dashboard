@@ -1,10 +1,7 @@
 // restaurantSort.ts
 //
-// Pure sort logic for the Restaurant List's two-level sort control,
-// pulled out of RestaurantList.tsx so it can be unit-tested without
-// rendering the component. RestaurantList owns the UI state (which
-// fields are picked, the direction toggle, the dropdown sentinels);
-// this module owns "given those choices, produce the ordered list".
+// Pure sort logic for the Restaurant List's two-level sort, split out for
+// testing. RestaurantList owns the UI state; this just orders the list.
 
 import type { RestaurantProperties } from "../types/restaurant";
 import type { SearchRadiusPoint } from "../types/searchRadius";
@@ -35,22 +32,15 @@ function gradeRank(restaurant: RestaurantProperties): number {
     case "uninspected": return 4;
     case "closed": return 5;
     default: {
-      // Exhaustiveness check: fails to compile if GradeCategory ever
-      // gains a 7th member without a rank assigned here.
+      // Fails to compile if GradeCategory gains a member without a rank here.
       const exhaustiveCheck: never = category;
       return exhaustiveCheck;
     }
   }
 }
 
-// Each sortable field is a labelled key function: restaurant -> a
-// comparable value, or null when the row has no value for that field.
-// Null values always sort last regardless of direction (so flipping
-// Score or Inspected to ascending can't flood the first page with
-// not-yet-inspected restaurants). `needsDistancePoint` fields are only
-// offered while a distance origin (a Search Radius point or the mobile
-// locate dot) is set. A sort is one or two of these applied in order,
-// sharing one direction.
+// Restaurant -> comparable value, or null (nulls sort last).
+// needsDistancePoint needs an origin; a sort chains one or two, one direction.
 export const SORT_KEYS: Record<
   SortKeyId,
   {
@@ -83,11 +73,8 @@ export const SORT_KEYS: Record<
   distance: {
     label: "Distance",
     needsDistancePoint: true,
-    // Rounded to the same precision shown on each card (see
-    // roundApproxMilesValue), so restaurants that display the same
-    // distance actually tie here and a secondary sort field (e.g. Grade)
-    // can meaningfully order between them, instead of every restaurant
-    // having a distinct raw float that never ties with anything.
+    // Rounded like the card (roundApproxMilesValue), so equal-looking
+    // distances tie and a secondary field can break them.
     keyOf: (restaurant, point) =>
       point && restaurant.latitude != null && restaurant.longitude != null
         ? roundApproxMilesValue(
@@ -110,10 +97,8 @@ export const SORT_KEY_ORDER: SortKeyId[] = [
   "distance",
 ];
 
-// The direction that puts the most useful rows first for each field,
-// applied whenever the primary field changes so picking Grade starts
-// with A's, Distance with the closest, and so on. The direction toggle
-// can still flip it.
+// Default direction on becoming primary (Grade -> A, Distance -> closest).
+// Toggle can still flip it.
 export const NATURAL_DIRECTION: Record<SortKeyId, SortDirection> = {
   inspection_date: "desc", // most recent first
   name: "asc", // A–Z
@@ -127,17 +112,13 @@ export type SortOptions = {
   primary: SortKeyId;
   secondary: SortKeyId | null;
   direction: SortDirection;
-  // The distance origin (Search Radius centre or the mobile locate dot),
-  // needed by the "distance" key. Null when neither is set, in which case
-  // "distance" keys every row as null and falls through to the name/id
-  // tiebreak.
+  // Distance origin (radius centre or locate dot). Null -> "distance"
+  // keys nothing, falls to the name/id tiebreak.
   point: SearchRadiusPoint | null;
 };
 
-// Returns a new array; does not mutate the input. The primary field is
-// applied first, then the secondary (if any), sharing one direction. A
-// null key at any level sorts that row last regardless of direction;
-// fully-tied rows fall back to name, then id, for a stable order.
+// New array, not mutated. Primary sorts first, then secondary; nulls
+// last; ties fall to name, then id.
 export function sortRestaurants(
   restaurants: RestaurantProperties[],
   { primary, secondary, direction, point }: SortOptions,

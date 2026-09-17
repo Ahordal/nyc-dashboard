@@ -1,7 +1,6 @@
 // BoroughFilters.tsx
 //
-// Filter section for selecting NYC boroughs, synced to dashboard filter
-// state.
+// Filter section for selecting NYC boroughs, synced to dashboard filter state.
 
 import { faCity } from "@fortawesome/free-solid-svg-icons";
 import FilterSection from "./FiltersSection";

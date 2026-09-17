@@ -1,9 +1,7 @@
 // userLocationGraphics.ts
 //
-// Pure graphics builder for the map's "locate me" control: a fixed-size
-// blue dot (kept larger than the score dots so it never reads as a
-// restaurant) plus a translucent accuracy circle sized to the fix's
-// reported precision. Decoupled from MapView, mirroring searchRadiusRings.
+// The "locate me" dot (larger than score dots, so it never reads as a
+// restaurant) and its accuracy circle. Decoupled from MapView, like searchRadiusRings.
 
 import Graphic from "@arcgis/core/Graphic";
 import Circle from "@arcgis/core/geometry/Circle";
@@ -22,7 +20,7 @@ const ACCURACY_STROKE: [number, number, number, number] = [26, 133, 255, 0.5];
 export function buildUserLocationGraphics(fix: GeolocationFix): Graphic[] {
   const graphics: Graphic[] = [];
 
-  // Accuracy circle first so the dot draws on top of it.
+  // Accuracy circle first, so the dot draws on top.
   if (fix.accuracy > 0) {
     graphics.push(
       new Graphic({

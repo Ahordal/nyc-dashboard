@@ -1,8 +1,8 @@
 // Badge.tsx
 //
 // Reusable pill badge for violation severity, codes, categories, and
-// status flags. Single source of truth for severity colours; base sizing
-// and other variant styles live in styles/explorer.css.
+// status flags. Base sizing and other variant styles live in
+// styles/explorer.css.
 
 import type { CSSProperties, ReactNode } from "react";
 

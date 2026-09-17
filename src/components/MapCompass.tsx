@@ -1,10 +1,7 @@
 // MapCompass.tsx
 //
-// Top-left reorient-north control for MapView, stacked directly below the
-// zoom chip. The icon rotates opposite the view's current rotation so it
-// keeps pointing to true north as a passive orientation indicator;
-// clicking it resets view.rotation to 0. Disabled at rotation 0 since
-// there's nothing to reorient.
+// Reorient-north control below the zoom chip. Icon rotates opposite the
+// view as a passive indicator; click resets to 0, disabled already there.
 
 import { useEffect, useState } from "react";
 import type MapView from "@arcgis/core/views/MapView";

@@ -1,10 +1,8 @@
 // useInspectionHistory.ts
 //
-// Loads a restaurant's inspection history by CAMIS. Results are held in
-// an LRU cache (capped at MAX_HISTORY_CACHE_ENTRIES) shared across
-// selections for the component's lifetime, so revisiting a restaurant is
-// instant. Returns empty history with isLoadingHistory false when camis
-// is null; aborts the in-flight fetch on a camis change or unmount.
+// Loads a restaurant's inspection history by CAMIS, LRU-cached
+// (MAX_HISTORY_CACHE_ENTRIES) so revisiting a restaurant is instant.
+// Aborts the in-flight fetch on a camis change or unmount.
 
 import { useEffect, useRef, useState } from "react";
 

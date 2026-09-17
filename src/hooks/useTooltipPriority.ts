@@ -1,10 +1,7 @@
 // useTooltipPriority.ts
 //
-// Decides which chart point PerformanceChart's tooltip should show, in
-// priority order: direct pointer hover, history-row hover/focus, the active
-// keyboard-nav point, then the pinned selection. Also owns the dot-ref map
-// used to read each point's rendered (cx, cy) position. Extracted from
-// PerformanceChart so this logic is independently testable.
+// Tracks the tooltip's active point (priority below) and each dot's
+// rendered position. Split out from PerformanceChart for testing.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 
@@ -25,7 +22,7 @@ type UseTooltipPriorityParams = {
   chartData: ChartPoint[];
   selectedChartPoint: ChartPoint | null;
   historyPreviewChartPoint: ChartPoint | null;
-  // Driven by keyboard-nav; this hook only reads them.
+  // Driven by keyboard-nav; this hook only reads it.
   activeKeyboardPoint: ChartPoint | null;
   isKeyboardModeActive: boolean;
   chartSize: ChartSize;
@@ -50,10 +47,10 @@ function tooltipPointsMatch(
 }
 
 // Tooltip priority:
-// 1. A chart dot directly under the pointer.
-// 2. A history row currently hovered or keyboard-focused.
-// 3. The current keyboard-navigation point.
-// 4. The report currently pinned by Dashboard.
+// 1. Dot directly under the pointer.
+// 2. Hovered or keyboard-focused history row.
+// 3. Active keyboard-nav point.
+// 4. Report pinned by Dashboard.
 export function useTooltipPriority({
   chartData,
   selectedChartPoint,
@@ -74,12 +71,12 @@ export function useTooltipPriority({
   const [historyPreviewPoint, setHistoryPreviewPoint] =
     useState<TooltipPoint | null>(null);
 
-  // Current point selected through chart keyboard navigation.
+  // Point selected via chart keyboard nav.
   const [keyboardPoint, setKeyboardPoint] = useState<TooltipPoint | null>(
     null,
   );
 
-  // Current report selection while Dashboard permits it to remain pinned.
+  // Report selection while Dashboard keeps it pinned.
   const [selectedPoint, setSelectedPoint] = useState<TooltipPoint | null>(
     null,
   );
@@ -89,7 +86,7 @@ export function useTooltipPriority({
     historyPreviewPoint ??
     (isKeyboardModeActive ? keyboardPoint : selectedPoint);
 
-  // Reset tooltip state whenever the underlying chart data changes.
+  // Resets tooltip state when chart data changes.
   useEffect(() => {
     setPointerPoint(null);
     setHistoryPreviewPoint(null);
@@ -139,7 +136,7 @@ export function useTooltipPriority({
     [],
   );
 
-  // Synchronize the pinned report point.
+  // Pinned report point.
   useEffect(() => {
     const syncPoint = () => {
       const nextSelectedPoint = getRenderedTooltipPoint(selectedChartPoint);
@@ -151,10 +148,8 @@ export function useTooltipPriority({
       );
     };
 
-    // 1. Try to sync immediately
+    // Sync now, then again once Recharts' layout paint settles.
     syncPoint();
-
-    // 2. Try again slightly later to ensure Recharts has finished its layout paint
     const timeoutId = setTimeout(syncPoint, 100);
 
     return () => clearTimeout(timeoutId);
@@ -168,7 +163,7 @@ export function useTooltipPriority({
     yMax,
   ]);
 
-  // Synchronize the history-row hover/focus preview.
+  // History-row hover/focus preview.
   useEffect(() => {
     const nextPreviewPoint = getRenderedTooltipPoint(historyPreviewChartPoint);
 
@@ -187,7 +182,7 @@ export function useTooltipPriority({
     yMax,
   ]);
 
-  // Synchronize the chart's keyboard-navigation point.
+  // Chart's keyboard-nav point.
   useEffect(() => {
     if (!isKeyboardModeActive) {
       setKeyboardPoint(null);

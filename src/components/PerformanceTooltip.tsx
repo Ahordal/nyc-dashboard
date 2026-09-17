@@ -1,10 +1,8 @@
 // PerformanceTooltip.tsx
 //
-// Custom chart tooltip positioned relative to the active inspection dot.
-// The "full" variant shows the inspection date and grade/score badges;
-// closure inspections also show the "Closed by DOHMH" status tag. The
-// "compact" variant (mobile, where the chart is short) drops to a small
-// grade + score label pinned to the dot.
+// Custom tooltip positioned relative to the active dot. "full" shows
+// date + grade/score badges (plus "Closed by DOHMH" for closures);
+// "compact" (mobile, short chart) drops to a small grade + score label.
 
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
@@ -30,9 +28,8 @@ type PerformanceTooltipProps = {
 // Padding kept from the chart edges
 const EDGE_PADDING = 8;
 
-// Clearance from the center of the dot. Covers the active dot's radius,
-// stroke, and hover glow (drop-shadow), plus a small gap, so the tooltip
-// never sits on top of the dot even when the highlighted/active style applies.
+// Clearance from the dot's centre — covers radius, stroke, and hover
+// glow, plus a gap, so the tooltip never sits on the dot.
 const DOT_CLEARANCE = 20;
 
 export default function PerformanceTooltip({
@@ -67,12 +64,9 @@ export default function PerformanceTooltip({
     const spaceAbove = cy - DOT_CLEARANCE - EDGE_PADDING;
     const spaceBelow = containerHeight - EDGE_PADDING - (cy + DOT_CLEARANCE);
 
-    // Prefer whichever side actually fits the tooltip; if neither does,
-    // pick whichever side has more room. Either way, the tooltip's near
-    // edge is always pinned exactly DOT_CLEARANCE away from the dot's
-    // centre and is never pulled back across that line, so it may spill
-    // past the chart's own edge in a tight corner, but it can never cover
-    // the dot itself.
+    // Prefers whichever side fits, else whichever has more room. The
+    // near edge stays exactly DOT_CLEARANCE from the dot's centre — may
+    // spill past the chart edge, never over the dot.
     const placeAbove =
       spaceAbove >= tooltipHeight || spaceAbove >= spaceBelow;
 

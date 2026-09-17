@@ -1,10 +1,8 @@
 // SortDropdown.tsx
 //
-// Custom dropdown replacing a native <select>, used for the Restaurant
-// List's "Sort by" controls. Implements the APG listbox keyboard model:
-// the open menu takes focus, arrow/Home/End move the active option,
-// Enter/Space commit it, Escape cancels, and focus returns to the
-// trigger either way.
+// Custom dropdown replacing a native <select>, for the Restaurant List's
+// "Sort by" controls. APG listbox model: menu takes focus, arrows/Home/
+// End move the option, Enter/Space commits, Escape cancels, focus always returns to the trigger.
 
 import { useEffect, useId, useRef, useState } from "react";
 import type { KeyboardEvent } from "react";
@@ -62,10 +60,8 @@ export default function SortDropdown<T extends string>({
     closeMenu();
   }
 
-  // Move focus into the menu once it opens so the arrow keys drive it.
-  // preventScroll: the menu is absolutely positioned below the trigger,
-  // so a plain focus() makes the browser scroll the list to fit it in
-  // view, jumping the sort bar up under the tabs.
+  // Moves focus into the menu on open, so arrow keys drive it.
+  // preventScroll — a plain focus() would scroll the sort bar under the tabs.
   useEffect(() => {
     if (isOpen) listRef.current?.focus({ preventScroll: true });
   }, [isOpen]);

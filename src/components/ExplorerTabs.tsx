@@ -1,9 +1,7 @@
 // ExplorerTabs.tsx
 //
-// The Restaurant Explorer's view switcher, built as an ARIA tab list:
-// arrow/Home/End move between tabs (with wraparound) and activate on
-// focus, matching the APG tabs pattern. Each tab is wired to its pane in
-// dashboard.tsx via shared id / aria-controls values (see EXPLORER_TABS).
+// ARIA tab list for the Explorer: arrows/Home/End move and activate, per
+// the APG pattern. Wired to dashboard.tsx's panes via shared id/aria-controls.
 
 import type { KeyboardEvent } from "react";
 

@@ -1,9 +1,6 @@
 // gradeCounts.ts
 //
-// The per-category tally of restaurants in the current map scope.
-// MapView produces it from the visible/in-radius query, the dashboard
-// holds it in state, and GradeChart renders it, so the type and the
-// zero value live here rather than in any one of those files.
+// Lives here, not MapView/dashboard/GradeChart, since all three need it.
 
 export type GradeCounts = Record<
   "A" | "B" | "C" | "pending" | "uninspected" | "closed",
@@ -19,8 +16,7 @@ export const EMPTY_GRADE_COUNTS: GradeCounts = {
   closed: 0,
 };
 
-// filters.grades holds the display labels ("A", "Pending", ...); map
-// them to the GradeCounts keys.
+// Maps display labels ("A", "Pending") to GradeCounts keys.
 const GRADE_LABEL_TO_KEY: Record<string, keyof GradeCounts> = {
   A: "A",
   B: "B",
@@ -30,10 +26,8 @@ const GRADE_LABEL_TO_KEY: Record<string, keyof GradeCounts> = {
   Closed: "closed",
 };
 
-// Restrict a tally to the selected grade categories, zeroing the rest.
-// With no grades selected the tally is returned unchanged. Used so the
-// grade chart and the mobile area bar reflect the active grade filter
-// rather than always showing the full distribution.
+// Zeroes categories outside `grades` (untouched if none selected). Keeps
+// the chart and mobile strip matching the active filter.
 export function scopeGradeCounts(
   counts: GradeCounts,
   grades: string[],

@@ -1,8 +1,7 @@
 // StatsPanel.tsx
 //
-// One-line summary of the restaurants in scope (the current map view, or
-// the Search Radius circle when that tool is active): total count plus a
-// breakdown by grade category.
+// One-line summary of the restaurants in scope (map view, or the Search
+// Radius circle when active): total count plus a grade breakdown.
 
 import { memo, useMemo, type ReactNode } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
@@ -41,10 +40,9 @@ type StatsPanelProps = {
   // ("18,276 / 64% A"). Used where the donut's own percentage line is
   // dropped in favour of a single combined row (the phone drawer).
   showShare?: boolean;
-  // Compact-desktop only: the Filters trigger button + popover, absolutely
-  // positioned inside this panel (see .desktop-filters-button-wrap) so it
-  // shares the panel's own border/background instead of sitting in an
-  // adjacent box.
+  // Compact-desktop only: the Filters trigger + popover, absolutely
+  // positioned inside this panel (.desktop-filters-button-wrap) so it
+  // shares the panel's border/background instead of an adjacent box.
   filtersButton?: ReactNode;
 };
 

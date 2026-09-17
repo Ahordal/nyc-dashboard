@@ -1,13 +1,8 @@
 // AppBar.tsx
 //
-// Slim top bar shared by the phone layout and the 751–1750px tablet
-// layout: compact wordmark, a Search button, a Filters button (badged
-// with the active filter count) and an Info button — each slides down its
-// own drawer. Search filters the map live while the sheet sits at its
-// half detent so the generated list stays visible. The Info drawer is the
-// single info surface here: dataset meta, the map legend / how-to (folded
-// in from MapView), then the attribution footer as a detached panel. Both
-// layouts pass `tagline` for the tertiary "what this is" title line.
+// Slim top bar for phone and 751-1750px tablet: wordmark, Search/Filters/
+// Info drawers. Search filters live at half detent; Info folds in dataset
+// meta, map legend, and the footer.
 
 import { useId } from "react";
 
@@ -36,15 +31,12 @@ type AppBarProps = {
   setFilters: SetFilters;
   meta: DashboardMeta | null;
   onSearchChange: (query: string) => void;
-  // A search query is committed — badge the button so it reads as a live
-  // filter even with the drawer closed.
+  // Committed search — badges the button as a live filter even when closed.
   searchActive: boolean;
-  // Tertiary title line under the subtitle: the plain-language "what this
-  // is" line. Both the phone and tablet layouts pass it.
+  // Tertiary "what this is" line under the subtitle. Both layouts pass it.
   tagline?: string;
-  // The one open top drawer across the whole mobile layout (see
-  // MobileDashboard). Search/Filters/Info live here; "grades" is the
-  // area-strip drawer and just means none of these is open.
+  // One open top drawer for the whole mobile layout (MobileDashboard).
+  // "grades" is the area-strip drawer — none of these three open.
   activeDrawer: MobileDrawer;
   onDrawerChange: (drawer: MobileDrawer) => void;
 };

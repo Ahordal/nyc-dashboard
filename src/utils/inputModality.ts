@@ -1,14 +1,9 @@
 // inputModality.ts
 //
-// Tracks whether the user is currently driving the UI by keyboard or by
-// pointer and reflects it as data-input-modality on <html>. Text inputs
-// match :focus-visible whenever they're focused (mouse click included),
-// so CSS alone can't keep the focus ring keyboard-only on a field like
-// .search-input -- this attribute lets a CSS rule gate on modality.
+// Tracks keyboard vs pointer as data-input-modality on <html>.
+// :focus-visible fires on clicks too, so CSS alone can't gate the ring.
 
-// Only true navigation keys count as "keyboard driving". Typing letters
-// into a field must not flip the modality, or the ring would appear
-// mid-search.
+// Only nav keys flip modality — typing must not, or the ring appears mid-search.
 const NAV_KEYS = new Set([
   "Tab",
   "ArrowUp",

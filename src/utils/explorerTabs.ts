@@ -1,8 +1,6 @@
 // explorerTabs.ts
 //
-// Shared identity for the Restaurant Explorer's tabs: the tab order and
-// the id helpers that tie each <button role="tab"> in ExplorerTabs to its
-// <div role="tabpanel"> in dashboard.tsx.
+// Ties ExplorerTabs' <button role="tab"> elements to their <div role="tabpanel"> in dashboard.tsx.
 
 export type ExplorerTab = "list" | "details" | "report";
 
@@ -15,10 +13,8 @@ export const EXPLORER_TABS: { id: ExplorerTab; label: string }[] = [
 export const tabButtonId = (tab: ExplorerTab) => `explorer-tab-${tab}`;
 export const tabPanelId = (tab: ExplorerTab) => `explorer-panel-${tab}`;
 
-// Maps a keydown on the tab list to the index that should receive focus
-// next, following the APG tabs pattern: Left/Up and Right/Down step with
-// wraparound, Home/End jump to the ends. Returns null for any other key
-// (the handler then leaves the event alone).
+// Keydown -> next index: arrows wrap, Home/End jump to ends, per the
+// APG tabs pattern. Null for any other key.
 export function nextTabIndex(
   key: string,
   currentIndex: number,
