@@ -1,15 +1,20 @@
+// @vitest-environment jsdom
+
 // useUrlSync.test.ts
 //
 // Unit tests for the pure URL helpers in useUrlSync: isSearchRadiusMiles
 // validation, parseRadiusParam parsing and range checks,
 // parseInitialUrlState query decoding, and buildUrlQuery serialization
-// plus a parse/build round-trip.
+// plus a parse/build round-trip. Also covers the hook's mount-time
+// read/write interaction via renderHook.
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, afterEach } from "vitest";
+import { renderHook } from "@testing-library/react";
 import {
   parseRadiusParam,
   parseInitialUrlState,
   buildUrlQuery,
+  useUrlSync,
 } from "./useUrlSync";
 import type { UrlSyncState } from "./useUrlSync";
 import { isSearchRadiusMiles } from "../types/searchRadius";
@@ -153,5 +158,65 @@ describe("buildUrlQuery", () => {
       point: { latitude: 40.6782, longitude: -73.9442 },
       miles: 1,
     });
+  });
+});
+
+describe("useUrlSync", () => {
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+
+  function makeState(overrides: Partial<UrlSyncState> = {}): UrlSyncState {
+    return {
+      grades: [],
+      boroughs: [],
+      searchQuery: "",
+      selectedRestaurantCamis: null,
+      searchRadiusPoint: null,
+      searchRadiusMiles: 0.25,
+      ...overrides,
+    };
+  }
+
+  it("doesn't overwrite the URL with default state before onInit's update lands", () => {
+    window.history.pushState({}, "", "/?camis=41234567");
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
+    const onInit = vi.fn();
+
+    const { rerender } = renderHook(
+      ({ state }) => useUrlSync(state, onInit),
+      { initialProps: { state: makeState() } },
+    );
+
+    expect(onInit).toHaveBeenCalledWith(
+      expect.objectContaining({ camis: "41234567" }),
+    );
+    // The write-effect's first pass runs in the same commit as onInit,
+    // before the parent has applied onInit's state -- it must not fire
+    // replaceState with the pre-init default (empty) query here.
+    expect(replaceStateSpy).not.toHaveBeenCalled();
+
+    // Parent applies onInit's state (as dashboard.tsx does) and re-renders.
+    rerender({ state: makeState({ selectedRestaurantCamis: "41234567" }) });
+
+    expect(replaceStateSpy).toHaveBeenCalledTimes(1);
+    expect(replaceStateSpy).toHaveBeenCalledWith(
+      {},
+      "",
+      expect.stringContaining("camis=41234567"),
+    );
+  });
+
+  it("writes on the first pass when there's no initial URL state to restore", () => {
+    window.history.pushState({}, "", "/");
+    const replaceStateSpy = vi.spyOn(window.history, "replaceState");
+    const onInit = vi.fn();
+
+    renderHook(({ state }) => useUrlSync(state, onInit), {
+      initialProps: { state: makeState() },
+    });
+
+    expect(onInit).not.toHaveBeenCalled();
+    expect(replaceStateSpy).toHaveBeenCalledTimes(1);
   });
 });

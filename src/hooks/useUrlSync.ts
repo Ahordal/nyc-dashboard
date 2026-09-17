@@ -136,6 +136,10 @@ export function useUrlSync(
   onInit: (initial: InitialUrlState) => void,
 ) {
   const isInitialized = useRef(false);
+  // Set when onInit fires, so the write-effect's first pass (same commit)
+  // doesn't briefly overwrite the URL with the pre-init default state
+  // before the render carrying onInit's applied state lands.
+  const skipNextWrite = useRef(false);
 
   const {
     grades,
@@ -156,6 +160,7 @@ export function useUrlSync(
     const initial = parseInitialUrlState(window.location.search);
 
     if (hasAnyInitialState(initial)) {
+      skipNextWrite.current = true;
       onInit(initial);
     }
   }, [onInit]);
@@ -163,6 +168,11 @@ export function useUrlSync(
   // 2. Write state back to the URL whenever state updates
   useEffect(() => {
     if (!isInitialized.current) {
+      return;
+    }
+
+    if (skipNextWrite.current) {
+      skipNextWrite.current = false;
       return;
     }
 
