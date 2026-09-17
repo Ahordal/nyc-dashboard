@@ -33,9 +33,9 @@ const gradeCategoryExpression = `
   }
 
   var s = $feature.score;
-  // Mirror getGradeCategory(): a missing/negative score is treated as
+  // Mirror getGradeCategory(): only a missing score is treated as
   // Pending, not silently bucketed into "C" by the comparisons below.
-  if (IsEmpty(s) || s < 0) {
+  if (IsEmpty(s)) {
     return "pending";
   }
   if (s <= 13) return "A";
