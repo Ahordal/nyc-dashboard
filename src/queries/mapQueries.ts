@@ -98,21 +98,29 @@ const VISIBLE_QUERY_PAGE_SIZE = 2000;
 
 // Mirrors the normalization applied to search_index at build time (see
 // buildSearchIndex() in the data pipeline): uppercased, & becomes AND,
-// apostrophes/periods stripped, other punctuation collapsed to spaces.
-// This has to match on the query side or a literal "&" or "'" typed by
+// apostrophes/periods stripped, other punctuation collapsed to spaces,
+// and corporate suffixes dropped as whole words. This has to match on
+// the query side or a literal "&"/"'" or a suffix like "INC" typed by
 // the user wouldn't line up with the pre-normalized index field.
+const CORPORATE_SUFFIXES = new Set(["INC", "LLC", "CORP", "CO", "LTD", "LP", "PC"]);
+
 function stripDiacritics(text: string): string {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
 }
 
 function normalizeSearchQuery(raw: string): string {
-  return stripDiacritics(raw)
+  const cleaned = stripDiacritics(raw)
     .toUpperCase()
     .replace(/&/g, " AND ")
     .replace(/['".]/g, "")
     .replace(/[^A-Z0-9\s]/g, " ")
     .trim()
     .replace(/\s+/g, " ");
+
+  return cleaned
+    .split(" ")
+    .filter((word) => word && !CORPORATE_SUFFIXES.has(word))
+    .join(" ");
 }
 
 // Escapes a value for safe interpolation into a SQL-style WHERE clause

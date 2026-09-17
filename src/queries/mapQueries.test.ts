@@ -45,6 +45,12 @@ describe("buildSearchClause", () => {
   it("strips diacritics so an accented query still matches", () => {
     expect(buildSearchClause("café")).toBe("(UPPER(search_index) LIKE '%CAFE%')");
   });
+
+  it("drops corporate suffixes, mirroring the pipeline's search_index build", () => {
+    expect(buildSearchClause("Domino's Pizza Inc")).toBe(
+      "(UPPER(search_index) LIKE '%DOMINOS%' AND UPPER(search_index) LIKE '%PIZZA%')",
+    );
+  });
 });
 
 describe("buildDefinitionExpression", () => {
