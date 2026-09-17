@@ -182,7 +182,9 @@ export function buildDefinitionExpression(
   const clauses: string[] = [];
 
   if (filters.boroughs.length > 0) {
-    const boroList = filters.boroughs.map((b) => `'${b}'`).join(",");
+    const boroList = filters.boroughs
+      .map((b) => `'${escapeSqlString(b)}'`)
+      .join(",");
     clauses.push(`boro IN (${boroList})`);
   }
 

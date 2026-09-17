@@ -69,6 +69,13 @@ describe("buildDefinitionExpression", () => {
     const filters: Filters = { grades: [], boroughs: ["Brooklyn"] };
     expect(buildDefinitionExpression(filters, "")).toBe("boro IN ('Brooklyn')");
   });
+
+  it("escapes single quotes in borough values (e.g. a hand-edited URL)", () => {
+    const filters: Filters = { grades: [], boroughs: ["X')) OR (('1'='1"] };
+    expect(buildDefinitionExpression(filters, "")).toBe(
+      "boro IN ('X'')) OR ((''1''=''1')",
+    );
+  });
 });
 
 describe("buildGradeWhereClause", () => {
