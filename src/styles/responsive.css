@@ -66,13 +66,9 @@
   }
 }
 
-/* Compact desktop (1751-2359px): the 3-pane grid's column widths were
-   tuned against >=2360px, where the columns' vw caps are a small slice of
-   the total width. Below that the same fixed type scale wraps more,
-   which can starve the sidebar's flexible grade-chart. Every font-size in
-   this file resolves to one of these tokens (guarded by
-   typeScale.test.ts), so shrinking them here is a single-point fix that
-   reaches every desktop panel without a chain of per-component overrides. */
+/* Compact desktop (1751–2359px): Below 2360px, the fixed type scale causes 
+   wrapping that starves the sidebar's grade chart. Shrinking tokens here provides 
+   a single-point global fix for all desktop panels without per-component overrides. */
 @media (min-width: 1751px) and (max-width: 2359px) {
   :root {
     --fs-2xs: 0.5625rem;
