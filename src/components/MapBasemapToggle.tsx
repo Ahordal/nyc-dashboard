@@ -83,9 +83,14 @@ type MapBasemapToggleProps = {
 
 export default function MapBasemapToggle({ view }: MapBasemapToggleProps) {
   const [isSatellite, setIsSatellite] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
   const defaultLabelsRef = useRef<LabelLayerPair | null>(null);
   const satelliteLabelsRef = useRef<LabelLayerPair | null>(null);
   const imageryLayerRef = useRef<WebTileLayer | null>(null);
+  // Synchronous in-flight guard: state updates from the previous click may
+  // not have re-rendered (and disabled the button) before a fast second
+  // click's handler runs, so a ref is used rather than isToggling itself.
+  const inFlightRef = useRef(false);
 
   // Mount default label layers on initialization since the map defaults to the standard view.
   useEffect(() => {
@@ -112,46 +117,54 @@ export default function MapBasemapToggle({ view }: MapBasemapToggleProps) {
   }, [view]);
 
   const toggleBasemap = async () => {
-    if (!view?.map) return;
-    const map = view.map;
-    const next = !isSatellite;
+    if (!view?.map || inFlightRef.current) return;
+    inFlightRef.current = true;
+    setIsToggling(true);
 
-    // Swap active/inactive label layer references based on target mode.
-    const [activeRef, inactiveRef] = next
-      ? [satelliteLabelsRef, defaultLabelsRef]
-      : [defaultLabelsRef, satelliteLabelsRef];
+    try {
+      const map = view.map;
+      const next = !isSatellite;
 
-    if (inactiveRef.current) {
-      map.layers.remove(inactiveRef.current.streetLayer);
-      map.layers.remove(inactiveRef.current.placeLayer);
-    }
-    if (!activeRef.current) {
-      activeRef.current = await createSplitLabelLayers(
-        next ? SATELLITE_LABELS_STYLE_URL : DEFAULT_LABELS_STYLE_URL,
-      );
-    }
-    map.layers.add(activeRef.current.streetLayer, 0);
-    map.layers.add(activeRef.current.placeLayer);
+      // Swap active/inactive label layer references based on target mode.
+      const [activeRef, inactiveRef] = next
+        ? [satelliteLabelsRef, defaultLabelsRef]
+        : [defaultLabelsRef, satelliteLabelsRef];
 
-    // Toggle the satellite imagery layer. Index 0 keeps it below street labels 
-    // and operational layers, directly sitting atop the dark-gray basemap.
-    if (next) {
-      if (!imageryLayerRef.current) {
-        imageryLayerRef.current = new WebTileLayer({
-          urlTemplate: WORLD_IMAGERY_TILE_URL,
-          opacity: SATELLITE_IMAGERY_OPACITY,
-          effect: SATELLITE_IMAGERY_EFFECT,
-          title: "World Imagery",
-          copyright: "Esri, Maxar, Earthstar Geographics, and the GIS User Community",
-          listMode: "hide",
-        });
+      if (inactiveRef.current) {
+        map.layers.remove(inactiveRef.current.streetLayer);
+        map.layers.remove(inactiveRef.current.placeLayer);
       }
-      map.layers.add(imageryLayerRef.current, 0);
-    } else if (imageryLayerRef.current) {
-      map.layers.remove(imageryLayerRef.current);
-    }
+      if (!activeRef.current) {
+        activeRef.current = await createSplitLabelLayers(
+          next ? SATELLITE_LABELS_STYLE_URL : DEFAULT_LABELS_STYLE_URL,
+        );
+      }
+      map.layers.add(activeRef.current.streetLayer, 0);
+      map.layers.add(activeRef.current.placeLayer);
 
-    setIsSatellite(next);
+      // Toggle the satellite imagery layer. Index 0 keeps it below street labels
+      // and operational layers, directly sitting atop the dark-gray basemap.
+      if (next) {
+        if (!imageryLayerRef.current) {
+          imageryLayerRef.current = new WebTileLayer({
+            urlTemplate: WORLD_IMAGERY_TILE_URL,
+            opacity: SATELLITE_IMAGERY_OPACITY,
+            effect: SATELLITE_IMAGERY_EFFECT,
+            title: "World Imagery",
+            copyright: "Esri, Maxar, Earthstar Geographics, and the GIS User Community",
+            listMode: "hide",
+          });
+        }
+        map.layers.add(imageryLayerRef.current, 0);
+      } else if (imageryLayerRef.current) {
+        map.layers.remove(imageryLayerRef.current);
+      }
+
+      setIsSatellite(next);
+    } finally {
+      inFlightRef.current = false;
+      setIsToggling(false);
+    }
   };
 
   return (
@@ -159,6 +172,7 @@ export default function MapBasemapToggle({ view }: MapBasemapToggleProps) {
       <button
         type="button"
         onClick={toggleBasemap}
+        disabled={isToggling}
         data-tooltip={isSatellite ? "Switch to map view" : "Switch to satellite view"}
         aria-label={isSatellite ? "Switch to map view" : "Switch to satellite view"}
         className="map-basemap-toggle-button tooltip-left"

@@ -70,22 +70,21 @@ export default function SortDropdown<T extends string>({
     if (isOpen) listRef.current?.focus({ preventScroll: true });
   }, [isOpen]);
 
-  // Close on click outside, the same pattern PanelHeader.tsx uses for its
-  // info popup.
+  // Close on outside pointer-down, matching PanelHeader.tsx's info popup:
+  // pointerdown (not mousedown) fires reliably and earlier on touch/pen.
   useEffect(() => {
     if (!isOpen) return;
 
-    function handleClickOutside(event: MouseEvent) {
-      if (
-        containerRef.current &&
-        !containerRef.current.contains(event.target as Node)
-      ) {
-        setIsOpen(false);
-      }
+    function handlePointerDown(event: PointerEvent) {
+      const target = event.target;
+      if (!(target instanceof Node)) return;
+      if (containerRef.current?.contains(target)) return;
+      setIsOpen(false);
     }
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    document.addEventListener("pointerdown", handlePointerDown, true);
+    return () =>
+      document.removeEventListener("pointerdown", handlePointerDown, true);
   }, [isOpen]);
 
   function handleTriggerKeyDown(event: KeyboardEvent) {

@@ -3,7 +3,7 @@
 // Sorted, paginated list of restaurant inspection cards. Auto-navigates
 // to the page holding the selected restaurant.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
@@ -109,7 +109,7 @@ type RestaurantListProps = {
   children?: React.ReactNode; // Slot for external filter notice overlay
 };
 
-export default function RestaurantList({
+function RestaurantList({
   restaurants,
   selectedRestaurantId = null,
   selectedRestaurant = null,
@@ -227,7 +227,11 @@ export default function RestaurantList({
       return;
     }
 
-    if (selectedRestaurantId && sorted.length > 0) {
+    if (
+      selectedRestaurantId &&
+      (selectedChanged || sortChanged) &&
+      sorted.length > 0
+    ) {
       const index = sorted.findIndex((r) => r.id === selectedRestaurantId);
       if (index !== -1) {
         const targetPage = Math.floor(index / PAGE_SIZE) + 1;
@@ -414,3 +418,5 @@ export default function RestaurantList({
     </section>
   );
 }
+
+export default memo(RestaurantList);

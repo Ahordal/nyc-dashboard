@@ -4,7 +4,7 @@
 // Inspection History list on the Details tab. Includes newer/older
 // navigation for browsing inspections without leaving the Report tab.
 
-import { useState } from "react";
+import { memo, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
@@ -113,7 +113,7 @@ type RestaurantReportProps = {
   onSelectInspection: (inspectionId: string) => void;
 };
 
-export default function RestaurantReport({
+function RestaurantReport({
   restaurant,
   history,
   isLoadingHistory = false,
@@ -321,3 +321,5 @@ export default function RestaurantReport({
     </section>
   );
 }
+
+export default memo(RestaurantReport);

@@ -6,7 +6,7 @@
 // gets confirmation their selection took effect. Lives in the grade
 // breakdown drawer, under the KPI row.
 
-import { Fragment } from "react";
+import { Fragment, memo } from "react";
 
 import { getFilterNoticeParts } from "../utils/filterNotice";
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
@@ -23,7 +23,7 @@ const GRADE_LABEL_COLORS: Record<string, string> = {
   Closed: CATEGORY_COLORS.closed,
 };
 
-export default function FilterSummary({
+function FilterSummary({
   filters,
   searchQuery = "",
 }: {
@@ -76,3 +76,5 @@ export default function FilterSummary({
     </p>
   );
 }
+
+export default memo(FilterSummary);

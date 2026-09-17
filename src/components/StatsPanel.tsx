@@ -4,7 +4,7 @@
 // the Search Radius circle when that tool is active): total count plus a
 // breakdown by grade category.
 
-import { useMemo, type ReactNode } from "react";
+import { memo, useMemo, type ReactNode } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUtensils } from "@fortawesome/free-solid-svg-icons";
 import type { RestaurantProperties } from "../types/restaurant";
@@ -48,7 +48,7 @@ type StatsPanelProps = {
   filtersButton?: ReactNode;
 };
 
-export default function StatsPanel({
+function StatsPanel({
   restaurants,
   searchRadiusMiles = null,
   showShare = false,
@@ -145,3 +145,5 @@ export default function StatsPanel({
     </section>
   );
 }
+
+export default memo(StatsPanel);

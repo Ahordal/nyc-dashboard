@@ -5,7 +5,7 @@
 // active Borough filter and search; when a grade filter is active the
 // chart is scoped to just those grades so it matches the map and list.
 
-import { useMemo, useState } from "react";
+import { memo, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { PieChart, Pie, ResponsiveContainer, Sector } from "recharts";
 
@@ -112,7 +112,7 @@ const renderCustomizedShape = (props: any) => {
   );
 };
 
-export default function GradeChart({
+function GradeChart({
   counts,
   filters,
   searchQuery = "",
@@ -332,3 +332,5 @@ export default function GradeChart({
     </section>
   );
 }
+
+export default memo(GradeChart);

@@ -10,7 +10,7 @@
 // sizing, and rendering, plus the one bit of cross-hook coordination: a
 // pointer hover cancels keyboard mode.
 
-import { useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
 
 import {
   LineChart,
@@ -302,7 +302,7 @@ function generateTimeTicks(
   return ticks;
 }
 
-export default function PerformanceChart({
+function PerformanceChart({
   restaurant,
   history,
   isLoadingHistory = false,
@@ -748,3 +748,5 @@ export default function PerformanceChart({
     </section>
   );
 }
+
+export default memo(PerformanceChart);

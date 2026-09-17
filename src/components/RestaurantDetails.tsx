@@ -5,7 +5,7 @@
 // row previews its chart point; activating one opens that inspection's
 // full report.
 
-import { useEffect, useMemo, useRef, useState } from "react";
+import { memo, useEffect, useMemo, useRef, useState } from "react";
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
@@ -250,7 +250,7 @@ type RestaurantDetailsProps = {
   isMobile?: boolean;
 };
 
-export default function RestaurantDetails({
+function RestaurantDetails({
   restaurant,
   history,
   isLoadingHistory,
@@ -531,7 +531,7 @@ export default function RestaurantDetails({
                     `Open inspection report for ${eventDate}.`,
                     `${critical} Critical, ${notCritical} Not Critical violations.`,
                     `Grade ${eventGrade}.`,
-                    `Score ${event.score}.`,
+                    `Score ${event.score ?? "not available"}.`,
                   ].join(" ")}
                   onMouseEnter={() => {
                     onHoverInspection(event.id);
@@ -625,3 +625,5 @@ export default function RestaurantDetails({
     </section>
   );
 }
+
+export default memo(RestaurantDetails);

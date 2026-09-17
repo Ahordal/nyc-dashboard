@@ -9,6 +9,7 @@ import {
   Suspense,
   useCallback,
   useId,
+  useMemo,
   useReducer,
   useState,
 } from "react";
@@ -196,6 +197,71 @@ export default function Dashboard() {
 
   const radiusKey = searchRadiusPoint ? `radius-${activeRadiusMiles}` : "";
 
+  // Memoized so its element reference stays stable across renders that
+  // don't touch filters/search/radius -- RestaurantList is memoized too,
+  // and a fresh children element every render would defeat that.
+  const restaurantListFilterNotice = useMemo(
+    () => (
+      <NoticeOverlay
+        triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}-${radiusKey}`}
+        durationMs={FILTER_NOTICE_DURATION_MS}>
+        {getFilterNoticeParts({
+          grades: filters.grades,
+          boroughs: filters.boroughs,
+          searchQuery,
+          hasSearchRadius: Boolean(searchRadiusPoint),
+        }).map((part, index) => (
+          <Fragment key={part.kind}>
+            {index > 0 && (
+              <span className="filter-notice-separator">, </span>
+            )}
+            <span className="filter-notice-group">
+              {part.kind === "grades" && (
+                <>
+                  Grade:{" "}
+                  {part.grades.map((grade, gradeIndex) => (
+                    <span key={grade}>
+                      <span style={{ color: GRADE_FILTER_COLORS[grade] }}>
+                        {grade}
+                      </span>
+                      {gradeIndex < part.grades.length - 1 && ", "}
+                    </span>
+                  ))}
+                </>
+              )}
+              {part.kind === "boroughs" && (
+                <>Borough: {part.boroughs.join(", ")}</>
+              )}
+              {part.kind === "search" && (
+                <>Search: &quot;{part.query}&quot;</>
+              )}
+              {part.kind === "radius" && (
+                <>
+                  Restaurants within{" "}
+                  <span className="unit-mi">
+                    {SEARCH_RADIUS_LABELS[activeRadiusMiles]}
+                  </span>{" "}
+                  of centre
+                </>
+              )}
+              {part.kind === "all" && <>All Restaurants</>}
+            </span>
+          </Fragment>
+        ))}
+      </NoticeOverlay>
+    ),
+    [
+      gradesKey,
+      boroughsKey,
+      searchQuery,
+      radiusKey,
+      filters.grades,
+      filters.boroughs,
+      searchRadiusPoint,
+      activeRadiusMiles,
+    ],
+  );
+
   const reportInspectionId = resolveReportInspectionId(
     selectedInspectionId,
     history,
@@ -238,32 +304,46 @@ export default function Dashboard() {
     handleInitialUrlState,
   );
 
-  function handleSelectRestaurant(restaurant: RestaurantProperties | null) {
-    dispatchSelection({ type: "selectRestaurant", restaurant });
-  }
+  // dispatchSelection is stable (useReducer), so these callbacks never need
+  // to change identity -- keeping them stable lets the memoized explorer
+  // panels (RestaurantList/Details/Report) skip re-rendering on unrelated
+  // hover/selection updates instead of just on prop-reference churn.
+  const handleSelectRestaurant = useCallback(
+    (restaurant: RestaurantProperties | null) => {
+      dispatchSelection({ type: "selectRestaurant", restaurant });
+    },
+    [],
+  );
 
-  function handleSelectInspection(inspectionId: string) {
+  const handleSelectInspection = useCallback((inspectionId: string) => {
     dispatchSelection({ type: "selectInspection", inspectionId });
-  }
+  }, []);
 
-  function handlePreviewInspection(inspectionId: string) {
+  const handlePreviewInspection = useCallback((inspectionId: string) => {
     dispatchSelection({ type: "previewInspection", inspectionId });
-  }
+  }, []);
 
-  function handleHoverInspection(inspectionId: string | null) {
+  const handleHoverInspection = useCallback((inspectionId: string | null) => {
     dispatchSelection({ type: "hoverInspection", inspectionId });
-  }
+  }, []);
 
-  function handleHoverRestaurant(restaurant: RestaurantProperties | null) {
-    dispatchSelection({
-      type: "hoverRestaurant",
-      restaurantId: restaurant?.id ?? null,
-    });
-  }
+  const handleHoverRestaurant = useCallback(
+    (restaurant: RestaurantProperties | null) => {
+      dispatchSelection({
+        type: "hoverRestaurant",
+        restaurantId: restaurant?.id ?? null,
+      });
+    },
+    [],
+  );
 
-  function handleExplorerTabChange(tab: ExplorerTab) {
+  const handleExplorerTabChange = useCallback((tab: ExplorerTab) => {
     dispatchSelection({ type: "changeTab", tab });
-  }
+  }, []);
+
+  const handleInitialSelectionResolved = useCallback(() => {
+    setPendingCamisFromUrl(null);
+  }, []);
 
   const handleSearchRadiusChange = useCallback(
     (point: SearchRadiusPoint | null, radius: SearchRadiusMiles) => {
@@ -302,7 +382,7 @@ export default function Dashboard() {
         onUserLocationChange={setUserLocationPoint}
         initialSearchRadius={initialSearchRadius}
         pendingCamisFromUrl={pendingCamisFromUrl}
-        onInitialSelectionResolved={() => setPendingCamisFromUrl(null)}
+        onInitialSelectionResolved={handleInitialSelectionResolved}
         history={history}
         isLoadingHistory={isLoadingHistory}
         violationCodes={violationCodes}
@@ -549,9 +629,7 @@ export default function Dashboard() {
                   onUserLocationChange={setUserLocationPoint}
                   initialSearchRadius={initialSearchRadius}
                   initialSelectedCamis={pendingCamisFromUrl}
-                  onInitialSelectionResolved={() =>
-                    setPendingCamisFromUrl(null)
-                  }
+                  onInitialSelectionResolved={handleInitialSelectionResolved}
                   showLocateControl={isTablet}
                 />
               </Suspense>
@@ -588,54 +666,7 @@ export default function Dashboard() {
                 onHoverRestaurant={handleHoverRestaurant}
                 searchRadiusPoint={searchRadiusPoint}
                 userLocationPoint={locateDistanceOrigin}>
-                <NoticeOverlay
-                  triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}-${radiusKey}`}
-                  durationMs={FILTER_NOTICE_DURATION_MS}>
-                  {getFilterNoticeParts({
-                    grades: filters.grades,
-                    boroughs: filters.boroughs,
-                    searchQuery,
-                    hasSearchRadius: Boolean(searchRadiusPoint),
-                  }).map((part, index) => (
-                    <Fragment key={part.kind}>
-                      {index > 0 && (
-                        <span className="filter-notice-separator">, </span>
-                      )}
-                      <span className="filter-notice-group">
-                        {part.kind === "grades" && (
-                          <>
-                            Grade:{" "}
-                            {part.grades.map((grade, gradeIndex) => (
-                              <span key={grade}>
-                                <span
-                                  style={{ color: GRADE_FILTER_COLORS[grade] }}>
-                                  {grade}
-                                </span>
-                                {gradeIndex < part.grades.length - 1 && ", "}
-                              </span>
-                            ))}
-                          </>
-                        )}
-                        {part.kind === "boroughs" && (
-                          <>Borough: {part.boroughs.join(", ")}</>
-                        )}
-                        {part.kind === "search" && (
-                          <>Search: &quot;{part.query}&quot;</>
-                        )}
-                        {part.kind === "radius" && (
-                          <>
-                            Restaurants within{" "}
-                            <span className="unit-mi">
-                              {SEARCH_RADIUS_LABELS[activeRadiusMiles]}
-                            </span>{" "}
-                            of centre
-                          </>
-                        )}
-                        {part.kind === "all" && <>All Restaurants</>}
-                      </span>
-                    </Fragment>
-                  ))}
-                </NoticeOverlay>
+                {restaurantListFilterNotice}
               </RestaurantList>
             </div>
 
