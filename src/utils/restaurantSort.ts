@@ -22,16 +22,24 @@ export type SortKeyId =
 export type SortDirection = "asc" | "desc";
 
 function gradeRank(restaurant: RestaurantProperties): number {
-  switch (
-    getGradeCategory(restaurant.action, restaurant.grade, restaurant.score)
-  ) {
+  const category = getGradeCategory(
+    restaurant.action,
+    restaurant.grade,
+    restaurant.score,
+  );
+  switch (category) {
     case "A": return 0;
     case "B": return 1;
     case "C": return 2;
     case "pending": return 3;
     case "uninspected": return 4;
     case "closed": return 5;
-    default: return 6;
+    default: {
+      // Exhaustiveness check: fails to compile if GradeCategory ever
+      // gains a 7th member without a rank assigned here.
+      const exhaustiveCheck: never = category;
+      return exhaustiveCheck;
+    }
   }
 }
 
