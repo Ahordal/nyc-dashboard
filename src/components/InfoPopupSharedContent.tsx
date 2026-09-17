@@ -220,7 +220,8 @@ export function DashboardHowToUse({ extra }: { extra?: ReactNode }) {
 
       <li>
         Select a restaurant on the map or in the list to see its details,
-        inspection history, and performance chart.
+        inspection history, and performance chart. It stays highlighted in
+        the list no matter how you sort or paginate.
       </li>
 
       <li>
