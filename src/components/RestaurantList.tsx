@@ -219,19 +219,19 @@ function RestaurantList({
     // With no restaurant selected, the list's page is always the top of
     // the current ordering - never stranded on wherever a since-cleared
     // selection last pushed it. Clearing the selection, or changing the
-    // sort while nothing is selected, returns to page 1. With a
-    // restaurant selected, fall through and track that card's page so it
-    // stays in view across sort changes.
-    if (!selectedRestaurantId && (selectedChanged || sortChanged)) {
-      setPage(1);
+    // sort while nothing is selected, returns to page 1.
+    if (!selectedRestaurantId) {
+      if (selectedChanged || sortChanged) setPage(1);
       return;
     }
 
-    if (
-      selectedRestaurantId &&
-      (selectedChanged || sortChanged) &&
-      sorted.length > 0
-    ) {
+    // With a restaurant selected, keep tracking its page on every relevant
+    // change - not just a fresh selection or a sort change, but also the
+    // list's contents shifting under it (e.g. the map re-centering on the
+    // selection re-queries the visible set once the camera settles).
+    // Without this, the selected card can silently end up on a page that
+    // no longer holds it.
+    if (sorted.length > 0) {
       const index = sorted.findIndex((r) => r.id === selectedRestaurantId);
       if (index !== -1) {
         const targetPage = Math.floor(index / PAGE_SIZE) + 1;
