@@ -4,10 +4,17 @@
 // cache to skip unnecessary work, tracks the daily API quota, saves
 // progress incrementally, and flags unusual coordinate jumps for review.
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { addressHash } from './normalize.mjs';
 import { resolveRestaurant, createQuota } from './resolve.mjs';
-import { loadCache, saveCacheAtomic, buildCacheEntry, needsResolution, upsertCacheEntry } from './cache.mjs';
+import {
+  loadCache,
+  saveCacheAtomic,
+  buildCacheEntry,
+  needsResolution,
+  upsertCacheEntry,
+  readJsonTolerant,
+} from './cache.mjs';
 
 const DEFAULT_DAILY_LIMIT = 4900;
 const DEFAULT_SAVE_EVERY_N = 25;
@@ -117,12 +124,7 @@ export async function runGeocodeBackfill(restaurants, opts) {
 
   // Append any flagged coordinate shifts to the log file for review.
   if (suspiciousShifts.length > 0) {
-    let existing = [];
-    try {
-      existing = JSON.parse(await readFile(logPath, 'utf-8'));
-    } catch {
-      // Ignore if the log file doesn't exist yet
-    }
+    const existing = await readJsonTolerant(logPath, []);
     await writeFile(logPath, JSON.stringify([...existing, ...suspiciousShifts], null, 2), 'utf-8');
   }
 

@@ -37,7 +37,7 @@
 
 import { readFile, writeFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import { mergeCaches, mergeSuspiciousShifts } from './cache.mjs';
+import { mergeCaches, mergeSuspiciousShifts, readJsonTolerant } from './cache.mjs';
 
 const CACHE_PATH = './geocode-cache.json';
 const LOG_PATH = './suspicious-shifts.json';
@@ -48,22 +48,14 @@ function run(cmd) {
   return execSync(cmd, { encoding: 'utf-8' });
 }
 
-async function readJsonOrDefault(path, fallback) {
-  try {
-    return JSON.parse(await readFile(path, 'utf-8'));
-  } catch {
-    return fallback;
-  }
-}
-
 async function main() {
   // Step 1: capture this run's own results before touching git at all.
-  const localCache = await readJsonOrDefault(CACHE_PATH, {});
-  const localShifts = await readJsonOrDefault(LOG_PATH, []);
+  const localCache = await readJsonTolerant(CACHE_PATH, {});
+  const localShifts = await readJsonTolerant(LOG_PATH, []);
   // counts-snapshot.json is tracked on `data`, so the step-2 reset below
   // reverts the copy run-geocode-backfill.mjs just wrote back to the
   // committed version. Hold this run's in memory so step 5 can restore it.
-  const localSnapshot = await readJsonOrDefault(COUNTS_SNAPSHOT_PATH, null);
+  const localSnapshot = await readJsonTolerant(COUNTS_SNAPSHOT_PATH, null);
 
   console.log(`Local run: ${Object.keys(localCache).length} cache entries, ${localShifts.length} suspicious shifts.`);
 
@@ -73,9 +65,9 @@ async function main() {
 
   // Step 3: read the remote's versions (git reset just placed them on
   // disk, if they exist; a brand-new repo before the first-ever backfill
-  // won't have them yet, which readJsonOrDefault handles gracefully).
-  const remoteCache = await readJsonOrDefault(CACHE_PATH, {});
-  const remoteShifts = await readJsonOrDefault(LOG_PATH, []);
+  // won't have them yet, which readJsonTolerant handles gracefully).
+  const remoteCache = await readJsonTolerant(CACHE_PATH, {});
+  const remoteShifts = await readJsonTolerant(LOG_PATH, []);
 
   console.log(`Remote state: ${Object.keys(remoteCache).length} cache entries, ${remoteShifts.length} suspicious shifts.`);
 

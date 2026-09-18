@@ -14,25 +14,22 @@ export const RESOLVER_VERSION = 1;
 
 // Loading
 
-/**
- * Loads the existing cache file from disk. If the file is missing or corrupted 
- * from a previous crash, it safely ignores the error and returns an empty object 
- * so the app can keep running without breaking.
- * 
- * @param {string} filePath - Path to the cache JSON file
- * @returns {Promise<Object>} The loaded cache dictionary
- */
-export async function loadCache(filePath) {
+// Reads and parses a JSON file. Missing file -> fallback, silently. Any
+// other read/parse error -> fallback, but logged (a corrupt file must
+// never fail silently; that caused a real data-loss incident). Shared by
+// every pipeline script that reads a possibly-absent JSON file.
+export async function readJsonTolerant(filePath, fallback) {
   try {
-    const raw = await readFile(filePath, 'utf-8');
-    return JSON.parse(raw);
+    return JSON.parse(await readFile(filePath, 'utf-8'));
   } catch (err) {
-    if (err.code === 'ENOENT') {
-      return {}; // Returns empty cache on the very first run
-    }
-    console.warn(`Cache at ${filePath} could not be read (${err.message}); starting fresh.`);
-    return {};
+    if (err.code === 'ENOENT') return fallback;
+    console.warn(`${filePath} could not be read (${err.message}); using fallback.`);
+    return fallback;
   }
+}
+
+export async function loadCache(filePath) {
+  return readJsonTolerant(filePath, {});
 }
 
 // Saving (atomic)

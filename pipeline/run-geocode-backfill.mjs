@@ -16,7 +16,7 @@ import dotenv from 'dotenv';
 // no-op there since no .env file exists.
 dotenv.config({ path: '../.env' });
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import {
   fetchAllRows,
@@ -27,7 +27,7 @@ import {
   buildInspectionHistory,
 } from './fetch-inspection.mjs';
 import { runGeocodeBackfill } from './backfill-core.mjs';
-import { loadCache } from './cache.mjs';
+import { loadCache, readJsonTolerant } from './cache.mjs';
 
 const CACHE_PATH = './geocode-cache.json';
 const SUSPICIOUS_SHIFT_LOG_PATH = './suspicious-shifts.json';
@@ -104,12 +104,8 @@ async function main() {
 // whose seed step found nothing on `data`) reports null deltas rather than
 // crashing or inventing a zero-change day.
 export async function readSnapshotOrNull(path) {
-  try {
-    const parsed = JSON.parse(await readFile(path, 'utf-8'));
-    return parsed && typeof parsed === 'object' ? parsed : null;
-  } catch {
-    return null;
-  }
+  const parsed = await readJsonTolerant(path, null);
+  return parsed && typeof parsed === 'object' ? parsed : null;
 }
 
 // (this daily refresh) minus (the previous daily refresh). A field is
