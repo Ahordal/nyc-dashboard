@@ -9,7 +9,7 @@
 //    description text isn't repeated across files.
 // 4. dashboard-meta.json: summary counts and daily baseline deltas.
 
-import { writeFile, readFile, mkdir, rm } from "node:fs/promises";
+import { writeFile, readFile, mkdir, rm, rename } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { loadCache } from "./cache.mjs";
@@ -624,10 +624,13 @@ async function runInBatches(items, batchSize, fn) {
   }
 }
 
-// Re-creates history directory on every build to prevent orphaned files from decommissioned venues.
+// Re-creates history directory on every build to prevent orphaned files from
+// decommissioned venues. Writes into a temp directory first and only swaps
+// it in once every file exists, so a crash mid-write can't leave the old
+// directory deleted with the new one half-populated.
 export async function writeHistoryFiles(restaurants) {
-  await rm(HISTORY_DIR, { recursive: true, force: true });
-  await mkdir(HISTORY_DIR, { recursive: true });
+  const tempDir = `${HISTORY_DIR}.tmp-${process.pid}-${Date.now()}`;
+  await mkdir(tempDir, { recursive: true });
 
   const HISTORY_WRITE_BATCH_SIZE = 500;
   await runInBatches(
@@ -635,11 +638,14 @@ export async function writeHistoryFiles(restaurants) {
     HISTORY_WRITE_BATCH_SIZE,
     ([camis, points]) =>
       writeFile(
-        path.join(HISTORY_DIR, `${camis}.json`),
+        path.join(tempDir, `${camis}.json`),
         JSON.stringify(points),
         "utf-8",
       ),
   );
+
+  await rm(HISTORY_DIR, { recursive: true, force: true });
+  await rename(tempDir, HISTORY_DIR);
 }
 
 async function main() {
