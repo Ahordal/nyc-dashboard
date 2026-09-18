@@ -16,7 +16,6 @@ import dotenv from 'dotenv';
 // no-op there since no .env file exists.
 dotenv.config({ path: '../.env' });
 
-import { writeFile } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import {
   fetchAllRows,
@@ -27,7 +26,7 @@ import {
   buildInspectionHistory,
 } from './fetch-inspection.mjs';
 import { runGeocodeBackfill } from './backfill-core.mjs';
-import { loadCache, readJsonTolerant } from './cache.mjs';
+import { loadCache, readJsonTolerant, saveCacheAtomic } from './cache.mjs';
 
 const CACHE_PATH = './geocode-cache.json';
 const SUSPICIOUS_SHIFT_LOG_PATH = './suspicious-shifts.json';
@@ -93,7 +92,7 @@ async function main() {
     restaurantDelta,
     inspectionDelta,
   };
-  await writeFile(COUNTS_SNAPSHOT_PATH, JSON.stringify(snapshot, null, 2), 'utf-8');
+  await saveCacheAtomic(COUNTS_SNAPSHOT_PATH, snapshot);
   console.log(
     `Wrote counts-snapshot.json (${restaurantCount} restaurants [${formatDelta(restaurantDelta)}], ` +
       `${inspectionCount} inspections [${formatDelta(inspectionDelta)}]).`,

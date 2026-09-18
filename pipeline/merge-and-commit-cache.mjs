@@ -35,9 +35,9 @@
 // geocode-cache.json / suspicious-shifts.json / counts-snapshot.json
 // locally.
 
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
-import { mergeCaches, mergeSuspiciousShifts, readJsonTolerant } from './cache.mjs';
+import { mergeCaches, mergeSuspiciousShifts, readJsonTolerant, saveCacheAtomic } from './cache.mjs';
 
 const CACHE_PATH = './geocode-cache.json';
 const LOG_PATH = './suspicious-shifts.json';
@@ -83,10 +83,10 @@ async function main() {
   // this run's own fresh per-run snapshot). Then add whichever of the
   // three files exist; a missing file means an earlier step failed
   // partway through, which shouldn't block committing whatever did make it.
-  await writeFile(CACHE_PATH, JSON.stringify(mergedCache, null, 2), 'utf-8');
-  await writeFile(LOG_PATH, JSON.stringify(mergedShifts, null, 2), 'utf-8');
+  await saveCacheAtomic(CACHE_PATH, mergedCache);
+  await saveCacheAtomic(LOG_PATH, mergedShifts);
   if (localSnapshot?.restaurantCount != null) {
-    await writeFile(COUNTS_SNAPSHOT_PATH, JSON.stringify(localSnapshot, null, 2), 'utf-8');
+    await saveCacheAtomic(COUNTS_SNAPSHOT_PATH, localSnapshot);
   }
 
   for (const path of [CACHE_PATH, LOG_PATH, COUNTS_SNAPSHOT_PATH]) {
