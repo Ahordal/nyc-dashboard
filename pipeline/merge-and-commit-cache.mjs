@@ -25,10 +25,10 @@
 //   5. Write the merged result, restore counts-snapshot.json (this run's
 //      fresh snapshot from step 1, re-written because the step-2 reset
 //      reverts it to the committed version; it's tracked on `data`),
-//      commit, push. The commit's parent is now exactly origin/<branch>,
-//      so the push is guaranteed to succeed (nothing else can have moved
-//      origin between step 2 and step 5, since this script awaits nothing
-//      network-bound in between).
+//      commit, push. If another run's push landed on `data` between
+//      steps 2 and 5, this push is rejected as non-fast-forward; steps
+//      2-5 then retry from a fresh fetch (this run's own step-1 results
+//      are held in memory, so nothing already captured is lost).
 //
 // Usage: node merge-and-commit-cache.mjs
 // Run from within pipeline/, after run-geocode-backfill.mjs has written
@@ -43,9 +43,22 @@ const CACHE_PATH = './geocode-cache.json';
 const LOG_PATH = './suspicious-shifts.json';
 const COUNTS_SNAPSHOT_PATH = './counts-snapshot.json';
 const BRANCH = 'data';
+const MAX_PUSH_ATTEMPTS = 3;
+const RETRY_DELAY_MS = 2000;
 
 function run(cmd) {
   return execSync(cmd, { encoding: 'utf-8' });
+}
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+// Distinguishes "remote moved, retry" from a real failure (auth, network,
+// etc) that retrying can't fix.
+function isPushConflict(err) {
+  const text = `${err.stderr || ''} ${err.message || ''}`.toLowerCase();
+  return ['rejected', 'non-fast-forward', 'fetch first', 'stale info'].some((s) => text.includes(s));
 }
 
 async function main() {
@@ -59,6 +72,22 @@ async function main() {
 
   console.log(`Local run: ${Object.keys(localCache).length} cache entries, ${localShifts.length} suspicious shifts.`);
 
+  for (let attempt = 1; attempt <= MAX_PUSH_ATTEMPTS; attempt++) {
+    const pushed = await mergeAndPush({ localCache, localShifts, localSnapshot });
+    if (pushed) return;
+
+    if (attempt === MAX_PUSH_ATTEMPTS) {
+      throw new Error(`git push rejected after ${MAX_PUSH_ATTEMPTS} attempts; remote kept moving.`);
+    }
+    console.warn(`Push rejected (remote moved); retrying from a fresh fetch (attempt ${attempt + 1}/${MAX_PUSH_ATTEMPTS})...`);
+    await sleep(RETRY_DELAY_MS);
+  }
+}
+
+// One attempt at steps 2-5: reconcile against the current remote and try to
+// push. Returns true on success (including "nothing to push"), false if the
+// push was rejected because the remote moved and should be retried.
+async function mergeAndPush({ localCache, localShifts, localSnapshot }) {
   // Step 2: bring the working tree to exactly what's on the remote.
   run(`git fetch origin ${BRANCH}`);
   run(`git reset --hard origin/${BRANCH}`);
@@ -112,12 +141,20 @@ async function main() {
 
   if (!hasChanges) {
     console.log('No changes to commit after merge.');
-    return;
+    return true;
   }
 
   run(`git commit -m "chore: update geocode cache and counts snapshot [automated]"`);
-  run(`git push origin HEAD:${BRANCH}`);
+
+  try {
+    run(`git push origin HEAD:${BRANCH}`);
+  } catch (err) {
+    if (!isPushConflict(err)) throw err;
+    return false;
+  }
+
   console.log('Pushed merged cache successfully.');
+  return true;
 }
 
 main().catch((err) => {
