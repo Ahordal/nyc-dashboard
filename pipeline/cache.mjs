@@ -122,6 +122,14 @@ function isFinal(entry) {
   return entry != null && entry.status !== 'pending';
 }
 
+// Date.parse on a malformed/missing resolvedAt is NaN, and NaN
+// comparisons are always false - treat that as 0 so a malformed remote
+// timestamp can't silently beat a genuinely newer local one.
+function resolvedTime(entry) {
+  const parsed = entry.resolvedAt ? Date.parse(entry.resolvedAt) : 0;
+  return Number.isFinite(parsed) ? parsed : 0;
+}
+
 /**
  * Combines two cache objects together entry-by-entry. Finished results always beat 
  * pending ones, and newer timestamps win if both are finished, ensuring no good 
@@ -150,9 +158,7 @@ export function mergeCaches(local, remote) {
     } else if (!localFinal && remoteFinal) {
       merged[camis] = remoteEntry;
     } else if (localFinal && remoteFinal) {
-      const localTime = localEntry.resolvedAt ? Date.parse(localEntry.resolvedAt) : 0;
-      const remoteTime = remoteEntry.resolvedAt ? Date.parse(remoteEntry.resolvedAt) : 0;
-      merged[camis] = localTime >= remoteTime ? localEntry : remoteEntry;
+      merged[camis] = resolvedTime(localEntry) >= resolvedTime(remoteEntry) ? localEntry : remoteEntry;
     } else {
       merged[camis] = localEntry;
     }

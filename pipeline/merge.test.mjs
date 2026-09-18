@@ -69,6 +69,13 @@ test('mergeCaches: older final result loses to newer one even if remote', () => 
   assert.equal(merged.A.status, 'verified'); // remote is newer
 });
 
+test('mergeCaches: a genuinely newer local result beats a remote with a malformed resolvedAt', () => {
+  const local = { A: entry({ camis: 'A', status: 'verified', resolvedAt: '2026-01-01T00:00:00.000Z' }) };
+  const remote = { A: entry({ camis: 'A', status: 'unverified', resolvedAt: 'not-a-date' }) };
+  const merged = mergeCaches(local, remote);
+  assert.equal(merged.A.status, 'verified'); // local wins - NaN must not beat it
+});
+
 test('mergeCaches: both pending keeps one without crashing', () => {
   const local = { A: entry({ camis: 'A', status: 'pending' }) };
   const remote = { A: entry({ camis: 'A', status: 'pending' }) };
