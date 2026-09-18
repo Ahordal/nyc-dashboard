@@ -407,25 +407,6 @@
   outline: none;
 }
 
-.search-filter-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  flex-shrink: 0;
-  background: transparent;
-  border: 1px solid var(--border-panel);
-  color: var(--text-body);
-  font-size: var(--fs-xl);
-  cursor: pointer;
-}
-
-.search-filter-toggle:hover {
-  background-color: var(--border-panel);
-  color: var(--link-hover);
-}
-
 .search-input-wrapper {
   position: relative;
   flex: 1;

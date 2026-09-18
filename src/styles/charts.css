@@ -73,17 +73,6 @@
   text-transform: uppercase;
 }
 
-.performance-tooltip-score {
-  color: var(--text-body);
-  font-size: var(--fs-md);
-}
-
-.performance-tooltip-score span {
-  font-family: var(--font-body);
-  font-weight: 600;
-  color: var(--text-heading);
-}
-
 /* Compact variant (mobile chart): grade + score blocks side by side, no card. */
 .performance-tooltip-compact {
   display: flex;
@@ -318,81 +307,6 @@
 
 .dashboard-guide-panel > .panel-header {
   flex-shrink: 0;
-}
-
-.dashboard-guide-content {
-  flex: 1;
-  min-height: 0;
-  overflow-y: auto;
-}
-
-.dashboard-guide-section {
-  border: 1px solid var(--border-panel);
-  border-bottom: none;
-  background-color: var(--bg-panel);
-}
-
-.dashboard-guide-section:last-child {
-  border-bottom: 1px solid var(--border-panel);
-}
-
-.dashboard-guide-section summary {
-  display: flex;
-  align-items: center;
-  gap: var(--space-xs);
-  padding: 0.55rem 0.65rem;
-  background-color: var(--bg-alt);
-  color: var(--text-muted);
-  font-family: var(--font-display);
-  font-size: var(--fs-xs);
-  font-weight: 700;
-  letter-spacing: 0.05em;
-  text-transform: uppercase;
-  cursor: pointer;
-  list-style: none;
-  user-select: none;
-}
-
-.dashboard-guide-section summary::-webkit-details-marker {
-  display: none;
-}
-
-.dashboard-guide-chevron {
-  flex-shrink: 0;
-  color: var(--text-muted);
-  font-size: var(--fs-xs);
-  transition: transform 0.15s ease;
-}
-
-.dashboard-guide-section[open] .dashboard-guide-chevron {
-  transform: rotate(90deg);
-}
-
-.dashboard-guide-section summary:hover,
-.dashboard-guide-section summary:focus-visible {
-  color: var(--text-heading);
-  background-color: var(--link-background-hover);
-}
-
-.dashboard-guide-section-content {
-  padding: 0.65rem 0.75rem 0.75rem;
-  font-size: var(--fs-sm);
-  line-height: 1.55;
-}
-
-.dashboard-guide-section-content ul {
-  margin: 0;
-  padding-left: 1.15rem;
-}
-
-.dashboard-guide-section-content li + li {
-  margin-top: 0.35rem;
-}
-
-.dashboard-guide-note {
-  margin-top: 0.65rem;
-  color: var(--text-muted);
-  font-weight: 600;
 }
 
 .panel-scroll-content {

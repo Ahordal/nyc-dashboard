@@ -182,7 +182,6 @@
   gap: 0;
 }
 
-.sort-select,
 .sort-direction-toggle {
   background: var(--bg-panel);
   color: var(--text-body);
@@ -202,8 +201,7 @@
   gap: 0.35rem;
 }
 
-.sort-direction-toggle:hover,
-.sort-select:hover {
+.sort-direction-toggle:hover {
   background-color: var(--link-background-hover);
   color: var(--link-hover);
 }
@@ -546,20 +544,6 @@
   letter-spacing: 0.05em;
   color: var(--text-muted);
 }
-.status-cell-content {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.35rem;
-  width: 100%;
-}
-
-.status-notes-block {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-}
-
 /* 11.2 INSPECTION REPORTS NAVIGATION */
 
 .restaurant-report-panel {
