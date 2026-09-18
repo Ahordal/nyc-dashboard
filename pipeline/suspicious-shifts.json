@@ -7606,5 +7606,17 @@
     "distanceMeters": 1936.931004055342,
     "matchType": "house+street",
     "resolvedVia": "no-hyphen"
+  },
+  {
+    "camis": "50192555",
+    "dba": "9046 DELI AND GRILL INC.",
+    "address": "90-46 161ST ST, Queens 11432",
+    "dohmhLat": 40.705177062773,
+    "dohmhLon": -73.799270307147,
+    "resolvedLat": 40.70429,
+    "resolvedLon": -73.798853,
+    "distanceMeters": 104.72172663386145,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated"
   }
 ]
