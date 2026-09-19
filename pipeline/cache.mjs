@@ -72,6 +72,7 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
     resolvedVia: resolution.resolvedVia,
     distanceFromDohmh: resolution.distanceFromDohmh ?? null,
     reason: resolution.reason || null,
+    error: resolution.error || null, // raw LocationIQ/network error text, for diagnosing a bad day's api_error batch
     resolvedAt: resolution.status === 'pending' ? null : new Date().toISOString(),
     addressHash,
     resolverVersion: RESOLVER_VERSION,

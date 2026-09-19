@@ -143,6 +143,34 @@ test('buildCacheEntry produces a pending entry with no resolvedAt timestamp', ()
   assert.equal(entry.resolvedAt, null);
 });
 
+test('buildCacheEntry preserves the raw error text from a failed resolution', () => {
+  const entry = buildCacheEntry({
+    camis: '321',
+    dohmh: { building: '1', street: 'Main St', boro: 'Queens', zip: '11111', lat: 40.7, lon: -73.9 },
+    addressHash: 'hash-jkl',
+    resolution: {
+      status: 'pending',
+      reason: 'api_error',
+      error: 'LocationIQ error 500: Internal Server Error',
+      matchType: null,
+      resolvedVia: null,
+    },
+  });
+
+  assert.equal(entry.error, 'LocationIQ error 500: Internal Server Error');
+});
+
+test('buildCacheEntry sets error to null when the resolution has none', () => {
+  const entry = buildCacheEntry({
+    camis: '654',
+    dohmh: { building: '1', street: 'Main St', boro: 'Queens', zip: '11111', lat: 40.7, lon: -73.9 },
+    addressHash: 'hash-mno',
+    resolution: { status: 'unverified', reason: 'no_acceptable_match', matchType: null, resolvedVia: null },
+  });
+
+  assert.equal(entry.error, null);
+});
+
 // needsResolution
 
 test('needsResolution is true when there is no cache entry at all', () => {
