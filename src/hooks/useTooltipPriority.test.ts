@@ -288,7 +288,7 @@ describe("useTooltipPriority", () => {
     it("retries the history preview sync once Recharts' layout settles", () => {
       const p1 = makePoint("1");
       const chartData = [p1];
-      const { result, rerender } = renderHook(
+      const { result } = renderHook(
         ({ historyPreviewChartPoint }) =>
           useTooltipPriority({
             chartData,
