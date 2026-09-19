@@ -7618,5 +7618,102 @@
     "distanceMeters": 104.72172663386145,
     "matchType": "house+street",
     "resolvedVia": "hyphenated"
+  },
+  {
+    "camis": "41654607",
+    "dba": "BROOKLYN CRAB",
+    "address": "24 REED ST, 0 07304",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.675333,
+    "resolvedLon": -74.016613,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "50006236",
+    "dba": "FRENCH LOUIE",
+    "address": "320 ATLANTIC AVE, 0 11762",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.647824,
+    "resolvedLon": -73.664654,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "50070626",
+    "dba": "LILLO",
+    "address": "331 HENRY ST, 0 08879",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.690228,
+    "resolvedLon": -73.996342,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "50088887",
+    "dba": "WISE",
+    "address": "35 NEPTUNE AVE, 0 11950",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.583039,
+    "resolvedLon": -73.955671,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "50141229",
+    "dba": "CHELSEA PIERS, LP @ CHELSEA PIERS FITNESS",
+    "address": "60 CHELSEA PIERS, Manhattan 10011",
+    "dohmhLat": 40.747992386672,
+    "dohmhLon": -74.008495743918,
+    "resolvedLat": 40.7463348,
+    "resolvedLon": -74.0083387,
+    "distanceMeters": 184.78940435449164,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.15210595645507,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
