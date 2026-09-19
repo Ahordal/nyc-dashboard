@@ -35,7 +35,9 @@ export function houseNumbersMatch(a, b) {
 // blindly strip "saint" from "St. Nicholas Ave" the way "St" expands to
 // "Street" elsewhere).
 
-const STREET_TYPE_MAP = {
+// Exported: fetch-inspection.mjs's search-index builder derives its token
+// expansions from these too, so the two never hand-drift out of sync.
+export const STREET_TYPE_MAP = {
   st: 'street',
   str: 'street',
   ave: 'avenue',
@@ -53,7 +55,7 @@ const STREET_TYPE_MAP = {
   ter: 'terrace',
 };
 
-const DIRECTIONAL_MAP = {
+export const DIRECTIONAL_MAP = {
   n: 'north',
   s: 'south',
   e: 'east',

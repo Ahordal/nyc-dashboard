@@ -13,7 +13,7 @@ import { writeFile, readFile, mkdir, rm, rename } from "node:fs/promises";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { loadCache } from "./cache.mjs";
-import { formatDisplayStreet } from "./normalize.mjs";
+import { formatDisplayStreet, STREET_TYPE_MAP, DIRECTIONAL_MAP } from "./normalize.mjs";
 import {
   OPEN_ACTIONS,
   CLOSED_ACTIONS,
@@ -95,29 +95,20 @@ const CORPORATE_SUFFIXES = new Set([
   "PC",
 ]);
 
-// Bidirectional token expansions to support both abbreviated and spelled-out queries.
-// ST maps to both STREET and SAINT to handle ambiguous names without complex NLP.
-const ABBREVIATION_EXPANSIONS = {
-  ST: ["STREET", "SAINT"],
-  AVE: ["AVENUE"],
-  BLVD: ["BOULEVARD"],
-  RD: ["ROAD"],
-  DR: ["DRIVE"],
-  LN: ["LANE"],
-  PL: ["PLACE"],
-  CT: ["COURT"],
-  PKWY: ["PARKWAY"],
-  HWY: ["HIGHWAY"],
-  EXPY: ["EXPRESSWAY"],
-  SQ: ["SQUARE"],
-  TER: ["TERRACE"],
-  BLDG: ["BUILDING"],
-  INTL: ["INTERNATIONAL"],
-  N: ["NORTH"],
-  S: ["SOUTH"],
-  E: ["EAST"],
-  W: ["WEST"],
-};
+// Bidirectional token expansions to support both abbreviated and spelled-out
+// queries. Built from normalize.mjs's street-type/direction maps (the
+// single source of truth for matching), so search can't hand-drift out of
+// sync with what actually counts as equivalent - plus a few search-only
+// extras that aren't street types at all: ST also expands to SAINT (handles
+// ambiguous names without complex NLP), and BLDG/INTL are generic word
+// abbreviations.
+const ABBREVIATION_EXPANSIONS = {};
+for (const [abbr, expansion] of Object.entries({ ...STREET_TYPE_MAP, ...DIRECTIONAL_MAP })) {
+  ABBREVIATION_EXPANSIONS[abbr.toUpperCase()] = [expansion.toUpperCase()];
+}
+ABBREVIATION_EXPANSIONS.ST.push("SAINT");
+ABBREVIATION_EXPANSIONS.BLDG = ["BUILDING"];
+ABBREVIATION_EXPANSIONS.INTL = ["INTERNATIONAL"];
 
 function stripDiacritics(text) {
   return text.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
