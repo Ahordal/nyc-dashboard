@@ -405,7 +405,7 @@ export default function Dashboard() {
       <div className="desktop-filters-button-wrap">
         <button
           type="button"
-          className="desktop-filters-button"
+          className="control-chip desktop-filters-button"
           aria-expanded={activeDrawer === "filters"}
           aria-controls={desktopFiltersPopoverId}
           aria-label={

@@ -43,7 +43,7 @@ export default function MapCompass({ view }: MapCompassProps) {
         disabled={isNorth}
         tooltip="Reorient to north"
         ariaLabel="Reorient to north"
-        className="map-compass-button tooltip-right"
+        className="control-chip map-compass-button tooltip-right"
       >
         <FontAwesomeIcon
           icon={faCompass}

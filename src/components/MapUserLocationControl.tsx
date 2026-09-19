@@ -93,7 +93,7 @@ export default function MapUserLocationControl({
             : tooltipText(status, errorKind, outsideNyc)
         }
         ariaLabel={ariaLabel(status, errorKind, outsideNyc)}
-        className={`map-user-location-button tooltip-left${
+        className={`control-chip map-user-location-button tooltip-left${
           locating ? " is-locating" : ""
         }${located ? " active" : ""}${muted ? " muted" : ""}`}>
         <FontAwesomeIcon

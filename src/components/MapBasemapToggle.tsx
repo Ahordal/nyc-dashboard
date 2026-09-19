@@ -157,7 +157,7 @@ export default function MapBasemapToggle({ view }: MapBasemapToggleProps) {
         disabled={isToggling}
         tooltip={isSatellite ? "Switch to map view" : "Switch to satellite view"}
         ariaLabel={isSatellite ? "Switch to map view" : "Switch to satellite view"}
-        className="map-basemap-toggle-button tooltip-left"
+        className="control-chip map-basemap-toggle-button tooltip-left"
       >
         <FontAwesomeIcon icon={isSatellite ? faMap : faSatellite} />
       </MapControlButton>

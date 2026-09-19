@@ -49,7 +49,7 @@ export default function MapSearchRadiusControl({
         onClick={handleIconClick}
         tooltip={isIdle ? "Search Radius" : undefined}
         ariaLabel={isIdle ? "Search Radius" : "Close search radius"}
-        className={`map-search-radius-button ${isIdle ? "tooltip-left" : "active"}`}>
+        className={`control-chip map-search-radius-button ${isIdle ? "tooltip-left" : "active"}`}>
         <FontAwesomeIcon icon={isIdle ? faBullseye : faXmark} />
       </MapControlButton>
 

@@ -126,7 +126,26 @@ summary:focus-visible,
   outline-offset: 2px;
 }
 
-/* 1.5 REDUCED MOTION */
+/* 1.5 CONTROL-CHIP BUTTON SHELL
+
+   Shared shell for the 32px square icon buttons: the app-bar buttons,
+   desktop filters button, and MapView's own corner controls. Each site
+   adds only what differs (position, font-size, padding). */
+.control-chip {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background-color: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 2px 4px var(--shadow-controls);
+  color: var(--text-muted);
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+/* 1.6 REDUCED MOTION */
 
 @media (prefers-reduced-motion: reduce) {
   *,

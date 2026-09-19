@@ -91,7 +91,7 @@ export default function AppBar({
         <div className="mobile-appbar-actions">
           <button
             type="button"
-            className="mobile-appbar-button"
+            className="control-chip mobile-appbar-button"
             data-active={searchOpen || undefined}
             aria-expanded={searchOpen}
             aria-controls={searchDrawerId}
@@ -114,7 +114,7 @@ export default function AppBar({
 
           <button
             type="button"
-            className="mobile-appbar-button"
+            className="control-chip mobile-appbar-button"
             data-active={filtersOpen || undefined}
             aria-expanded={filtersOpen}
             aria-controls={filterDrawerId}
@@ -134,7 +134,7 @@ export default function AppBar({
 
           <button
             type="button"
-            className="mobile-appbar-button"
+            className="control-chip mobile-appbar-button"
             data-active={infoOpen || undefined}
             aria-expanded={infoOpen}
             aria-controls={infoDrawerId}

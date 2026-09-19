@@ -260,20 +260,10 @@
     flex-shrink: 0;
   }
 
+  /* Shell is shared - see .control-chip in base.css. */
   .tablet-appbar-region .mobile-appbar-button {
     position: relative;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    width: 32px;
-    height: 32px;
-    background-color: var(--bg-panel);
-    border: 1px solid var(--border-panel);
-    box-shadow: 0 2px 4px var(--shadow-controls);
-    color: var(--text-muted);
     font-size: var(--fs-lg);
-    cursor: pointer;
-    box-sizing: border-box;
   }
 
   .tablet-appbar-region .mobile-appbar-button:hover,
