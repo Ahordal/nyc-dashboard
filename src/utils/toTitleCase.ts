@@ -1,9 +1,9 @@
 // toTitleCase.ts
 
+// Capitalizes the first letter after a space, a hyphen, or the string
+// start - not after an apostrophe, so a possessive "'s" stays lowercase.
 export function toTitleCase(input: string): string {
   return input
     .toLowerCase()
-    .split(" ")
-    .map((word) => (word.length > 0 ? word[0].toUpperCase() + word.slice(1) : word))
-    .join(" ");
+    .replace(/(^|[\s-])(\p{L})/gu, (_match, boundary: string, letter: string) => boundary + letter.toUpperCase());
 }
