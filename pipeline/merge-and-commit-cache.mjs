@@ -24,24 +24,34 @@
 //      corrupt the JSON or silently pick one side wholesale.
 //   5. Write the merged result, restore counts-snapshot.json (this run's
 //      fresh snapshot from step 1, re-written because the step-2 reset
-//      reverts it to the committed version; it's tracked on `data`),
-//      commit, push. If another run's push landed on `data` between
-//      steps 2 and 5, this push is rejected as non-fast-forward; steps
-//      2-5 then retry from a fresh fetch (this run's own step-1 results
-//      are held in memory, so nothing already captured is lost).
+//      reverts it to the committed version; it's tracked on `data`) -
+//      corrected first for any restaurant whose count-eligibility (see
+//      DOHMH_INVALID_CAMIS_PATH below) changed between the local and
+//      merged cache - commit, push. If another run's push landed on
+//      `data` between steps 2 and 5, this push is rejected as
+//      non-fast-forward; steps 2-5 then retry from a fresh fetch (this
+//      run's own step-1 results are held in memory, so nothing already
+//      captured is lost).
 //
 // Usage: node merge-and-commit-cache.mjs
 // Run from within pipeline/, after run-geocode-backfill.mjs has written
-// geocode-cache.json / suspicious-shifts.json / counts-snapshot.json
-// locally.
+// geocode-cache.json / suspicious-shifts.json / counts-snapshot.json /
+// dohmh-invalid-camis.json locally.
 
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
+import { pathToFileURL } from 'node:url';
 import { mergeCaches, mergeSuspiciousShifts, readJsonTolerant, saveCacheAtomic } from './cache.mjs';
+import { isWithinNYC } from '../shared/nycBounds.mjs';
 
 const CACHE_PATH = './geocode-cache.json';
 const LOG_PATH = './suspicious-shifts.json';
 const COUNTS_SNAPSHOT_PATH = './counts-snapshot.json';
+// Restaurants whose DOHMH coordinate is invalid - the only ones whose
+// count-eligibility depends on geocode cache state at all (see
+// fetch-inspection.mjs's findRestaurantsWithInvalidDohmhCoords). Never
+// committed to `data`; read here only to correct the snapshot below.
+const DOHMH_INVALID_CAMIS_PATH = './dohmh-invalid-camis.json';
 const BRANCH = 'data';
 const MAX_PUSH_ATTEMPTS = 3;
 const RETRY_DELAY_MS = 2000;
@@ -61,6 +71,42 @@ function isPushConflict(err) {
   return ['rejected', 'non-fast-forward', 'fetch first', 'stale info'].some((s) => text.includes(s));
 }
 
+export function countVerifiedInBounds(cache, camisList) {
+  let count = 0;
+  for (const camis of camisList) {
+    const entry = cache[camis];
+    if (entry?.status === 'verified' && entry.resolved && isWithinNYC(entry.resolved.lat, entry.resolved.lon)) {
+      count += 1;
+    }
+  }
+  return count;
+}
+
+// run-geocode-backfill.mjs's restaurantCount only reflects the pre-merge
+// local cache; a restaurant with an invalid DOHMH coordinate is only
+// counted at all once it has a verified, in-bounds cache entry (see
+// fetch-inspection.mjs's buildLatestInspectionsGeoJSON). If merging
+// against the remote changed that for any of them, correct the snapshot
+// by the same amount so it reflects the cache actually being committed,
+// not the one that existed before the merge.
+export function correctSnapshotForMerge(snapshot, localCache, mergedCache, invalidDohmhCamis) {
+  if (!snapshot || invalidDohmhCamis.length === 0) return snapshot;
+
+  const correction =
+    countVerifiedInBounds(mergedCache, invalidDohmhCamis) - countVerifiedInBounds(localCache, invalidDohmhCamis);
+  if (correction === 0) return snapshot;
+
+  console.warn(
+    `Correcting restaurant count by ${correction} after merge (cache differed for DOHMH-invalid-coordinate restaurants).`,
+  );
+
+  return {
+    ...snapshot,
+    restaurantCount: snapshot.restaurantCount + correction,
+    restaurantDelta: snapshot.restaurantDelta != null ? snapshot.restaurantDelta + correction : null,
+  };
+}
+
 async function main() {
   // Step 1: capture this run's own results before touching git at all.
   const localCache = await readJsonTolerant(CACHE_PATH, {});
@@ -69,11 +115,12 @@ async function main() {
   // reverts the copy run-geocode-backfill.mjs just wrote back to the
   // committed version. Hold this run's in memory so step 5 can restore it.
   const localSnapshot = await readJsonTolerant(COUNTS_SNAPSHOT_PATH, null);
+  const invalidDohmhCamis = await readJsonTolerant(DOHMH_INVALID_CAMIS_PATH, []);
 
   console.log(`Local run: ${Object.keys(localCache).length} cache entries, ${localShifts.length} suspicious shifts.`);
 
   for (let attempt = 1; attempt <= MAX_PUSH_ATTEMPTS; attempt++) {
-    const pushed = await mergeAndPush({ localCache, localShifts, localSnapshot });
+    const pushed = await mergeAndPush({ localCache, localShifts, localSnapshot, invalidDohmhCamis });
     if (pushed) return;
 
     if (attempt === MAX_PUSH_ATTEMPTS) {
@@ -87,7 +134,7 @@ async function main() {
 // One attempt at steps 2-5: reconcile against the current remote and try to
 // push. Returns true on success (including "nothing to push"), false if the
 // push was rejected because the remote moved and should be retried.
-async function mergeAndPush({ localCache, localShifts, localSnapshot }) {
+async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDohmhCamis }) {
   // Step 2: bring the working tree to exactly what's on the remote.
   run(`git fetch origin ${BRANCH}`);
   run(`git reset --hard origin/${BRANCH}`);
@@ -106,16 +153,19 @@ async function mergeAndPush({ localCache, localShifts, localSnapshot }) {
 
   console.log(`Merged: ${Object.keys(mergedCache).length} cache entries, ${mergedShifts.length} suspicious shifts.`);
 
+  const correctedSnapshot = correctSnapshotForMerge(localSnapshot, localCache, mergedCache, invalidDohmhCamis);
+
   // Step 5: write the merged cache/shifts and restore this run's
   // snapshot (step-2's `git reset --hard` reverted the on-disk copy to
   // the committed version; counts-snapshot.json isn't merged, it's just
-  // this run's own fresh per-run snapshot). Then add whichever of the
-  // three files exist; a missing file means an earlier step failed
-  // partway through, which shouldn't block committing whatever did make it.
+  // this run's own fresh per-run snapshot, corrected above for the merge).
+  // Then add whichever of the three files exist; a missing file means an
+  // earlier step failed partway through, which shouldn't block committing
+  // whatever did make it.
   await saveCacheAtomic(CACHE_PATH, mergedCache);
   await saveCacheAtomic(LOG_PATH, mergedShifts);
-  if (localSnapshot?.restaurantCount != null) {
-    await saveCacheAtomic(COUNTS_SNAPSHOT_PATH, localSnapshot);
+  if (correctedSnapshot?.restaurantCount != null) {
+    await saveCacheAtomic(COUNTS_SNAPSHOT_PATH, correctedSnapshot);
   }
 
   for (const path of [CACHE_PATH, LOG_PATH, COUNTS_SNAPSHOT_PATH]) {
@@ -157,11 +207,17 @@ async function mergeAndPush({ localCache, localShifts, localSnapshot }) {
   return true;
 }
 
-main().catch((err) => {
-  // A failure here should be loud: if the merge/push genuinely fails,
-  // that run's results stay only on the (soon-to-be-destroyed) runner
-  // disk, same as the original bug. Surfacing it clearly matters so it
-  // doesn't silently repeat.
-  console.error('merge-and-commit-cache failed:', err.message);
-  process.exit(1);
-});
+// Only run when invoked directly (node merge-and-commit-cache.mjs), not
+// when imported by a test; mirrors run-geocode-backfill.mjs. Without this
+// guard, importing this module's pure helpers for testing would also run
+// main() for real - actual git fetch/reset/push against the repo.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main().catch((err) => {
+    // A failure here should be loud: if the merge/push genuinely fails,
+    // that run's results stay only on the (soon-to-be-destroyed) runner
+    // disk, same as the original bug. Surfacing it clearly matters so it
+    // doesn't silently repeat.
+    console.error('merge-and-commit-cache failed:', err.message);
+    process.exit(1);
+  });
+}

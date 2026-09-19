@@ -456,6 +456,34 @@ export function buildGeocodeInputList(eventsByRestaurant) {
   return restaurants;
 }
 
+// Restaurants whose own DOHMH coordinate is missing/invalid/out-of-bounds -
+// the only ones whose inclusion in buildLatestInspectionsGeoJSON depends on
+// geocode cache state at all (see the dohmhValid/hasVerifiedResolution
+// check below). Exposed separately, computed straight from the live
+// dataset, so a restaurant count taken before a cache merge can be
+// corrected afterward without re-fetching the whole dataset (see
+// run-geocode-backfill.mjs / merge-and-commit-cache.mjs).
+export function findRestaurantsWithInvalidDohmhCoords(eventsByRestaurant) {
+  const invalidCamis = [];
+
+  for (const [camis, events] of eventsByRestaurant) {
+    const scoredEvents = events.filter(
+      (event) => event.primary.score != null && event.date !== NOT_YET_INSPECTED_DATE,
+    );
+    const latest = scoredEvents.length === 0 ? events[events.length - 1] : scoredEvents[scoredEvents.length - 1];
+    if (!latest) continue;
+
+    const dohmhLatRaw = parseFloat(latest.primary.latitude);
+    const dohmhLonRaw = parseFloat(latest.primary.longitude);
+    const dohmhValid =
+      !Number.isNaN(dohmhLatRaw) && !Number.isNaN(dohmhLonRaw) && isWithinNYC(dohmhLatRaw, dohmhLonRaw);
+
+    if (!dohmhValid) invalidCamis.push(camis);
+  }
+
+  return invalidCamis;
+}
+
 /**
  * Builds the primary GeoJSON feature collection for the map.
  * Enforces spatial validity (NYC bounding box) and resolves geocode cache overrides.
