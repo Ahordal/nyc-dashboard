@@ -181,9 +181,11 @@ async function goToFullExtent(
   view: MapView,
   layer: GeoJSONLayer,
   options?: Parameters<MapView["goTo"]>[1],
+  isCancelled: () => boolean = () => false,
 ): Promise<void> {
   try {
     const { extent } = await queryFilterExtent(layer, "1=1");
+    if (isCancelled()) return;
     if (extent) {
       await view.goTo(extent.expand(1.2), options);
     }
@@ -705,6 +707,11 @@ export default function InspectionMapView({
 
     const cameraTrigger = boroughsChanged || searchChanged;
 
+    // Guards every side effect below: a fast filter/search edit can start a
+    // new run before this one's awaits resolve, and a stale run must not
+    // deselect the current restaurant or snap the camera to an old extent.
+    let cancelled = false;
+
     async function syncSelectionAndZoom() {
       if (!layer) return;
 
@@ -736,10 +743,13 @@ export default function InspectionMapView({
         }
       }
 
+      if (cancelled) return;
+
       if (currentId && !stillMatches) {
         onSelectRestaurantRef.current?.(null);
       } else {
         await applyHighlightForId(currentId, objectId);
+        if (cancelled) return;
       }
 
       let cameraWillMove = false;
@@ -755,6 +765,8 @@ export default function InspectionMapView({
               layer,
               newDefinitionExpression,
             );
+
+            if (cancelled) return;
 
             if (count > 0 && extent) {
               cameraWillMove = true;
@@ -772,9 +784,11 @@ export default function InspectionMapView({
           }
         } else {
           cameraWillMove = true;
-          await goToFullExtent(view, layer);
+          await goToFullExtent(view, layer, undefined, () => cancelled);
         }
       }
+
+      if (cancelled) return;
 
       if (view && !cameraWillMove) {
         await reportVisibleRestaurants(view, layer);
@@ -782,6 +796,10 @@ export default function InspectionMapView({
     }
 
     syncSelectionAndZoom();
+
+    return () => {
+      cancelled = true;
+    };
     // reportVisibleRestaurants (per-render) and searchRadius's ref
     // (stable) don't belong in the dep array.
     // eslint-disable-next-line react-hooks/exhaustive-deps
