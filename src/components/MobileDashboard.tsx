@@ -263,7 +263,6 @@ export default function MobileDashboard({
     const camis = selectedRestaurant?.camis ?? null;
     if (camis !== prevCamisRef.current) {
       skippedToOpenRef.current = false;
-      setPerfInfoOpen(false);
       if (!camis) setDetent("peek");
     }
     prevCamisRef.current = camis;
@@ -296,10 +295,13 @@ export default function MobileDashboard({
   const showPerformanceChart =
     selectedRestaurant != null && activeExplorerTab === "details";
 
-  // Closes the chart's info takeover whenever the chart itself goes away.
+  // Closes the chart's info takeover whenever the chart itself goes away
+  // or the selection changes - either way, any open takeover belonged to
+  // stale context. One effect owns this reset (a separate camis-change
+  // effect above used to also reset it, redundantly, on deselect).
   useEffect(() => {
-    if (!showPerformanceChart) setPerfInfoOpen(false);
-  }, [showPerformanceChart]);
+    setPerfInfoOpen(false);
+  }, [showPerformanceChart, selectedRestaurant?.camis]);
 
   // Resets the shared scroll on takeover open, so the header starts at
   // top, not mid-scroll.

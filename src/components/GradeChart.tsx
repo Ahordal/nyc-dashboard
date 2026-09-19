@@ -8,6 +8,7 @@
 import { memo, useMemo, useState } from "react";
 import type { CSSProperties } from "react";
 import { PieChart, Pie, ResponsiveContainer, Sector } from "recharts";
+import type { PieSectorShapeProps } from "recharts";
 
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
@@ -89,8 +90,7 @@ type ChartDataItem = {
   color: string;
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const renderCustomizedShape = (props: any) => {
+const renderCustomizedShape = (props: PieSectorShapeProps) => {
   const { cx, cy, innerRadius, outerRadius, startAngle, endAngle, payload } =
     props;
 

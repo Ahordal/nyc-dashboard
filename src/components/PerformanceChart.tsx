@@ -10,7 +10,7 @@
 // sizing/rendering, and the one cross-hook bit: pointer hover cancels
 // keyboard mode.
 
-import { memo, useCallback, useEffect, useId, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useId, useMemo, useState } from "react";
 
 import {
   LineChart,
@@ -318,7 +318,12 @@ function PerformanceChart({
     [isMobile],
   );
 
-  const chartBodyRef = useRef<HTMLDivElement | null>(null);
+  // A state setter used as a ref callback, not a plain ref, so the
+  // ResizeObserver effect below re-runs exactly when this element mounts
+  // or unmounts (e.g. switching between restaurants through a loading
+  // state) - not on some indirect proxy that could coincidentally not
+  // change across a remount.
+  const [chartBodyEl, setChartBodyEl] = useState<HTMLDivElement | null>(null);
 
   const [chartSize, setChartSize] = useState<ChartSize>({
     width: 0,
@@ -446,9 +451,7 @@ function PerformanceChart({
 
   // Watch ResponsiveContainer so tooltip positions remain aligned with dots.
   useEffect(() => {
-    const chartBody = chartBodyRef.current;
-
-    if (!chartBody || typeof ResizeObserver === "undefined") {
+    if (!chartBodyEl || typeof ResizeObserver === "undefined") {
       return;
     }
 
@@ -472,12 +475,12 @@ function PerformanceChart({
       });
     });
 
-    resizeObserver.observe(chartBody);
+    resizeObserver.observe(chartBodyEl);
 
     return () => {
       resizeObserver.disconnect();
     };
-  }, [chartData.length]);
+  }, [chartBodyEl]);
 
   // A fresh pointer hover always wins, so it cancels keyboard mode.
   const handlePointerPointChange = useCallback(
@@ -544,7 +547,7 @@ function PerformanceChart({
   } else {
     content = (
       <div
-        ref={chartBodyRef}
+        ref={setChartBodyEl}
         className="performance-chart-body"
         tabIndex={0}
         role="group"

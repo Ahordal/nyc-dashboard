@@ -172,18 +172,14 @@ export default function Dashboard() {
     null,
   );
 
-  const gradesKey = filters.grades.join(",");
-
-  const boroughsKey = filters.boroughs.join(",");
-
-  const radiusKey = searchRadiusPoint ? `radius-${activeRadiusMiles}` : "";
-
   // Stable reference needed here since RestaurantList is memoized too —
   // a fresh element every render would defeat that.
   const restaurantListFilterNotice = useMemo(
     () => (
       <NoticeOverlay
-        triggerKey={`${gradesKey}-${boroughsKey}-${searchQuery}-${radiusKey}`}
+        triggerKey={`${filters.grades.join(",")}-${filters.boroughs.join(",")}-${searchQuery}-${
+          searchRadiusPoint ? `radius-${activeRadiusMiles}` : ""
+        }`}
         durationMs={FILTER_NOTICE_DURATION_MS}>
         {getFilterNoticeParts({
           grades: filters.grades,
@@ -231,12 +227,9 @@ export default function Dashboard() {
       </NoticeOverlay>
     ),
     [
-      gradesKey,
-      boroughsKey,
-      searchQuery,
-      radiusKey,
       filters.grades,
       filters.boroughs,
+      searchQuery,
       searchRadiusPoint,
       activeRadiusMiles,
     ],
