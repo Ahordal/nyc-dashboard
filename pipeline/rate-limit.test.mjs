@@ -89,6 +89,37 @@ test('fetchGeocode throws RateLimitedError specifically on HTTP 429', async () =
   }
 });
 
+// resolveRestaurant still throttles after an ordinary error
+
+test('resolveRestaurant waits out the rate-limit delay after an ordinary api_error, not just on success', async () => {
+  const originalFetch = global.fetch;
+  // 400 is not retried by fetchGeocode and not a 429, so this reaches
+  // resolveRestaurant's generic api_error branch on the first attempt.
+  global.fetch = async () => ({ status: 400, ok: false, text: async () => 'Bad request' });
+  try {
+    const restaurant = {
+      camis: '1',
+      dba: 'Test Place',
+      building: '1',
+      street: 'Main St',
+      boro: 'Queens',
+      zip: '11111',
+      dohmhLat: 40.7,
+      dohmhLon: -73.9,
+    };
+    const quota = createQuota(100);
+    const start = Date.now();
+    const result = await resolveRestaurant(restaurant, { apiKey: 'fake-key', quota });
+    const elapsed = Date.now() - start;
+
+    assert.equal(result.status, 'pending');
+    assert.equal(result.reason, 'api_error');
+    assert.ok(elapsed >= 500, `expected the throttle delay to be awaited, only took ${elapsed}ms`);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
 // resolveRestaurant marks rate-limited correctly
 
 test('resolveRestaurant returns pending/rate_limited with rateLimited:true on 429', async () => {

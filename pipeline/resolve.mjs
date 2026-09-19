@@ -43,7 +43,8 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
         // stop the whole run immediately rather than grinding through
         // every remaining restaurant with the same guaranteed failure,
         // wasting the time budget and adding more rejected requests to
-        // the day's usage stats for nothing.
+        // the day's usage stats for nothing. No further requests will
+        // follow this run either way, so no throttle wait is needed here.
         return {
           status: 'pending',
           reason: 'rate_limited',
@@ -55,7 +56,11 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
       }
 
       // Network/API error. NOT the same as "geocoder ran and found
-      // nothing". Pending, retried next run.
+      // nothing". Pending, retried next run. A request still went out
+      // against LocationIQ, so the next one (this restaurant's other
+      // query, or the next restaurant) must still wait out the throttle.
+      await rateLimitDelay();
+
       return {
         status: 'pending',
         reason: 'api_error',
