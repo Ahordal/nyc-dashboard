@@ -239,11 +239,13 @@ function RestaurantList({
 
   // If the list shrank (a filter, or a smaller map view) and the current
   // page fell out of range, return to page 1 rather than stranding on a
-  // partial page.
+  // partial page. Uses a functional update, not the closed-over `page`,
+  // so it sees whatever the selection-tracking effect above just queued
+  // in this same commit instead of clobbering it with a stale value.
   useEffect(() => {
     const pageCount = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
-    if (page > pageCount) setPage(1);
-  }, [sorted.length, page]);
+    setPage((prev) => (prev > pageCount ? 1 : prev));
+  }, [sorted.length]);
 
   const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const clampedPage = Math.min(page, totalPages);
