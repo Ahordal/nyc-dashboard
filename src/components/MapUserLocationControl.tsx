@@ -11,6 +11,7 @@ import {
   faLocationArrow,
   faXmark,
 } from "@fortawesome/free-solid-svg-icons";
+import MapControlButton from "./MapControlButton";
 
 import type {
   GeolocationErrorKind,
@@ -74,26 +75,24 @@ export default function MapUserLocationControl({
       {located && (
         <div className="map-user-location-panel">
           <span className="map-user-location-label">My location</span>
-          <button
-            type="button"
+          <MapControlButton
             className="map-user-location-clear"
-            aria-label="Clear my location"
+            ariaLabel="Clear my location"
             onClick={onClear}>
             <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
-          </button>
+          </MapControlButton>
         </div>
       )}
 
-      <button
-        type="button"
+      <MapControlButton
         onClick={onLocate}
         disabled={locating}
-        data-tooltip={
+        tooltip={
           locating || located
             ? undefined
             : tooltipText(status, errorKind, outsideNyc)
         }
-        aria-label={ariaLabel(status, errorKind, outsideNyc)}
+        ariaLabel={ariaLabel(status, errorKind, outsideNyc)}
         className={`map-user-location-button tooltip-left${
           locating ? " is-locating" : ""
         }${located ? " active" : ""}${muted ? " muted" : ""}`}>
@@ -101,7 +100,7 @@ export default function MapUserLocationControl({
           icon={locating ? faCircleNotch : faLocationArrow}
           aria-hidden="true"
         />
-      </button>
+      </MapControlButton>
     </div>
   );
 }

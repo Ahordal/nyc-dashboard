@@ -7,6 +7,7 @@
 import { useEffect, useState } from "react";
 import type MapView from "@arcgis/core/views/MapView";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
+import MapControlButton from "./MapControlButton";
 
 const MIN_ZOOM = 1;
 const MAX_ZOOM = 20;
@@ -78,26 +79,24 @@ export default function MapScaleZoomControls({
     <>
       <div className="map-zoom-buttons-container">
         <div className="map-zoom-buttons-chip">
-          <button
-            type="button"
+          <MapControlButton
             onClick={() => stepZoom(1)}
             disabled={currentZoom >= MAX_ZOOM}
-            data-tooltip="Zoom in"
-            aria-label="Zoom in"
+            tooltip="Zoom in"
+            ariaLabel="Zoom in"
             className="map-zoom-button tooltip-right"
           >
             +
-          </button>
-          <button
-            type="button"
+          </MapControlButton>
+          <MapControlButton
             onClick={() => stepZoom(-1)}
             disabled={currentZoom <= MIN_ZOOM}
-            data-tooltip="Zoom out"
-            aria-label="Zoom out"
+            tooltip="Zoom out"
+            ariaLabel="Zoom out"
             className="map-zoom-button tooltip-right"
           >
             &minus;
-          </button>
+          </MapControlButton>
         </div>
       </div>
 
@@ -119,18 +118,17 @@ export default function MapScaleZoomControls({
               className="map-control-input scale-input"
             />
           ) : (
-            <button
-              type="button"
+            <MapControlButton
               onClick={() => {
                 setScaleInputVal(String(currentScale));
                 setIsEditingScale(true);
               }}
-              data-tooltip="Click to type a map scale denominator"
-              aria-label={`Map scale 1 to ${currentScale.toLocaleString()}. Activate to type a value.`}
+              tooltip="Click to type a map scale denominator"
+              ariaLabel={`Map scale 1 to ${currentScale.toLocaleString()}. Activate to type a value.`}
               className="map-control-button tooltip-right"
             >
               {currentScale.toLocaleString()}
-            </button>
+            </MapControlButton>
           )}
         </div>
 
@@ -154,18 +152,17 @@ export default function MapScaleZoomControls({
               className="map-control-input zoom-input"
             />
           ) : (
-            <button
-              type="button"
+            <MapControlButton
               onClick={() => {
                 setZoomInputVal(String(currentZoom));
                 setIsEditingZoom(true);
               }}
-              data-tooltip="Click to type a zoom level"
-              aria-label={`Zoom level ${currentZoom}. Activate to type a value.`}
+              tooltip="Click to type a zoom level"
+              ariaLabel={`Zoom level ${currentZoom}. Activate to type a value.`}
               className="map-control-button tooltip-right"
             >
               {currentZoom}
-            </button>
+            </MapControlButton>
           )}
         </div>
       </div>

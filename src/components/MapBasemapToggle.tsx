@@ -18,6 +18,7 @@ import VectorTileLayer from "@arcgis/core/layers/VectorTileLayer";
 import WebTileLayer from "@arcgis/core/layers/WebTileLayer";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSatellite, faMap } from "@fortawesome/free-solid-svg-icons";
+import MapControlButton from "./MapControlButton";
 
 // Raw tiles avoid triggering token/metadata requests via esriConfig.apiKey.
 const WORLD_IMAGERY_TILE_URL =
@@ -151,16 +152,15 @@ export default function MapBasemapToggle({ view }: MapBasemapToggleProps) {
 
   return (
     <div className="map-basemap-toggle-container">
-      <button
-        type="button"
+      <MapControlButton
         onClick={toggleBasemap}
         disabled={isToggling}
-        data-tooltip={isSatellite ? "Switch to map view" : "Switch to satellite view"}
-        aria-label={isSatellite ? "Switch to map view" : "Switch to satellite view"}
+        tooltip={isSatellite ? "Switch to map view" : "Switch to satellite view"}
+        ariaLabel={isSatellite ? "Switch to map view" : "Switch to satellite view"}
         className="map-basemap-toggle-button tooltip-left"
       >
         <FontAwesomeIcon icon={isSatellite ? faMap : faSatellite} />
-      </button>
+      </MapControlButton>
     </div>
   );
 }

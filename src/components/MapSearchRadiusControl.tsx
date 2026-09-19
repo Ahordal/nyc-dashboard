@@ -8,6 +8,7 @@
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faBullseye, faXmark } from "@fortawesome/free-solid-svg-icons";
 
+import MapControlButton from "./MapControlButton";
 import SearchRadiusPicker from "./SearchRadiusPicker";
 import type { SearchRadiusMiles } from "../types/searchRadius";
 
@@ -44,14 +45,13 @@ export default function MapSearchRadiusControl({
 
   return (
     <div className="map-search-radius-container">
-      <button
-        type="button"
+      <MapControlButton
         onClick={handleIconClick}
-        data-tooltip={isIdle ? "Search Radius" : undefined}
-        aria-label={isIdle ? "Search Radius" : "Close search radius"}
+        tooltip={isIdle ? "Search Radius" : undefined}
+        ariaLabel={isIdle ? "Search Radius" : "Close search radius"}
         className={`map-search-radius-button ${isIdle ? "tooltip-left" : "active"}`}>
         <FontAwesomeIcon icon={isIdle ? faBullseye : faXmark} />
-      </button>
+      </MapControlButton>
 
       {!isIdle && (
         <div className="map-search-radius-panel">

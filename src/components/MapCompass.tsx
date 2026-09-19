@@ -8,6 +8,7 @@ import type MapView from "@arcgis/core/views/MapView";
 import * as reactiveUtils from "@arcgis/core/core/reactiveUtils";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCompass } from "@fortawesome/free-solid-svg-icons";
+import MapControlButton from "./MapControlButton";
 
 const ROTATION_EPSILON = 0.1;
 
@@ -35,21 +36,20 @@ export default function MapCompass({ view }: MapCompassProps) {
 
   return (
     <div className="map-compass-container">
-      <button
-        type="button"
+      <MapControlButton
         onClick={() => {
           if (view) view.rotation = 0;
         }}
         disabled={isNorth}
-        data-tooltip="Reorient to north"
-        aria-label="Reorient to north"
+        tooltip="Reorient to north"
+        ariaLabel="Reorient to north"
         className="map-compass-button tooltip-right"
       >
         <FontAwesomeIcon
           icon={faCompass}
           style={{ transform: `rotate(${-rotation}deg)` }}
         />
-      </button>
+      </MapControlButton>
     </div>
   );
 }
