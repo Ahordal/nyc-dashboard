@@ -23,7 +23,7 @@ export default function InspectionBadges({
   action,
   style,
 }: InspectionBadgesProps) {
-  const category = getGradeCategory(action ?? "", grade, score ?? 0);
+  const category = getGradeCategory(action ?? "", grade, score);
   const categoryColor = CATEGORY_COLORS[category];
   const isUninspected = grade === UNINSPECTED_GRADE;
 

@@ -104,7 +104,7 @@ export default function PerformanceTooltip({
 
   if (variant === "compact") {
     const categoryColor =
-      CATEGORY_COLORS[getGradeCategory(action ?? "", grade, score ?? 0)];
+      CATEGORY_COLORS[getGradeCategory(action ?? "", grade, score)];
     const isUninspected = grade === UNINSPECTED_GRADE;
 
     return (
