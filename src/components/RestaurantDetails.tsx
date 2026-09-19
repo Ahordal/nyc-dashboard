@@ -565,9 +565,7 @@ function RestaurantDetails({
                   <span className="inspection-row-date">{eventDate}</span>
 
                   <div className="inspection-violation-counts">
-                    {critical === 0 &&
-                    notCritical === 0 &&
-                    event.score === 0 ? (
+                    {critical === 0 && notCritical === 0 ? (
                       <span className="violation-slot-full">
                         <Badge variant="status-open">0 Violations</Badge>
                       </span>
