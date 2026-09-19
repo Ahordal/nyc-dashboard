@@ -770,10 +770,12 @@ export default function InspectionMapView({
 
             if (count > 0 && extent) {
               cameraWillMove = true;
+              // goTo rejects if the user interrupts the animation; ignore.
+              const ignoreInterruption = () => {};
               if (isDegenerate) {
-                view.goTo({ center: extent.center, zoom: 16 });
+                view.goTo({ center: extent.center, zoom: 16 }).catch(ignoreInterruption);
               } else {
-                view.goTo(extent.expand(1.2));
+                view.goTo(extent.expand(1.2)).catch(ignoreInterruption);
               }
             }
           } catch (err) {
