@@ -55,6 +55,7 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
         onClose={() => {
           setShowInfoModal(false);
         }}
+        ariaLabel="Dashboard Information"
       >
         <div className="panel-header info-modal-panel-header">
           <h2 className="panel-header-title">

@@ -399,6 +399,7 @@ export default function PanelHeader({
         <PanelInfoModal
           isOpen={showInfo}
           onClose={() => setShowInfo(false)}
+          ariaLabel={modalTitle}
         >
           <div className="panel-header info-modal-panel-header">
             <h2 className="panel-header-title">{modalTitle}</h2>

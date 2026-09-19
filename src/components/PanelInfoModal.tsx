@@ -19,6 +19,10 @@ type PanelInfoModalProps = {
   isOpen: boolean;
   onClose: () => void;
   title?: string;
+  // Accessible name for callers that render their own heading in
+  // `children` instead of using `title`'s built-in header - both real
+  // usages do this today, so `title` alone leaves the dialog unnamed.
+  ariaLabel?: string;
   children: ReactNode;
 };
 
@@ -26,6 +30,7 @@ export default function PanelInfoModal({
   isOpen,
   onClose,
   title,
+  ariaLabel,
   children,
 }: PanelInfoModalProps) {
   const titleId = useId();
@@ -116,6 +121,7 @@ export default function PanelInfoModal({
         aria-modal="true"
         tabIndex={-1}
         aria-labelledby={title ? titleId : undefined}
+        aria-label={!title ? ariaLabel : undefined}
         onClick={(event) => {
           event.stopPropagation();
         }}
