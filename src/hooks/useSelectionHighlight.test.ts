@@ -233,4 +233,40 @@ describe("useSelectionHighlight", () => {
     await new Promise((r) => setTimeout(r, 0));
     expect(activeObjectIds(layerView)).toEqual([-1]);
   });
+
+  it("keeps the un-hovered state when a stale hover lookup resolves after the pointer moved off", async () => {
+    let resolveA: (v: { objectId: number; stillMatches: boolean }) => void;
+    checkSelectionMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveA = resolve;
+        }),
+    );
+    const { layerRef, viewRef, layerView } = setup();
+
+    const { rerender } = renderHook(
+      ({ id }: { id: string | null }) =>
+        useSelectionHighlight({
+          layerRef,
+          viewRef,
+          selectedRestaurantId: null,
+          hoveredRestaurantId: id,
+        }),
+      { initialProps: { id: null as string | null } },
+    );
+
+    await waitFor(() => expect(layerView.featureEffect).toBeTruthy());
+
+    rerender({ id: "A" });
+    await waitFor(() => expect(checkSelectionMock).toHaveBeenCalled());
+
+    // Pointer moves off A while its lookup is still in flight.
+    rerender({ id: null });
+    await waitFor(() => expect(activeObjectIds(layerView)).toEqual([-1]));
+
+    // A's stale lookup resolves after the pointer left and must not reapply.
+    resolveA!({ objectId: 1, stillMatches: true });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(activeObjectIds(layerView)).toEqual([-1]);
+  });
 });

@@ -147,8 +147,15 @@ export function useSelectionHighlight({
 
   const applyHoverHighlightForId = useCallback(
     async (restaurantId: string | null) => {
+      // Bumped before anything else so a newer call (moving to a
+      // different dot, or the pointer leaving) invalidates whichever
+      // await an older call is still stuck on, no matter which branch.
+      const requestId = ++hoverHighlightRequestIdRef.current;
+
       const layerView = await ensureLayerView();
-      if (!layerView) return;
+      if (!layerView || requestId !== hoverHighlightRequestIdRef.current) {
+        return;
+      }
 
       if (!restaurantId) {
         hoveredObjectIdRef.current = null;
@@ -159,7 +166,6 @@ export function useSelectionHighlight({
       const layer = layerRef.current;
       if (!layer) return;
 
-      const requestId = ++hoverHighlightRequestIdRef.current;
       try {
         const { objectId } = await checkSelectionAgainstFilters(
           layer,
