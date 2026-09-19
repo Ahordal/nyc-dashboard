@@ -7,7 +7,7 @@
 // registration and rendered-coordinate resolution; and reset on data
 // change.
 
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
 
 import { useTooltipPriority } from "./useTooltipPriority";
@@ -279,5 +279,64 @@ describe("useTooltipPriority", () => {
     act(() => result.current.registerDotRef(p1.id, null));
     rerender({ chartSize: { width: 102, height: 100 } });
     expect(result.current.activeTooltipPoint).toBeNull();
+  });
+
+  describe("layout-settle retry", () => {
+    beforeEach(() => vi.useFakeTimers());
+    afterEach(() => vi.useRealTimers());
+
+    it("retries the history preview sync once Recharts' layout settles", () => {
+      const p1 = makePoint("1");
+      const chartData = [p1];
+      const { result, rerender } = renderHook(
+        ({ historyPreviewChartPoint }) =>
+          useTooltipPriority({
+            chartData,
+            selectedChartPoint: null,
+            historyPreviewChartPoint,
+            activeKeyboardPoint: null,
+            isKeyboardModeActive: false,
+            chartSize: { width: 100, height: 100 },
+            ...BASE_PARAMS,
+          }),
+        { initialProps: { historyPreviewChartPoint: p1 as ChartPoint | null } },
+      );
+
+      // Dot isn't registered yet when the effect's immediate sync runs
+      // (e.g. Recharts hasn't painted it after a resize) - the point
+      // can't resolve yet.
+      expect(result.current.activeTooltipPoint).toBeNull();
+
+      // Dot arrives after the immediate sync but before layout settles.
+      act(() => result.current.registerDotRef(p1.id, makeDot(3, 4)));
+      expect(result.current.activeTooltipPoint).toBeNull();
+
+      act(() => vi.advanceTimersByTime(100));
+      expect(result.current.activeTooltipPoint).toEqual({ cx: 3, cy: 4, payload: p1 });
+    });
+
+    it("retries the keyboard-nav sync once Recharts' layout settles", () => {
+      const p1 = makePoint("1");
+      const chartData = [p1];
+      const { result } = renderHook(() =>
+        useTooltipPriority({
+          chartData,
+          selectedChartPoint: null,
+          historyPreviewChartPoint: null,
+          activeKeyboardPoint: p1,
+          isKeyboardModeActive: true,
+          chartSize: { width: 100, height: 100 },
+          ...BASE_PARAMS,
+        }),
+      );
+
+      expect(result.current.activeTooltipPoint).toBeNull();
+
+      act(() => result.current.registerDotRef(p1.id, makeDot(7, 8)));
+      expect(result.current.activeTooltipPoint).toBeNull();
+
+      act(() => vi.advanceTimersByTime(100));
+      expect(result.current.activeTooltipPoint).toEqual({ cx: 7, cy: 8, payload: p1 });
+    });
   });
 });

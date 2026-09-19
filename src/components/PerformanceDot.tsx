@@ -28,7 +28,13 @@ type PerformanceDotProps = {
   cx?: number;
   cy?: number;
   payload?: ChartPoint;
-  hoveredInspectionId?: string | null;
+  // Sole highlight signal - derived by the caller from
+  // tooltipPriority.activeTooltipPoint, the same source the tooltip
+  // itself reads. A separate hoveredInspectionId prop used to be OR'd in
+  // here too, but it updated on a different render cycle (a plain prop
+  // vs. activeTooltipPoint's DOM-position-dependent effect), so a fast
+  // hover could briefly highlight the wrong dot or leave one glowing
+  // with no tooltip.
   isActive?: boolean;
 
   onPointerPointChange?: (
@@ -56,7 +62,6 @@ export default function PerformanceDot({
   cx,
   cy,
   payload,
-  hoveredInspectionId,
   isActive = false,
   onPointerPointChange,
   onSelectInspection,
@@ -80,9 +85,7 @@ export default function PerformanceDot({
   const dotColor =
     CATEGORY_COLORS[category];
 
-  const isHighlighted =
-    hoveredInspectionId === payload.id ||
-    isActive;
+  const isHighlighted = isActive;
 
   const radius = isHighlighted
     ? ACTIVE_RADIUS

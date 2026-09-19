@@ -691,7 +691,6 @@ function PerformanceChart({
                     tooltipPriority.activeTooltipPoint?.payload.id ===
                     props.payload?.id
                   }
-                  hoveredInspectionId={hoveredInspectionId}
                   onPointerPointChange={handlePointerPointChange}
                   onSelectInspection={onSelectInspection}
                   registerDotRef={tooltipPriority.registerDotRef}

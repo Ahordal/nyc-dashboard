@@ -165,13 +165,21 @@ export function useTooltipPriority({
 
   // History-row hover/focus preview.
   useEffect(() => {
-    const nextPreviewPoint = getRenderedTooltipPoint(historyPreviewChartPoint);
+    const syncPoint = () => {
+      const nextPreviewPoint = getRenderedTooltipPoint(historyPreviewChartPoint);
 
-    setHistoryPreviewPoint((currentPoint) =>
-      tooltipPointsMatch(currentPoint, nextPreviewPoint)
-        ? currentPoint
-        : nextPreviewPoint,
-    );
+      setHistoryPreviewPoint((currentPoint) =>
+        tooltipPointsMatch(currentPoint, nextPreviewPoint)
+          ? currentPoint
+          : nextPreviewPoint,
+      );
+    };
+
+    // Sync now, then again once Recharts' layout paint settles.
+    syncPoint();
+    const timeoutId = setTimeout(syncPoint, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [
     historyPreviewChartPoint,
     getRenderedTooltipPoint,
@@ -189,13 +197,21 @@ export function useTooltipPriority({
       return;
     }
 
-    const nextKeyboardPoint = getRenderedTooltipPoint(activeKeyboardPoint);
+    const syncPoint = () => {
+      const nextKeyboardPoint = getRenderedTooltipPoint(activeKeyboardPoint);
 
-    setKeyboardPoint((currentPoint) =>
-      tooltipPointsMatch(currentPoint, nextKeyboardPoint)
-        ? currentPoint
-        : nextKeyboardPoint,
-    );
+      setKeyboardPoint((currentPoint) =>
+        tooltipPointsMatch(currentPoint, nextKeyboardPoint)
+          ? currentPoint
+          : nextKeyboardPoint,
+      );
+    };
+
+    // Sync now, then again once Recharts' layout paint settles.
+    syncPoint();
+    const timeoutId = setTimeout(syncPoint, 100);
+
+    return () => clearTimeout(timeoutId);
   }, [
     activeKeyboardPoint,
     getRenderedTooltipPoint,
