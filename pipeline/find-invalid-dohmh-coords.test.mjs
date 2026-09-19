@@ -1,10 +1,9 @@
 // find-invalid-dohmh-coords.test.mjs
 //
-// findRestaurantsWithInvalidDohmhCoords() identifies restaurants whose own
-// DOHMH coordinate is missing/invalid/out-of-bounds - the only ones whose
-// inclusion in the dashboard's restaurant count can depend on geocode
-// cache state. Used to correct a counts-snapshot after a cache merge
-// without re-fetching the whole dataset.
+// Identifies restaurants whose DOHMH coordinate is missing, invalid, or
+// out-of-bounds - the only ones whose restaurant-count eligibility can
+// depend on geocode cache state. Used to correct a counts-snapshot after
+// a cache merge without re-fetching the dataset.
 //
 // Run with: node --test find-invalid-dohmh-coords.test.mjs
 

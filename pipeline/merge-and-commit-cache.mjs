@@ -1,42 +1,29 @@
 // merge-and-commit-cache.mjs
 //
-// Replaces a naive "git add / commit / push" with a safe
-// reconcile-then-push flow, so a run's geocoding results can never be
-// silently lost when the remote has moved on since checkout (an
-// overlapping run, a manual push of unrelated changes, anything). That
-// is the exact failure mode that lost run #4's results on 2026-08-10.
+// Safe reconcile-then-push, replacing naive git add/commit/push: a run's
+// results must never be silently lost when the remote moved since
+// checkout (overlapping run, manual push, anything) - the exact failure
+// that lost run #4's results on 2026-08-10.
 //
-// Targets the `data` branch (the cache/snapshot files live there now,
-// not on `main`; this script predates that split and was never
-// repointed). It pushes a normal incremental commit onto `data` rather
-// than force-replacing an orphan branch, so `data` gains real history,
-// which the merge step below needs to have anything to reconcile against.
+// Targets `data` (cache/snapshot files live there, not `main`; this
+// script predates that split). Pushes an incremental commit rather than
+// force-replacing an orphan branch, so there's real history to merge against.
 //
 // Sequence:
-//   1. Read THIS run's local cache/log files into memory (already on
-//      disk, written by backfill-core.mjs before this script runs).
-//   2. git fetch, then git reset --hard origin/<branch>: discards this
-//      run's own uncommitted git state (NOT the in-memory data from
-//      step 1) and brings the working tree to exactly the remote.
-//   3. Read the (now-reset) remote versions of both files.
-//   4. Merge local + remote at the DATA level (cache.mjs's mergeCaches /
-//      mergeSuspiciousShifts), never a raw git text merge, which could
-//      corrupt the JSON or silently pick one side wholesale.
-//   5. Write the merged result, restore counts-snapshot.json (this run's
-//      fresh snapshot from step 1, re-written because the step-2 reset
-//      reverts it to the committed version; it's tracked on `data`) -
-//      corrected first for any restaurant whose count-eligibility (see
-//      DOHMH_INVALID_CAMIS_PATH below) changed between the local and
-//      merged cache - commit, push. If another run's push landed on
-//      `data` between steps 2 and 5, this push is rejected as
-//      non-fast-forward; steps 2-5 then retry from a fresh fetch (this
-//      run's own step-1 results are held in memory, so nothing already
-//      captured is lost).
+//   1. Read this run's local cache/log/snapshot into memory.
+//   2. git fetch + reset --hard origin/<branch>: working tree now matches
+//      remote exactly (in-memory data from step 1 is untouched).
+//   3. Read the (now-reset) remote versions.
+//   4. Merge local + remote at the DATA level (cache.mjs), never a raw
+//      git text merge - that could corrupt JSON or pick one side whole.
+//   5. Write the merged result, restore counts-snapshot.json (corrected
+//      for any restaurant whose count-eligibility changed in the merge),
+//      commit, push. A non-fast-forward rejection (another run landed on
+//      `data` first) retries steps 2-5 from a fresh fetch - step-1 data
+//      stays in memory, so nothing already captured is lost.
 //
-// Usage: node merge-and-commit-cache.mjs
-// Run from within pipeline/, after run-geocode-backfill.mjs has written
-// geocode-cache.json / suspicious-shifts.json / counts-snapshot.json /
-// dohmh-invalid-camis.json locally.
+// Usage: node merge-and-commit-cache.mjs, from pipeline/, after
+// run-geocode-backfill.mjs has written its output files locally.
 
 import { readFile } from 'node:fs/promises';
 import { execSync } from 'node:child_process';
@@ -48,9 +35,8 @@ const CACHE_PATH = './geocode-cache.json';
 const LOG_PATH = './suspicious-shifts.json';
 const COUNTS_SNAPSHOT_PATH = './counts-snapshot.json';
 // Restaurants whose DOHMH coordinate is invalid - the only ones whose
-// count-eligibility depends on geocode cache state at all (see
-// fetch-inspection.mjs's findRestaurantsWithInvalidDohmhCoords). Never
-// committed to `data`; read here only to correct the snapshot below.
+// count depends on cache state (see findRestaurantsWithInvalidDohmhCoords).
+// Never committed to `data`, only read here to correct the snapshot.
 const DOHMH_INVALID_CAMIS_PATH = './dohmh-invalid-camis.json';
 const BRANCH = 'data';
 const MAX_PUSH_ATTEMPTS = 3;
@@ -82,13 +68,10 @@ export function countVerifiedInBounds(cache, camisList) {
   return count;
 }
 
-// run-geocode-backfill.mjs's restaurantCount only reflects the pre-merge
-// local cache; a restaurant with an invalid DOHMH coordinate is only
-// counted at all once it has a verified, in-bounds cache entry (see
-// fetch-inspection.mjs's buildLatestInspectionsGeoJSON). If merging
-// against the remote changed that for any of them, correct the snapshot
-// by the same amount so it reflects the cache actually being committed,
-// not the one that existed before the merge.
+// restaurantCount only reflects the pre-merge local cache; a restaurant
+// only counts once it has a verified, in-bounds entry. If the merge
+// changed that for any DOHMH-invalid-coordinate restaurant, correct the
+// snapshot to match what's actually being committed.
 export function correctSnapshotForMerge(snapshot, localCache, mergedCache, invalidDohmhCamis) {
   if (!snapshot || invalidDohmhCamis.length === 0) return snapshot;
 
@@ -111,9 +94,8 @@ async function main() {
   // Step 1: capture this run's own results before touching git at all.
   const localCache = await readJsonTolerant(CACHE_PATH, {});
   const localShifts = await readJsonTolerant(LOG_PATH, []);
-  // counts-snapshot.json is tracked on `data`, so the step-2 reset below
-  // reverts the copy run-geocode-backfill.mjs just wrote back to the
-  // committed version. Hold this run's in memory so step 5 can restore it.
+  // Tracked on `data`, so the step-2 reset reverts run-geocode-backfill.mjs's
+  // fresh copy - hold it in memory so step 5 can restore it.
   const localSnapshot = await readJsonTolerant(COUNTS_SNAPSHOT_PATH, null);
   const invalidDohmhCamis = await readJsonTolerant(DOHMH_INVALID_CAMIS_PATH, []);
 
@@ -131,17 +113,15 @@ async function main() {
   }
 }
 
-// One attempt at steps 2-5: reconcile against the current remote and try to
-// push. Returns true on success (including "nothing to push"), false if the
-// push was rejected because the remote moved and should be retried.
+// One attempt at steps 2-5. Returns true on success (including "nothing
+// to push"), false if rejected because the remote moved - caller retries.
 async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDohmhCamis }) {
   // Step 2: bring the working tree to exactly what's on the remote.
   run(`git fetch origin ${BRANCH}`);
   run(`git reset --hard origin/${BRANCH}`);
 
-  // Step 3: read the remote's versions (git reset just placed them on
-  // disk, if they exist; a brand-new repo before the first-ever backfill
-  // won't have them yet, which readJsonTolerant handles gracefully).
+  // Step 3: read the remote's versions (readJsonTolerant handles a
+  // brand-new repo with no prior backfill gracefully).
   const remoteCache = await readJsonTolerant(CACHE_PATH, {});
   const remoteShifts = await readJsonTolerant(LOG_PATH, []);
 
@@ -155,13 +135,10 @@ async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDoh
 
   const correctedSnapshot = correctSnapshotForMerge(localSnapshot, localCache, mergedCache, invalidDohmhCamis);
 
-  // Step 5: write the merged cache/shifts and restore this run's
-  // snapshot (step-2's `git reset --hard` reverted the on-disk copy to
-  // the committed version; counts-snapshot.json isn't merged, it's just
-  // this run's own fresh per-run snapshot, corrected above for the merge).
-  // Then add whichever of the three files exist; a missing file means an
-  // earlier step failed partway through, which shouldn't block committing
-  // whatever did make it.
+  // Step 5: write the merged cache/shifts and this run's own snapshot
+  // (not merged, just corrected above) - the reset wiped the on-disk
+  // copies. Add whichever files exist; a missing one means an earlier
+  // step failed partway, which shouldn't block committing the rest.
   await saveCacheAtomic(CACHE_PATH, mergedCache);
   await saveCacheAtomic(LOG_PATH, mergedShifts);
   if (correctedSnapshot?.restaurantCount != null) {
@@ -177,11 +154,9 @@ async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDoh
     }
   }
 
-  // A successful run restores a snapshot with a fresh generatedAt above,
-  // so this is almost always non-empty by design; it's kept as a safety
-  // net rather than a real gate, since diff --quiet across all three
-  // still correctly no-ops the case where an earlier step failed and
-  // nothing actually changed.
+  // Almost always non-empty by design (fresh generatedAt every run) -
+  // this is a safety net, not a real gate. Still correctly no-ops if an
+  // earlier step failed and nothing actually changed.
   let hasChanges = false;
   try {
     run('git diff --cached --quiet');
@@ -207,16 +182,13 @@ async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDoh
   return true;
 }
 
-// Only run when invoked directly (node merge-and-commit-cache.mjs), not
-// when imported by a test; mirrors run-geocode-backfill.mjs. Without this
-// guard, importing this module's pure helpers for testing would also run
-// main() for real - actual git fetch/reset/push against the repo.
+// Only runs when invoked directly, not when imported by a test - mirrors
+// run-geocode-backfill.mjs. Without it, importing this module's helpers
+// for testing would run main() for real: git fetch/reset/push.
 if (import.meta.url === pathToFileURL(process.argv[1]).href) {
   main().catch((err) => {
-    // A failure here should be loud: if the merge/push genuinely fails,
-    // that run's results stay only on the (soon-to-be-destroyed) runner
-    // disk, same as the original bug. Surfacing it clearly matters so it
-    // doesn't silently repeat.
+    // Loud on purpose: a genuine failure here strands results on the
+    // soon-to-be-destroyed runner disk, same as the original bug.
     console.error('merge-and-commit-cache failed:', err.message);
     process.exit(1);
   });

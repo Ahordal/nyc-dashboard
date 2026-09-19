@@ -227,9 +227,8 @@ test('needsResolution is false for a verified entry whose resolved coordinate is
 });
 
 test('needsResolution always returns a strict boolean, not a falsy non-boolean', () => {
-  // A "verified" entry with a null `resolved` shouldn't happen via
-  // buildCacheEntry, but needsResolution's combined-condition expression
-  // must still return strict false here, not the null resolved value.
+  // A verified entry with null `resolved` shouldn't happen via
+  // buildCacheEntry, but this must still return strict false, not null.
   const cache = {
     '123': {
       status: 'verified',

@@ -19,20 +19,17 @@ function buildVerifiedResult(best) {
     matchType: best.matchType,
     resolvedVia: best.resolvedVia,
     distanceFromDohmh: best.distanceFromDohmh,
-    // Carried through so a shakily-confirmed match (e.g. borough + ZIP
-    // both unconfirmed) can still be told apart from a fully-confirmed
-    // one after caching, instead of both looking like plain "verified".
+    // Carried through so a shakily-confirmed match (borough + ZIP both
+    // unconfirmed) stays distinguishable from a fully-confirmed one.
     score: best.score,
     reasons: best.reasons,
   };
 }
 
-// If an earlier query in this restaurant's loop already produced an
-// acceptable match, use it instead of discarding it just because a LATER
-// query then failed (quota ran out, rate limit, ordinary error) - otherwise
-// the whole restaurant retries both queries from scratch next run, wasting
-// the quota already spent on the successful one. Falls back to the
-// pending result as-is when there's nothing to salvage.
+// Uses an earlier query's match instead of discarding it when a LATER
+// query fails (quota, rate limit, error) - otherwise the restaurant
+// redoes both queries next run, wasting quota already spent. Falls back
+// to the pending result when there's nothing to salvage.
 function salvageOrPending(candidateEntries, restaurant, pendingResult) {
   const best = selectBestMatch(candidateEntries, restaurant);
   if (!best) return pendingResult;
@@ -49,10 +46,9 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
 
   for (const { label, query } of queries) {
     if (quota.remaining() <= 0) {
-      // Ran out of quota mid-restaurant. Whatever's been gathered so far
-      // is incomplete; do NOT treat this as "no match found". Pending
-      // means "try again next run", never written to the cache as final -
-      // unless an earlier query already found an acceptable match.
+      // Ran out of quota mid-restaurant - incomplete, not "no match found".
+      // Pending means retry next run, unless an earlier query already
+      // found an acceptable match.
       return salvageOrPending(candidateEntries, restaurant, {
         status: 'pending',
         reason: 'quota_exhausted',
@@ -69,13 +65,10 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
       quota.use(); // the request was still sent, so it counts against quota either way
 
       if (err instanceof RateLimitedError) {
-        // The ACCOUNT is rate-limited, not just this one restaurant.
-        // Flagged separately (rateLimited: true) so the caller's loop can
-        // stop the whole run immediately rather than grinding through
-        // every remaining restaurant with the same guaranteed failure,
-        // wasting the time budget and adding more rejected requests to
-        // the day's usage stats for nothing. No further requests will
-        // follow this run either way, so no throttle wait is needed here.
+        // The ACCOUNT is rate-limited, not just this restaurant. Flagged
+        // (rateLimited: true) so the caller's loop stops the run immediately
+        // instead of grinding through guaranteed failures. No throttle
+        // wait needed - no further requests follow this run anyway.
         return salvageOrPending(candidateEntries, restaurant, {
           status: 'pending',
           reason: 'rate_limited',
@@ -86,10 +79,9 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
         });
       }
 
-      // Network/API error. NOT the same as "geocoder ran and found
-      // nothing". Pending, retried next run. A request still went out
-      // against LocationIQ, so the next one (this restaurant's other
-      // query, or the next restaurant) must still wait out the throttle.
+      // Network/API error, not "geocoder found nothing" - pending, retried
+      // next run. A request still went out, so the next one must still
+      // wait out the throttle.
       await rateLimitDelay();
 
       return salvageOrPending(candidateEntries, restaurant, {

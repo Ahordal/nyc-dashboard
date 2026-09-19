@@ -93,8 +93,8 @@ test('fetchGeocode throws RateLimitedError specifically on HTTP 429', async () =
 
 test('resolveRestaurant waits out the rate-limit delay after an ordinary api_error, not just on success', async () => {
   const originalFetch = global.fetch;
-  // 400 is not retried by fetchGeocode and not a 429, so this reaches
-  // resolveRestaurant's generic api_error branch on the first attempt.
+  // 400 isn't retried and isn't 429, so this hits resolveRestaurant's
+  // generic api_error branch on the first attempt.
   global.fetch = async () => ({ status: 400, ok: false, text: async () => 'Bad request' });
   try {
     const restaurant = {

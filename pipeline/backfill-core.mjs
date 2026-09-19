@@ -81,11 +81,9 @@ export async function runGeocodeBackfill(restaurants, opts) {
     const entry = buildCacheEntry({ camis: restaurant.camis, dohmh, addressHash: hash, resolution });
     cache = upsertCacheEntry(cache, entry);
 
-    // If the match is verified, flag it for review when it moved unusually
-    // far from the official health department coordinates, OR when it's
-    // only shakily confirmed (both the borough and ZIP bonus checks
-    // missed) - a nearby but shakily-confirmed match is otherwise
-    // indistinguishable from a fully-confirmed one once cached.
+    // Flag for review: moved unusually far from DOHMH's coordinate, OR
+    // only shakily confirmed (borough + ZIP bonuses both missed) -
+    // otherwise indistinguishable from a fully-confirmed match once cached.
     if (resolution.status === 'verified') {
       resolvedCount += 1;
 

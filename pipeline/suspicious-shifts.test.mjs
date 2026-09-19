@@ -1,10 +1,9 @@
 // suspicious-shifts.test.mjs
 //
 // runGeocodeBackfill() flags a verified match for suspicious-shifts.json
-// review not just when it lands far from DOHMH's own coordinates, but
-// also when it's only shakily confirmed (both the borough and ZIP
-// scoring bonuses missed) - otherwise that match is cached as plain
-// "verified", indistinguishable from a fully-confirmed one.
+// review when it's far from DOHMH's coordinate, OR only shakily
+// confirmed (borough + ZIP bonuses both missed) - otherwise it's cached
+// as plain "verified", indistinguishable from a solid match.
 //
 // Run with: node --test suspicious-shifts.test.mjs
 

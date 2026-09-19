@@ -190,11 +190,9 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
-// Fetches a URL and returns its parsed JSON body, retrying network errors,
-// retryable HTTP statuses, AND a malformed-but-200 body the same way - a
-// truncated/invalid JSON response is the same class of transient failure as
-// a 503 and deserves the same backoff, not zero retries just because the
-// status line looked fine.
+// Retries network errors, retryable statuses, AND a malformed-but-200
+// body alike - a truncated JSON response is the same transient failure
+// as a 503 and deserves the same backoff, not zero retries.
 async function fetchWithRetry(url, attempt = 1) {
   let response;
 
@@ -310,10 +308,9 @@ async function fetchExpectedRowCount() {
 const MAX_ROW_COUNT_ATTEMPTS = 3;
 const ROW_COUNT_RETRY_DELAY_MS = 5000;
 
-// Paginates SODA API once. Orders by `:id` tiebreaker to prevent silent row
-// drops across page boundaries when multiple violations share identical
-// dates. Returns whatever it got alongside the expected count, even on a
-// mismatch - fetchAllRows decides whether that's worth retrying.
+// Orders by `:id` tiebreaker to prevent silent row drops across page
+// boundaries when violations share a date. Returns whatever it got plus
+// the expected count, even on mismatch - fetchAllRows decides on retry.
 async function fetchAllRowsOnce() {
   const expectedCount = await fetchExpectedRowCount();
 
@@ -335,10 +332,9 @@ async function fetchAllRowsOnce() {
   return { rows, expectedCount };
 }
 
-// Retries the full paginated fetch on a row-count mismatch (e.g. the
-// dataset changed mid-fetch), rather than aborting on the first one -
-// individual pages already retry transient HTTP errors via
-// fetchWithRetry, but a mismatch only shows up after all pages are in.
+// Retries the full fetch on a row-count mismatch (dataset changed
+// mid-fetch) instead of aborting immediately - pages already retry HTTP
+// errors via fetchWithRetry, but a mismatch only shows up once all are in.
 export async function fetchAllRows({ retryDelayMs = ROW_COUNT_RETRY_DELAY_MS } = {}) {
   let result;
   for (let attempt = 1; attempt <= MAX_ROW_COUNT_ATTEMPTS; attempt++) {
@@ -456,13 +452,10 @@ export function buildGeocodeInputList(eventsByRestaurant) {
   return restaurants;
 }
 
-// Restaurants whose own DOHMH coordinate is missing/invalid/out-of-bounds -
-// the only ones whose inclusion in buildLatestInspectionsGeoJSON depends on
-// geocode cache state at all (see the dohmhValid/hasVerifiedResolution
-// check below). Exposed separately, computed straight from the live
-// dataset, so a restaurant count taken before a cache merge can be
-// corrected afterward without re-fetching the whole dataset (see
-// run-geocode-backfill.mjs / merge-and-commit-cache.mjs).
+// Restaurants whose DOHMH coordinate is invalid - the only ones whose
+// inclusion in buildLatestInspectionsGeoJSON depends on cache state.
+// Lets run-geocode-backfill.mjs/merge-and-commit-cache.mjs correct a
+// restaurant count post-merge without re-fetching the dataset.
 export function findRestaurantsWithInvalidDohmhCoords(eventsByRestaurant) {
   const invalidCamis = [];
 
@@ -687,10 +680,9 @@ async function runInBatches(items, batchSize, fn) {
   }
 }
 
-// Re-creates history directory on every build to prevent orphaned files from
-// decommissioned venues. Writes into a temp directory first and only swaps
-// it in once every file exists, so a crash mid-write can't leave the old
-// directory deleted with the new one half-populated.
+// Re-created every build to drop orphaned files from decommissioned
+// venues. Writes to a temp dir first, swapping it in only once every
+// file exists - a crash mid-write can't leave it half-populated.
 export async function writeHistoryFiles(restaurants) {
   const tempDir = `${HISTORY_DIR}.tmp-${process.pid}-${Date.now()}`;
   await mkdir(tempDir, { recursive: true });

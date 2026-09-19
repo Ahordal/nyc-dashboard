@@ -32,10 +32,8 @@ import { loadCache, readJsonTolerant, saveCacheAtomic } from './cache.mjs';
 const CACHE_PATH = './geocode-cache.json';
 const SUSPICIOUS_SHIFT_LOG_PATH = './suspicious-shifts.json';
 const COUNTS_SNAPSHOT_PATH = './counts-snapshot.json';
-// NOT committed to the `data` branch (merge-and-commit-cache.mjs reads it
-// but never `git add`s it) - a transient artifact letting that script
-// correct the restaurant count for a cache merge without re-fetching the
-// whole DOHMH dataset itself.
+// Not committed to `data` - merge-and-commit-cache.mjs reads it to
+// correct the restaurant count post-merge without re-fetching the dataset.
 const DOHMH_INVALID_CAMIS_PATH = './dohmh-invalid-camis.json';
 const API_KEY = process.env.LOCATIONIQ_API_KEY;
 
@@ -100,11 +98,9 @@ async function main() {
   };
   await saveCacheAtomic(COUNTS_SNAPSHOT_PATH, snapshot);
 
-  // restaurantCount above only reflects THIS run's pre-merge local cache.
-  // merge-and-commit-cache.mjs reconciles against the shared `data` branch
-  // afterward, which can change whether a DOHMH-invalid-coordinate
-  // restaurant counts as resolved; hand it just those restaurants so it
-  // can correct the count without re-fetching the whole dataset itself.
+  // Only reflects this run's pre-merge cache - merging against `data`
+  // afterward can change whether a DOHMH-invalid restaurant counts as
+  // resolved. Pass those restaurants along so merge can correct it.
   const invalidDohmhCamis = findRestaurantsWithInvalidDohmhCoords(eventsByRestaurant);
   await saveCacheAtomic(DOHMH_INVALID_CAMIS_PATH, invalidDohmhCamis);
 

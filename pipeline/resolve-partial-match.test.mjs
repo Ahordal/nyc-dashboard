@@ -1,11 +1,9 @@
 // resolve-partial-match.test.mjs
 //
-// resolveRestaurant() runs up to two geocode queries (hyphenated,
-// no-hyphen) per restaurant. If the first already found an acceptable
-// match and the SECOND then fails (quota exhausted, rate limit, an
-// ordinary error), that match must be kept rather than discarded -
-// otherwise the restaurant retries both queries from scratch next run,
-// wasting the quota already spent on the successful one.
+// If the first of resolveRestaurant()'s two queries finds an acceptable
+// match and the SECOND then fails (quota, rate limit, error), that match
+// must be kept - otherwise the restaurant redoes both queries next run,
+// wasting quota already spent.
 //
 // Run with: node --test resolve-partial-match.test.mjs
 

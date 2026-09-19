@@ -1,11 +1,9 @@
 // merge-count-correction.test.mjs
 //
-// run-geocode-backfill.mjs freezes restaurantCount/restaurantDelta from
-// the PRE-merge local cache. A restaurant with an invalid DOHMH
-// coordinate only counts at all once it has a verified, in-bounds cache
-// entry, so if merging against the remote changes that for any of them,
-// the snapshot must be corrected by the same amount rather than
-// committing a value based on cache state that's about to be replaced.
+// run-geocode-backfill.mjs freezes restaurantCount from the pre-merge
+// local cache. A restaurant only counts once it has a verified,
+// in-bounds entry - if merging changes that, the snapshot must be
+// corrected, not committed against soon-to-be-replaced cache state.
 //
 // Run with: node --test merge-count-correction.test.mjs
 

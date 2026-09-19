@@ -42,10 +42,9 @@ export class RateLimitedError extends Error {
   }
 }
 
-// Makes a single LocationIQ search request, retrying transient failures
-// (network errors, 500/502/503/504) with backoff before giving up. Throws
-// on a persistent network/HTTP error or a 429; the caller catches and
-// translates into a "pending" state.
+// Retries transient failures (network errors, 500/502/503/504) with
+// backoff before giving up. Throws on a persistent error or a 429 - the
+// caller translates that into a "pending" state.
 export async function fetchGeocode(query, apiKey, attempt = 1) {
   const url = new URL('https://us1.locationiq.com/v1/search');
   url.searchParams.set('key', apiKey);

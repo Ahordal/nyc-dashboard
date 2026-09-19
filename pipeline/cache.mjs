@@ -15,10 +15,8 @@ export const RESOLVER_VERSION = 1;
 
 // Loading
 
-// Reads and parses a JSON file. Missing file -> fallback, silently. Any
-// other read/parse error -> fallback, but logged (a corrupt file must
-// never fail silently; that caused a real data-loss incident). Shared by
-// every pipeline script that reads a possibly-absent JSON file.
+// ENOENT falls back silently (first run); anything else is logged first -
+// a silent swallow here once caused a real data-loss incident.
 export async function readJsonTolerant(filePath, fallback) {
   try {
     return JSON.parse(await readFile(filePath, 'utf-8'));
@@ -72,8 +70,8 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
     resolvedVia: resolution.resolvedVia,
     distanceFromDohmh: resolution.distanceFromDohmh ?? null,
     reason: resolution.reason || null,
-    error: resolution.error || null, // raw LocationIQ/network error text, for diagnosing a bad day's api_error batch
-    score: resolution.score ?? null, // scoring.mjs's confidence score, so a shakily-confirmed match isn't indistinguishable from a fully-confirmed one
+    error: resolution.error || null, // raw error text, for diagnosing a bad api_error batch
+    score: resolution.score ?? null, // flags a shakily-confirmed match vs a solid one
     reasons: resolution.reasons || null, // e.g. ['borough_unconfirmed', 'zip_unconfirmed']
     resolvedAt: resolution.status === 'pending' ? null : new Date().toISOString(),
     addressHash,
@@ -84,19 +82,13 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
 // Invalidation logic
 
 /**
- * Checks whether a restaurant needs to be geocoded again. It returns true if
- * it's new, previously failed/pending, has a different address, if the global
- * resolver version has been bumped, or if a "verified" entry's own
- * coordinate has since fallen outside NYC bounds (a standing check against
- * a future scoring regression, rather than relying on a one-off cleanup
- * script to catch it).
+ * True if this restaurant needs a fresh geocode: new, pending, address
+ * changed, resolver version bumped, or a verified entry now falls outside
+ * NYC bounds (catches a future scoring regression automatically).
  *
- * Each condition below is independent - deliberately a single `||`
- * expression, not a chain of early returns, so it's obvious NONE of them
- * depend on evaluation order. reset-out-of-bounds-cache-entries.mjs (and
- * anything else that flips just one field on an entry to force a
- * re-geocode) relies on that: it works regardless of which condition ends
- * up "noticing" first.
+ * One `||` expression, not early returns, so order can't matter -
+ * reset-out-of-bounds-cache-entries.mjs relies on flipping just one field
+ * to force a re-geocode.
  *
  * @param {Object} cache - The current cache dictionary
  * @param {string} camis - The restaurant's ID
@@ -139,9 +131,8 @@ function isFinal(entry) {
   return entry != null && entry.status !== 'pending';
 }
 
-// Date.parse on a malformed/missing resolvedAt is NaN, and NaN
-// comparisons are always false - treat that as 0 so a malformed remote
-// timestamp can't silently beat a genuinely newer local one.
+// NaN comparisons are always false; treat a malformed/missing resolvedAt
+// as 0 so it can't silently win a tie-break over a real timestamp.
 function resolvedTime(entry) {
   const parsed = entry.resolvedAt ? Date.parse(entry.resolvedAt) : 0;
   return Number.isFinite(parsed) ? parsed : 0;

@@ -1,10 +1,9 @@
 // fetch-all-rows-retry.test.mjs
 //
-// fetchAllRows() retries the whole paginated fetch on a row-count
-// mismatch against Socrata's count(*) (e.g. the dataset changed
-// mid-fetch), rather than aborting the build on the first mismatch. It
-// also covers fetchWithRetry's retry of a malformed-but-200 JSON body,
-// the same as any other transient Socrata failure.
+// fetchAllRows() retries the whole paginated fetch on a count(*) mismatch
+// (dataset changed mid-fetch) instead of aborting immediately. Also
+// covers fetchWithRetry retrying a malformed-but-200 JSON body the same
+// as any other transient failure.
 //
 // Run with: node --test fetch-all-rows-retry.test.mjs
 
