@@ -5,6 +5,12 @@
 // scoring.mjs, kept separate so it stays testable without the live API.
 
 const RATE_LIMIT_DELAY_MS = 1000; // stay well under LocationIQ's per-second limits
+const MAX_RETRIES = 2;
+const BASE_RETRY_DELAY_MS = 500; // exponential backoff: 500ms, 1s
+
+function sleep(ms) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
 
 export function buildQueries(restaurant) {
   const { dba, building, street, boro, zip } = restaurant;
@@ -36,9 +42,11 @@ export class RateLimitedError extends Error {
   }
 }
 
-// Makes a single LocationIQ search request. Throws on network/HTTP
-// errors; the caller catches and translates into a "pending" state.
-export async function fetchGeocode(query, apiKey) {
+// Makes a single LocationIQ search request, retrying transient failures
+// (network errors, 500/502/503/504) with backoff before giving up. Throws
+// on a persistent network/HTTP error or a 429; the caller catches and
+// translates into a "pending" state.
+export async function fetchGeocode(query, apiKey, attempt = 1) {
   const url = new URL('https://us1.locationiq.com/v1/search');
   url.searchParams.set('key', apiKey);
   url.searchParams.set('q', query);
@@ -46,7 +54,14 @@ export async function fetchGeocode(query, apiKey) {
   url.searchParams.set('addressdetails', '1');
   url.searchParams.set('limit', '5');
 
-  const res = await fetch(url);
+  let res;
+  try {
+    res = await fetch(url);
+  } catch (networkErr) {
+    if (attempt > MAX_RETRIES) throw networkErr;
+    await sleep(BASE_RETRY_DELAY_MS * 2 ** (attempt - 1));
+    return fetchGeocode(query, apiKey, attempt + 1);
+  }
 
   if (res.status === 404) {
     // LocationIQ returns 404 for "no results found": not an error, just empty.
@@ -56,6 +71,11 @@ export async function fetchGeocode(query, apiKey) {
     throw new RateLimitedError(`LocationIQ rate limit hit (429): ${await res.text()}`);
   }
   if (!res.ok) {
+    const isRetryable = [500, 502, 503, 504].includes(res.status);
+    if (isRetryable && attempt <= MAX_RETRIES) {
+      await sleep(BASE_RETRY_DELAY_MS * 2 ** (attempt - 1));
+      return fetchGeocode(query, apiKey, attempt + 1);
+    }
     throw new Error(`LocationIQ error ${res.status}: ${await res.text()}`);
   }
   return res.json();

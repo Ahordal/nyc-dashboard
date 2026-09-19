@@ -38,6 +38,42 @@ function mockFetch429() {
   });
 }
 
+// fetchGeocode retries transient errors
+
+test('fetchGeocode retries a 503 and succeeds once the transient error clears', async () => {
+  const originalFetch = global.fetch;
+  let callCount = 0;
+  global.fetch = async () => {
+    callCount += 1;
+    if (callCount === 1) {
+      return { status: 503, ok: false, text: async () => 'Service unavailable' };
+    }
+    return { status: 200, ok: true, json: async () => [{ lat: '40.7', lon: '-73.9' }] };
+  };
+  try {
+    const result = await fetchGeocode('some query', 'fake-key');
+    assert.equal(callCount, 2);
+    assert.deepEqual(result, [{ lat: '40.7', lon: '-73.9' }]);
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
+test('fetchGeocode gives up on a 503 after exhausting its retries', async () => {
+  const originalFetch = global.fetch;
+  let callCount = 0;
+  global.fetch = async () => {
+    callCount += 1;
+    return { status: 503, ok: false, text: async () => 'Service unavailable' };
+  };
+  try {
+    await assert.rejects(() => fetchGeocode('some query', 'fake-key'), /LocationIQ error 503/);
+    assert.equal(callCount, 3); // 1 initial attempt + 2 retries
+  } finally {
+    global.fetch = originalFetch;
+  }
+});
+
 // fetchGeocode throws RateLimitedError on 429
 
 test('fetchGeocode throws RateLimitedError specifically on HTTP 429', async () => {
