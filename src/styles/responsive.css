@@ -104,7 +104,9 @@
    the compact band above: the base 1rem padding reads as too much
    whitespace at any desktop width once compared against it. Each selector
    here matches (or outranks) the specificity of the rule it's trimming,
-   so this wins without touching those rules. */
+   so this wins without touching those rules. Ties in specificity with
+   panels.css's .panel rule - wins only because global.css imports this
+   file later. Reordering would drop it silently. */
 @media (min-width: 1751px) {
   .panel,
   .dashboard-title .panel,
