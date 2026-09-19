@@ -652,10 +652,14 @@ export default function InspectionMapView({
           { returnGeometry: true },
         );
         if (geometry && !cancelled) {
-          view.goTo(
-            { target: geometry, zoom: Math.max(view.zoom, 14) },
-            { duration: 500, easing: "ease-in-out" },
-          );
+          view
+            .goTo(
+              { target: geometry, zoom: Math.max(view.zoom, 14) },
+              { duration: 500, easing: "ease-in-out" },
+            )
+            .catch(() => {
+              // goTo rejects if the user interrupts the animation; ignore.
+            });
         }
       } catch (err) {
         console.error("MapView: failed to query feature for pan/zoom", err);
