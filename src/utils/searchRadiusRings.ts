@@ -16,9 +16,7 @@ import {
   SEARCH_RADIUS_LABELS,
 } from "../types/searchRadius";
 import type { SearchRadiusPoint, SearchRadiusMiles } from "../types/searchRadius";
-
-// Earth radius in miles, for the label offset math.
-const EARTH_RADIUS_MILES = 3958.8;
+import { EARTH_RADIUS_MILES } from "./distance";
 
 // Inlined color constants since ArcGIS symbols cannot reference CSS vars.
 const ACTIVE_FILL_COLOR: [number, number, number, number] = [31, 32, 32, 0.42];

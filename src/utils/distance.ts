@@ -3,7 +3,7 @@
 // For Search Radius: client-side since the list has lat/lon already and
 // radius never filters the map.
 
-const EARTH_RADIUS_MILES = 3958.8;
+export const EARTH_RADIUS_MILES = 3958.8;
 
 type LatLng = {
   latitude: number;
