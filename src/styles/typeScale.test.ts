@@ -29,10 +29,6 @@ const VALID_TOKENS = [
   "--fs-display",
 ];
 
-// The reflow block recomputes the decorative "NYC" wordmark as a
-// viewport-relative clamp(); it's the one intentional non-token size.
-const ALLOWED_RAW = [/font-size:\s*clamp\(4rem, 12vw, 9rem\)/];
-
 describe("type scale", () => {
   it("only uses defined --fs-* tokens", () => {
     const used = new Set(
@@ -55,9 +51,7 @@ describe("type scale", () => {
       .map((m) => m[0])
       .filter(
         (decl) =>
-          !decl.includes("var(--fs-") &&
-          !/font-size:\s*inherit;/.test(decl) &&
-          !ALLOWED_RAW.some((re) => re.test(decl)),
+          !decl.includes("var(--fs-") && !/font-size:\s*inherit;/.test(decl),
       );
     expect(
       offenders,

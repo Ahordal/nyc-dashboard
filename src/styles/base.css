@@ -191,7 +191,7 @@ summary:focus-visible,
   --fs-xl: 1.1875rem;   /* 19px - hero / content titles */
   --fs-2xl: 1.25rem;   /* 20px - big stat numbers, h1 primary line */
   --fs-3xl: 2.75rem;    /* 44px - tablet app-bar "NYC" masthead */
-  --fs-display: 6.5rem;  /* decorative "NYC" wordmark only; reflow clamps it */
+  --fs-display: 6.5rem;  /* decorative "NYC" wordmark only; smaller in the 1751-2359px compact band (responsive.css) */
 
   --link-hover: #ffffff;
   --link-background-hover: #424242;
