@@ -10,6 +10,10 @@
 import { buildQueries, fetchGeocode, rateLimitDelay, RateLimitedError } from './geocode.mjs';
 import { selectBestMatch } from './scoring.mjs';
 
+function pending(reason, extra = {}) {
+  return { status: 'pending', reason, matchType: null, resolvedVia: null, ...extra };
+}
+
 function buildVerifiedResult(best) {
   return {
     status: 'verified',
@@ -49,12 +53,7 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
       // Ran out of quota mid-restaurant - incomplete, not "no match found".
       // Pending means retry next run, unless an earlier query already
       // found an acceptable match.
-      return salvageOrPending(candidateEntries, restaurant, {
-        status: 'pending',
-        reason: 'quota_exhausted',
-        matchType: null,
-        resolvedVia: null,
-      });
+      return salvageOrPending(candidateEntries, restaurant, pending('quota_exhausted'));
     }
 
     let results;
@@ -69,14 +68,11 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
         // (rateLimited: true) so the caller's loop stops the run immediately
         // instead of grinding through guaranteed failures. No throttle
         // wait needed - no further requests follow this run anyway.
-        return salvageOrPending(candidateEntries, restaurant, {
-          status: 'pending',
-          reason: 'rate_limited',
-          error: err.message,
-          matchType: null,
-          resolvedVia: null,
-          rateLimited: true,
-        });
+        return salvageOrPending(
+          candidateEntries,
+          restaurant,
+          pending('rate_limited', { error: err.message, rateLimited: true }),
+        );
       }
 
       // Network/API error, not "geocoder found nothing" - pending, retried
@@ -84,13 +80,11 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
       // wait out the throttle.
       await rateLimitDelay();
 
-      return salvageOrPending(candidateEntries, restaurant, {
-        status: 'pending',
-        reason: 'api_error',
-        error: err.message,
-        matchType: null,
-        resolvedVia: null,
-      });
+      return salvageOrPending(
+        candidateEntries,
+        restaurant,
+        pending('api_error', { error: err.message }),
+      );
     }
 
     candidateEntries.push(...results.map((candidate) => ({ candidate, queryLabel: label })));
