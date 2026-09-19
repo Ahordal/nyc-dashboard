@@ -10,6 +10,31 @@
 import { buildQueries, fetchGeocode, rateLimitDelay, RateLimitedError } from './geocode.mjs';
 import { selectBestMatch } from './scoring.mjs';
 
+function buildVerifiedResult(best) {
+  return {
+    status: 'verified',
+    lat: best.lat,
+    lon: best.lon,
+    neighbourhood: best.neighbourhood,
+    matchType: best.matchType,
+    resolvedVia: best.resolvedVia,
+    distanceFromDohmh: best.distanceFromDohmh,
+  };
+}
+
+// If an earlier query in this restaurant's loop already produced an
+// acceptable match, use it instead of discarding it just because a LATER
+// query then failed (quota ran out, rate limit, ordinary error) - otherwise
+// the whole restaurant retries both queries from scratch next run, wasting
+// the quota already spent on the successful one. Falls back to the
+// pending result as-is when there's nothing to salvage.
+function salvageOrPending(candidateEntries, restaurant, pendingResult) {
+  const best = selectBestMatch(candidateEntries, restaurant);
+  if (!best) return pendingResult;
+  const verified = buildVerifiedResult(best);
+  return pendingResult.rateLimited ? { ...verified, rateLimited: true } : verified;
+}
+
 // quota: { remaining: () => number, use: () => void }
 // Caller owns the quota object so it can persist the count across restaurants
 // within a single run.
@@ -21,13 +46,14 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
     if (quota.remaining() <= 0) {
       // Ran out of quota mid-restaurant. Whatever's been gathered so far
       // is incomplete; do NOT treat this as "no match found". Pending
-      // means "try again next run", never written to the cache as final.
-      return {
+      // means "try again next run", never written to the cache as final -
+      // unless an earlier query already found an acceptable match.
+      return salvageOrPending(candidateEntries, restaurant, {
         status: 'pending',
         reason: 'quota_exhausted',
         matchType: null,
         resolvedVia: null,
-      };
+      });
     }
 
     let results;
@@ -45,14 +71,14 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
         // wasting the time budget and adding more rejected requests to
         // the day's usage stats for nothing. No further requests will
         // follow this run either way, so no throttle wait is needed here.
-        return {
+        return salvageOrPending(candidateEntries, restaurant, {
           status: 'pending',
           reason: 'rate_limited',
           error: err.message,
           matchType: null,
           resolvedVia: null,
           rateLimited: true,
-        };
+        });
       }
 
       // Network/API error. NOT the same as "geocoder ran and found
@@ -61,13 +87,13 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
       // query, or the next restaurant) must still wait out the throttle.
       await rateLimitDelay();
 
-      return {
+      return salvageOrPending(candidateEntries, restaurant, {
         status: 'pending',
         reason: 'api_error',
         error: err.message,
         matchType: null,
         resolvedVia: null,
-      };
+      });
     }
 
     candidateEntries.push(...results.map((candidate) => ({ candidate, queryLabel: label })));
@@ -79,15 +105,7 @@ export async function resolveRestaurant(restaurant, { apiKey, quota }) {
   const best = selectBestMatch(candidateEntries, restaurant);
 
   if (best) {
-    return {
-      status: 'verified',
-      lat: best.lat,
-      lon: best.lon,
-      neighbourhood: best.neighbourhood,
-      matchType: best.matchType,
-      resolvedVia: best.resolvedVia,
-      distanceFromDohmh: best.distanceFromDohmh,
-    };
+    return buildVerifiedResult(best);
   }
 
   // Geocoder ran cleanly, no acceptable candidate. This IS a final
