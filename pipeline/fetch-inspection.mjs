@@ -291,12 +291,14 @@ async function fetchExpectedRowCount() {
   return Number(count);
 }
 
-/**
- * Paginates SODA API. Orders by `:id` tiebreaker to prevent silent row drops
- * across page boundaries when multiple violations share identical dates.
- * Aborts on total count mismatch to prevent writing truncated builds.
- */
-export async function fetchAllRows() {
+const MAX_ROW_COUNT_ATTEMPTS = 3;
+const ROW_COUNT_RETRY_DELAY_MS = 5000;
+
+// Paginates SODA API once. Orders by `:id` tiebreaker to prevent silent row
+// drops across page boundaries when multiple violations share identical
+// dates. Returns whatever it got alongside the expected count, even on a
+// mismatch - fetchAllRows decides whether that's worth retrying.
+async function fetchAllRowsOnce() {
   const expectedCount = await fetchExpectedRowCount();
 
   const rows = [];
@@ -315,16 +317,34 @@ export async function fetchAllRows() {
   }
 
   console.log(`Fetched ${rows.length} total rows (expected ${expectedCount}).`);
+  return { rows, expectedCount };
+}
 
-  if (rows.length !== expectedCount) {
-    throw new Error(
-      `Row count mismatch: fetched ${rows.length} rows but Socrata reports ` +
-        `${expectedCount} total for the dataset. Aborting rather than writing ` +
-        `a possibly-incomplete dataset.`,
-    );
+// Retries the full paginated fetch on a row-count mismatch (e.g. the
+// dataset changed mid-fetch), rather than aborting on the first one -
+// individual pages already retry transient HTTP errors via
+// fetchWithRetry, but a mismatch only shows up after all pages are in.
+export async function fetchAllRows({ retryDelayMs = ROW_COUNT_RETRY_DELAY_MS } = {}) {
+  let result;
+  for (let attempt = 1; attempt <= MAX_ROW_COUNT_ATTEMPTS; attempt++) {
+    result = await fetchAllRowsOnce();
+    if (result.rows.length === result.expectedCount) {
+      return result.rows;
+    }
+    if (attempt < MAX_ROW_COUNT_ATTEMPTS) {
+      console.warn(
+        `Row count mismatch (fetched ${result.rows.length}, expected ${result.expectedCount}) ` +
+          `on attempt ${attempt}; retrying full fetch in ${retryDelayMs}ms...`,
+      );
+      await sleep(retryDelayMs);
+    }
   }
 
-  return rows;
+  throw new Error(
+    `Row count mismatch persisted after ${MAX_ROW_COUNT_ATTEMPTS} attempts: fetched ` +
+      `${result.rows.length} rows but Socrata reports ${result.expectedCount} total ` +
+      `for the dataset. Aborting rather than writing a possibly-incomplete dataset.`,
+  );
 }
 
 // Builds central violation lookup to avoid repeating verbose description strings across individual files.
