@@ -402,14 +402,18 @@ describe("buildTwoPointFitBounds", () => {
     }
   });
 
-  it("matches the box aspect to the view when there is no bottom inset", () => {
-    const box = buildTwoPointFitBounds(
-      { longitude: -73.99, latitude: 40.73 },
-      { longitude: -73.95, latitude: 40.7 },
-      { viewAspect: 0.5, bottomInsetRatio: 0 },
-    )!;
+  it("matches the box's GROUND aspect to the view, not its raw degree aspect", () => {
+    const a = { longitude: -73.99, latitude: 40.73 };
+    const b = { longitude: -73.95, latitude: 40.7 };
+    const box = buildTwoPointFitBounds(a, b, { viewAspect: 0.5, bottomInsetRatio: 0 })!;
     const ratio = (box.xmax - box.xmin) / (box.ymax - box.ymin);
-    expect(ratio).toBeCloseTo(0.5, 5);
+
+    // A degree of longitude covers less ground than a degree of latitude
+    // at this latitude, so the raw degree-space ratio should come out
+    // wider than the view's own aspect by exactly that factor.
+    const cy = (a.latitude + b.latitude) / 2;
+    const lonScale = Math.cos((cy * Math.PI) / 180);
+    expect(ratio).toBeCloseTo(0.5 / lonScale, 5);
   });
 
   it("grows only the south edge for a bottom inset, keeping both points in the top slice", () => {

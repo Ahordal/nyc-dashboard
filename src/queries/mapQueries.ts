@@ -309,17 +309,29 @@ export function buildTwoPointFitBounds(
 ): Bounds | null {
   const dLng = Math.abs(a.longitude - b.longitude);
   const dLat = Math.abs(a.latitude - b.latitude);
-  if (Math.hypot(dLng, dLat) < 0.0018) return null;
 
   const cx = (a.longitude + b.longitude) / 2;
   const cy = (a.latitude + b.latitude) / 2;
 
-  let halfW = (dLng / 2) * 1.25;
+  // A degree of longitude covers less ground than a degree of latitude
+  // (except at the equator) - about 24% less at NYC's ~40.7°N. Scale
+  // longitude degrees into latitude-equivalent ground-distance units
+  // before any distance/aspect comparison, so both reflect real ground
+  // shape instead of degree-space distortion; convert back to longitude
+  // degrees only for the final bounds.
+  const lonScale = Math.cos((cy * Math.PI) / 180);
+  const dLngGround = dLng * lonScale;
+
+  if (Math.hypot(dLngGround, dLat) < 0.0018) return null;
+
+  let halfWGround = (dLngGround / 2) * 1.25;
   let halfH = (dLat / 2) * 1.25;
 
   const aspect = opts.viewAspect > 0 ? opts.viewAspect : 1;
-  if (halfW / halfH > aspect) halfH = halfW / aspect;
-  else halfW = halfH * aspect;
+  if (halfWGround / halfH > aspect) halfH = halfWGround / aspect;
+  else halfWGround = halfH * aspect;
+
+  const halfW = halfWGround / lonScale;
 
   // South edge drops by height * r/(1-r), keeping both points in the
   // visible (1-r) slice above the sheet.
