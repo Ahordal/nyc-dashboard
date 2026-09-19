@@ -20,22 +20,7 @@ import type {
 } from "../types/restaurant";
 
 import { isClosedInspection, UNINSPECTED_GRADE } from "../utils/gradeCategory";
-
-function formatDate(raw: string | null): string {
-  if (!raw) {
-    return "—";
-  }
-
-  const date = new Date(raw);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return date.toLocaleDateString("en-US", {
-    timeZone: "UTC",
-  });
-}
+import { formatDate } from "../utils/formatDate";
 
 const REPORT_INFO_CONTENT = (
   <InfoPopupContent

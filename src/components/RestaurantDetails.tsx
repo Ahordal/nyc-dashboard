@@ -23,24 +23,9 @@ import { getGradeCategory, CATEGORY_COLORS, UNINSPECTED_GRADE } from "../utils/g
 import { haversineDistanceMiles, formatApproxMiles } from "../utils/distance";
 import { formatPhoneNumber } from "../utils/formatPhoneNumber";
 import { toTitleCase } from "../utils/toTitleCase";
+import { formatDate } from "../utils/formatDate";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
-
-function formatDate(raw: string | null): string {
-  if (!raw) {
-    return "—";
-  }
-
-  const date = new Date(raw);
-
-  if (Number.isNaN(date.getTime())) {
-    return "—";
-  }
-
-  return date.toLocaleDateString("en-US", {
-    timeZone: "UTC",
-  });
-}
 
 function yearsSince(dateString: string): number {
   const then = new Date(dateString).getTime();

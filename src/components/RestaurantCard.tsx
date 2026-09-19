@@ -16,6 +16,7 @@ import {
   formatApproxMilesSpoken,
 } from "../utils/distance";
 import { toTitleCase } from "../utils/toTitleCase";
+import { formatDate } from "../utils/formatDate";
 
 type RestaurantCardProps = {
   restaurant: RestaurantProperties;
@@ -31,13 +32,6 @@ type RestaurantCardProps = {
 };
 
 // Local formatting helpers
-function formatDate(raw: string | null): string {
-  if (!raw) return "—";
-  const date = new Date(raw);
-  if (Number.isNaN(date.getTime())) return "—";
-  return date.toLocaleDateString("en-US", { timeZone: "UTC" });
-}
-
 function formatAddress(restaurant: RestaurantProperties): string {
   // Uses the pipeline's display_street ("5th Street", not "5 Street") to
   // keep formatting in one place. Falls back to the raw name (title-cased) only if missing.
