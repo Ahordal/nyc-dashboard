@@ -91,6 +91,13 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
  * a future scoring regression, rather than relying on a one-off cleanup
  * script to catch it).
  *
+ * Each condition below is independent - deliberately a single `||`
+ * expression, not a chain of early returns, so it's obvious NONE of them
+ * depend on evaluation order. reset-out-of-bounds-cache-entries.mjs (and
+ * anything else that flips just one field on an entry to force a
+ * re-geocode) relies on that: it works regardless of which condition ends
+ * up "noticing" first.
+ *
  * @param {Object} cache - The current cache dictionary
  * @param {string} camis - The restaurant's ID
  * @param {string} currentAddressHash - The newly computed address hash
@@ -99,13 +106,13 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
 export function needsResolution(cache, camis, currentAddressHash) {
   const entry = cache[camis];
   if (!entry) return true;
-  if (entry.status === 'pending') return true;
-  if (entry.addressHash !== currentAddressHash) return true;
-  if (entry.resolverVersion !== RESOLVER_VERSION) return true;
-  if (entry.status === 'verified' && entry.resolved && !isWithinNYC(entry.resolved.lat, entry.resolved.lon)) {
-    return true;
-  }
-  return false;
+
+  return Boolean(
+    entry.status === 'pending' ||
+      entry.addressHash !== currentAddressHash ||
+      entry.resolverVersion !== RESOLVER_VERSION ||
+      (entry.status === 'verified' && entry.resolved && !isWithinNYC(entry.resolved.lat, entry.resolved.lon)),
+  );
 }
 
 /**

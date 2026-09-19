@@ -226,6 +226,21 @@ test('needsResolution is false for a verified entry whose resolved coordinate is
   assert.equal(needsResolution(cache, '123', 'hash-abc'), false);
 });
 
+test('needsResolution always returns a strict boolean, not a falsy non-boolean', () => {
+  // A "verified" entry with a null `resolved` shouldn't happen via
+  // buildCacheEntry, but needsResolution's combined-condition expression
+  // must still return strict false here, not the null resolved value.
+  const cache = {
+    '123': {
+      status: 'verified',
+      addressHash: 'hash-abc',
+      resolverVersion: RESOLVER_VERSION,
+      resolved: null,
+    },
+  };
+  assert.strictEqual(needsResolution(cache, '123', 'hash-abc'), false);
+});
+
 // upsertCacheEntry
 
 test('upsertCacheEntry adds a new entry without mutating the original cache object', () => {
