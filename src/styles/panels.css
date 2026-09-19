@@ -75,11 +75,10 @@
   color: var(--text-heading);
 }
 
+/* Positioning (position/top/left/right/width/z-index) is set inline by
+   PanelHeader.tsx: the popup is portaled to <body> and JS-positioned
+   relative to the trigger/viewport, so a CSS rule for it can't apply. */
 .panel-header-popup {
-  position: absolute;
-  top: calc(100% + 4px);
-  right: 0;
-  z-index: 10;
   background-color: var(--bg-panel);
   border: 1px solid var(--border-panel);
   padding: var(--space-s);

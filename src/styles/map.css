@@ -48,12 +48,6 @@
   padding: 0 !important;
 }
 
-.map-view-top-header .panel-header-popup {
-  width: 250px;
-  right: 0;
-  left: auto;
-}
-
 /* 15.2 MAP LEGENDS */
 
 .legend-grade-text {
