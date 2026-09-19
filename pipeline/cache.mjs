@@ -7,6 +7,7 @@
 
 import { readFile, writeFile, rename, mkdir } from 'node:fs/promises';
 import { dirname } from 'node:path';
+import { isWithinNYC } from '../shared/nycBounds.mjs';
 
 // Bumping this version forces a re-geocode of everything if the address
 // matching rules change in future.
@@ -80,10 +81,13 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
 // Invalidation logic
 
 /**
- * Checks whether a restaurant needs to be geocoded again. It returns true if 
- * it's new, previously failed/pending, has a different address, or if the global 
- * resolver version has been bumped.
- * 
+ * Checks whether a restaurant needs to be geocoded again. It returns true if
+ * it's new, previously failed/pending, has a different address, if the global
+ * resolver version has been bumped, or if a "verified" entry's own
+ * coordinate has since fallen outside NYC bounds (a standing check against
+ * a future scoring regression, rather than relying on a one-off cleanup
+ * script to catch it).
+ *
  * @param {Object} cache - The current cache dictionary
  * @param {string} camis - The restaurant's ID
  * @param {string} currentAddressHash - The newly computed address hash
@@ -95,6 +99,9 @@ export function needsResolution(cache, camis, currentAddressHash) {
   if (entry.status === 'pending') return true;
   if (entry.addressHash !== currentAddressHash) return true;
   if (entry.resolverVersion !== RESOLVER_VERSION) return true;
+  if (entry.status === 'verified' && entry.resolved && !isWithinNYC(entry.resolved.lat, entry.resolved.lon)) {
+    return true;
+  }
   return false;
 }
 

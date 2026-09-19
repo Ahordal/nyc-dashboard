@@ -174,6 +174,30 @@ test('needsResolution is false for an unverified entry with matching hash (do no
   assert.equal(needsResolution(cache, '123', 'hash-abc'), false);
 });
 
+test('needsResolution is true for a verified entry whose resolved coordinate is outside NYC bounds', () => {
+  const cache = {
+    '123': {
+      status: 'verified',
+      addressHash: 'hash-abc',
+      resolverVersion: RESOLVER_VERSION,
+      resolved: { lat: 34.05, lon: -118.24 }, // Los Angeles, not NYC
+    },
+  };
+  assert.equal(needsResolution(cache, '123', 'hash-abc'), true);
+});
+
+test('needsResolution is false for a verified entry whose resolved coordinate is within NYC bounds', () => {
+  const cache = {
+    '123': {
+      status: 'verified',
+      addressHash: 'hash-abc',
+      resolverVersion: RESOLVER_VERSION,
+      resolved: { lat: 40.75, lon: -73.98 },
+    },
+  };
+  assert.equal(needsResolution(cache, '123', 'hash-abc'), false);
+});
+
 // upsertCacheEntry
 
 test('upsertCacheEntry adds a new entry without mutating the original cache object', () => {
