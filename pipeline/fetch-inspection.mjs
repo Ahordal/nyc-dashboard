@@ -190,6 +190,11 @@ function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
+// Fetches a URL and returns its parsed JSON body, retrying network errors,
+// retryable HTTP statuses, AND a malformed-but-200 body the same way - a
+// truncated/invalid JSON response is the same class of transient failure as
+// a 503 and deserves the same backoff, not zero retries just because the
+// status line looked fine.
 async function fetchWithRetry(url, attempt = 1) {
   let response;
 
@@ -205,7 +210,19 @@ async function fetchWithRetry(url, attempt = 1) {
     return fetchWithRetry(url, attempt + 1);
   }
 
-  if (response.ok) return response;
+  if (response.ok) {
+    try {
+      return await response.json();
+    } catch (parseErr) {
+      if (attempt > MAX_RETRIES) throw parseErr;
+      const delay = BASE_RETRY_DELAY_MS * 2 ** (attempt - 1);
+      console.warn(
+        `Malformed JSON body on attempt ${attempt}, retrying in ${delay}ms: ${parseErr.message}`,
+      );
+      await sleep(delay);
+      return fetchWithRetry(url, attempt + 1);
+    }
+  }
 
   const isRetryable = [429, 500, 502, 503, 504].includes(response.status);
   if (!isRetryable || attempt > MAX_RETRIES) {
@@ -286,8 +303,7 @@ const SELECT_FIELDS = [
 // Queries dataset count aggregate to validate paginated pipeline completeness.
 async function fetchExpectedRowCount() {
   const url = `${DATASET_URL}?$select=count(*) as count`;
-  const response = await fetchWithRetry(url);
-  const [{ count }] = await response.json();
+  const [{ count }] = await fetchWithRetry(url);
   return Number(count);
 }
 
@@ -308,8 +324,7 @@ async function fetchAllRowsOnce() {
     const url = `${DATASET_URL}?$select=${SELECT_FIELDS}&$limit=${PAGE_SIZE}&$offset=${offset}&$order=camis,inspection_date,:id`;
     console.log(`Fetching offset ${offset}...`);
 
-    const response = await fetchWithRetry(url);
-    const page = await response.json();
+    const page = await fetchWithRetry(url);
     rows.push(...page);
 
     if (page.length < PAGE_SIZE) break;
