@@ -520,11 +520,11 @@ export function buildLatestInspectionsGeoJSON(
       isWithinNYC(dohmhLatRaw, dohmhLonRaw);
 
     const cacheEntry = geocodeCache[camis];
+    const isVerifiedWithCoords = cacheEntry?.status === "verified" && cacheEntry.resolved;
 
     // Must match bounds check; prevents false positive matches on duplicate street names outside NYC.
     const hasVerifiedResolution =
-      cacheEntry?.status === "verified" &&
-      cacheEntry.resolved &&
+      isVerifiedWithCoords &&
       isWithinNYC(cacheEntry.resolved.lat, cacheEntry.resolved.lon);
 
     if (!dohmhValid && !hasVerifiedResolution) continue;
@@ -533,10 +533,7 @@ export function buildLatestInspectionsGeoJSON(
     const displayLon = hasVerifiedResolution ? cacheEntry.resolved.lon : dohmhLonRaw;
 
     // Cache entries that failed NYC bounds are flagged 'unverified' rather than 'pending' (already attempted).
-    const failedBoundsCheck =
-      cacheEntry?.status === "verified" &&
-      cacheEntry.resolved &&
-      !isWithinNYC(cacheEntry.resolved.lat, cacheEntry.resolved.lon);
+    const failedBoundsCheck = isVerifiedWithCoords && !hasVerifiedResolution;
 
     const locationStatus = hasVerifiedResolution
       ? "verified"
