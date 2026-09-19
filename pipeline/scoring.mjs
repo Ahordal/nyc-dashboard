@@ -5,7 +5,8 @@
 // decides whether it's an acceptable match. Separate from the LocationIQ
 // wrapper so it can be unit-tested against fixtures.
 
-import { houseNumbersMatch, streetNamesMatch, isWithinNYC } from './normalize.mjs';
+import { houseNumbersMatch, streetNamesMatch } from './normalize.mjs';
+import { isWithinNYC } from '../shared/nycBounds.mjs';
 
 // Haversine distance in meters between two lat/lon points.
 export function distanceMeters(lat1, lon1, lat2, lon2) {

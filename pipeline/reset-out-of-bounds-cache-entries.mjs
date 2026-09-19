@@ -15,7 +15,7 @@
 // Usage: node reset-out-of-bounds-cache-entries.mjs [path-to-geocode-cache.json]
 
 import { loadCache, saveCacheAtomic } from "./cache.mjs";
-import { isWithinNYC } from "./normalize.mjs";
+import { isWithinNYC } from "../shared/nycBounds.mjs";
 
 const CACHE_PATH = process.argv[2] || "./geocode-cache.json";
 

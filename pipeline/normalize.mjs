@@ -157,12 +157,3 @@ export function addressHash({ camis, building, street, boro, zip }) {
   const zipNorm = (zip || '').toString().trim();
   return [camis, houseNorm, streetNorm, boroNorm, zipNorm].join('|');
 }
-
-// 5. NYC bounding box (for geographic sanity checks)
-//
-// Loose bounding box around NYC, used to catch obviously-wrong
-// coordinates: (0, 0), swapped lat/lon, or a same-house-number match at a
-// real address outside the five boroughs (e.g. "25 Madison Avenue" also
-// exists in Glen Cove, NY). Defined in shared/ so the frontend's GPS
-// locate control tests against the exact same box.
-export { NYC_BOUNDS, isWithinNYC } from '../shared/nycBounds.mjs';
