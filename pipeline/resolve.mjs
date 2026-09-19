@@ -19,6 +19,11 @@ function buildVerifiedResult(best) {
     matchType: best.matchType,
     resolvedVia: best.resolvedVia,
     distanceFromDohmh: best.distanceFromDohmh,
+    // Carried through so a shakily-confirmed match (e.g. borough + ZIP
+    // both unconfirmed) can still be told apart from a fully-confirmed
+    // one after caching, instead of both looking like plain "verified".
+    score: best.score,
+    reasons: best.reasons,
   };
 }
 

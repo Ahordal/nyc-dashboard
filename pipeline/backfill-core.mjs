@@ -81,13 +81,23 @@ export async function runGeocodeBackfill(restaurants, opts) {
     const entry = buildCacheEntry({ camis: restaurant.camis, dohmh, addressHash: hash, resolution });
     cache = upsertCacheEntry(cache, entry);
 
-    // If the match is verified, check if it moved unusually far from the official health department coordinates.
+    // If the match is verified, flag it for review when it moved unusually
+    // far from the official health department coordinates, OR when it's
+    // only shakily confirmed (both the borough and ZIP bonus checks
+    // missed) - a nearby but shakily-confirmed match is otherwise
+    // indistinguishable from a fully-confirmed one once cached.
     if (resolution.status === 'verified') {
       resolvedCount += 1;
-      if (
-        resolution.distanceFromDohmh != null &&
-        resolution.distanceFromDohmh > suspiciousThresholdMeters
-      ) {
+
+      const flagReasons = [];
+      if (resolution.distanceFromDohmh != null && resolution.distanceFromDohmh > suspiciousThresholdMeters) {
+        flagReasons.push('distance_shift');
+      }
+      if (resolution.reasons?.includes('borough_unconfirmed') && resolution.reasons?.includes('zip_unconfirmed')) {
+        flagReasons.push('low_confidence_match');
+      }
+
+      if (flagReasons.length > 0) {
         suspiciousShifts.push({
           camis: restaurant.camis,
           dba: restaurant.dba,
@@ -99,6 +109,9 @@ export async function runGeocodeBackfill(restaurants, opts) {
           distanceMeters: resolution.distanceFromDohmh,
           matchType: resolution.matchType,
           resolvedVia: resolution.resolvedVia,
+          score: resolution.score,
+          reasons: resolution.reasons,
+          flagReasons,
         });
       }
     }

@@ -73,6 +73,8 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
     distanceFromDohmh: resolution.distanceFromDohmh ?? null,
     reason: resolution.reason || null,
     error: resolution.error || null, // raw LocationIQ/network error text, for diagnosing a bad day's api_error batch
+    score: resolution.score ?? null, // scoring.mjs's confidence score, so a shakily-confirmed match isn't indistinguishable from a fully-confirmed one
+    reasons: resolution.reasons || null, // e.g. ['borough_unconfirmed', 'zip_unconfirmed']
     resolvedAt: resolution.status === 'pending' ? null : new Date().toISOString(),
     addressHash,
     resolverVersion: RESOLVER_VERSION,
