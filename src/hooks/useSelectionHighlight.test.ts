@@ -159,4 +159,78 @@ describe("useSelectionHighlight", () => {
     rerender({ id: null });
     await waitFor(() => expect(activeObjectIds(layerView)).toEqual([-1]));
   });
+
+  it("ignores a stale lookup for an earlier selection that resolves after a newer one", async () => {
+    const resolvers: Record<string, (v: { objectId: number; stillMatches: boolean }) => void> = {};
+    checkSelectionMock.mockImplementation(
+      (_layer: unknown, id: string) =>
+        new Promise((resolve) => {
+          resolvers[id] = resolve;
+        }),
+    );
+    const { layerRef, viewRef, layerView } = setup();
+
+    const { rerender } = renderHook(
+      ({ id }: { id: string | null }) =>
+        useSelectionHighlight({
+          layerRef,
+          viewRef,
+          selectedRestaurantId: id,
+          hoveredRestaurantId: null,
+        }),
+      { initialProps: { id: null as string | null } },
+    );
+
+    await waitFor(() => expect(layerView.featureEffect).toBeTruthy());
+
+    rerender({ id: "A" });
+    await waitFor(() => expect(checkSelectionMock).toHaveBeenCalledWith(expect.anything(), "A", ""));
+    rerender({ id: "B" });
+    await waitFor(() => expect(checkSelectionMock).toHaveBeenCalledWith(expect.anything(), "B", ""));
+
+    // B (the newer click) resolves first.
+    resolvers.B({ objectId: 2, stillMatches: true });
+    await waitFor(() => expect(activeObjectIds(layerView)).toEqual([2]));
+
+    // A's stale lookup resolves later and must not override B.
+    resolvers.A({ objectId: 1, stillMatches: true });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(activeObjectIds(layerView)).toEqual([2]);
+  });
+
+  it("keeps the deselected state when a stale selection lookup resolves afterward", async () => {
+    let resolveA: (v: { objectId: number; stillMatches: boolean }) => void;
+    checkSelectionMock.mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolveA = resolve;
+        }),
+    );
+    const { layerRef, viewRef, layerView } = setup();
+
+    const { rerender } = renderHook(
+      ({ id }: { id: string | null }) =>
+        useSelectionHighlight({
+          layerRef,
+          viewRef,
+          selectedRestaurantId: id,
+          hoveredRestaurantId: null,
+        }),
+      { initialProps: { id: null as string | null } },
+    );
+
+    await waitFor(() => expect(layerView.featureEffect).toBeTruthy());
+
+    rerender({ id: "A" });
+    await waitFor(() => expect(checkSelectionMock).toHaveBeenCalled());
+
+    // Deselect while A's lookup is still in flight.
+    rerender({ id: null });
+    await waitFor(() => expect(activeObjectIds(layerView)).toEqual([-1]));
+
+    // A's stale lookup resolves after the deselect and must not reapply.
+    resolveA!({ objectId: 1, stillMatches: true });
+    await new Promise((r) => setTimeout(r, 0));
+    expect(activeObjectIds(layerView)).toEqual([-1]);
+  });
 });

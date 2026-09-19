@@ -42,6 +42,7 @@ export function useSelectionHighlight({
 
   const selectedObjectIdRef = useRef<number | null>(null);
   const hoveredObjectIdRef = useRef<number | null>(null);
+  const selectionHighlightRequestIdRef = useRef(0);
 
   // Resolves and caches the layer view, building the glow effect on first use.
   const ensureLayerView = useCallback(async () => {
@@ -100,8 +101,15 @@ export function useSelectionHighlight({
 
   const applyHighlightForId = useCallback(
     async (restaurantId: string | null, knownObjectId?: number | null) => {
+      // Bumped before anything else so a newer call (another click, or a
+      // deselect) invalidates whichever await an older call is still
+      // stuck on, no matter which branch that older call takes.
+      const requestId = ++selectionHighlightRequestIdRef.current;
+
       const layerView = await ensureLayerView();
-      if (!layerView) return;
+      if (!layerView || requestId !== selectionHighlightRequestIdRef.current) {
+        return;
+      }
 
       if (!restaurantId) {
         selectedObjectIdRef.current = null;
@@ -124,6 +132,7 @@ export function useSelectionHighlight({
           restaurantId,
           layer.definitionExpression ?? "",
         );
+        if (requestId !== selectionHighlightRequestIdRef.current) return;
         selectedObjectIdRef.current = objectId;
         applyCombinedHighlight();
       } catch (err) {
