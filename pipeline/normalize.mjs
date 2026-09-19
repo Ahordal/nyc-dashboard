@@ -7,7 +7,7 @@
 // Three distinct jobs, kept deliberately separate:
 //   1. normalizeHouseNumber  for MATCHING (DOHMH vs geocoder results)
 //   2. normalizeStreetName    for MATCHING
-//   3. formatDisplayAddress   for DISPLAY ONLY, never used in matching/hashing
+//   3. formatDisplayStreet    for DISPLAY ONLY, never used in matching/hashing
 
 // 1. House number normalization (for matching)
 //
@@ -136,15 +136,6 @@ export function formatDisplayStreet(raw) {
       return titleCase(token);
     })
     .join(' ');
-}
-
-// Combines building + formatted street (+ optional neighbourhood) into a
-// single display string. Neighbourhood is enrichment only, never required.
-export function formatDisplayAddress({ building, street, neighbourhood }) {
-  const parts = [building, formatDisplayStreet(street)].filter(Boolean);
-  let result = parts.join(' ');
-  if (neighbourhood) result += `, ${neighbourhood}`;
-  return result;
 }
 
 // 4. Address hash (for cache invalidation), built from NORMALIZED matching

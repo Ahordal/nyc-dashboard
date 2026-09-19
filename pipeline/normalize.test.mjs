@@ -12,7 +12,6 @@ import {
   normalizeStreetName,
   streetNamesMatch,
   formatDisplayStreet,
-  formatDisplayAddress,
   addressHash,
 } from './normalize.mjs';
 
@@ -101,21 +100,6 @@ test('formatDisplayStreet adds ordinal suffixes', () => {
 test('formatDisplayStreet title-cases abbreviations', () => {
   assert.equal(formatDisplayStreet('MAIN ST'), 'Main Street');
   assert.equal(formatDisplayStreet('NORTHERN BLVD'), 'Northern Boulevard');
-});
-
-test('formatDisplayAddress includes neighbourhood only when provided', () => {
-  const withNeighbourhood = formatDisplayAddress({
-    building: '37-70',
-    street: '79 STREET',
-    neighbourhood: 'Jackson Heights',
-  });
-  assert.equal(withNeighbourhood, '37-70 79th Street, Jackson Heights');
-
-  const withoutNeighbourhood = formatDisplayAddress({
-    building: '37-70',
-    street: '79 STREET',
-  });
-  assert.equal(withoutNeighbourhood, '37-70 79th Street');
 });
 
 // Address hashing (must use NORMALIZED inputs, not display strings)
