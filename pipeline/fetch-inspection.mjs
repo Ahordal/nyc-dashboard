@@ -780,12 +780,12 @@ async function main() {
     `Wrote ${Object.keys(history.restaurants).length} individual history files to ${HISTORY_DIR}`,
   );
   console.log(
-    `Wrote dashboard-meta.json (${dashboardMeta.restaurantCount} restaurants [${formatDeltaForLog(dashboardMeta.restaurantDelta)}], ` +
-      `${dashboardMeta.inspectionCount} inspections [${formatDeltaForLog(dashboardMeta.inspectionDelta)}], generated_at ${dashboardMeta.lastUpdated})`,
+    `Wrote dashboard-meta.json (${dashboardMeta.restaurantCount} restaurants [${formatDelta(dashboardMeta.restaurantDelta)}], ` +
+      `${dashboardMeta.inspectionCount} inspections [${formatDelta(dashboardMeta.inspectionDelta)}], generated_at ${dashboardMeta.lastUpdated})`,
   );
 }
 
-function formatDeltaForLog(delta) {
+export function formatDelta(delta) {
   if (delta == null) return "no baseline";
   return delta >= 0 ? `+${delta}` : `${delta}`;
 }

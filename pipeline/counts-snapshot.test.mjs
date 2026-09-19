@@ -2,8 +2,8 @@
 //
 // The delta plumbing in run-geocode-backfill.mjs: computeCountDeltas()
 // does the once-a-day subtraction, readSnapshotOrNull() tolerates a
-// missing or junk previous snapshot, and formatDelta() renders the
-// console line.
+// missing or junk previous snapshot, and formatDelta() (shared with
+// fetch-inspection.mjs's own dashboard-meta log line) renders it.
 //
 // Run with: node --test counts-snapshot.test.mjs
 
@@ -13,11 +13,8 @@ import { mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import {
-  computeCountDeltas,
-  readSnapshotOrNull,
-  formatDelta,
-} from './run-geocode-backfill.mjs';
+import { computeCountDeltas, readSnapshotOrNull } from './run-geocode-backfill.mjs';
+import { formatDelta } from './fetch-inspection.mjs';
 
 test('computeCountDeltas subtracts the previous daily run', () => {
   assert.deepEqual(

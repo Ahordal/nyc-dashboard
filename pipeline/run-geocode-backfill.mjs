@@ -25,6 +25,7 @@ import {
   buildLatestInspectionsGeoJSON,
   buildInspectionHistory,
   findRestaurantsWithInvalidDohmhCoords,
+  formatDelta,
 } from './fetch-inspection.mjs';
 import { runGeocodeBackfill } from './backfill-core.mjs';
 import { loadCache, readJsonTolerant, saveCacheAtomic } from './cache.mjs';
@@ -136,11 +137,6 @@ export function computeCountDeltas(
         ? inspectionCount - previousSnapshot.inspectionCount
         : null,
   };
-}
-
-export function formatDelta(delta) {
-  if (delta == null) return 'no baseline';
-  return delta >= 0 ? `+${delta}` : `${delta}`;
 }
 
 // Only run the backfill when invoked directly (node
