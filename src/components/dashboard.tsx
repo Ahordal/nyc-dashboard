@@ -423,7 +423,7 @@ export default function Dashboard() {
             aria-hidden="true"
           />
           {activeFilterCount > 0 && (
-            <span className="desktop-filters-badge">{activeFilterCount}</span>
+            <span className="notification-badge desktop-filters-badge">{activeFilterCount}</span>
           )}
         </button>
       </div>

@@ -106,7 +106,7 @@ export default function AppBar({
             <FontAwesomeIcon icon={searchOpen ? faXmark : faMagnifyingGlass} />
             {searchActive && !searchOpen && (
               <span
-                className="mobile-appbar-badge mobile-appbar-badge-dot"
+                className="notification-badge mobile-appbar-badge mobile-appbar-badge-dot"
                 aria-hidden="true"
               />
             )}
@@ -128,7 +128,7 @@ export default function AppBar({
             onClick={toggleFilters}>
             <FontAwesomeIcon icon={filtersOpen ? faXmark : faSliders} />
             {activeFilterCount > 0 && !filtersOpen && (
-              <span className="mobile-appbar-badge">{activeFilterCount}</span>
+              <span className="notification-badge mobile-appbar-badge">{activeFilterCount}</span>
             )}
           </button>
 

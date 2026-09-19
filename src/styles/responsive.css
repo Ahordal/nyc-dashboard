@@ -282,23 +282,11 @@
     color: var(--link-hover);
   }
 
+  /* Shell (shape/color/type) is shared - see .notification-badge in
+     filters-stats.css. Only this corner position lives here. */
   .tablet-appbar-region .mobile-appbar-badge {
-    position: absolute;
     top: -6px;
     right: -6px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-width: 16px;
-    height: 16px;
-    padding: 0 3px;
-    border-radius: 8px;
-    background-color: var(--accent-blue);
-    color: #fff;
-    font-family: var(--font-body);
-    font-size: var(--fs-2xs);
-    font-weight: 700;
-    line-height: 1;
   }
 
   .tablet-appbar-region .mobile-appbar-badge-dot {

@@ -98,16 +98,36 @@
   margin-right: var(--space-s);
 }
 
+/* Shell (shape/color/type) for the small numeric/dot notification badges
+   anchored to a corner of their trigger button - the app-bar badge
+   (mobile.css, responsive.css) and this file's desktop filters badge.
+   Each site adds only its own corner position (+ z-index if needed) on
+   top of this. */
+.notification-badge {
+  position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 3px;
+  border-radius: 8px;
+  background-color: var(--accent-blue);
+  color: #fff;
+  font-family: var(--font-body);
+  font-size: var(--fs-2xs);
+  font-weight: 700;
+  line-height: 1;
+}
+
 /* 7.2 COMPACT-DESKTOP FILTERS BUTTON (1751-2359px)
    Below the width the inline row above fits on one line, Grade/Borough
    move behind this small button instead -- sized and styled like
-   MapView's own 32px control chips (mirrors .mobile-appbar-button /
-   .mobile-appbar-badge, which live in phone/tablet-scoped media queries
-   and so aren't reachable at this width). Nested inside the KPI panel
-   itself (StatsPanel's filtersButton prop) rather than an adjacent box:
-   the panel's own outer edge keeps lining up with the search panel
-   beside it, and the button's 0.5rem inset from the panel's inner edge
-   lines up with the map's own control chips (same inset, same edge). */
+   MapView's own 32px control chips. Nested inside the KPI panel itself
+   (StatsPanel's filtersButton prop) rather than an adjacent box: the
+   panel's own outer edge keeps lining up with the search panel beside
+   it, and the button's 0.5rem inset from the panel's inner edge lines
+   up with the map's own control chips (same inset, same edge). */
 
 .desktop-filters-button-wrap {
   position: absolute;
@@ -141,23 +161,9 @@
 }
 
 .desktop-filters-badge {
-  position: absolute;
   bottom: -6px;
   left: -6px;
   z-index: 30;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  min-width: 16px;
-  height: 16px;
-  padding: 0 3px;
-  border-radius: 8px;
-  background-color: var(--accent-blue);
-  color: #fff;
-  font-family: var(--font-body);
-  font-size: var(--fs-2xs);
-  font-weight: 700;
-  line-height: 1;
 }
 
 /* Floating popover, not an inline push -- overlays the map, doesn't
