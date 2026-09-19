@@ -102,6 +102,9 @@ export function useMapHover({
     });
 
     const handlePointerLeave = () => {
+      // Invalidates any in-flight hit test so its response can't reopen
+      // the hover card after the pointer has already left the map.
+      latestHitTestToken++;
       setHoverCard(null);
       // Don't clear the crosshair while a Search Radius point is being placed.
       if (view.container && !isPlacingPointRef.current) {

@@ -208,4 +208,29 @@ describe("useMapHover", () => {
     await flush();
     expect(setHoverCard.mock.calls.length).toBe(callsAfterB);
   });
+
+  it("drops a hit-test response that resolves after the pointer already left the map", async () => {
+    const { firePointerMove, hitResolvers, setHoverCard, onHoverRestaurant, container } = setup({
+      manualHitTest: true,
+    });
+
+    firePointerMove({ x: 1, y: 1 });
+    await vi.advanceTimersByTimeAsync(60);
+    expect(hitResolvers).toHaveLength(1);
+
+    // Pointer leaves while the hit test is still in flight.
+    container.dispatchEvent(new Event("mouseleave"));
+    const callsAfterLeave = setHoverCard.mock.calls.length;
+    const hoverCallsAfterLeave = onHoverRestaurant.mock.calls.length;
+
+    // The stale response finally resolves as a hit; it must be ignored.
+    hitResolvers[0]({
+      results: [{ type: "graphic", graphic: { layer: {} as GeoJSONLayer, attributes: makeAttrs() } }],
+    });
+    await flush();
+
+    expect(setHoverCard.mock.calls.length).toBe(callsAfterLeave);
+    expect(onHoverRestaurant.mock.calls.length).toBe(hoverCallsAfterLeave);
+    expect(container.style.cursor).toBe("default");
+  });
 });
