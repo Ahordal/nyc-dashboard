@@ -296,6 +296,21 @@ export function DataNotes() {
         &quot;1ST&quot; into &quot;1st&quot;) and may differ slightly from
         official listings.
       </li>
+
+      <li>
+        The{" "}
+        <span className="dashboard-guide-meta-delta dashboard-guide-meta-delta-positive">
+          +12
+        </span>{" "}
+        or{" "}
+        <span className="dashboard-guide-meta-delta dashboard-guide-meta-delta-negative">
+          −12
+        </span>{" "}
+        next to the restaurant/inspection counts shows the change since the
+        last update. A drop isn&apos;t a dashboard error &mdash; DOHMH&apos;s
+        own published dataset can shrink as well as grow (for example, when
+        older records are corrected or removed).
+      </li>
     </ul>
   );
 }
