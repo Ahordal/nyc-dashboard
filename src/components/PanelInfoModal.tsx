@@ -149,7 +149,7 @@ export default function PanelInfoModal({
 
         <div 
           className="info-modal-content"
-          style={!title ? { paddingTop: "1rem" } : undefined}
+          style={!title ? { paddingTop: "var(--space-xs)" } : undefined}
         >
           {children}
         </div>
