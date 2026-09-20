@@ -8,6 +8,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { ChartPoint } from "../types/restaurant";
 import InspectionBadges from "./InspectionBadges";
+import Badge from "./Badge";
 import {
   getGradeCategory,
   CATEGORY_COLORS,
@@ -149,9 +150,7 @@ export default function PerformanceTooltip({
             justifyContent: "center",
             marginTop: "8px",
           }}>
-          <span className="violation-tag status-flag status-closed">
-            Closed by DOHMH
-          </span>
+          <Badge variant="status-closed">Closed by DOHMH</Badge>
         </div>
       )}
     </div>

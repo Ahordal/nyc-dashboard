@@ -26,6 +26,7 @@ import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
 import PerformanceDot from "./PerformanceDot";
 import PerformanceTooltip from "./PerformanceTooltip";
+import Badge from "./Badge";
 
 import { useChartKeyboardNav } from "../hooks/useChartKeyboardNav";
 import { useTooltipPriority } from "../hooks/useTooltipPriority";
@@ -130,9 +131,7 @@ const performanceChartInfoContent = (isMobile: boolean) => (
     statuses={
       isMobile ? undefined : (
         <p>
-          <span className="violation-tag status-flag status-closed">
-            Closed by DOHMH
-          </span>{" "}
+          <Badge variant="status-closed">Closed by DOHMH</Badge>{" "}
           identifies an inspection that resulted in a closure. It describes
           that historical inspection, not necessarily the restaurant&apos;s
           current status.

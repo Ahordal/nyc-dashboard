@@ -273,14 +273,7 @@ function RestaurantReport({
                   <>
                     {" "}
                     <div style={{ marginTop: "6px" }}>
-                      <Badge
-                        variant="status-closed"
-                        style={{
-                          marginLeft: "0",
-                          display: "inline-block",
-                        }}>
-                        Closed by DOHMH
-                      </Badge>
+                      <Badge variant="status-closed">Closed by DOHMH</Badge>
                     </div>
                   </>
                 )}
