@@ -101,7 +101,7 @@ Each cache entry is marked `verified`, `unverified`, or `pending`, and stamped w
 
 ## Testing
 
-Two separate suites, both run in CI on every push and pull request to `main`.
+Two separate suites, both run in CI on every push and pull request to `main`, alongside ESLint, stylelint, and a TypeScript typecheck.
 
 **Pipeline** (`npm run test:pipeline`) uses Node's built-in test runner, with no external library. It covers the geocode cache (atomic writes, recovery from corrupt files), the merge-and-push logic (which had a past data-loss bug), rate-limit handling, and address scoring — the scoring tests run against real saved API responses so CI never has to call LocationIQ.
 
@@ -148,8 +148,10 @@ Vite only exposes `VITE_`-prefixed variables to the app by default; `PUBLIC_ARCG
 | `npm run build` | Pull the cache, download the dataset, then build for production |
 | `npm run preview` | Preview a production build |
 | `npm run lint` | Run ESLint |
+| `npm run lint:css` | Run stylelint |
 | `npm run test:pipeline` | Run the pipeline tests |
 | `npm run test:frontend` | Run the frontend tests |
+| `npm run test:frontend:watch` | Run the frontend tests in watch mode |
 
 ## Deployment
 
