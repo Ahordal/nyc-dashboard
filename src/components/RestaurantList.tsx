@@ -50,12 +50,12 @@ function restaurantListInfoContent(withinRadius: boolean, isMobile: boolean) {
             results.
           </li>
 
+          <li>Use the pagination controls to move between pages of results.</li>
+
           <li>
             When a Search Radius or your location is set, each card shows its
-            distance, and Distance becomes available as a sort option.
+            Distance, which also becomes available as a sort option.
           </li>
-
-          <li>Use the pagination controls to move between pages of results.</li>
         </ul>
       }
       dataNotes={

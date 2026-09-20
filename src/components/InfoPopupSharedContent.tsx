@@ -177,12 +177,13 @@ export function DashboardOverview() {
       </p>
       <ul>
         <li>An interactive map of restaurant locations</li>
+        <li>A Restaurant List and Restaurant Details panel</li>
+        <li>Grade and Borough filters</li>
+        <li>Restaurant search by name, cuisine, or address</li>
         <li>
           A search radius tool to find restaurants within a chosen distance
           of a point
         </li>
-        <li>Grade and Borough filters, plus restaurant search</li>
-        <li>A Restaurant List and Restaurant Details panel</li>
         <li>Full Inspection Reports, including cited violations</li>
         <li>A Restaurant Performance Over Time chart</li>
         <li>A Grade Breakdown chart for the current view</li>
@@ -195,6 +196,12 @@ export function DashboardOverview() {
 export function DashboardHowToUse({ extra }: { extra?: ReactNode }) {
   return (
     <ul>
+      <li>
+        Select a restaurant on the map or in the list to see its details,
+        inspection history, and performance chart. It stays highlighted in
+        the list no matter how you sort or paginate.
+      </li>
+
       <li>
         Combine the Grade and Borough filters to narrow down the restaurants
         shown.
@@ -212,14 +219,8 @@ export function DashboardHowToUse({ extra }: { extra?: ReactNode }) {
       </li>
 
       <li>
-        The restaurant list and dashboard summaries update automatically as
-        you move the map, filter, search, or set a search radius.
-      </li>
-
-      <li>
-        Select a restaurant on the map or in the list to see its details,
-        inspection history, and performance chart. It stays highlighted in
-        the list no matter how you sort or paginate.
+        Use the list&apos;s sort and pagination controls to browse restaurants
+        currently in view.
       </li>
 
       <li>
@@ -228,8 +229,13 @@ export function DashboardHowToUse({ extra }: { extra?: ReactNode }) {
       </li>
 
       <li>
-        Use the list&apos;s sort and pagination controls to browse restaurants
-        currently in view.
+        The restaurant list and dashboard summaries update automatically as
+        you move the map, filter, search, or set a search radius.
+      </li>
+
+      <li>
+        Filters, search, sorting, and the search radius all apply
+        independently &mdash; combine them in any order.
       </li>
 
       {extra}
@@ -237,11 +243,14 @@ export function DashboardHowToUse({ extra }: { extra?: ReactNode }) {
   );
 }
 
-// Link to the source dataset on NYC Open Data.
+// Link to the source dataset on NYC Open Data. Also covers the basemap
+// credit: ArcGIS's own on-map attribution widget collapses at narrow
+// (mobile) viewport widths, so it's restated here where it can't disappear.
 export function DataAttribution() {
   return (
     <ul>
       <li>
+        <strong className="info-popup-field-label">Restaurant Data:</strong>{" "}
         <a
           href="https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data"
           target="_blank"
@@ -254,6 +263,13 @@ export function DataAttribution() {
           className="external-link-icon"
           aria-hidden="true"
         />
+      </li>
+
+      <li>
+        <strong className="info-popup-field-label">Basemap:</strong> Esri
+        Community Maps Contributors, NYC OpenData, New Jersey Office of GIS,
+        Esri, TomTom, Garmin, SafeGraph, GeoTechnologies, Inc, METI/NASA,
+        USGS, EPA, NPS, US Census Bureau, USDA, USFWS, NYC DOHMH
       </li>
     </ul>
   );

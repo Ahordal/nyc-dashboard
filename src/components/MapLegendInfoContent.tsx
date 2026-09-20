@@ -27,6 +27,10 @@ const MAP_LEGEND_INFO_CONTENT = (
           directly on the map canvas (active when scale is 1:18,056 or larger).
         </li>
         <li>
+          Click the satellite/map icon in the top-right corner to toggle between
+          the default map and satellite imagery.
+        </li>
+        <li>
           Click the{" "}
           <span className="map-control-button" style={{ display: "inline" }}>
             Map Scale
@@ -41,10 +45,6 @@ const MAP_LEGEND_INFO_CONTENT = (
         <li>
           Click and hold the right mouse button to rotate the map; click the
           compass icon below the zoom buttons to reorient to north.
-        </li>
-        <li>
-          Click the satellite/map icon in the top-right corner to toggle between
-          the default map and satellite imagery.
         </li>
         <li>
           The scale bar in the bottom-right corner shows the current map scale

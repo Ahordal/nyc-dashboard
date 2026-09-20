@@ -27,6 +27,10 @@ const MOBILE_INFO_CONTENT = (
           approximate inspection score (larger circle = higher score), and
           circle color represents the inspection grade.
         </p>
+        <p>
+          Use the restaurant listing panel to browse and inspect individual
+          establishments when multiple locations share overlapping points.
+        </p>
       </>
     }
     howToUse={
@@ -44,6 +48,10 @@ const MOBILE_INFO_CONTENT = (
             <li>
               Tap the location arrow icon in the map&apos;s top-right corner
               to show your position on the map as a blue dot.
+            </li>
+            <li>
+              Twist with two fingers to rotate the map; tap the compass icon
+              below the zoom buttons to reorient to north.
             </li>
           </>
         }
