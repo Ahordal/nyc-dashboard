@@ -1,6 +1,6 @@
 /* map.css - map view container, legends, controls and hover cards. */
 
-/*///////////////////////////////////////////// 15. MAP VIEW, LEGENDS & CONTROLS //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 15. MAP VIEW, LEGENDS & CONTROLS ////////////////////////////////////////////// */
 
 /* 15.1 MAP VIEW CONTAINER & HEADERS */
 
@@ -90,7 +90,7 @@
 }
 
 .legend-table td {
-  padding: 0.3rem 0.3rem;
+  padding: 0.3rem;
   vertical-align: middle;
 }
 
@@ -213,13 +213,12 @@
   padding: 2px 4px;
   box-sizing: border-box;
   font-variant-numeric: tabular-nums;
-  -moz-appearance: textfield;
   appearance: textfield;
 }
 
 .map-control-input::-webkit-outer-spin-button,
 .map-control-input::-webkit-inner-spin-button {
-  -webkit-appearance: none;
+  appearance: none;
   margin: 0;
 }
 
@@ -242,6 +241,7 @@
 .map-zoom-buttons-chip {
   display: flex;
   flex-direction: column;
+
   /* 32 wide, 64 tall (two stacked) to align with the 32x32 control chips. */
   width: 32px;
   height: 64px;
@@ -395,6 +395,7 @@
   justify-content: center;
   background-color: var(--bg-panel);
   color: var(--text-muted);
+
   /* Keep the "mi" unit lowercase, not .filter-button's uppercase. */
   text-transform: none;
 }
@@ -443,10 +444,10 @@
 }
 
 .map-user-location-button.is-locating svg {
-  animation: mapUserLocationSpin 0.8s linear infinite;
+  animation: map-user-location-spin 0.8s linear infinite;
 }
 
-@keyframes mapUserLocationSpin {
+@keyframes map-user-location-spin {
   to {
     transform: rotate(360deg);
   }
@@ -529,6 +530,7 @@
   font-weight: 400;
   letter-spacing: 0.03em;
   white-space: nowrap;
+
   /* Uppercase to match the placement-hint chip and the icon tooltips. */
   text-transform: uppercase;
 }
@@ -553,10 +555,10 @@
   background: var(--bg-panel);
   border: 1px solid var(--border-panel);
   box-shadow: 0 2px 4px var(--shadow-controls);
-  animation: placementHintFadeIn 0.2s ease forwards;
+  animation: placement-hint-fade-in 0.2s ease forwards;
 }
 
-@keyframes placementHintFadeIn {
+@keyframes placement-hint-fade-in {
   from { opacity: 0; }
   to { opacity: 1; }
 }

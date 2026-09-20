@@ -1,6 +1,6 @@
 /* explorer.css - restaurant list, details, status/violation badges, inspection history. */
 
-/*///////////////////////////////////////////// 10. RESTAURANT EXPLORER & LIST //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 10. RESTAURANT EXPLORER & LIST ////////////////////////////////////////////// */
 
 /* 10.1 EXPLORER TABS */
 
@@ -183,6 +183,10 @@
 }
 
 .sort-direction-toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
   background: var(--bg-panel);
   color: var(--text-body);
   border: 1px solid var(--border-panel);
@@ -192,13 +196,6 @@
   box-sizing: border-box;
   height: 2.25rem;
   cursor: pointer;
-}
-
-.sort-direction-toggle {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.35rem;
 }
 
 .sort-direction-toggle:hover {
@@ -294,12 +291,12 @@
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+
   /* A full PAGE_SIZE (RestaurantList.tsx) usually overflows this pane, so
      scroll it with the pagination row pinned below; min-height:0 lets it
      shrink below content. Mobile flows instead (18.5). */
   min-height: 0;
-  overflow-y: auto;
-  overflow-x: hidden;
+  overflow: hidden auto;
   margin-bottom: 0.5rem;
   width: 100%;
   min-width: 0;
@@ -363,6 +360,7 @@
   font-family: var(--font-display);
   font-weight: 700;
   font-size: var(--fs-lg);
+
   /* Wrap to a second line when one line can't hold the name; clamp
      and ellipsize only past two. */
   display: -webkit-box;
@@ -403,6 +401,7 @@
   width: 44px;
   height: 44px;
   background: var(--bg-score);
+
   /* borderColor set inline by each consumer to the grade colour at 80% */
   border: 0.5px solid var(--border-panel);
 }
@@ -424,7 +423,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/*///////////////////////////////////////////// 11. RESTAURANT DETAILS & REPORTS //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 11. RESTAURANT DETAILS & REPORTS ////////////////////////////////////////////// */
 
 /* 11.1 DETAILS HEADER & TABLES */
 
@@ -462,6 +461,7 @@
 .details-hero-title {
   font-family: var(--font-display);
   font-weight: 700;
+
   /* Like .card-title: wrap to a second line, clamp past two. The flex
      header has no fixed height, so it grows to fit. */
   font-size: var(--fs-lg);
@@ -544,6 +544,7 @@
   letter-spacing: 0.05em;
   color: var(--text-muted);
 }
+
 /* 11.2 INSPECTION REPORTS NAVIGATION */
 
 .restaurant-report-panel {
@@ -595,7 +596,7 @@
   border-right: none;
 }
 
-/*///////////////////////////////////////////// 12. STATUS FLAGS & VIOLATIONS //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 12. STATUS FLAGS & VIOLATIONS ////////////////////////////////////////////// */
 
 /* 12.1 STATUS BADGES & TAGS */
 
@@ -707,7 +708,7 @@
   text-align: justify;
 }
 
-/*///////////////////////////////////////////// 13. INSPECTION HISTORY //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 13. INSPECTION HISTORY ////////////////////////////////////////////// */
 
 /* 13.1 HISTORY LIST & ROWS */
 

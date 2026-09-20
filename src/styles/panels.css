@@ -1,6 +1,6 @@
 /* panels.css - shared panel/modal chrome and the dashboard title. */
 
-/*///////////////////////////////////////////// 5. PANELS, HEADERS & MODALS //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 5. PANELS, HEADERS & MODALS ////////////////////////////////////////////// */
 
 /* 5.1 PANEL CONTAINERS & HEADERS */
 
@@ -171,7 +171,7 @@
   border-radius: 4px;
 }
 
-/*///////////////////////////////////////////// 6. DASHBOARD TITLE //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 6. DASHBOARD TITLE ////////////////////////////////////////////// */
 
 /* 6.1 TITLE TYPOGRAPHY & WRAPPER */
 
@@ -209,7 +209,7 @@
   line-height: 1;
   letter-spacing: -0.05em; 
   margin-left: -0.06em; 
-  text-shadow: -3px 4px 0px var(--bg-alt);
+  text-shadow: -3px 4px 0 var(--bg-alt);
 }
 
 .h1-med {

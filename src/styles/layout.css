@@ -1,6 +1,6 @@
 /* layout.css - dashboard grid layout and footer. */
 
-/*///////////////////////////////////////////// 3. APP & GRID LAYOUT //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 3. APP & GRID LAYOUT ////////////////////////////////////////////// */
 
 /* 3.1 CONTAINER & DASHBOARD CSS GRID */
 
@@ -9,6 +9,7 @@
   height: 100%;
   min-width: 0;
   min-height: 0;
+
   /* Scroll, not clip, below the desktop floor; reflow block resets it. */
   overflow: auto;
 }
@@ -17,16 +18,16 @@
   display: grid;
   width: 100%;
   height: 100%;
+
   /* 3-pane floor; reflow block resets these below 1750px. */
   min-width: 1176px;
   min-height: 800px;
-  grid-template-columns: clamp(320px, 22vw, 400px) minmax(480px, 1fr) clamp(360px, 25vw, 480px);
-  grid-template-rows: auto minmax(0, 1fr) clamp(200px, 20vh, 280px) auto;
-  grid-template-areas:
-    "sidebar map-column  search"
-    "sidebar map-column  explorer"
-    "sidebar performance explorer"
-    "footer  footer      footer";
+  grid-template:
+    "sidebar map-column  search"    auto
+    "sidebar map-column  explorer"  minmax(0, 1fr)
+    "sidebar performance explorer"  clamp(200px, 20vh, 280px)
+    "footer  footer      footer"    auto
+    / clamp(320px, 22vw, 400px) minmax(480px, 1fr) clamp(360px, 25vw, 480px);
   gap: var(--space-xs);
 }
 
@@ -39,6 +40,7 @@
   gap: var(--space-xs);
   min-width: 0;
   min-height: 0;
+
   /* Fallback if title + guide ever outgrow the sidebar's grid-allocated
      height (e.g. unusually long guide content): scroll instead of
      squeezing grade-chart's flex remainder to nothing. */
@@ -81,6 +83,7 @@
   gap: var(--space-xs);
   min-width: 0;
   min-height: 0;
+
   /* Neither this nor .map-view has its own stacking context, so without
      an explicit z-index here the (later-painted, unpositioned) map wins
      ties against this row's contents -- including the filters popover.
@@ -118,7 +121,7 @@
   grid-area: explorer;
 }
 
-/*///////////////////////////////////////////// 4. FOOTER //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 4. FOOTER ////////////////////////////////////////////// */
 
 /* 4.1 FOOTER BAR & LAYOUT */
 

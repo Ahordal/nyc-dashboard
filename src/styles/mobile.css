@@ -1,12 +1,12 @@
 /* mobile.css - phone layout (<=640px): app bar, bottom sheet, drawers. */
 
-/*///////////////////////////////////////////// 18. MOBILE (PHONE) LAYOUT //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 18. MOBILE (PHONE) LAYOUT ////////////////////////////////////////////// */
 
 /* Below 750px, or a short landscape viewport (phone turned sideways),
    dashboard.tsx renders <MobileDashboard>: app bar, area strip, full-bleed
    map, bottom sheet (peek/half/full on [data-detent]). Classes below are
    mobile-only; keep this query in sync with isPhone. */
-@media (max-width: 750px), (max-height: 480px) and (orientation: landscape) {
+@media (width <= 750px), (height <= 480px) and (orientation: landscape) {
   body {
     padding: 0;
     overflow: hidden;
@@ -18,10 +18,12 @@
     --appbar-h: calc(60px + env(safe-area-inset-top));
     --strip-h: 34px;
     --sheet-handle-h: 32px;
+
     /* .explorer-tabs floor (18.5) so its footprint doesn't drift with font
        metrics; tall enough for a two-line label plus the tab's 0.5rem
        top/bottom padding. */
     --explorer-tabs-h: 52px;
+
     position: relative;
     width: 100%;
     height: 100dvh;
@@ -33,10 +35,7 @@
   /* Starts below the app bar + area strip so the map's control clusters clear them. */
   .mobile-map {
     position: absolute;
-    top: calc(var(--appbar-h) + var(--strip-h));
-    left: 0;
-    right: 0;
-    bottom: 0;
+    inset: calc(var(--appbar-h) + var(--strip-h)) 0 0;
   }
 
   /* Editable scale/zoom readouts are a desktop pointer affordance; drop
@@ -407,6 +406,7 @@
   /* Gutter = Clear button width + the row gap. */
   .mobile-filter-groups .filter-group {
     --filter-clear-w: 3.75rem;
+
     display: flex;
     flex-direction: column;
     align-items: stretch;
@@ -683,8 +683,7 @@
     height: auto;
     min-height: calc(118px + env(safe-area-inset-bottom));
     max-height: calc(50dvh + env(safe-area-inset-bottom));
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto;
   }
 
   .mobile-dashboard[data-detent="peek"][data-peek="empty"] .mobile-sheet {
@@ -783,8 +782,7 @@
     display: flex;
     flex-direction: column;
     gap: var(--space-xs);
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow: hidden auto;
     padding-bottom: calc(0.75rem + env(safe-area-inset-bottom));
     -webkit-overflow-scrolling: touch;
   }
@@ -950,6 +948,7 @@
   .mobile-explorer .restaurant-list-sort-bar {
     flex-wrap: nowrap;
     gap: 0.5rem;
+
     /* No side padding, to line up with the flush cards; extra bottom
        padding sets it off. */
     padding-left: 0;
@@ -986,6 +985,7 @@
   .mobile-explorer .inspection-history-list li {
     gap: 0.3rem;
     padding: 0.4rem 0.2rem;
+
     /* Desktop's auto-margin centring (13.2) is off for the mobile grid;
        distribute leftover space here instead of a dead right gap. */
     justify-content: space-between;

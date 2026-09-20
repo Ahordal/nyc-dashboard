@@ -1,6 +1,6 @@
 /* base.css - fonts, reset, base elements, focus/a11y utilities, design tokens. */
 
-/*///////////////////////////////////////////// 1. RESET & GLOBAL FOUNDATIONS //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 1. RESET & GLOBAL FOUNDATIONS ////////////////////////////////////////////// */
 
 /* 1.0 FONTS
 
@@ -15,6 +15,7 @@
   font-display: swap;
   src: url('/fonts/public-sans-v21-latin_latin-ext-regular.woff2') format('woff2');
 }
+
 @font-face {
   font-family: 'Public Sans';
   font-style: normal;
@@ -22,6 +23,7 @@
   font-display: swap;
   src: url('/fonts/public-sans-v21-latin_latin-ext-500.woff2') format('woff2');
 }
+
 @font-face {
   font-family: 'Public Sans';
   font-style: normal;
@@ -29,6 +31,7 @@
   font-display: swap;
   src: url('/fonts/public-sans-v21-latin_latin-ext-600.woff2') format('woff2');
 }
+
 @font-face {
   font-family: 'Public Sans';
   font-style: normal;
@@ -36,22 +39,25 @@
   font-display: swap;
   src: url('/fonts/public-sans-v21-latin_latin-ext-700.woff2') format('woff2');
 }
+
 @font-face {
-  font-family: 'Archivo';
+  font-family: Archivo;
   font-style: normal;
   font-weight: 600;
   font-display: swap;
   src: url('/fonts/archivo-v25-latin_latin-ext-600.woff2') format('woff2');
 }
+
 @font-face {
-  font-family: 'Archivo';
+  font-family: Archivo;
   font-style: normal;
   font-weight: 700;
   font-display: swap;
   src: url('/fonts/archivo-v25-latin_latin-ext-700.woff2') format('woff2');
 }
+
 @font-face {
-  font-family: 'Archivo';
+  font-family: Archivo;
   font-style: normal;
   font-weight: 800;
   font-display: swap;
@@ -158,7 +164,7 @@ summary:focus-visible,
   }
 }
 
-/*///////////////////////////////////////////// 2. VARIABLES //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 2. VARIABLES ////////////////////////////////////////////// */
 
 /* 2.1 COLOR PALETTE & DESIGN TOKENS */
 
@@ -167,38 +173,30 @@ summary:focus-visible,
   --bg-alt: #252525;
   --bg-panel: #2b2b2b;
   --bg-row-alt: #292929;
-  
   --text-body: #d6d8d4;
-  --text-heading: #ffffff;
+  --text-heading: #fff;
   --text-muted: #a0a0a0;
   --text-faded: #767676;
-
   --border-panel: #424242;
-
   --status-positive-bg: #3cb44b;
-  --status-positive-text: #ffffff;
+  --status-positive-text: #fff;
   --status-negative-bg: #b81d13;
-  --status-negative-text: #ffffff;
+  --status-negative-text: #fff;
   --status-warning-bg: #e6b800;
   --status-warning-text: #1a1a1a;
-  
   --status-delta-positive: #66bb6a;
   --status-delta-negative: #ef5350;
-
   --bg-score: #272727;
-  --shadow-overlay: rgba(0, 0, 0, 0.4);
-  --shadow-modal: rgba(0, 0, 0, 0.6);
-  --shadow-controls: rgba(0, 0, 0, 0.3);
-
+  --shadow-overlay: rgb(0 0 0 / 40%);
+  --shadow-modal: rgb(0 0 0 / 60%);
+  --shadow-controls: rgb(0 0 0 / 30%);
   --scrollbar-thumb: #4a4a4a;
   --scrollbar-track: #2b2b2b;
-
   --space-xs: 0.5rem;
   --space-s: 1rem;
   --space-m: 2rem;
   --space-l: 4rem;
-
-  --font-body: 'Public Sans', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --font-body: 'Public Sans', system-ui, -apple-system, blinkmacsystemfont, "Segoe UI", roboto, sans-serif;
   --font-display: 'Archivo', var(--font-body);
 
   /* Type scale. Every font-size resolves to one of these; CI guards it. */
@@ -211,14 +209,12 @@ summary:focus-visible,
   --fs-2xl: 1.25rem;   /* 20px - big stat numbers, h1 primary line */
   --fs-3xl: 2.75rem;    /* 44px - tablet app-bar "NYC" masthead */
   --fs-display: 6.5rem;  /* decorative "NYC" wordmark only; smaller in the 1751-2359px compact band (responsive.css) */
-
-  --link-hover: #ffffff;
+  --link-hover: #fff;
   --link-background-hover: #424242;
-  --link-selected: #ffffff;
-  --accent-blue: #0066cc;
+  --link-selected: #fff;
+  --accent-blue: #06c;
   --focus-ring: #5aa2ff;
-
-  --highlight-border: rgba(255, 255, 255, 0.2);
-  --highlight-glow: rgba(255, 255, 255, 0.6);
+  --highlight-border: rgb(255 255 255 / 20%);
+  --highlight-glow: rgb(255 255 255 / 60%);
 }
 

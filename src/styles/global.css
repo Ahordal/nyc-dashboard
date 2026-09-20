@@ -3,13 +3,13 @@
    reorder these without checking for cross-file selector overlap.
    Vite inlines all @imports at build time; this still ships as one file. */
 
-@import "./base.css";
-@import "./layout.css";
-@import "./panels.css";
-@import "./filters-stats.css";
-@import "./explorer.css";
-@import "./charts.css";
-@import "./map.css";
-@import "./esri-overrides.css";
-@import "./responsive.css";
-@import "./mobile.css";
+@import url("./base.css");
+@import url("./layout.css");
+@import url("./panels.css");
+@import url("./filters-stats.css");
+@import url("./explorer.css");
+@import url("./charts.css");
+@import url("./map.css");
+@import url("./esri-overrides.css");
+@import url("./responsive.css");
+@import url("./mobile.css");

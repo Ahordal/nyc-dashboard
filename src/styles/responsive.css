@@ -1,8 +1,8 @@
 /* responsive.css - tablet app bar and the desktop/tablet reflow breakpoints. */
 
-/*///////////////////////////////////////////// 16. RESPONSIVE REFLOW //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 16. RESPONSIVE REFLOW ////////////////////////////////////////////// */
 
-@media (max-width: 1750px) {
+@media (width <= 1750px) {
   body {
     overflow: auto;
   }
@@ -20,14 +20,13 @@
     min-width: 0;
     min-height: 0;
     height: auto;
-    grid-template-columns: 1fr 1fr;
-    grid-template-rows: repeat(5, auto);
-    grid-template-areas:
-      "appbar      appbar"
-      "map-column  map-column"
-      "explorer    explorer"
-      "performance performance"
-      "footer      footer";
+    grid-template:
+      "appbar      appbar"      auto
+      "map-column  map-column"  auto
+      "explorer    explorer"    auto
+      "performance performance" auto
+      "footer      footer"      auto
+      / 1fr 1fr;
   }
 
   /* Flattened so its remaining child places into the grid directly. */
@@ -69,7 +68,7 @@
 /* Compact desktop (1751–2359px): Below 2360px, the fixed type scale causes 
    wrapping that starves the sidebar's grade chart. Shrinking tokens here provides 
    a single-point global fix for all desktop panels without per-component overrides. */
-@media (min-width: 1751px) and (max-width: 2359px) {
+@media (width >= 1751px) and (width <= 2359px) {
   :root {
     --fs-2xs: 0.5625rem;
     --fs-xs: 0.6875rem;
@@ -107,7 +106,7 @@
    so this wins without touching those rules. Ties in specificity with
    panels.css's .panel rule - wins only because global.css imports this
    file later. Reordering would drop it silently. */
-@media (min-width: 1751px) {
+@media (width >= 1751px) {
   .panel,
   .dashboard-title .panel,
   .grade-chart,
@@ -167,11 +166,11 @@
   }
 }
 
-@media (max-width: 1100px) {
+@media (width <= 1100px) {
   .stats-panel-line {
-    row-gap: var(--space-xs);
-    column-gap: var(--space-s);
+    gap: var(--space-xs) var(--space-s);
   }
+
   .stats-breakdown-item {
     padding: 0 0.4rem;
   }
@@ -183,7 +182,7 @@
    as the phone AppBar, wrapped by dashboard.tsx in .tablet-appbar-region
    so the bar and its drawers stack in flow atop the grid. Drawers expand
    in place, pushing content down. Button/badge values mirror section 18.2. */
-@media (min-width: 751px) and (max-width: 1750px) {
+@media (width >= 751px) and (width <= 1750px) {
   .tablet-appbar-region {
     grid-area: appbar;
     position: relative;

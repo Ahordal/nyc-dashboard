@@ -1,6 +1,6 @@
 /* filters-stats.css - grade/borough filters, the KPI stats panel, and search bar. */
 
-/*///////////////////////////////////////////// 7. DASHBOARD FILTERS //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 7. DASHBOARD FILTERS ////////////////////////////////////////////// */
 
 /* 7.1 FILTER BAR & BUTTONS */
 
@@ -169,6 +169,7 @@
   top: calc(100% + var(--space-xs));
   right: 0;
   z-index: 20;
+
   /* Sized to whatever the Grade/Borough rows actually need (each row is
      already width:auto below) plus this box's own padding -- not a
      guessed fixed width. Capped well under the map's narrowest
@@ -194,6 +195,7 @@
 .desktop-filters-popover .dashboard-grade-filters .panel,
 .desktop-filters-popover .dashboard-borough-filters .panel {
   justify-content: flex-start;
+
   /* The popover's own padding already provides the left inset; this
      section's own left padding would stack on top of it (1rem total). */
   padding-left: 0;
@@ -221,13 +223,14 @@
   flex-shrink: 0;
 }
 
-/*///////////////////////////////////////////// 8. STATS PANEL //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 8. STATS PANEL ////////////////////////////////////////////// */
 
 /* 8.1 STATS LAYOUT & COUNTERS */
 
 .map-stats {
   min-width: 0;
   min-height: 0;
+
   /* In .map-top's grid this is a fr-track item that would otherwise
      stretch to match the taller Filters/Search row, padding out the
      panel's border well past its own content. Hug its content instead
@@ -252,6 +255,7 @@
   height: 100%;
   width: 100%;
   font-family: var(--font-display);
+
   /* Positioning context for .desktop-filters-button-wrap (compact desktop
      only, via the filtersButton prop). No-op otherwise. */
   position: relative;
@@ -275,6 +279,7 @@
    right-padding on the content so the breakdown doesn't run under it. */
 .stats-panel[data-has-filters-button] {
   padding: var(--space-s) var(--space-s);
+
   /* Base .panel clips overflow; the popover extends below this panel's
      own box, so it needs to escape that clip. */
   overflow: visible;
@@ -352,6 +357,7 @@
   font-size: var(--fs-sm);
   font-weight: 700;
   text-transform: uppercase;
+
   /* Muted so the count reads first, like the grade-chart percentage line. */
   color: var(--text-muted);
 }
@@ -365,7 +371,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/*///////////////////////////////////////////// 9. SEARCH PANEL //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 9. SEARCH PANEL ////////////////////////////////////////////// */
 
 /* 9.1 SEARCH BAR & INPUT CONTROLS */
 

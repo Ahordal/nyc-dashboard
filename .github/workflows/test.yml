@@ -1,9 +1,10 @@
 name: Tests
 
-# Lint + typecheck, then the pipeline/*.test.mjs suite (node --test) and
-# the src/**/*.test.ts suite (Vitest), so a type error, eslint failure, or
-# cache/normalize/scoring/frontend regression fails the PR instead of only
-# surfacing in the Vite build or by someone running these by hand.
+# Lint (JS/TS + CSS) + typecheck, then the pipeline/*.test.mjs suite (node
+# --test) and the src/**/*.test.ts suite (Vitest), so a type error, lint
+# failure, or cache/normalize/scoring/frontend regression fails the PR
+# instead of only surfacing in the Vite build or by someone running these
+# by hand.
 #
 # Read-only: doesn't touch the `data` branch, LocationIQ, or Vercel, so no
 # secrets or write permissions are needed here.
@@ -33,6 +34,9 @@ jobs:
 
       - name: Lint
         run: npm run lint
+
+      - name: Lint CSS
+        run: npm run lint:css
 
       - name: Typecheck
         run: npx tsc --noEmit

@@ -1,12 +1,13 @@
 /* charts.css - performance chart, grade chart, dashboard guide and meta. */
 
-/*///////////////////////////////////////////// 14. PERFORMANCE CHARTS & GUIDES //////////////////////////////////////////////*/
+/* ///////////////////////////////////////////// 14. PERFORMANCE CHARTS & GUIDES ////////////////////////////////////////////// */
 
 /* 14.1 PERFORMANCE CHART UI */
 
 .performance-chart-panel {
   display: flex;
   flex-direction: column;
+
   /* Base .panel clips overflow; a tooltip near the chart's bottom edge
      (footer sits right below, in the next grid row) needs to escape
      that clip and outrank the footer, which -- like this panel until
@@ -90,7 +91,7 @@
   height: 1.7rem;
   background: var(--bg-score);
   border: 0.5px solid;
-  border-color: color-mix(in srgb, currentColor 80%, transparent);
+  border-color: color-mix(in srgb, currentcolor 80%, transparent);
   font-family: var(--font-body);
   font-weight: 700;
   font-size: var(--fs-sm);
@@ -119,6 +120,7 @@
   display: flex;
   flex-direction: column;
   gap: var(--space-xs);
+
   /* Floor so title/guide wrapping can't squeeze this to nothing; past it,
      .left-sidebar scrolls instead. */
   min-height: 160px;

@@ -13,6 +13,7 @@
   font-family: var(--font-display) !important;
   text-transform: uppercase !important;
   font-size: var(--fs-xs) !important;
+
   /* Horizontal padding 0 -- the esri child elements carry their own edge
      padding (trimmed to 0.5rem below; the 4px inner gap between them is
      untouched). */
@@ -148,7 +149,7 @@
   pointer-events: none;
   padding: var(--space-s);
   text-align: center;
-  animation: filterNoticeFade 2s ease forwards;
+  animation: filter-notice-fade 2s ease forwards;
 }
 
 .filter-notice-text {
@@ -158,7 +159,7 @@
   text-transform: uppercase;
 }
 
-@keyframes filterNoticeFade {
+@keyframes filter-notice-fade {
   0% { opacity: 0; }
   10% { opacity: 1; }
   80% { opacity: 1; }
