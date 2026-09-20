@@ -100,7 +100,7 @@
 }
 
 /* Match .section-header's own left padding so bare <p> content lines up
-   with the header text above it.*/
+   with the header text above it. */
 .info-popup-section > p {
   padding-left: 0.15rem;
 }
