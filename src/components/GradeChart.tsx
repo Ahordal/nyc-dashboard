@@ -36,8 +36,8 @@ function gradeChartInfoContent(withinRadius: boolean) {
       howToUse={
         <ul>
           <li>
-            This chart is read-only. Each category&apos;s share of the total,
-            as a percentage, appears in the panel below it.
+            This chart is read-only. Each category&apos;s share of the total
+            (%) appears in the panel below it.
           </li>
           <li>
             When a grade or status filter is active, the chart and the
