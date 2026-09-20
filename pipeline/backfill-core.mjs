@@ -19,14 +19,6 @@ const DEFAULT_DAILY_LIMIT = 4900;
 const DEFAULT_SAVE_EVERY_N = 25;
 const DEFAULT_SUSPICIOUS_THRESHOLD_METERS = 100;
 
-/**
- * Loops through a list of restaurants to geocode their locations, managing API quotas 
- * and saving progress along the way.
- * 
- * @param {Array} restaurants - List of restaurant objects to process
- * @param {Object} opts - Configuration options like API keys, paths, and limits
- * @returns {Promise<{ skippedCount, resolvedCount, requestsUsed, suspiciousShiftsLogged, cacheSize }>} Summary metrics of the run
- */
 export async function runGeocodeBackfill(restaurants, opts) {
   const {
     apiKey,

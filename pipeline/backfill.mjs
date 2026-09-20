@@ -26,17 +26,14 @@ async function main() {
     process.exit(1);
   }
 
-  // Reads and parses the static restaurant test file
   const restaurants = JSON.parse(await readFile(inputPath, 'utf-8'));
 
-  // Hands off execution to the shared core backfill loop
   const result = await runGeocodeBackfill(restaurants, {
     apiKey: API_KEY,
     cachePath: CACHE_PATH,
     logPath: SUSPICIOUS_SHIFT_LOG_PATH,
   });
 
-  // Prints out the final performance and metrics summary of the test run
   console.log(
     `\nDone. Skipped (already cached): ${result.skippedCount} | Newly resolved: ${result.resolvedCount} | ` +
       `Requests used: ${result.requestsUsed} | Suspicious shifts logged: ${result.suspiciousShiftsLogged}`

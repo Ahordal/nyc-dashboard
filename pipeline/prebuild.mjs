@@ -21,16 +21,8 @@ const FILES = ['geocode-cache.json', 'counts-snapshot.json'];
 
 const PIPELINE_DIR = fileURLToPath(new URL('.', import.meta.url));
 
-/**
- * Downloads one file from the `data` branch to <destDir>/<name>. On any
- * failure, removes a stale local copy and logs a warning; never throws.
- *
- * @param {string} name - File name, relative to pipeline/ on both ends
- * @param {object} [opts]
- * @param {string} [opts.destDir] - Where to write (defaults to pipeline/)
- * @param {typeof fetch} [opts.fetchImpl] - Injectable for tests
- * @returns {Promise<boolean>} true if the file was written
- */
+// Downloads one file from the `data` branch to <destDir>/<name>; never
+// throws (see header). fetchImpl is injectable for tests.
 export async function seedFile(name, { destDir = PIPELINE_DIR, fetchImpl = fetch } = {}) {
   const dest = join(destDir, name);
   try {

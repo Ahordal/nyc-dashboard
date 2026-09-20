@@ -33,14 +33,7 @@ export async function loadCache(filePath) {
 
 // Saving (atomic)
 
-/**
- * Saves the cache safely by writing it to a temporary file first, then instantly 
- * renaming it over the real file. This prevents a half-written file if the script 
- * crashes midway.
- * 
- * @param {string} filePath - Destination path for the cache
- * @param {Object} cache - The current cache object to save
- */
+// Write-then-rename so a crash mid-save can't leave a half-written cache.
 export async function saveCacheAtomic(filePath, cache) {
   await mkdir(dirname(filePath), { recursive: true });
   const tempPath = `${filePath}.tmp-${process.pid}-${Date.now()}`;
@@ -50,13 +43,7 @@ export async function saveCacheAtomic(filePath, cache) {
 
 // Cache entry construction
 
-/**
- * Creates a standardized cache record from a restaurant's geocoding result, 
- * keeping the original official data untouched.
- * 
- * @param {Object} params - Entry details (camis, dohmh, addressHash, resolution)
- * @returns {Object} A structured cache record
- */
+// Normalizes a resolution result into the cache's stored shape.
 export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
   return {
     camis,
@@ -81,20 +68,13 @@ export function buildCacheEntry({ camis, dohmh, addressHash, resolution }) {
 
 // Invalidation logic
 
-/**
- * True if this restaurant needs a fresh geocode: new, pending, address
- * changed, resolver version bumped, or a verified entry now falls outside
- * NYC bounds (catches a future scoring regression automatically).
- *
- * One `||` expression, not early returns, so order can't matter -
- * reset-out-of-bounds-cache-entries.mjs relies on flipping just one field
- * to force a re-geocode.
- *
- * @param {Object} cache - The current cache dictionary
- * @param {string} camis - The restaurant's ID
- * @param {string} currentAddressHash - The newly computed address hash
- * @returns {boolean} True if a fresh geocode lookup is needed
- */
+// True if this restaurant needs a fresh geocode: new, pending, address
+// changed, resolver version bumped, or a verified entry now falls outside
+// NYC bounds (catches a future scoring regression automatically).
+//
+// One `||` expression, not early returns, so order can't matter -
+// reset-out-of-bounds-cache-entries.mjs relies on flipping just one field
+// to force a re-geocode.
 export function needsResolution(cache, camis, currentAddressHash) {
   const entry = cache[camis];
   if (!entry) return true;
@@ -107,26 +87,13 @@ export function needsResolution(cache, camis, currentAddressHash) {
   );
 }
 
-/**
- * Adds or updates a single restaurant entry, returning a brand new cache object 
- * instead of modifying the old one directly.
- * 
- * @param {Object} cache - Existing cache object
- * @param {Object} entry - The cache entry to insert or update
- * @returns {Object} A new updated cache object
- */
+// Returns a new cache object; does not mutate the original.
 export function upsertCacheEntry(cache, entry) {
   return { ...cache, [entry.camis]: entry };
 }
 
 // Merging (reconciling concurrent/overlapping runs)
 
-/**
- * Helper function to check if a cache entry is finished and final (not pending).
- * 
- * @param {Object} entry - Cache entry to check
- * @returns {boolean} True if the status is final
- */
 function isFinal(entry) {
   return entry != null && entry.status !== 'pending';
 }
@@ -138,15 +105,8 @@ function resolvedTime(entry) {
   return Number.isFinite(parsed) ? parsed : 0;
 }
 
-/**
- * Combines two cache objects together entry-by-entry. Finished results always beat 
- * pending ones, and newer timestamps win if both are finished, ensuring no good 
- * geocoding work is accidentally lost.
- * 
- * @param {Object} local - Local cache dataset
- * @param {Object} remote - Remote cache dataset
- * @returns {Object} The merged cache dictionary
- */
+// Reconciles two runs entry-by-entry: a finished result always beats a
+// pending one, and the newer resolvedAt wins between two finished results.
 export function mergeCaches(local, remote) {
   const merged = { ...remote };
 
@@ -175,14 +135,7 @@ export function mergeCaches(local, remote) {
   return merged;
 }
 
-/**
- * Combines two suspicious coordinate shift logs into one, removing duplicates 
- * by CAMIS ID and letting local entries take priority.
- * 
- * @param {Array} local - Local shift logs
- * @param {Array} remote - Remote shift logs
- * @returns {Array} Cleaned, combined array of shift logs
- */
+// De-dupes by camis; local entries win over remote.
 export function mergeSuspiciousShifts(local, remote) {
   const byCamis = new Map();
   for (const entry of remote) byCamis.set(entry.camis, entry);
