@@ -654,7 +654,7 @@ export default function InspectionMapView({
         if (geometry && !cancelled) {
           view
             .goTo(
-              { target: geometry, zoom: Math.max(view.zoom, 14) },
+              { target: geometry, zoom: Math.max(view.zoom, 15) },
               { duration: 500, easing: "ease-in-out" },
             )
             .catch(() => {
