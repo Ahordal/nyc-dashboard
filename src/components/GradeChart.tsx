@@ -36,12 +36,13 @@ function gradeChartInfoContent(withinRadius: boolean) {
       howToUse={
         <ul>
           <li>
-            This chart is read-only. Each category&apos;s share of the total
-            appears in the panel below it.
+            This chart is read-only. Each category&apos;s share of the total,
+            as a percentage, appears in the panel below it.
           </li>
           <li>
-            When a grade or status filter is active, the chart and the shares
-            are both limited to the selected categories.
+            When a grade or status filter is active, the chart and the
+            percentages are both limited to the selected categories; an
+            active search further narrows which restaurants are counted.
           </li>
         </ul>
       }
