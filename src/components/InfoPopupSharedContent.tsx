@@ -274,8 +274,10 @@ export function DataNotes() {
       </li>
 
       <li>
-        Inspections that didn&apos;t get a numeric score aren&apos;t included
-        in score-based charts and summaries.
+        Restaurant addresses are matched to a map location automatically
+        (geocoding). When that match couldn&apos;t be confirmed, the
+        restaurant is flagged on the map as &quot;Location Unverified&quot;
+        instead of assumed correct.
       </li>
 
       <li>
@@ -285,16 +287,8 @@ export function DataNotes() {
       </li>
 
       <li>
-        Restaurant addresses are matched to a map location automatically
-        (geocoding). When that match couldn&apos;t be confirmed, the
-        restaurant is flagged on the map as &quot;Location Unverified&quot;
-        instead of assumed correct.
-      </li>
-
-      <li>
-        Addresses are cleaned up for display (for example, turning
-        &quot;1ST&quot; into &quot;1st&quot;) and may differ slightly from
-        official listings.
+        Inspections that didn&apos;t get a numeric score aren&apos;t included
+        in score-based charts and summaries.
       </li>
 
       <li>
@@ -304,6 +298,12 @@ export function DataNotes() {
         last update. A drop isn&apos;t a dashboard error &mdash; it reflects
         DOHMH&apos;s own current published count, which can go up or down as
         records are added, corrected, or removed.
+      </li>
+
+      <li>
+        Addresses are cleaned up for display (for example, turning
+        &quot;1ST&quot; into &quot;1st&quot;) and may differ slightly from
+        official listings.
       </li>
     </ul>
   );
