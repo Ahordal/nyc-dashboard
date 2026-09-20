@@ -62,6 +62,15 @@ esriConfig.apiKey = import.meta.env.PUBLIC_ARCGIS_API_KEY;
 const DEFAULT_CENTER: [number, number] = [-73.98, 40.7];
 const DEFAULT_ZOOM = 9.75;
 
+// Torn-down views/layers reject in-flight requests as "cancelled" —
+// expected noise on unmount/re-render, not a real failure worth logging.
+function isAbortError(err: unknown): boolean {
+  return (
+    err instanceof Error &&
+    (err.name === "AbortError" || err.name.startsWith("cancelled"))
+  );
+}
+
 type MapViewProps = {
   filters: Filters;
   searchQuery?: string;
@@ -370,6 +379,7 @@ export default function InspectionMapView({
 
       onVisibleRestaurantsChange?.(filteredRestaurants);
     } catch (err) {
+      if (isAbortError(err)) return;
       console.error("MapView: failed to query visible restaurants", err);
     }
   }
@@ -662,6 +672,7 @@ export default function InspectionMapView({
             });
         }
       } catch (err) {
+        if (isAbortError(err)) return;
         console.error("MapView: failed to query feature for pan/zoom", err);
       }
     };
@@ -694,6 +705,7 @@ export default function InspectionMapView({
             : null;
         })
         .catch((err) => {
+          if (isAbortError(err)) return;
           console.error(
             "MapView: failed to apply grade filter to layer view",
             err,
@@ -740,6 +752,7 @@ export default function InspectionMapView({
           stillMatches = checkResult.stillMatches;
           objectId = checkResult.objectId;
         } catch (err) {
+          if (isAbortError(err)) return;
           console.error(
             "MapView: failed to verify selection against new filters",
             err,
