@@ -43,18 +43,15 @@ import type { ExplorerTab } from "../utils/explorerTabs";
 import { useBottomSheet } from "../hooks/useBottomSheet";
 
 import type { Filters, SetFilters } from "../types/filters";
-import type {
-  RestaurantProperties,
-  ViolationCodeLookup,
-  InspectionEvent,
-} from "../types/restaurant";
+import type { RestaurantProperties, ViolationCodeLookup } from "../types/restaurant";
 import type { DashboardMeta } from "../types/dashboardMeta";
 import type { GradeCounts } from "../types/gradeCounts";
 import type {
-  SearchRadiusPoint,
-  SearchRadiusMiles,
-} from "../types/searchRadius";
-import type { InitialRadiusState } from "../hooks/useUrlSync";
+  SelectionState,
+  SelectionHandlers,
+  RadiusState,
+  RadiusHandlers,
+} from "../types/dashboardState";
 
 const MapView = lazy(() => import("./MapView"));
 const PerformanceChart = lazy(() => import("./PerformanceChart"));
@@ -66,20 +63,8 @@ type MobileDashboardProps = {
   searchQuery: string;
   onSearchChange: (query: string) => void;
 
-  selectedRestaurant: RestaurantProperties | null;
-  reportInspectionId: string | null;
-  hoveredInspectionId: string | null;
-  hoveredRestaurantId: string | null;
-  activeExplorerTab: ExplorerTab;
-
-  onSelectRestaurant: (restaurant: RestaurantProperties | null) => void;
-  onSelectInspection: (inspectionId: string) => void;
-  // Highlights the matching history row without leaving Details — used by
-  // the pinned chart's dot taps.
-  onPreviewInspection: (inspectionId: string) => void;
-  onHoverInspection: (inspectionId: string | null) => void;
-  onHoverRestaurant: (restaurant: RestaurantProperties | null) => void;
-  onExplorerTabChange: (tab: ExplorerTab) => void;
+  selection: SelectionState;
+  selectionHandlers: SelectionHandlers;
 
   visibleRestaurants: RestaurantProperties[];
   onVisibleRestaurantsChange: (restaurants: RestaurantProperties[]) => void;
@@ -87,25 +72,12 @@ type MobileDashboardProps = {
   gradeCounts: GradeCounts;
   onGradeCountsChange: (counts: GradeCounts) => void;
 
-  searchRadiusPoint: SearchRadiusPoint | null;
-  activeRadiusMiles: SearchRadiusMiles;
-  onSearchRadiusChange: (
-    point: SearchRadiusPoint | null,
-    radiusMiles: SearchRadiusMiles,
-  ) => void;
-  // Locate dot position (in-NYC only). Feeds per-card distance, separate
-  // from the Search Radius point.
-  userLocationPoint: SearchRadiusPoint | null;
-  onUserLocationChange: (
-    point: { latitude: number; longitude: number } | null,
-  ) => void;
-  initialSearchRadius: InitialRadiusState | null;
+  radius: RadiusState;
+  radiusHandlers: RadiusHandlers;
 
   pendingCamisFromUrl: string | null;
   onInitialSelectionResolved: () => void;
 
-  history: InspectionEvent[];
-  isLoadingHistory: boolean;
   violationCodes: ViolationCodeLookup;
   dashboardMeta: DashboardMeta | null;
 };
@@ -115,34 +87,43 @@ export default function MobileDashboard({
   setFilters,
   searchQuery,
   onSearchChange,
-  selectedRestaurant,
-  reportInspectionId,
-  hoveredInspectionId,
-  hoveredRestaurantId,
-  activeExplorerTab,
-  onSelectRestaurant,
-  onSelectInspection,
-  onPreviewInspection,
-  onHoverInspection,
-  onHoverRestaurant,
-  onExplorerTabChange,
+  selection,
+  selectionHandlers,
   visibleRestaurants,
   onVisibleRestaurantsChange,
   gradeCounts,
   onGradeCountsChange,
-  searchRadiusPoint,
-  activeRadiusMiles,
-  onSearchRadiusChange,
-  userLocationPoint,
-  onUserLocationChange,
-  initialSearchRadius,
+  radius,
+  radiusHandlers,
   pendingCamisFromUrl,
   onInitialSelectionResolved,
-  history,
-  isLoadingHistory,
   violationCodes,
   dashboardMeta,
 }: MobileDashboardProps) {
+  const {
+    restaurant: selectedRestaurant,
+    reportInspectionId,
+    hoveredInspectionId,
+    hoveredRestaurantId,
+    activeTab: activeExplorerTab,
+    history,
+    isLoadingHistory,
+  } = selection;
+  const {
+    onSelectRestaurant,
+    onSelectInspection,
+    onPreviewInspection,
+    onHoverInspection,
+    onHoverRestaurant,
+    onExplorerTabChange,
+  } = selectionHandlers;
+  const {
+    searchRadiusPoint,
+    activeRadiusMiles,
+    userLocationPoint,
+    initialSearchRadius,
+  } = radius;
+  const { onSearchRadiusChange, onUserLocationChange } = radiusHandlers;
   const { detent, setDetent, open } = useBottomSheet("peek");
 
   // One open top drawer — app-bar Search/Filters/Info and the area-strip

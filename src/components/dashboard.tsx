@@ -66,6 +66,12 @@ import type {
 
 import type { DashboardMeta } from "../types/dashboardMeta";
 import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
+import type {
+  SelectionState,
+  SelectionHandlers,
+  RadiusState,
+  RadiusHandlers,
+} from "../types/dashboardState";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
 import { resolveReportInspectionId } from "../utils/reportInspection";
@@ -323,37 +329,53 @@ export default function Dashboard() {
   );
 
   if (isPhone) {
+    const mobileSelection: SelectionState = {
+      restaurant: selectedRestaurant,
+      reportInspectionId,
+      hoveredInspectionId,
+      hoveredRestaurantId,
+      activeTab: activeExplorerTab,
+      history,
+      isLoadingHistory,
+    };
+
+    const mobileSelectionHandlers: SelectionHandlers = {
+      onSelectRestaurant: handleSelectRestaurant,
+      onSelectInspection: handleSelectInspection,
+      onPreviewInspection: handlePreviewInspection,
+      onHoverInspection: handleHoverInspection,
+      onHoverRestaurant: handleHoverRestaurant,
+      onExplorerTabChange: handleExplorerTabChange,
+    };
+
+    const mobileRadius: RadiusState = {
+      searchRadiusPoint,
+      activeRadiusMiles,
+      userLocationPoint,
+      initialSearchRadius,
+    };
+
+    const mobileRadiusHandlers: RadiusHandlers = {
+      onSearchRadiusChange: handleSearchRadiusChange,
+      onUserLocationChange: setUserLocationPoint,
+    };
+
     return (
       <MobileDashboard
         filters={filters}
         setFilters={setFilters}
         searchQuery={searchQuery}
         onSearchChange={setSearchQuery}
-        selectedRestaurant={selectedRestaurant}
-        reportInspectionId={reportInspectionId}
-        hoveredInspectionId={hoveredInspectionId}
-        hoveredRestaurantId={hoveredRestaurantId}
-        activeExplorerTab={activeExplorerTab}
-        onSelectRestaurant={handleSelectRestaurant}
-        onSelectInspection={handleSelectInspection}
-        onPreviewInspection={handlePreviewInspection}
-        onHoverInspection={handleHoverInspection}
-        onHoverRestaurant={handleHoverRestaurant}
-        onExplorerTabChange={handleExplorerTabChange}
+        selection={mobileSelection}
+        selectionHandlers={mobileSelectionHandlers}
         visibleRestaurants={visibleRestaurants}
         onVisibleRestaurantsChange={setVisibleRestaurants}
         gradeCounts={gradeCounts}
         onGradeCountsChange={setGradeCounts}
-        searchRadiusPoint={searchRadiusPoint}
-        activeRadiusMiles={activeRadiusMiles}
-        onSearchRadiusChange={handleSearchRadiusChange}
-        userLocationPoint={userLocationPoint}
-        onUserLocationChange={setUserLocationPoint}
-        initialSearchRadius={initialSearchRadius}
+        radius={mobileRadius}
+        radiusHandlers={mobileRadiusHandlers}
         pendingCamisFromUrl={pendingCamisFromUrl}
         onInitialSelectionResolved={handleInitialSelectionResolved}
-        history={history}
-        isLoadingHistory={isLoadingHistory}
         violationCodes={violationCodes}
         dashboardMeta={dashboardMeta}
       />
