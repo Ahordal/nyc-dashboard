@@ -362,9 +362,12 @@
     text-overflow: ellipsis;
   }
 
-  /* Space between the dataset meta and the folded-in map legend/how-to. */
+  /* Space between the dataset meta and the folded-in map legend/how-to.
+     Font-size bumped a touch above --fs-md: 14px reads small at phone
+     viewing distance even though it matches desktop's CSS pixel size. */
   .mobile-info-drawer-panel .info-popup-content {
     margin-top: var(--space-s);
+    font-size: 0.925rem;
   }
 
   .mobile-info-drawer-footer-panel .dashboard-footer {
