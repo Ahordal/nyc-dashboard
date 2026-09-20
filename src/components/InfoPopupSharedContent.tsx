@@ -298,18 +298,12 @@ export function DataNotes() {
       </li>
 
       <li>
-        The{" "}
-        <span className="dashboard-guide-meta-delta dashboard-guide-meta-delta-positive">
-          +12
-        </span>{" "}
-        or{" "}
-        <span className="dashboard-guide-meta-delta dashboard-guide-meta-delta-negative">
-          −12
-        </span>{" "}
+        The <span className="dashboard-guide-meta-delta-positive">+12</span>{" "}
+        or <span className="dashboard-guide-meta-delta-negative">−12</span>{" "}
         next to the restaurant/inspection counts shows the change since the
-        last update. A drop isn&apos;t a dashboard error &mdash; DOHMH&apos;s
-        own published dataset can shrink as well as grow (for example, when
-        older records are corrected or removed).
+        last update. A drop isn&apos;t a dashboard error &mdash; it reflects
+        DOHMH&apos;s own current published count, which can go up or down as
+        records are added, corrected, or removed.
       </li>
     </ul>
   );
