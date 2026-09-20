@@ -382,3 +382,13 @@
   color: var(--status-delta-negative);
 }
 
+.dashboard-guide-mark {
+  padding: 1rem 1rem 0.5rem;
+  text-align: center;
+  font-family: var(--font-display);
+  font-size: 3rem;
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  color: var(--text-heading);
+}
+

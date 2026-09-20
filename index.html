@@ -11,7 +11,7 @@
     <title>NYC Restaurant Inspection Grades &amp; Trends</title>
     <meta
       name="description"
-      content="Explore health inspection grades, scores, and violation history for roughly 27,000 NYC restaurants across all five boroughs, mapped from NYC Open Data."
+      content="Explore health inspection grades, scores, and violation history for roughly %RESTAURANT_COUNT% NYC restaurants across all five boroughs, mapped from NYC Open Data."
     />
     <link rel="canonical" href="https://nyc.alexhordal.ca/" />
     <meta name="theme-color" content="#212121" />
@@ -22,7 +22,7 @@
     <meta property="og:title" content="NYC Restaurant Inspection Grades &amp; Trends" />
     <meta
       property="og:description"
-      content="Explore health inspection grades, scores, and violation history for roughly 27,000 NYC restaurants across all five boroughs, mapped from NYC Open Data."
+      content="Explore health inspection grades, scores, and violation history for roughly %RESTAURANT_COUNT% NYC restaurants across all five boroughs, mapped from NYC Open Data."
     />
     <meta property="og:url" content="https://nyc.alexhordal.ca/" />
     <meta property="og:image" content="https://nyc.alexhordal.ca/og-image.png" />
@@ -34,9 +34,55 @@
     <meta name="twitter:title" content="NYC Restaurant Inspection Grades &amp; Trends" />
     <meta
       name="twitter:description"
-      content="Health inspection grades, scores, and violation history for roughly 27,000 NYC restaurants, mapped from NYC Open Data."
+      content="Health inspection grades, scores, and violation history for roughly %RESTAURANT_COUNT% NYC restaurants, mapped from NYC Open Data."
     />
     <meta name="twitter:image" content="https://nyc.alexhordal.ca/og-image.png" />
+
+    <!-- Structured data: helps search engines surface this as an app
+         and (via Dataset) makes it discoverable through dataset search,
+         separate from the underlying NYC Open Data source. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "NYC Restaurant Inspection Grades & Trends",
+        "url": "https://nyc.alexhordal.ca/",
+        "description": "Explore health inspection grades, scores, and violation history for roughly %RESTAURANT_COUNT% NYC restaurants across all five boroughs, mapped from NYC Open Data.",
+        "applicationCategory": "DataVisualizationApplication",
+        "operatingSystem": "Any",
+        "browserRequirements": "Requires JavaScript",
+        "isAccessibleForFree": true,
+        "author": {
+          "@type": "Person",
+          "name": "Alex Hordal",
+          "url": "https://alexhordal.ca"
+        }
+      }
+    </script>
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Dataset",
+        "name": "NYC Restaurant Inspection Results (mapped)",
+        "description": "Health inspection grades, scores, and violation history for roughly %RESTAURANT_COUNT% NYC restaurants, geocoded and mapped from the DOHMH New York City Restaurant Inspection Results dataset.",
+        "url": "https://nyc.alexhordal.ca/",
+        "license": "https://opendata.cityofnewyork.us/overview/#termsofuse",
+        "creator": {
+          "@type": "Person",
+          "name": "Alex Hordal",
+          "url": "https://alexhordal.ca"
+        },
+        "spatialCoverage": {
+          "@type": "Place",
+          "name": "New York City, NY"
+        },
+        "isBasedOn": {
+          "@type": "Dataset",
+          "name": "DOHMH New York City Restaurant Inspection Results",
+          "url": "https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data"
+        }
+      }
+    </script>
 
     <!-- Self-hosted from /fonts/ (styles/base.css) — no third-party
          request, no render-blocking stylesheet. Only above-the-fold faces
@@ -71,7 +117,25 @@
     />
   </head>
   <body>
-    <div id="root"></div>
+    <!-- Replaced by the React app on mount; kept as real markup (not
+         noscript) so crawlers see content before JS runs. Visually
+         hidden inline (not via the stylesheet) so it never flashes
+         unstyled before the app's own CSS/JS take over. -->
+    <div id="root">
+      <div style="position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0">
+        <h1>NYC Restaurant Inspection Grades &amp; Trends</h1>
+        <p>
+          Explore health inspection grades, scores, and violation history for
+          roughly %RESTAURANT_COUNT% NYC restaurants across all five boroughs, mapped from
+          <a href="https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j"
+            >NYC Open Data</a
+          >.
+        </p>
+      </div>
+    </div>
+    <noscript>
+      <p>This dashboard requires JavaScript to render the interactive map and charts.</p>
+    </noscript>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

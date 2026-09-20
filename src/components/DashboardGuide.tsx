@@ -20,6 +20,8 @@ import {
   NYCHealthResources,
 } from "./InfoPopupSharedContent";
 
+import { CATEGORY_COLORS } from "../utils/gradeCategory";
+
 import type { DashboardMeta } from "../types/dashboardMeta";
 
 type DashboardGuideProps = {
@@ -80,6 +82,10 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
           dataNotes={<DataNotes />}
           resources={<NYCHealthResources />}
         />
+
+        <h3 className="dashboard-guide-mark">
+          I <span style={{ color: CATEGORY_COLORS.closed }}>♥</span> NY
+        </h3>
       </PanelInfoModal>
     </section>
   );

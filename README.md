@@ -2,7 +2,7 @@
 
 ![NYC restaurant inspection dashboard — map of restaurants coloured by grade, with filter bar, restaurant list, and grade-breakdown donut.](docs/dashboard.png)
 
-An interactive map for exploring New York City health-department restaurant inspection data. Built with Vite, React, TypeScript, the ArcGIS Maps SDK, and Recharts.
+An interactive map for exploring health-department inspection data for roughly 30,600 NYC restaurants. Built with Vite, React, TypeScript, the ArcGIS Maps SDK, and Recharts.
 
 **Live site:** [nyc.alexhordal.ca](https://nyc.alexhordal.ca)
 
@@ -117,7 +117,7 @@ Two separate suites, both run in CI on every push and pull request to `main`, al
 - **Node.js** — the build and geocoding scripts
 - **GitHub Actions** — the daily geocoding run and cache commits
 - **Vercel** — hosting and automatic deploys
-- **Data:** [NYC DOHMH Restaurant Inspection Results](https://opendata.cityofnewyork.us/) via the Socrata API, with addresses verified against [LocationIQ](https://locationiq.com/)
+- **Data:** [DOHMH New York City Restaurant Inspection Results](https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j/about_data) via the Socrata API, with addresses verified against [LocationIQ](https://locationiq.com/)
 
 ## Getting started
 
