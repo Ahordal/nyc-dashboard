@@ -129,6 +129,8 @@
   max-height: calc(100vh - 64px);
   overflow-y: auto;
   background: var(--bg-panel);
+  border: 1px solid var(--border-panel);
+  box-shadow: 0 4px 12px var(--shadow-overlay);
   font-family: var(--font-body);
   box-sizing: border-box;
   font-size: var(--fs-md);
