@@ -169,8 +169,7 @@
 
 /* Panel-header bar reused as a modal heading. */
 .info-modal-panel-header {
-  margin-bottom: 1.5rem;
-  border-radius: 4px;
+  margin-bottom: 0.5rem;
 }
 
 /* ///////////////////////////////////////////// 6. DASHBOARD TITLE ////////////////////////////////////////////// */
