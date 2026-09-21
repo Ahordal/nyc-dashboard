@@ -5,7 +5,7 @@
 An interactive map for exploring health-department inspection data for roughly 30,600 NYC restaurants. Built with Vite, React, TypeScript, the ArcGIS Maps SDK, and Recharts.
 
 **Live site:** [nyc.alexhordal.ca](https://nyc.alexhordal.ca)
-**Portfolio writeup:** [alexhordal.ca/portfolio/nyc-restaurants](https://www.alexhordal.ca/portfolio/nyc-restaurants)
+**Project writeup:** [alexhordal.ca/portfolio/nyc-restaurants](https://www.alexhordal.ca/portfolio/nyc-restaurants)
 
 ## What it does
 
