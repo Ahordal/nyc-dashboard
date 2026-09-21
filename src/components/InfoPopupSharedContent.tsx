@@ -321,6 +321,10 @@ export function DataNotes() {
         &quot;1ST&quot; into &quot;1st&quot;) and may differ slightly from
         official listings.
       </li>
+
+      <li>
+        This site uses Google Analytics to understand traffic.
+      </li>
     </ul>
   );
 }
