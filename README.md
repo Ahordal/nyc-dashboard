@@ -1,4 +1,4 @@
-# NYC Restaurant Inspection Dashboard
+# NYC Dining Under the Microscope - Mapping Restaurant Health Inspections
 
 ![NYC restaurant inspection dashboard — map of restaurants coloured by grade, with filter bar, restaurant list, and grade-breakdown donut.](docs/dashboard.png)
 
