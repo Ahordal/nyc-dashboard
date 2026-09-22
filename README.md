@@ -7,6 +7,10 @@ An interactive map for exploring health-department inspection data for roughly 3
 **Live site:** [nyc.alexhordal.ca](https://nyc.alexhordal.ca)
 **Project writeup:** [alexhordal.ca/portfolio/nyc-restaurants](https://www.alexhordal.ca/portfolio/nyc-restaurants)
 
+## AI-Assisted Development
+
+This project was developed through a combination of traditional development and iterative AI-assisted workflows, using [Claude Code](https://claude.com/claude-code) for the data pipeline, frontend, and most of this documentation. Commits made with its help carry a `Co-Authored-By: Claude` trailer, so the history shows exactly where.
+
 ## What it does
 
 Every inspected NYC restaurant shows up as a dot on the map, coloured by its health grade. As you pan and zoom, the side list, the stats panel, and the grade-breakdown chart all update to match what's on screen. Click a restaurant to see its full inspection history, past violations, and score over time.
