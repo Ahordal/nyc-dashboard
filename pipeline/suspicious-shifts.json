@@ -7715,5 +7715,39 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50192651",
+    "dba": "STEINWAY COFFEE N JUICE CORP",
+    "address": "28-54 STEINWAY STREET, Queens 11103",
+    "dohmhLat": 40.765186550502,
+    "dohmhLon": -73.913948358856,
+    "resolvedLat": 40.764313,
+    "resolvedLon": -73.914831,
+    "distanceMeters": 122.31420068928574,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.77685799310714,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "50192658",
+    "dba": "RICHMOND CHICKEN BG LLC",
+    "address": "2557 RICHMOND AVENUE, Staten Island 10314",
+    "dohmhLat": 40.584274104949,
+    "dohmhLon": -74.168758799658,
+    "resolvedLat": 40.585451,
+    "resolvedLon": -74.168216,
+    "distanceMeters": 138.66020005267006,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.6133979994733,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
