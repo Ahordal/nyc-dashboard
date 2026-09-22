@@ -16,6 +16,7 @@ type InfoPopupContentProps = {
   dataNotes?: ReactNode;
   legend?: ReactNode;
   resources?: ReactNode;
+  privacyPolicy?: ReactNode;
 };
 
 type InfoPopupSectionProps = {
@@ -49,6 +50,7 @@ export default function InfoPopupContent({
   dataNotes,
   legend,
   resources,
+  privacyPolicy,
 }: InfoPopupContentProps) {
   return (
     <div className="info-popup-content">
@@ -109,6 +111,12 @@ export default function InfoPopupContent({
       {resources && (
         <InfoPopupSection title="NYC Health Resources">
           {resources}
+        </InfoPopupSection>
+      )}
+
+      {privacyPolicy && (
+        <InfoPopupSection title="Privacy Policy">
+          {privacyPolicy}
         </InfoPopupSection>
       )}
     </div>

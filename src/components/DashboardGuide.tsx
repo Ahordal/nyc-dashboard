@@ -18,6 +18,7 @@ import {
   DataNotes,
   GradeRangeInfo,
   NYCHealthResources,
+  PrivacyPolicyInfo,
 } from "./InfoPopupSharedContent";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
@@ -81,6 +82,7 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
           dataAttribution={<DataAttribution />}
           dataNotes={<DataNotes />}
           resources={<NYCHealthResources />}
+          privacyPolicy={<PrivacyPolicyInfo />}
         />
 
         <h3 className="dashboard-guide-mark">

@@ -57,6 +57,10 @@
   letter-spacing: 0.05em;
 }
 
+.panel-header-title-icon {
+  margin-right: 0.5rem;
+}
+
 /* Keeps the "mi" unit lowercase inside uppercased text. */
 .unit-mi {
   text-transform: none;
@@ -187,6 +191,11 @@
 /* Panel-header bar reused as a modal heading. */
 .info-modal-panel-header {
   margin-bottom: 1.5rem;
+}
+
+/* Matches the gap between .section-header and its body elsewhere. */
+.ai-assisted-modal-header {
+  margin-bottom: 0.4rem;
 }
 
 /* ///////////////////////////////////////////// 6. DASHBOARD TITLE ////////////////////////////////////////////// */

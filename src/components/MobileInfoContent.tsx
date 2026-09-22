@@ -14,6 +14,7 @@ import {
   GradeRangeInfo,
   LegendTable,
   NYCHealthResources,
+  PrivacyPolicyInfo,
 } from "./InfoPopupSharedContent";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
@@ -64,6 +65,7 @@ const MOBILE_INFO_CONTENT = (
       dataAttribution={<DataAttribution />}
       dataNotes={<DataNotes />}
       resources={<NYCHealthResources />}
+      privacyPolicy={<PrivacyPolicyInfo />}
     />
 
     <h3 className="dashboard-guide-mark">

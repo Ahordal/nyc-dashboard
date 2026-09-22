@@ -183,18 +183,19 @@
   color: var(--link-hover);
 }
 
-.footer-link-button {
+.footer-icon-button {
   font: inherit;
-  text-transform: inherit;
   color: var(--text-muted);
   background: none;
   border: none;
   padding: 0;
   cursor: pointer;
+  display: inline-flex;
+  align-items: center;
   transition: color 0.15s ease;
 }
 
-.footer-link-button:hover {
+.footer-icon-button:hover {
   color: var(--link-hover);
 }
 

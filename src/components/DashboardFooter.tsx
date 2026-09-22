@@ -9,13 +9,12 @@ import {
   faLinkedin,
   faGithub,
 } from "@fortawesome/free-brands-svg-icons";
-import { faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faBrain, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import PanelInfoModal from "./PanelInfoModal";
-import PrivacyPolicyContent from "./PrivacyPolicyContent";
 
 export default function DashboardFooter() {
-  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  const [showAiModal, setShowAiModal] = useState(false);
 
   return (
     <footer className="dashboard-footer-bar">
@@ -43,16 +42,6 @@ export default function DashboardFooter() {
 
         <span className="footer-divider">|</span>
 
-        <button
-          type="button"
-          className="footer-link-button"
-          onClick={() => setShowPrivacyModal(true)}
-        >
-          Privacy Policy
-        </button>
-
-        <span className="footer-divider">|</span>
-
         <a
           href="https://www.linkedin.com/in/alex-hordal/"
           target="_blank"
@@ -61,6 +50,8 @@ export default function DashboardFooter() {
           <FontAwesomeIcon icon={faLinkedin} aria-hidden="true" />
         </a>
 
+        <span className="footer-divider">|</span>
+
         <a
           href="https://github.com/Ahordal/nyc-dashboard"
           target="_blank"
@@ -68,29 +59,52 @@ export default function DashboardFooter() {
           aria-label="GitHub repository">
           <FontAwesomeIcon icon={faGithub} aria-hidden="true" />
         </a>
+
+        <span className="footer-divider">|</span>
+
+        <button
+          type="button"
+          className="footer-icon-button"
+          onClick={() => setShowAiModal(true)}
+          aria-label="About AI-Assisted Development"
+        >
+          <FontAwesomeIcon icon={faBrain} aria-hidden="true" />
+        </button>
       </div>
 
       <div className="footer-copyright">&copy; Alex Hordal 2026</div>
 
       <PanelInfoModal
-        isOpen={showPrivacyModal}
-        onClose={() => setShowPrivacyModal(false)}
-        ariaLabel="Privacy Policy"
+        isOpen={showAiModal}
+        onClose={() => setShowAiModal(false)}
+        ariaLabel="AI-Assisted Development"
       >
-        <div className="panel-header info-modal-panel-header">
-          <h2 className="panel-header-title">Privacy Policy</h2>
+        <div className="panel-header info-modal-panel-header ai-assisted-modal-header">
+          <h2 className="panel-header-title">
+            <FontAwesomeIcon
+              icon={faBrain}
+              className="panel-header-title-icon"
+              aria-hidden="true"
+            />
+            AI-Assisted Development
+          </h2>
 
           <button
             type="button"
             className="panel-header-info-button"
-            onClick={() => setShowPrivacyModal(false)}
+            onClick={() => setShowAiModal(false)}
             aria-label="Close"
           >
             <FontAwesomeIcon icon={faXmark} />
           </button>
         </div>
 
-        <PrivacyPolicyContent />
+        <div className="info-popup-content">
+          <p>
+            This dashboard was developed through a combination of
+            traditional development and iterative AI-assisted workflows.
+          </p>
+        </div>
       </PanelInfoModal>
     </footer>
   );
