@@ -93,7 +93,7 @@ const performanceChartInfoContent = (isMobile: boolean) => (
           <li>
             Shows the selected restaurant&apos;s scored inspections over time.
           </li>
-          <li>Lower scores generally indicate fewer food-safety violations.</li>
+          <li>Lower scores are better — fewer or less severe violations.</li>
           <li>Each point represents one inspection report.</li>
         </ul>
         <p>

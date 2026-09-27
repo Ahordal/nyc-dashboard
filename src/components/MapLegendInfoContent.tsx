@@ -1,9 +1,8 @@
 // MapLegendInfoContent.tsx
 //
 // Contents of the map panel's info popup (overview, how-to-use, the
-// grade/score legend table, data notes). Lifted out of MapView.tsx as a
-// plain constant of static JSX. The legend table is shared
-// (InfoPopupSharedContent).
+// grade/score legend table). Lifted out of MapView.tsx as a plain constant
+// of static JSX. The legend table is shared (InfoPopupSharedContent).
 
 import InfoPopupContent from "./InfoPopupContent";
 import { LegendTable } from "./InfoPopupSharedContent";
@@ -52,19 +51,20 @@ const MAP_LEGEND_INFO_CONTENT = (
         </li>
       </ul>
     }
-    legend={<LegendTable />}
-    dataNotes={
-      <ul>
-        <li>
+    legend={
+      <>
+        <LegendTable />
+        <p>
           The map utilizes bivariate symbology: circle size corresponds to the
           approximate inspection score (larger circle = higher score), and
-          circle color represents the inspection grade.
-        </li>
-        <li>
+          circle color represents the inspection grade. Lower scores are
+          better.
+        </p>
+        <p>
           Use the restaurant listing panel to browse and inspect individual
           establishments when multiple locations share overlapping points.
-        </li>
-      </ul>
+        </p>
+      </>
     }
   />
 );

@@ -29,7 +29,8 @@ const MOBILE_INFO_CONTENT = (
           <p>
             The map utilizes bivariate symbology: circle size corresponds to the
             approximate inspection score (larger circle = higher score), and
-            circle color represents the inspection grade.
+            circle color represents the inspection grade. Lower scores are
+            better.
           </p>
           <p>
             Use the restaurant listing panel to browse and inspect individual
