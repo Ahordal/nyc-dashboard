@@ -7749,5 +7749,39 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50192994",
+    "dba": "WOODBINE CATERERS INC",
+    "address": "2281 CHURCH AVE, Brooklyn 11226",
+    "dohmhLat": 40.650452096542,
+    "dohmhLon": -73.957461093571,
+    "resolvedLat": 40.650643,
+    "resolvedLon": -73.956088,
+    "distanceMeters": 117.76754421946414,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.82232455780536,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "50193037",
+    "dba": "MAGNOLIA BAKERY HYLAN COMMONS",
+    "address": "430 NEW DORP LN, Staten Island 10306",
+    "dohmhLat": 40.570109266305,
+    "dohmhLon": -74.109123617518,
+    "resolvedLat": 40.568994,
+    "resolvedLon": -74.109304,
+    "distanceMeters": 124.94440342728352,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.75055596572716,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
