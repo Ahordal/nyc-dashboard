@@ -7783,5 +7783,22 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50193138",
+    "dba": "DUNKIN'",
+    "address": "2704 HYLAN BLVD, Staten Island 10306",
+    "dohmhLat": 40.56636074302,
+    "dohmhLon": -74.113872039258,
+    "resolvedLat": 40.5656358,
+    "resolvedLon": -74.1127842,
+    "distanceMeters": 122.23629167571178,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.7776370832429,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
