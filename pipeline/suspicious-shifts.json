@@ -7800,5 +7800,24 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50193219",
+    "dba": "HDR HOLDINGS NEW YORK LLC",
+    "address": "70-11 PARSONS BLVD, Queens 11365",
+    "dohmhLat": 40.731746864666,
+    "dohmhLon": -73.810797517348,
+    "resolvedLat": 40.7161153,
+    "resolvedLon": -73.8078907,
+    "distanceMeters": 1755.3269071904178,
+    "matchType": "house+street",
+    "resolvedVia": "no-hyphen",
+    "score": 110,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
