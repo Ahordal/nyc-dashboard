@@ -1,7 +1,9 @@
 // build-featured-slab.mjs (prototype)
 //
-// Builds a standalone three.js page: the generated card as a thick matte block,
-// og-image-style grade donut on the back. Run generate-featured-card.mjs first.
+// Builds a standalone three.js page: the generated card as a thick matte block. Corner
+// grade boxes sit flush and wrap across the edges, the border runs on the card edge and
+// joins front to back across the thickness, edges carry a faint 45-degree hatch, and the
+// back has an og-image-style grade donut. Run generate-featured-card.mjs first.
 // Usage: node pipeline/prototypes/build-featured-slab.mjs <repoRoot> <outPath.html>
 import fs from "node:fs";
 import path from "node:path";
@@ -51,9 +53,26 @@ function texture(c) {
   return t;
 }
 
+const GRADE_COLOR = svgText.match(/<g id="grade-box">[^]*?stroke="([^"]+)"/)[1];
+const BOX = 128;   // flush corner box, 64 card units
+const DEPTH = 64;  // card thickness 0.16 world units = 32 card units
+const LINE = "rgba(" + [1, 3, 5].map((i) => parseInt(GRADE_COLOR.slice(i, i + 2), 16)).join(",") + ",0.8)";
+
 async function cardFront() {
   // Rasterise at 2x, then crop away the SVG's shadow margin.
-  const big = svgText.replace('width="700" height="900"', 'width="1400" height="1800"');
+  const flush = svgText
+    .replace('<rect x="0.5" y="0.5" width="55" height="55"', '<rect x="0.5" y="0.5" width="63" height="63"')
+    .replace('<text x="28" y="38"', '<text x="32" y="42"')
+    .replace('<use href="#grade-box" x="8" y="8"/>', '<use href="#grade-box" x="0" y="0"/>')
+    .replace('<use href="#grade-box" x="436" y="8"/>', '<use href="#grade-box" x="436" y="0"/>')
+    .replace('<use href="#grade-box" x="8" y="636" transform="rotate(180 36 664)"/>', '<use href="#grade-box" x="0" y="636" transform="rotate(180 32 668)"/>')
+    .replace('<use href="#grade-box" x="436" y="636" transform="rotate(180 464 664)"/>', '<use href="#grade-box" x="436" y="636" transform="rotate(180 468 668)"/>')
+    // Border (and the texture clip that shares its path) runs on the card edge, stepping 8 around each box.
+    .replaceAll(
+      "M72.5 8.5 L427.5 8.5 L427.5 72.5 L491.5 72.5 L491.5 627.5 L427.5 627.5 L427.5 691.5 L72.5 691.5 L72.5 627.5 L8.5 627.5 L8.5 72.5 L72.5 72.5 Z",
+      "M72.5 0.5 L427.5 0.5 L427.5 72.5 L499.5 72.5 L499.5 627.5 L427.5 627.5 L427.5 699.5 L72.5 699.5 L72.5 627.5 L0.5 627.5 L0.5 72.5 L72.5 72.5 Z",
+    );
+  const big = flush.replace('width="700" height="900"', 'width="1400" height="1800"');
   const img = new Image();
   img.src = URL.createObjectURL(new Blob([big], { type: "image/svg+xml" }));
   await img.decode();
@@ -66,7 +85,22 @@ async function cardFront() {
 function cardBack() {
   const [c, g] = canvas(1000, 1400);
   g.fillStyle = "#2b2b2b"; g.fillRect(0, 0, 1000, 1400);
-  g.strokeStyle = "#424242"; g.lineWidth = 2; g.strokeRect(17, 17, 966, 1366);
+  g.strokeStyle = LINE; g.lineWidth = 2;
+  g.beginPath();
+  for (const [x, y] of [[145,1],[855,1],[855,145],[999,145],[999,1255],[855,1255],[855,1399],[145,1399],[145,1255],[1,1255],[1,145],[145,145]]) g.lineTo(x, y);
+  g.closePath(); g.stroke();
+  // Corner boxes match the front's: grade letter, bottom pair upside down.
+  const letter = svgText.match(/<g id="grade-box">[^]*?<text[^>]*>([^<]+)<.text>/)[1];
+  for (const [x, y, flip] of [[0, 0, false], [1000 - BOX, 0, false], [0, 1400 - BOX, true], [1000 - BOX, 1400 - BOX, true]]) {
+    g.fillStyle = "#272727"; g.fillRect(x, y, BOX, BOX);
+    g.strokeStyle = LINE; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, BOX - 2, BOX - 2);
+    g.save();
+    g.translate(x + BOX / 2, y + BOX / 2);
+    if (flip) g.rotate(Math.PI);
+    g.font = "700 56px 'Public Sans'"; g.fillStyle = GRADE_COLOR; g.textAlign = "center";
+    g.fillText(letter, 0, 20);
+    g.restore();
+  }
 
   // Stack, centred vertically: ring, NYC wordmark, title, tagline (og-image order).
   const cx = 500, cy = 508, outer = 220, inner = 148;
@@ -108,6 +142,62 @@ function cardBack() {
   return texture(c);
 }
 
+function edgeStrip(lengthPx, vertical) {
+  const [c, g] = vertical ? canvas(DEPTH, lengthPx) : canvas(lengthPx, DEPTH);
+  g.fillStyle = "#2b2b2b"; g.fillRect(0, 0, c.width, c.height);
+
+  // Faint 45° hatch on the border span and the corner boxes, never in the gaps between them.
+  // One continuous line set, clipped per region, so the stripes line up across the gaps.
+  const hatch = (from, len) => {
+    g.save();
+    g.beginPath();
+    if (vertical) g.rect(0, from, DEPTH, len);
+    else g.rect(from, 0, len, DEPTH);
+    g.clip();
+    g.strokeStyle = "#1e1e1e"; g.lineWidth = 3;
+    for (let t = -DEPTH; t < lengthPx + DEPTH; t += 14) {
+      g.beginPath();
+      if (vertical) { g.moveTo(0, t); g.lineTo(DEPTH, t + DEPTH); }
+      else { g.moveTo(t, 0); g.lineTo(t + DEPTH, DEPTH); }
+      g.stroke();
+    }
+    g.restore();
+  };
+  hatch(BOX + 17, lengthPx - 2 * (BOX + 17));
+
+  for (const start of [0, lengthPx - BOX]) {
+    const inner = start === 0 ? BOX - 1 : lengthPx - BOX + 1;
+    g.fillStyle = "#272727";
+    if (vertical) g.fillRect(0, start, DEPTH, BOX);
+    else g.fillRect(start, 0, BOX, DEPTH);
+    hatch(start, BOX);
+    g.strokeStyle = LINE; g.lineWidth = 2;
+    g.beginPath();
+    if (vertical) { g.moveTo(0, inner); g.lineTo(DEPTH, inner); }
+    else { g.moveTo(inner, 0); g.lineTo(inner, DEPTH); }
+    g.stroke();
+  }
+  g.strokeStyle = LINE; g.lineWidth = 2;
+  // The edge border continues the front and back borders: lines along both long edges
+  // between the steps, joined across the thickness where the border steps in at each box.
+  const step = BOX + 17, far = lengthPx - step;
+  const line = (x1, y1, x2, y2) => vertical
+    ? (g.beginPath(), g.moveTo(y1, x1), g.lineTo(y2, x2), g.stroke())
+    : (g.beginPath(), g.moveTo(x1, y1), g.lineTo(x2, y2), g.stroke());
+  // Corner box outline on this side: outer end and its front/back edges.
+  line(1, 0, 1, DEPTH);
+  line(lengthPx - 1, 0, lengthPx - 1, DEPTH);
+  for (const [a, b] of [[0, BOX], [lengthPx - BOX, lengthPx]]) {
+    line(a, 1, b, 1);
+    line(a, DEPTH - 1, b, DEPTH - 1);
+  }
+  line(step, 0, step, DEPTH);
+  line(far, 0, far, DEPTH);
+  line(step, 1, far, 1);
+  line(step, DEPTH - 1, far, DEPTH - 1);
+  return texture(c);
+}
+
 const renderer = new THREE.WebGLRenderer({ antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.setSize(innerWidth, innerHeight);
@@ -127,11 +217,12 @@ const backKey = new THREE.DirectionalLight("#ffffff", 0.45);
 backKey.position.set(-3, 4, -6);
 scene.add(key, backKey, new THREE.AmbientLight("#ffffff", 0.75));
 
-// The card as a solid block: 2.5 x 3.5 (5:7), matte, panel-grey edges.
+// The card as a solid block: 2.5 x 3.5 (5:7), matte; corner boxes wrap across the edges.
 // Box face order: +x, -x, +y, -y, front, back.
-const body = new THREE.MeshLambertMaterial({ color: "#2b2b2b" });
+const side = new THREE.MeshLambertMaterial({ map: edgeStrip(1400, true) });
+const end = new THREE.MeshLambertMaterial({ map: edgeStrip(1000, false) });
 const card = new THREE.Mesh(new THREE.BoxGeometry(2.5, 3.5, 0.16), [
-  body, body, body, body,
+  side, side, end, end,
   new THREE.MeshLambertMaterial({ map: await cardFront() }),
   new THREE.MeshLambertMaterial({ map: cardBack() }),
 ]);
