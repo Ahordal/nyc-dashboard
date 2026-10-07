@@ -146,15 +146,16 @@ function edgeStrip(lengthPx, vertical) {
   const [c, g] = vertical ? canvas(DEPTH, lengthPx) : canvas(lengthPx, DEPTH);
   g.fillStyle = "#2b2b2b"; g.fillRect(0, 0, c.width, c.height);
 
-  // Faint 45° hatch on the border span and the corner boxes, never in the gaps between them.
+  // 45° hatch on the border span and the corner boxes, never in the gaps between them.
   // One continuous line set, clipped per region, so the stripes line up across the gaps.
-  const hatch = (from, len) => {
+  // Each stripe sits one step darker than its fill, like the faded score on the face.
+  const hatch = (from, len, color) => {
     g.save();
     g.beginPath();
     if (vertical) g.rect(0, from, DEPTH, len);
     else g.rect(from, 0, len, DEPTH);
     g.clip();
-    g.strokeStyle = "#1e1e1e"; g.lineWidth = 3;
+    g.strokeStyle = color; g.lineWidth = 3;
     for (let t = -DEPTH; t < lengthPx + DEPTH; t += 14) {
       g.beginPath();
       if (vertical) { g.moveTo(0, t); g.lineTo(DEPTH, t + DEPTH); }
@@ -163,14 +164,14 @@ function edgeStrip(lengthPx, vertical) {
     }
     g.restore();
   };
-  hatch(BOX + 17, lengthPx - 2 * (BOX + 17));
+  hatch(BOX + 17, lengthPx - 2 * (BOX + 17), "#272727"); // on #2b2b2b body
 
   for (const start of [0, lengthPx - BOX]) {
     const inner = start === 0 ? BOX - 1 : lengthPx - BOX + 1;
     g.fillStyle = "#272727";
     if (vertical) g.fillRect(0, start, DEPTH, BOX);
     else g.fillRect(start, 0, BOX, DEPTH);
-    hatch(start, BOX);
+    hatch(start, BOX, "#222222"); // on #272727 box fill
     g.strokeStyle = LINE; g.lineWidth = 2;
     g.beginPath();
     if (vertical) { g.moveTo(0, inner); g.lineTo(DEPTH, inner); }
