@@ -103,6 +103,7 @@ Each cache entry is marked `verified`, `unverified`, or `pending`, and stamped w
 | `prebuild.mjs` | Pulls the cache down from `data` before the build runs |
 | `backfill.mjs` | Local manual-test entry point against a sample file |
 | `reset-out-of-bounds-cache-entries.mjs` | One-off cleanup for bad cache entries |
+| `generate-featured-card.mjs` | Renders the Restaurant of the Day playing card (`templates/featured-card.svg`) for a given CAMIS; not yet part of the build |
 
 ## Testing
 

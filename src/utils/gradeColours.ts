@@ -1,6 +1,9 @@
 // gradeColours.ts
 //
-// Single source for the grade/status colours used across the dashboard.
+// Grade/status colours used across the dashboard. Values live in
+// shared/gradeColours.mjs so the pipeline's featured card uses the same ones.
+
+import { CATEGORY_COLORS as SHARED_CATEGORY_COLORS } from "../../shared/gradeColours.mjs";
 
 export type GradeCategory =
   | "A"
@@ -10,11 +13,5 @@ export type GradeCategory =
   | "closed"
   | "uninspected";
 
-export const CATEGORY_COLORS: Record<GradeCategory, string> = {
-  A: "#2E7BE4",
-  B: "#3CB44B",
-  C: "#F58231",
-  pending: "#E6007E",
-  closed: "#B81D13",
-  uninspected: "#959595",
-};
+export const CATEGORY_COLORS: Record<GradeCategory, string> =
+  SHARED_CATEGORY_COLORS;

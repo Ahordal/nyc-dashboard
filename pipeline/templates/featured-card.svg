@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="700" height="900" viewBox="0 0 700 900" role="img">
+  <!-- Restaurant of the Day card. Double-brace tokens are filled by pipeline/generate-featured-card.mjs. -->
+  <title>{{TITLE}}</title>
+  <style>
+{{FONT_FACES}}
+    .display { font-family: Archivo, 'Public Sans', system-ui, sans-serif; }
+    .label { font-family: 'Public Sans', system-ui, sans-serif; }
+  </style>
+  <defs>
+    <filter id="card-shadow" x="-20%" y="-20%" width="140%" height="140%">
+      <!-- Tight blur: a defined edge without the floating look of a soft shadow -->
+      <feDropShadow dx="4" dy="6" stdDeviation="6" flood-color="#000" flood-opacity="0.65"/>
+    </filter>
+    <g id="grade-box">
+      <rect x="0.5" y="0.5" width="55" height="55" fill="#272727" stroke="{{GRADE_COLOR}}" stroke-opacity="0.8" stroke-width="1" shape-rendering="crispEdges"/>
+      <text x="28" y="38" class="label" font-weight="700" font-size="28" fill="{{GRADE_COLOR}}" text-anchor="middle">{{GRADE}}</text>
+    </g>
+    <clipPath id="inside-border">
+      <path d="M72.5 8.5 L427.5 8.5 L427.5 72.5 L491.5 72.5 L491.5 627.5 L427.5 627.5 L427.5 691.5 L72.5 691.5 L72.5 627.5 L8.5 627.5 L8.5 72.5 L72.5 72.5 Z"/>
+    </clipPath>
+  </defs>
+  <!-- Card: 5:7 playing-card body. Transparent around it; the Instagram export adds its own backdrop -->
+  <!-- 100px margin so the shadow blur is not clipped by the SVG edge -->
+  <g transform="translate(100 100)">
+    <rect width="500" height="700" fill="#2b2b2b" filter="url(#card-shadow)"/>
+
+    <!-- Score as a faint diagonal texture: separate glyphs, not a pattern tile, so no digit is cut at tile seams -->
+    <g clip-path="url(#inside-border)">
+      <g transform="rotate(-45 250 350)" class="display" font-weight="800" font-size="200" fill="#272727" stroke="none" text-anchor="middle">
+{{SCORE_GLYPHS}}
+      </g>
+    </g>
+
+    <!-- Border 0.5rem (8px) in, stepped around a grade box at each corner -->
+    <!-- crispEdges snaps 1px strokes to device pixels so display scaling cannot blur them -->
+    <path d="M72.5 8.5 L427.5 8.5 L427.5 72.5 L491.5 72.5 L491.5 627.5 L427.5 627.5 L427.5 691.5 L72.5 691.5 L72.5 627.5 L8.5 627.5 L8.5 72.5 L72.5 72.5 Z"
+          fill="none" stroke="{{GRADE_COLOR}}" stroke-opacity="0.8" stroke-width="1" shape-rendering="crispEdges"/>
+
+    <!-- Grade boxes: dashboard .badge-box scaled 44px to 56px; bottom pair upside down -->
+    <use href="#grade-box" x="8" y="8"/>
+    <use href="#grade-box" x="436" y="8"/>
+    <use href="#grade-box" x="8" y="636" transform="rotate(180 36 664)"/>
+    <use href="#grade-box" x="436" y="636" transform="rotate(180 464 664)"/>
+
+    <!-- Restaurant block (name, borough, cuisine), then score block -->
+{{NAME_LINES}}
+{{SUB_LINES}}
+    <text x="250" y="{{SCORE_LABEL_Y}}" class="label" font-weight="700" font-size="14" letter-spacing="1.4" fill="#a0a0a0" text-anchor="middle">SCORE</text>
+    <text x="250" y="{{SCORE_Y}}" class="label" font-weight="700" font-size="64" fill="{{GRADE_COLOR}}" text-anchor="middle">{{SCORE}}</text>
+
+    <!-- Footer between the bottom grade boxes, vertically centred on them -->
+    <text x="250" y="669" class="display" font-weight="700" font-size="12" letter-spacing="1.2" fill="#a0a0a0" text-anchor="middle">{{FOOTER}}</text>
+  </g>
+</svg>
