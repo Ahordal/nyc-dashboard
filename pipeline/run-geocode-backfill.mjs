@@ -29,6 +29,7 @@ import {
 } from './fetch-inspection.mjs';
 import { runGeocodeBackfill } from './backfill-core.mjs';
 import { loadCache, readJsonTolerant, saveCacheAtomic } from './cache.mjs';
+import { dealHand, loadFeatured, newYorkDate } from './deal-cards.mjs';
 
 const CACHE_PATH = './geocode-cache.json';
 const SUSPICIOUS_SHIFT_LOG_PATH = './suspicious-shifts.json';
@@ -36,6 +37,8 @@ const COUNTS_SNAPSHOT_PATH = './counts-snapshot.json';
 // Not committed to `data` - merge-and-commit-cache.mjs reads it to
 // correct the restaurant count post-merge without re-fetching the dataset.
 const DOHMH_INVALID_CAMIS_PATH = './dohmh-invalid-camis.json';
+// Seeded from `data` by the workflow; merge-and-commit-cache.mjs commits it back.
+const FEATURED_PATH = './featured.json';
 const API_KEY = process.env.LOCATIONIQ_API_KEY;
 
 async function main() {
@@ -109,6 +112,19 @@ async function main() {
     `Wrote counts-snapshot.json (${restaurantCount} restaurants [${formatDelta(restaurantDelta)}], ` +
       `${inspectionCount} inspections [${formatDelta(inspectionDelta)}]).`,
   );
+
+  // Dealt here because this GeoJSON already reflects today's geocodes, and
+  // the run commits to `data` once a day. Last, so a dealing failure can't
+  // cost the geocode or count results above.
+  const featured = await loadFeatured(FEATURED_PATH);
+  const date = newYorkDate();
+  const hand = dealHand(latestGeoJSON.features, featured, date);
+  if (hand) {
+    await saveCacheAtomic(FEATURED_PATH, { ...featured, hands: [...featured.hands, hand] });
+    console.log(`Dealt ${date}'s hand: ${hand.cards.map((c) => `${c.name} (${c.boro})`).join(', ')}.`);
+  } else {
+    console.log(`${date}'s hand was already dealt.`);
+  }
 }
 
 // Returns null on missing/corrupt/empty file so the first-ever run (or a run

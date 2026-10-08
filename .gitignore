@@ -37,3 +37,4 @@ CLAUDE.md
 pipeline/geocode-cache.json
 pipeline/suspicious-shifts.json
 pipeline/counts-snapshot.json
+pipeline/featured.json

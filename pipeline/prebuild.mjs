@@ -1,8 +1,8 @@
 // prebuild.mjs
 //
 // Runs automatically before `npm run build`. Pulls the committed
-// geocode cache and counts snapshot down from the `data` branch so
-// fetch-inspection.mjs can read them without checking the branch out.
+// geocode cache, counts snapshot and featured cards down from the `data`
+// branch so fetch-inspection.mjs can read them without checking it out.
 //
 // Best-effort: a download failure clears any stale local copy, logs a
 // warning, and lets the build continue (fetch-inspection.mjs runs fine
@@ -17,7 +17,7 @@ import { join } from 'node:path';
 const RAW_BASE =
   'https://raw.githubusercontent.com/Ahordal/nyc-dashboard/data/pipeline';
 
-const FILES = ['geocode-cache.json', 'counts-snapshot.json'];
+const FILES = ['geocode-cache.json', 'counts-snapshot.json', 'featured.json'];
 
 const PIPELINE_DIR = fileURLToPath(new URL('.', import.meta.url));
 

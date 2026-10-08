@@ -14,8 +14,9 @@
 //   2. git fetch + reset --hard origin/<branch>: working tree now matches
 //      remote exactly (in-memory data from step 1 is untouched).
 //   3. Read the (now-reset) remote versions.
-//   4. Merge local + remote at the DATA level (cache.mjs), never a raw
-//      git text merge - that could corrupt JSON or pick one side whole.
+//   4. Merge local + remote at the DATA level (cache.mjs; featured.json via
+//      deal-cards.mjs), never a raw git text merge - that could corrupt
+//      JSON or pick one side whole.
 //   5. Write the merged result, restore counts-snapshot.json (corrected
 //      for any restaurant whose count-eligibility changed in the merge),
 //      commit, push. A non-fast-forward rejection (another run landed on
@@ -30,10 +31,12 @@ import { execSync } from 'node:child_process';
 import { pathToFileURL } from 'node:url';
 import { mergeCaches, mergeSuspiciousShifts, readJsonTolerant, saveCacheAtomic } from './cache.mjs';
 import { isWithinNYC } from '../shared/nycBounds.mjs';
+import { loadFeatured, mergeFeatured } from './deal-cards.mjs';
 
 const CACHE_PATH = './geocode-cache.json';
 const LOG_PATH = './suspicious-shifts.json';
 const COUNTS_SNAPSHOT_PATH = './counts-snapshot.json';
+const FEATURED_PATH = './featured.json';
 // Restaurants whose DOHMH coordinate is invalid - the only ones whose
 // count depends on cache state (see findRestaurantsWithInvalidDohmhCoords).
 // Never committed to `data`, only read here to correct the snapshot.
@@ -98,11 +101,12 @@ async function main() {
   // fresh copy - hold it in memory so step 5 can restore it.
   const localSnapshot = await readJsonTolerant(COUNTS_SNAPSHOT_PATH, null);
   const invalidDohmhCamis = await readJsonTolerant(DOHMH_INVALID_CAMIS_PATH, []);
+  const localFeatured = await loadFeatured(FEATURED_PATH);
 
   console.log(`Local run: ${Object.keys(localCache).length} cache entries, ${localShifts.length} suspicious shifts.`);
 
   for (let attempt = 1; attempt <= MAX_PUSH_ATTEMPTS; attempt++) {
-    const pushed = await mergeAndPush({ localCache, localShifts, localSnapshot, invalidDohmhCamis });
+    const pushed = await mergeAndPush({ localCache, localShifts, localSnapshot, invalidDohmhCamis, localFeatured });
     if (pushed) return;
 
     if (attempt === MAX_PUSH_ATTEMPTS) {
@@ -115,7 +119,7 @@ async function main() {
 
 // One attempt at steps 2-5. Returns true on success (including "nothing
 // to push"), false if rejected because the remote moved - caller retries.
-async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDohmhCamis }) {
+async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDohmhCamis, localFeatured }) {
   // Step 2: bring the working tree to exactly what's on the remote.
   run(`git fetch origin ${BRANCH}`);
   run(`git reset --hard origin/${BRANCH}`);
@@ -130,6 +134,7 @@ async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDoh
   // Step 4: merge at the data level.
   const mergedCache = mergeCaches(localCache, remoteCache);
   const mergedShifts = mergeSuspiciousShifts(localShifts, remoteShifts);
+  const mergedFeatured = mergeFeatured(localFeatured, await loadFeatured(FEATURED_PATH));
 
   console.log(`Merged: ${Object.keys(mergedCache).length} cache entries, ${mergedShifts.length} suspicious shifts.`);
 
@@ -144,8 +149,11 @@ async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDoh
   if (correctedSnapshot?.restaurantCount != null) {
     await saveCacheAtomic(COUNTS_SNAPSHOT_PATH, correctedSnapshot);
   }
+  if (mergedFeatured.hands.length > 0) {
+    await saveCacheAtomic(FEATURED_PATH, mergedFeatured);
+  }
 
-  for (const path of [CACHE_PATH, LOG_PATH, COUNTS_SNAPSHOT_PATH]) {
+  for (const path of [CACHE_PATH, LOG_PATH, COUNTS_SNAPSHOT_PATH, FEATURED_PATH]) {
     try {
       await readFile(path);
       run(`git add ${path}`);
@@ -169,7 +177,7 @@ async function mergeAndPush({ localCache, localShifts, localSnapshot, invalidDoh
     return true;
   }
 
-  run(`git commit -m "chore: update geocode cache and counts snapshot [automated]"`);
+  run(`git commit -m "chore: update geocode cache, counts snapshot and featured cards [automated]"`);
 
   try {
     run(`git push origin HEAD:${BRANCH}`);

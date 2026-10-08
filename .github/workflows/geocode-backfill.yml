@@ -59,6 +59,9 @@ jobs:
           # this run's counts against it to produce the Dashboard
           # Information deltas.
           git show origin/data:pipeline/counts-snapshot.json > pipeline/counts-snapshot.json 2>/dev/null || echo '{}' > pipeline/counts-snapshot.json
+          # Every restaurant card dealt so far; the backfill deals today's
+          # hand into it, excluding restaurants already dealt.
+          git show origin/data:pipeline/featured.json > pipeline/featured.json 2>/dev/null || echo '{"version":1,"hands":[]}' > pipeline/featured.json
 
       - name: Run geocode backfill
         working-directory: pipeline

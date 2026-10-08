@@ -20,12 +20,16 @@ import {
   UNINSPECTED_GRADE,
 } from "../shared/inspectionStatus.mjs";
 import { isWithinNYC } from "../shared/nycBounds.mjs";
+import { loadFeatured } from "./deal-cards.mjs";
 
 // Read-only geocode cache committed by scheduled backfill. If absent, falls back to raw DOHMH coords.
 const GEOCODE_CACHE_PATH = path.join(import.meta.dirname, "geocode-cache.json");
 
 // Read-only snapshot of previous run counts. Used to compute +/- deltas without external DB.
 const COUNTS_SNAPSHOT_PATH = path.join(import.meta.dirname, "counts-snapshot.json");
+
+// Restaurant cards dealt so far, from `data`. Passed through to the dashboard as-is.
+const FEATURED_PATH = path.join(import.meta.dirname, "featured.json");
 
 const CATEGORY_CSV_PATH = path.join(import.meta.dirname, "violation-categories.csv");
 
@@ -703,6 +707,7 @@ async function main() {
 
   const geocodeCache = await loadCache(GEOCODE_CACHE_PATH);
   const countsSnapshot = await loadCountsSnapshot(COUNTS_SNAPSHOT_PATH);
+  const featured = await loadFeatured(FEATURED_PATH);
 
   let latestGeoJSON, history, violationCodes, dashboardMeta;
   try {
@@ -750,6 +755,11 @@ async function main() {
         JSON.stringify(dashboardMeta),
         "utf-8",
       ),
+      writeFile(
+        path.join(OUTPUT_DIR, "featured.json"),
+        JSON.stringify(featured),
+        "utf-8",
+      ),
       writeHistoryFiles(history.restaurants),
     ]);
   } catch (err) {
@@ -767,6 +777,7 @@ async function main() {
   console.log(
     `Wrote ${Object.keys(history.restaurants).length} individual history files to ${HISTORY_DIR}`,
   );
+  console.log(`Wrote featured.json (${featured.hands.length} hands dealt)`);
   console.log(
     `Wrote dashboard-meta.json (${dashboardMeta.restaurantCount} restaurants [${formatDelta(dashboardMeta.restaurantDelta)}], ` +
       `${dashboardMeta.inspectionCount} inspections [${formatDelta(dashboardMeta.inspectionDelta)}], generated_at ${dashboardMeta.lastUpdated})`,

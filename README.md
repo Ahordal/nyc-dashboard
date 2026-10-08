@@ -48,7 +48,7 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 ### Two branches
 
 - **`main`** — the app. The `public/data/` folder is rebuilt from scratch on every deploy and is never committed.
-- **`data`** — a separate branch holding only the geocoding cache. Kept apart so the daily cache updates never collide with in-progress app changes.
+- **`data`** — a separate branch holding only pipeline state: the geocoding cache, daily counts, and the restaurant cards dealt so far. Kept apart so the daily updates never collide with in-progress app changes.
 
 ### Keeping it fast
 
@@ -68,7 +68,7 @@ The dashboard works with a keyboard and a screen reader: visible focus outlines 
 
 ### The build step
 
-`pipeline/fetch-inspection.mjs` runs on every deploy. It downloads the full NYC DOHMH inspection dataset from the Socrata API and writes four files:
+`pipeline/fetch-inspection.mjs` runs on every deploy. It downloads the full NYC DOHMH inspection dataset from the Socrata API and writes five files:
 
 | File | What it holds |
 |---|---|
@@ -76,6 +76,7 @@ The dashboard works with a keyboard and a screen reader: visible focus outlines 
 | `history/{camis}.json` | Each restaurant's full inspection history, loaded on demand when it's selected |
 | `violation-codes.json` | Violation code to description and category |
 | `dashboard-meta.json` | Dataset totals and last-updated info shown in the app |
+| `featured.json` | Every restaurant card dealt so far, passed through from the `data` branch |
 
 It fetches in pages of 50,000 rows and checks the total against Socrata's own row count — if they don't match, it stops rather than publish a partial dataset. Restaurants with no scored inspection are dropped, obviously-bad coordinates (like 0,0 or swapped values) are caught against a rough NYC bounding box, and text is normalised for the search index.
 
@@ -86,6 +87,10 @@ Geocoding does **not** run during the build. A scheduled GitHub Action (`geocode
 The daily cap mainly matters for the first full backfill. The dataset is around 30,500 restaurants, so filling an empty cache from scratch takes roughly a week of daily runs. This is rarely necessary: a normal build, local or on Vercel, does not geocode anything itself — `prebuild` pulls the already-committed cache down from the `data` branch and the build reads it directly. A LocationIQ key is only required to run the backfill manually.
 
 Each cache entry is marked `verified`, `unverified`, or `pending`, and stamped with a resolver version so the matching rules can be bumped to force a re-check. A verified match that moves a restaurant more than 100m from the city's own coordinates is still used, but its details are also written to a log file for manual review. The only thing that pulls a geocoded point back to the city's coordinates is failing the NYC bounds check, which also drops it to `unverified`.
+
+### Restaurant cards (dealt daily)
+
+The same daily run also deals a hand of five restaurant cards, one per borough, and commits it to `featured.json` on the `data` branch (`deal-cards.mjs`). A restaurant is eligible if it is independent (its name appears at fewer than three locations), holds an A from the last 12 months with a score in the A band, is open, has a verified location, and hasn't been dealt before. Each card is stored as a snapshot of the restaurant on the day it was dealt, so a later grade change doesn't rewrite it. The hand is seeded by the date, so re-running a day deals the same cards. The dashboard doesn't show the cards yet.
 
 ### Key pipeline files
 
@@ -103,7 +108,8 @@ Each cache entry is marked `verified`, `unverified`, or `pending`, and stamped w
 | `prebuild.mjs` | Pulls the cache down from `data` before the build runs |
 | `backfill.mjs` | Local manual-test entry point against a sample file |
 | `reset-out-of-bounds-cache-entries.mjs` | One-off cleanup for bad cache entries |
-| `generate-featured-card.mjs` | Renders the Restaurant of the Day playing card (`templates/featured-card.svg`) for a given CAMIS; not yet part of the build |
+| `deal-cards.mjs` | Eligibility rules and the daily one-per-borough hand; also a local dev command |
+| `generate-featured-card.mjs` | Renders a restaurant's playing card (`templates/featured-card.svg`) for a given CAMIS; not yet part of the build |
 
 ## Testing
 
