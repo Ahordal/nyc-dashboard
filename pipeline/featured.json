@@ -1,0 +1,65 @@
+{
+  "version": 1,
+  "hands": [
+    {
+      "date": "2026-10-08",
+      "cards": [
+        {
+          "camis": "50106778",
+          "name": "SHIRAZ KITCHEN",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Mediterranean",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2025-11-26T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50062748",
+          "name": "CHIPOTLE MEXICAN GRILL #2879",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Tex-Mex",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2025-11-14T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40816997",
+          "name": "KABUL KABAB HOUSE",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Middle Eastern",
+          "grade": "A",
+          "score": 4,
+          "inspectionDate": "2026-01-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50159465",
+          "name": "MR.PIZZERIA",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-05-20T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50054304",
+          "name": "ALI BABA HOOKAH LOUNGE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Middle Eastern",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-05-15T00:00:00.000",
+          "posts": []
+        }
+      ]
+    }
+  ]
+}
