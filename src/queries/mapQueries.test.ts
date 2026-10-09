@@ -390,6 +390,29 @@ describe("findRestaurantGraphicHit", () => {
     );
     expect(hit?.graphic.attributes).toEqual({ id: "first" });
   });
+
+  it("prefers a featured ring over a dot drawn on top of it", () => {
+    const hit = findRestaurantGraphicHit(
+      response([
+        graphicHit(layer, { id: "neighbour" }),
+        graphicHit(otherLayer, { id: "featured" }),
+      ]),
+      asLayer,
+      otherLayer as unknown as Parameters<typeof findRestaurantGraphicHit>[2],
+    );
+    expect(hit?.graphic.attributes).toEqual({ id: "featured" });
+    expect(hit?.isFeaturedRing).toBe(true);
+  });
+
+  it("ignores ring graphics without restaurant attributes", () => {
+    const hit = findRestaurantGraphicHit(
+      response([graphicHit(otherLayer, {}), graphicHit(layer, { id: "42" })]),
+      asLayer,
+      otherLayer as unknown as Parameters<typeof findRestaurantGraphicHit>[2],
+    );
+    expect(hit?.graphic.attributes).toEqual({ id: "42" });
+    expect(hit?.isFeaturedRing).toBe(false);
+  });
 });
 
 describe("buildTwoPointFitBounds", () => {

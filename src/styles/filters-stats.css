@@ -88,12 +88,14 @@
   background-color: var(--link-background-hover);
 }
 
+/* Inset shadow, not a thicker border-bottom, so toggling doesn't grow
+   the button and shift the row. */
 .filter-button.active {
   background-color: var(--bg-alt);
   border-color: var(--border-panel);
   color: var(--link-hover);
   font-weight: bold;
-  border-bottom: 3px solid var(--border-panel);
+  box-shadow: inset 0 -2px 0 0 var(--border-panel);
 }
 
 .filter-clear {

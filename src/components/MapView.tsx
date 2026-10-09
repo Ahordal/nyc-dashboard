@@ -301,6 +301,7 @@ export default function InspectionMapView({
   useMapHover({
     view: mapView,
     layerRef,
+    featuredRingsLayerRef,
     isPlacingPointRef: searchRadius.isPlacingPointRef,
     onHoverRestaurantRef,
     setHoverCard,
@@ -521,7 +522,11 @@ export default function InspectionMapView({
         return;
       }
 
-      const graphicHit = findRestaurantGraphicHit(response, layer);
+      const graphicHit = findRestaurantGraphicHit(
+        response,
+        layer,
+        featuredRingsLayerRef.current,
+      );
 
       // The graphic already carries every field the dashboard reads; no
       // follow-up query is needed here. A hit on the already-selected
@@ -898,15 +903,14 @@ export default function InspectionMapView({
         layer.queryFeatures({
           where,
           returnGeometry: true,
-          outFields: ["camis"],
+          // Rings carry the full record so hover and click can use them directly.
+          outFields: RESTAURANT_OUT_FIELDS,
         }),
       )
       .then(({ features }) => {
         if (cancelled) return;
         ringsLayer.removeAll();
-        ringsLayer.addMany(
-          buildFeaturedRingGraphics(features.flatMap((f) => (f.geometry ? [f.geometry] : []))),
-        );
+        ringsLayer.addMany(buildFeaturedRingGraphics(features));
       })
       .catch((err) => {
         if (isAbortError(err)) return;

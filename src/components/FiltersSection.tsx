@@ -42,7 +42,13 @@ export default function FilterSection({
         aria-pressed={isActive}
         style={
           activeColor
-            ? { backgroundColor: activeColor, borderColor: activeColor, color: activeTextColor }
+            ? {
+                backgroundColor: activeColor,
+                borderColor: activeColor,
+                color: activeTextColor,
+                // Solid fill already reads as selected; skip the underline.
+                boxShadow: "none",
+              }
             : undefined
         }
         onClick={() =>

@@ -361,7 +361,8 @@ export default function PanelHeader({
           <button
             ref={buttonRef}
             type="button"
-            className="panel-header-info-button"
+            className="panel-header-info-button tooltip-left"
+            data-tooltip={(onInfoClick ? isInfoOpen : showInfo) ? undefined : "Info"}
             onClick={() => {
               if (onInfoClick) {
                 onInfoClick();

@@ -5,6 +5,7 @@
 // src/types/, since it's logic.
 
 import type GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
+import type Layer from "@arcgis/core/layers/Layer";
 import type MapView from "@arcgis/core/views/MapView";
 import type Graphic from "@arcgis/core/Graphic";
 import type { ViewHit } from "@arcgis/core/views/types";
@@ -470,17 +471,34 @@ export async function queryFilterExtent(
 
 export type RestaurantGraphicHit = {
   graphic: { attributes: RestaurantProperties };
+  // Hit today's featured ring, not a dot.
+  isFeaturedRing: boolean;
 };
 
 // Picks the restaurant graphic out of a hitTest() result, ignoring other
-// layers (rings, basemap labels). Undefined on a miss; narrows
-// Graphic.attributes (typed `any`) to our schema.
+// layers (basemap labels). Undefined on a miss; narrows Graphic.attributes
+// (typed `any`) to our schema. A featured ring wins over the dots under
+// it, so it stays reachable zoomed out.
 export function findRestaurantGraphicHit(
   hitTestResponse: { results: ViewHit[] },
   layer: GeoJSONLayer,
+  featuredRingsLayer?: Layer | null,
 ): RestaurantGraphicHit | undefined {
-  const hit = hitTestResponse.results.find(
-    (result) => result.type === "graphic" && result.graphic.layer === layer,
-  );
-  return hit as RestaurantGraphicHit | undefined;
+  const graphicOn = (target: Layer | null | undefined) =>
+    target
+      ? hitTestResponse.results.find(
+          (result) =>
+            result.type === "graphic" &&
+            result.graphic.layer === target &&
+            result.graphic.attributes?.id != null,
+        )
+      : undefined;
+
+  const ringHit = graphicOn(featuredRingsLayer);
+  const hit = ringHit ?? graphicOn(layer);
+  if (!hit || hit.type !== "graphic") return undefined;
+  return {
+    graphic: hit.graphic as RestaurantGraphicHit["graphic"],
+    isFeaturedRing: ringHit !== undefined,
+  };
 }

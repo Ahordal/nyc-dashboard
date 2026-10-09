@@ -43,7 +43,8 @@ export default function RestaurantCardModal({ dealt, isOpen, onClose }: Restaura
         <div className="restaurant-card-modal-actions">
           <button
             type="button"
-            className="panel-header-info-button"
+            className="panel-header-info-button tooltip-left"
+            data-tooltip={showInfo ? undefined : "Info"}
             onClick={() => setShowInfo((current) => !current)}
             aria-label="About featured restaurants"
             aria-expanded={showInfo}>

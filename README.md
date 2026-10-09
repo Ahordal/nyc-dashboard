@@ -29,8 +29,14 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 ### Search and filtering
 
 - Search by name, cuisine, or address. Handles accents, company suffixes like "INC" and "LLC", and street abbreviations ("St" matches "Street").
-- Filter by grade and borough; sort the list by date, name, cuisine, grade, score, or distance, with a secondary sort field to break ties.
+- Filter by grade, borough, or today's featured restaurants (Featured and Grade replace each other, since every featured pick holds an A). On wider screens the filters sit in one Filters popover, with an X on each row to clear it. Sort the list by date, name, cuisine, grade, score, or distance, with a secondary sort field to break ties.
 - The active filters, search text, selected restaurant, and any placed search radius are all kept in the URL, so any view can be bookmarked or shared.
+
+### Featured restaurants
+
+- Each day five restaurants are featured, one per borough (see [Restaurant cards](#restaurant-cards-dealt-daily) for how they're picked).
+- Today's five get a gold ring on the map. A gold certificate button among the map controls (or Featured > Today in Filters) narrows the map and list to just them; it's kept in the URL as `featured=today`.
+- Every restaurant that has ever been featured carries a gold certificate beside its grade and score. In Restaurant Details that certificate opens the restaurant's card, and the score chart marks the inspection that earned it.
 
 ### Restaurant details
 
@@ -90,7 +96,7 @@ Each cache entry is marked `verified`, `unverified`, or `pending`, and stamped w
 
 ### Restaurant cards (dealt daily)
 
-The same daily run also deals a hand of five restaurant cards, one per borough, and commits it to `featured.json` on the `data` branch (`deal-cards.mjs`). A restaurant is eligible if it is independent (its name appears at fewer than three locations), holds an A from the last 12 months with a score in the A band, is open, has a verified location, and hasn't been dealt before. Each card is stored as a snapshot of the restaurant on the day it was dealt, so a later grade change doesn't rewrite it. The hand is seeded by the date, so re-running a day deals the same cards. The dashboard doesn't show the cards yet.
+The same daily run also deals a hand of five restaurant cards, one per borough, and commits it to `featured.json` on the `data` branch (`deal-cards.mjs`). A restaurant is eligible if it is independent (its name appears at fewer than three locations), holds an A from the last 12 months with a score in the A band, is open, has a verified location, and hasn't been dealt before. Each card is stored as a snapshot of the restaurant on the day it was dealt, so a later grade change doesn't rewrite it. The hand is seeded by the date, so re-running a day deals the same cards. The build stamps each dealt restaurant's map point with a `featured_date` (a `YYYYMMDD` number, since ArcGIS would otherwise read a date-like string as a date), which drives the rings, the filter, and the certificate badge. The card itself is drawn by `shared/restaurantCard.mjs`, used by both the pipeline and the dashboard's card modal.
 
 ### Key pipeline files
 
@@ -109,7 +115,7 @@ The same daily run also deals a hand of five restaurant cards, one per borough, 
 | `backfill.mjs` | Local manual-test entry point against a sample file |
 | `reset-out-of-bounds-cache-entries.mjs` | One-off cleanup for bad cache entries |
 | `deal-cards.mjs` | Eligibility rules and the daily one-per-borough hand; also a local dev command |
-| `generate-featured-card.mjs` | Renders a restaurant's playing card (`templates/featured-card.svg`) for a given CAMIS; not yet part of the build |
+| `generate-featured-card.mjs` | Writes a restaurant's card as a standalone SVG for a given CAMIS, using the shared renderer; a local dev command, not part of the build |
 
 ## Testing
 

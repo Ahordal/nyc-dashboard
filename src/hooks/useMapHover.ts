@@ -1,7 +1,8 @@
 // useMapHover.ts
 //
 // Owns the map's pointer-move behaviour: throttled hit-testing, cursor,
-// `onHoverRestaurant`, and the hover card (past HOVER_CARD_MAX_SCALE).
+// `onHoverRestaurant`, and the hover card (past HOVER_CARD_MAX_SCALE, or
+// any zoom over today's featured rings).
 //
 // MapView passes `view` plus stable refs once it exists. Listeners
 // attach then and detach on unmount — fine since the map isn't
@@ -10,6 +11,7 @@
 import { useEffect } from "react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
+import type GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import type MapView from "@arcgis/core/views/MapView";
 
 import type { RestaurantProperties } from "../types/restaurant";
@@ -25,6 +27,7 @@ const POINTER_MOVE_THROTTLE_MS = 60;
 type UseMapHoverArgs = {
   view: MapView | null;
   layerRef: RefObject<GeoJSONLayer | null>;
+  featuredRingsLayerRef: RefObject<GraphicsLayer | null>;
   isPlacingPointRef: RefObject<boolean>;
   onHoverRestaurantRef: RefObject<
     ((restaurant: RestaurantProperties | null) => void) | undefined
@@ -35,6 +38,7 @@ type UseMapHoverArgs = {
 export function useMapHover({
   view,
   layerRef,
+  featuredRingsLayerRef,
   isPlacingPointRef,
   onHoverRestaurantRef,
   setHoverCard,
@@ -62,7 +66,11 @@ export function useMapHover({
       }
       if (token !== latestHitTestToken) return;
 
-      const graphicHit = findRestaurantGraphicHit(response, layer);
+      const graphicHit = findRestaurantGraphicHit(
+        response,
+        layer,
+        featuredRingsLayerRef.current,
+      );
 
       if (view.container) {
         view.container.style.cursor = graphicHit ? "pointer" : "default";
@@ -72,7 +80,11 @@ export function useMapHover({
         graphicHit ? graphicHit.graphic.attributes : null,
       );
 
-      if (graphicHit && view.scale <= HOVER_CARD_MAX_SCALE) {
+      // Only five rings, so they stay distinguishable at any zoom.
+      if (
+        graphicHit &&
+        (graphicHit.isFeaturedRing || view.scale <= HOVER_CARD_MAX_SCALE)
+      ) {
         const attrs = graphicHit.graphic.attributes;
 
         setHoverCard({
@@ -121,5 +133,12 @@ export function useMapHover({
       }
       view.container?.removeEventListener("mouseleave", handlePointerLeave);
     };
-  }, [view, layerRef, isPlacingPointRef, onHoverRestaurantRef, setHoverCard]);
+  }, [
+    view,
+    layerRef,
+    featuredRingsLayerRef,
+    isPlacingPointRef,
+    onHoverRestaurantRef,
+    setHoverCard,
+  ]);
 }

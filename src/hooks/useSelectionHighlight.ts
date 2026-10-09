@@ -46,11 +46,13 @@ export function useSelectionHighlight({
 
   // Resolves and caches the layer view, building the glow effect on first use.
   const ensureLayerView = useCallback(async () => {
-    if (layerViewRef.current) return layerViewRef.current;
-
     const layer = layerRef.current;
     const view = viewRef.current;
     if (!layer || !view) return null;
+
+    // A rebuilt map (Retry, hot reload) leaves the cached view stale.
+    const cached = layerViewRef.current;
+    if (cached && cached.layer === layer && cached.view === view) return cached;
 
     let layerView: GeoJSONLayerView;
     try {

@@ -41,7 +41,8 @@ export default function DashboardGuide({ meta }: DashboardGuideProps) {
 
         <button
           type="button"
-          className="panel-header-info-button"
+          className="panel-header-info-button tooltip-left"
+          data-tooltip="Info"
           onClick={() => {
             setShowInfoModal(true);
           }}

@@ -5,7 +5,6 @@
 
 import Graphic from "@arcgis/core/Graphic";
 import SimpleMarkerSymbol from "@arcgis/core/symbols/SimpleMarkerSymbol";
-import type Geometry from "@arcgis/core/geometry/Geometry";
 
 // Matches --award-gold in base.css.
 const AWARD_GOLD = "#d4af37";
@@ -27,9 +26,14 @@ const goldSymbol = new SimpleMarkerSymbol({
   outline: { color: AWARD_GOLD, width: 2 },
 });
 
-export function buildFeaturedRingGraphics(points: Geometry[]): Graphic[] {
-  return points.flatMap((geometry) => [
-    new Graphic({ geometry, symbol: edgeSymbol }),
-    new Graphic({ geometry, symbol: goldSymbol }),
-  ]);
+// Rings copy each feature's attributes, so a hit on one resolves to its restaurant.
+export function buildFeaturedRingGraphics(features: Graphic[]): Graphic[] {
+  return features.flatMap(({ geometry, attributes }) =>
+    geometry
+      ? [
+          new Graphic({ geometry, attributes, symbol: edgeSymbol }),
+          new Graphic({ geometry, attributes, symbol: goldSymbol }),
+        ]
+      : [],
+  );
 }

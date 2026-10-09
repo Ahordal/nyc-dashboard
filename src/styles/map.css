@@ -662,6 +662,16 @@
   right: calc(100% + 0.5rem);
 }
 
+/* Borderless panel-header button, so a bare text label; gap measured
+   from the icon. The map's info chip keeps the boxed tooltip. */
+.panel-header-info-button.tooltip-left:not(.map-view-top-header *)::after {
+  right: calc(100% + 0.5rem - var(--space-s));
+  padding: 0;
+  background: none;
+  border: none;
+  box-shadow: none;
+}
+
 /* Below, right-aligned: for buttons with neighbours on both sides or the
    panel edge beside them. */
 [data-tooltip].tooltip-bottom::after {

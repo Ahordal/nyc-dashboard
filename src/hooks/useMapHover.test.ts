@@ -11,6 +11,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { renderHook } from "@testing-library/react";
 import type { Dispatch, RefObject, SetStateAction } from "react";
 import type GeoJSONLayer from "@arcgis/core/layers/GeoJSONLayer";
+import type GraphicsLayer from "@arcgis/core/layers/GraphicsLayer";
 import type MapView from "@arcgis/core/views/MapView";
 
 import type { RestaurantProperties } from "../types/restaurant";
@@ -40,15 +41,24 @@ function makeAttrs(over: Partial<RestaurantProperties> = {}) {
 type SetupOpts = {
   scale?: number;
   hit?: boolean;
+  // Hit lands on a featured ring rather than a dot.
+  ringHit?: boolean;
   isPlacing?: boolean;
   // When set, hitTest returns a promise the test resolves by hand.
   manualHitTest?: boolean;
 };
 
 function setup(opts: SetupOpts = {}) {
-  const { scale = 5000, hit = true, isPlacing = false, manualHitTest = false } = opts;
+  const {
+    scale = 5000,
+    hit = true,
+    ringHit = false,
+    isPlacing = false,
+    manualHitTest = false,
+  } = opts;
 
   const layer = {} as GeoJSONLayer;
+  const ringsLayer = {} as GraphicsLayer;
   const container = document.createElement("div");
   const handlers: Record<string, (e: unknown) => void> = {};
 
@@ -59,7 +69,12 @@ function setup(opts: SetupOpts = {}) {
     }
     return Promise.resolve({
       results: hit
-        ? [{ type: "graphic", graphic: { layer, attributes: makeAttrs() } }]
+        ? [
+            {
+              type: "graphic",
+              graphic: { layer: ringHit ? ringsLayer : layer, attributes: makeAttrs() },
+            },
+          ]
         : [],
     });
   });
@@ -84,6 +99,7 @@ function setup(opts: SetupOpts = {}) {
     useMapHover({
       view,
       layerRef: { current: layer } as RefObject<GeoJSONLayer | null>,
+      featuredRingsLayerRef: { current: ringsLayer } as RefObject<GraphicsLayer | null>,
       isPlacingPointRef,
       onHoverRestaurantRef: { current: onHoverRestaurant } as RefObject<
         ((r: RestaurantProperties | null) => void) | undefined
@@ -140,6 +156,18 @@ describe("useMapHover", () => {
     // The hover callback still fires regardless of zoom.
     expect(zoomedOut.onHoverRestaurant).toHaveBeenLastCalledWith(
       expect.objectContaining({ id: "r1" }),
+    );
+  });
+
+  it("shows the hover card for a featured ring even when zoomed out", async () => {
+    const { firePointerMove, setHoverCard } = setup({
+      scale: HOVER_CARD_MAX_SCALE * 10,
+      ringHit: true,
+    });
+    firePointerMove({ x: 5, y: 5 });
+    await vi.advanceTimersByTimeAsync(60);
+    expect(setHoverCard).toHaveBeenLastCalledWith(
+      expect.objectContaining({ name: "Joe's Pizza" }),
     );
   });
 
