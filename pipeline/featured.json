@@ -49,6 +49,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-09",
+      "cards": [
+        {
+          "camis": "41695803",
+          "name": "MISS KOREA (3FL)",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Korean",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-09-18T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50085822",
+          "name": "HAPPY ZOE VEGAN BAKERY",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Vegan",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-04-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50106471",
+          "name": "DELICIAS SECUENAS",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Latin American",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-08-25T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50113951",
+          "name": "LA PATRONA",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-04-27T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50102903",
+          "name": "SAL'S BAKERY",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-03-06T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
