@@ -100,14 +100,20 @@ test("renderCard shows a dash and no score texture without a score", () => {
   assert.equal(scoreGlyphs(null), "");
 });
 
-test("awardIcons draws known awards as a centred row and skips unknown ids", () => {
+test("awardIcons draws each award in its colour as a centred row", () => {
   assert.equal(awardIcons([], 500), "");
-  assert.equal(awardIcons(["nope"], 500), "");
-  const one = awardIcons(["featured"], 500);
+  const star = { width: 576, d: "M0 0z", color: "#d4af37" };
+  const zero = { width: 320, d: "M1 1z", color: "#ffffff" };
+  const one = awardIcons([star], 500);
   assert.equal(one.match(/<path /g).length, 1);
   assert.match(one, /fill="#d4af37"/);
   const x = Number(one.match(/translate\(([\d.]+)/)[1]);
   assert.equal(x + (576 * 32) / 512 / 2, 250); // centred on the card
+
+  const scale = 32 / 512;
+  const xs = [...awardIcons([star, zero], 500).matchAll(/translate\(([\d.]+)/g)].map((m) => Number(m[1]));
+  assert.ok(Math.abs(xs[1] - (xs[0] + 576 * scale + 12)) < 0.1); // spaced by the star's own width
+  assert.ok(Math.abs(xs[0] + ((576 + 320) * scale + 12) / 2 - 250) < 0.1); // whole row centred
 });
 
 // The 3D card loads the SVG as a standalone image, which must be strict XML.

@@ -24,10 +24,6 @@ const GROUP_CENTRE_Y = 355;
 const AWARD_ICON_SIZE = 32;
 const AWARD_ICON_GAP = 12;
 const FOOTER_CAP_TOP = 660;
-const AWARD_GOLD = "#d4af37"; // --award-gold
-const AWARD_ICONS = {
-  featured: { width: 576, d: "M309.5-18.9c-4.1-8-12.4-13.1-21.4-13.1s-17.3 5.1-21.4 13.1L193.1 125.3 33.2 150.7c-8.9 1.4-16.3 7.7-19.1 16.3s-.5 18 5.8 24.4l114.4 114.5-25.2 159.9c-1.4 8.9 2.3 17.9 9.6 23.2s16.9 6.1 25 2L288.1 417.6 432.4 491c8 4.1 17.7 3.3 25-2s11-14.2 9.6-23.2L441.7 305.9 556.1 191.4c6.4-6.4 8.6-15.8 5.8-24.4s-10.1-14.9-19.1-16.3L383 125.3 309.5-18.9z" },
-};
 
 // Corner letter per status. Closed gets Font Awesome's ban icon instead, so
 // it can't read as grade C.
@@ -179,17 +175,17 @@ function statusLine(category, scoreY, color) {
   return `    <text x="250" y="${scoreY + STATUS_LINE_GAP}" class="rc-label" font-weight="700" font-size="14" letter-spacing="1.4" fill="${color}" text-anchor="middle">${text}</text>`;
 }
 
-// One gold icon per award id, centred as a row; unknown ids are skipped.
+// Award icons as a centred row. Each is { width, d, color }: a Font Awesome
+// path (512 tall) and its colour, supplied by the caller's award catalogue.
 export function awardIcons(awards, scoreY) {
-  const known = awards.filter((id) => id in AWARD_ICONS);
   const centreY = scoreY + (FOOTER_CAP_TOP - scoreY) / 4;
   const scale = AWARD_ICON_SIZE / 512;
-  const widths = known.map((id) => AWARD_ICONS[id].width * scale);
-  const rowWidth = widths.reduce((sum, w) => sum + w, 0) + (known.length - 1) * AWARD_ICON_GAP;
+  const widths = awards.map(({ width }) => width * scale);
+  const rowWidth = widths.reduce((sum, w) => sum + w, 0) + (awards.length - 1) * AWARD_ICON_GAP;
   let x = 250 - rowWidth / 2;
-  return known
-    .map((id, i) => {
-      const path = `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${AWARD_GOLD}" d="${AWARD_ICONS[id].d}"/>`;
+  return awards
+    .map(({ d, color }, i) => {
+      const path = `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${escapeXml(color)}" d="${escapeXml(d)}"/>`;
       x += widths[i] + AWARD_ICON_GAP;
       return path;
     })

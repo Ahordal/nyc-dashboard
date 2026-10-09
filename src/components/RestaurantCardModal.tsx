@@ -15,7 +15,7 @@ import type { RestaurantProperties } from "../types/restaurant";
 
 type RestaurantCardModalProps = {
   restaurant: RestaurantProperties;
-  featuredToday: boolean;
+  featuredDate: string | null;
   gradeCounts: GradeCounts;
   isOpen: boolean;
   onClose: () => void;
@@ -23,7 +23,7 @@ type RestaurantCardModalProps = {
 
 export default function RestaurantCardModal({
   restaurant,
-  featuredToday,
+  featuredDate,
   gradeCounts,
   isOpen,
   onClose,
@@ -56,7 +56,7 @@ export default function RestaurantCardModal({
         fallback={<p className="restaurant-card-caption">This card couldn&apos;t be drawn.</p>}>
         <RestaurantCardView
           restaurant={restaurant}
-          featuredToday={featuredToday}
+          featuredDate={featuredDate}
           gradeCounts={gradeCounts}
         />
       </ErrorBoundary>

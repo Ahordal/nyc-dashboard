@@ -5,6 +5,13 @@
 
 export type CardCategory = "A" | "B" | "C" | "pending" | "uninspected" | "closed";
 
+// A Font Awesome icon (512 tall; width varies) and the colour to draw it in.
+export type CardAward = {
+  width: number;
+  d: string;
+  color: string;
+};
+
 export type CardRestaurant = {
   name: string;
   // getGradeCategory's result: sets the card's colour and corner mark.
@@ -12,8 +19,8 @@ export type CardRestaurant = {
   score: number | null;
   boro?: string | null;
   cuisine?: string | null;
-  // Award ids held now, drawn as gold icons below the score.
-  awards?: string[];
+  // Awards held now, drawn as icons below the score.
+  awards?: CardAward[];
 };
 
 export type RenderCardOptions = {
@@ -26,7 +33,7 @@ export declare function renderCard(restaurant: CardRestaurant, options: RenderCa
 
 export declare function formatCardDate(date: Date): string;
 
-export declare function awardIcons(awards: string[], scoreY: number): string;
+export declare function awardIcons(awards: CardAward[], scoreY: number): string;
 
 export declare const BAN_ICON_PATH: string;
 

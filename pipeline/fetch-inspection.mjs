@@ -499,8 +499,10 @@ function dayNumber(date) {
 export function awardFields(scoredEvents, grade) {
   let firstA = null;
   let tripleCrown = null;
+  let perfectScore = null;
   let run = 0;
   for (const event of scoredEvents) {
+    if (Number(event.primary.score) === 0) perfectScore ??= dayNumber(event.date);
     const eventGrade = event.primary.grade;
     if (!LETTER_GRADES.has(eventGrade)) continue;
     if (eventGrade !== "A") {
@@ -517,6 +519,7 @@ export function awardFields(scoredEvents, grade) {
   return {
     award_first_a: firstA,
     award_triple_crown: tripleCrown,
+    award_perfect_score: perfectScore,
     consistent: currentA && previous === "A" ? 1 : 0,
     most_improved: currentA && previous === "C" ? 1 : 0,
   };
@@ -524,10 +527,18 @@ export function awardFields(scoredEvents, grade) {
 
 // Holders per award, for the legend's "held by N%" (total = every restaurant).
 export function countAwards(features) {
-  const counts = { total: features.length, first_a: 0, triple_crown: 0, consistent: 0, most_improved: 0 };
+  const counts = {
+    total: features.length,
+    first_a: 0,
+    triple_crown: 0,
+    perfect_score: 0,
+    consistent: 0,
+    most_improved: 0,
+  };
   for (const { properties: p } of features) {
     if (p.award_first_a) counts.first_a += 1;
     if (p.award_triple_crown) counts.triple_crown += 1;
+    if (p.award_perfect_score) counts.perfect_score += 1;
     if (p.consistent) counts.consistent += 1;
     if (p.most_improved) counts.most_improved += 1;
   }

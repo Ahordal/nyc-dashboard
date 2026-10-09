@@ -2,7 +2,7 @@
 //
 // Any restaurant's card, drawn from its live record by the same renderer the
 // pipeline uses: coloured by its current grade or status, with the awards it
-// holds now. A loading animation holds its place while the 3D slab loads;
+// holds now (utils/awards.ts). A loading animation holds its place while the 3D slab loads;
 // the flat card shows only where 3D can't (no WebGL, or a load failure).
 
 import { useEffect, useMemo, useRef, useState } from "react";
@@ -14,6 +14,7 @@ import type { CardRestaurant } from "../../shared/restaurantCard.mjs";
 import cardTemplate from "../../shared/restaurantCard.svg?raw";
 import type { GradeCounts } from "../types/gradeCounts";
 import type { RestaurantProperties } from "../types/restaurant";
+import { heldAwards } from "../utils/awards";
 import { formatDate } from "../utils/formatDate";
 import { getGradeCategory, type GradeCategory } from "../utils/gradeCategory";
 import { supportsWebGL } from "../utils/webgl";
@@ -34,8 +35,8 @@ const SPOKEN_STATUS: Record<GradeCategory, string> = {
 
 type RestaurantCardViewProps = {
   restaurant: RestaurantProperties;
-  // In today's hand: the Featured award joins the card's award row.
-  featuredToday: boolean;
+  // Latest hand's date, so Featured joins the award row on its day.
+  featuredDate: string | null;
   // Every restaurant's grade mix, drawn on the 3D card's back.
   gradeCounts: GradeCounts;
 };
@@ -52,7 +53,7 @@ function inspectedFooter(category: GradeCategory, inspectionDate: string | numbe
 
 export default function RestaurantCardView({
   restaurant,
-  featuredToday,
+  featuredDate,
   gradeCounts,
 }: RestaurantCardViewProps) {
   const category = getGradeCategory(restaurant.action, restaurant.grade, restaurant.score);
@@ -64,9 +65,13 @@ export default function RestaurantCardView({
       score: category === "uninspected" ? null : restaurant.score,
       boro: restaurant.boro,
       cuisine: restaurant.cuisine,
-      awards: featuredToday ? ["featured"] : [],
+      awards: heldAwards(restaurant, featuredDate).map(({ award }) => ({
+        width: award.icon.icon[0],
+        d: String(award.icon.icon[4]),
+        color: award.color,
+      })),
     }),
-    [restaurant, category, featuredToday],
+    [restaurant, category, featuredDate],
   );
   const footer = inspectedFooter(category, restaurant.inspection_date);
 

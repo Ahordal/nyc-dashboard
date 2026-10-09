@@ -55,6 +55,13 @@ export type RestaurantProperties = {
   current_status_label: string;
   // Day this restaurant was featured, as YYYYMMDD (NYC); null if never.
   featured_date: number | null;
+  // Awards, from the build (see utils/awards.ts). Permanent ones are the
+  // YYYYMMDD first earned, null if never; statuses are 1 while held, else 0.
+  award_first_a: number | null;
+  award_triple_crown: number | null;
+  award_perfect_score: number | null;
+  consistent: number;
+  most_improved: number;
 };
 
 // Inspection history

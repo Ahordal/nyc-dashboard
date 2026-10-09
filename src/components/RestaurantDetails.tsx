@@ -362,7 +362,7 @@ function RestaurantDetails({
 
         <RestaurantCardModal
           restaurant={restaurant}
-          featuredToday={featuredToday}
+          featuredDate={featuredDate}
           gradeCounts={gradeCounts}
           isOpen={showCard}
           onClose={() => setShowCard(false)}

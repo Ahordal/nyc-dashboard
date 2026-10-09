@@ -57,6 +57,11 @@ function makeRestaurant(id: string, date: string): RestaurantProperties {
     current_status_code: "open",
     current_status_label: "Open",
     featured_date: null,
+    award_first_a: null,
+    award_triple_crown: null,
+    award_perfect_score: null,
+    consistent: 0,
+    most_improved: 0,
   };
 }
 

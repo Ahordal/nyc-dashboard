@@ -16,6 +16,12 @@ const history = (...grades) =>
     primary: { grade, score: 10 },
   }));
 
+const withScores = (...scores) =>
+  scores.map((score, i) => ({
+    date: `2025-${String(i + 1).padStart(2, '0')}-15T00:00:00.000`,
+    primary: { grade: 'A', score },
+  }));
+
 const fieldsFor = (...grades) => awardFields(history(...grades), grades.at(-1));
 
 test('First A is the date of the first graded A, kept after later drops', () => {
@@ -47,10 +53,16 @@ test('Most Improved holds only for an A straight after a C', () => {
   assert.equal(fieldsFor('C', 'A', 'A').most_improved, 0);
 });
 
+test('Perfect Score is the date of the first inspection scoring 0, kept for good', () => {
+  assert.equal(awardFields(withScores(12, 0, 9), 'A').award_perfect_score, 20250215);
+  assert.equal(awardFields(withScores(12, 3), 'A').award_perfect_score, null);
+});
+
 test('a restaurant with no inspections holds nothing', () => {
   assert.deepEqual(awardFields([], 'U'), {
     award_first_a: null,
     award_triple_crown: null,
+    award_perfect_score: null,
     consistent: 0,
     most_improved: 0,
   });
@@ -58,7 +70,7 @@ test('a restaurant with no inspections holds nothing', () => {
 
 test('countAwards tallies holders of each award', () => {
   const features = [
-    { properties: { award_first_a: 20250101, award_triple_crown: 20250301, consistent: 1, most_improved: 0 } },
+    { properties: { award_first_a: 20250101, award_triple_crown: 20250301, award_perfect_score: 20250301, consistent: 1, most_improved: 0 } },
     { properties: { award_first_a: 20250101, award_triple_crown: null, consistent: 0, most_improved: 1 } },
     { properties: { award_first_a: null, award_triple_crown: null, consistent: 0, most_improved: 0 } },
   ];
@@ -66,6 +78,7 @@ test('countAwards tallies holders of each award', () => {
     total: 3,
     first_a: 2,
     triple_crown: 1,
+    perfect_score: 1,
     consistent: 1,
     most_improved: 1,
   });

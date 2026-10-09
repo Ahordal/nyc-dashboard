@@ -49,6 +49,11 @@ export const RESTAURANT_OUT_FIELDS = [
   "current_status_code",
   "current_status_label",
   "featured_date",
+  "award_first_a",
+  "award_triple_crown",
+  "award_perfect_score",
+  "consistent",
+  "most_improved",
 ];
 
 // Same closure strings isClosedInspection() checks — avoids

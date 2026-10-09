@@ -85,7 +85,7 @@ The dashboard works with a keyboard and a screen reader: visible focus outlines 
 | `dashboard-meta.json` | Dataset totals and last-updated info shown in the app, plus how many restaurants hold each award |
 | `featured.json` | Every restaurant card dealt so far, passed through from the `data` branch |
 
-Each restaurant's point also carries its award fields, worked out from its history: the date it first earned an A (`award_first_a`) and its first three As in a row (`award_triple_crown`), which are kept for good, and whether it holds Consistency (`consistent`, its last two graded inspections are A) or Most Improved (`most_improved`, an A straight after a C) right now. Dates are `YYYYMMDD` numbers and statuses are 1/0, since ArcGIS mishandles date-like strings.
+Each restaurant's point also carries its award fields, worked out from its history: the date it first earned an A (`award_first_a`), its first three As in a row (`award_triple_crown`), and its first score of 0 (`award_perfect_score`), which are kept for good, and whether it holds Consistency (`consistent`, its last two graded inspections are A) or Most Improved (`most_improved`, an A straight after a C) right now. Dates are `YYYYMMDD` numbers and statuses are 1/0, since ArcGIS mishandles date-like strings.
 
 It fetches in pages of 50,000 rows and checks the total against Socrata's own row count — if they don't match, it stops rather than publish a partial dataset. Restaurants with no scored inspection are dropped, obviously-bad coordinates (like 0,0 or swapped values) are caught against a rough NYC bounding box, and text is normalised for the search index.
 
