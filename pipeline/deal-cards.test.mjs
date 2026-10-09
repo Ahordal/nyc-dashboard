@@ -4,6 +4,7 @@ import {
   BOROUGHS,
   EMPTY_FEATURED,
   applyFeaturedDates,
+  chainKey,
   chainNames,
   dealHand,
   isEligible,
@@ -71,6 +72,26 @@ test("chainNames flags names at three or more locations", () => {
     restaurant({ name: "PAIR" }),
   ];
   assert.deepEqual([...chainNames(features)], ["CHAIN"]);
+});
+
+test("chainKey strips trailing store numbers but keeps numbers in the name", () => {
+  assert.equal(chainKey("CHIPOTLE MEXICAN GRILL #2879"), "CHIPOTLE MEXICAN GRILL");
+  assert.equal(chainKey("GENESIS # 1"), "GENESIS");
+  assert.equal(chainKey("AMOR BAKERY NO 2"), "AMOR BAKERY");
+  assert.equal(chainKey("Amor Bakery No. 2"), "AMOR BAKERY");
+  assert.equal(chainKey("CANDLE 79"), "CANDLE 79");
+  assert.equal(chainKey("#1 SABOR LATINO"), "#1 SABOR LATINO");
+});
+
+test("numbered branches count as one chain and are ineligible", () => {
+  const features = [
+    restaurant({ name: "CHIPOTLE MEXICAN GRILL #1" }),
+    restaurant({ name: "CHIPOTLE MEXICAN GRILL #2" }),
+    restaurant({ name: "CHIPOTLE MEXICAN GRILL #2879" }),
+  ];
+  const chains = chainNames(features);
+  assert.deepEqual([...chains], ["CHIPOTLE MEXICAN GRILL"]);
+  assert.equal(isEligible(features[2].properties, { asOf: DATE, chains, dealt: new Set() }), false);
 });
 
 test("dealHand deals one card per borough, snapshotting the restaurant", () => {

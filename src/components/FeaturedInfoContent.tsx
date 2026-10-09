@@ -55,7 +55,7 @@ const FEATURED_INFO_CONTENT = (
           To be featured, a restaurant needs an A grade from an inspection in
           the last 12 months and an A on the graded inspection before that,
           must be open, must have a verified location, and
-          must not be a chain (its name appears at fewer than three locations).
+          must not be a chain (its name, ignoring store numbers, appears at fewer than three locations).
         </li>
 
         <li>

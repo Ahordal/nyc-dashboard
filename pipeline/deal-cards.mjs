@@ -26,10 +26,21 @@ export function newYorkDate(date = new Date()) {
   return new Intl.DateTimeFormat("en-CA", { timeZone: "America/New_York" }).format(date);
 }
 
+// Drops a trailing store number ("#2879", "NO. 2"), so numbered branches
+// count as one chain. Bare numbers stay: they're often the name ("CANDLE 79").
+export function chainKey(name) {
+  return String(name ?? "")
+    .toUpperCase()
+    .replace(/\s*(?:#|\bNO\.?\s)\s*\d+\s*$/, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export function chainNames(features) {
   const counts = new Map();
   for (const { properties } of features) {
-    counts.set(properties.name, (counts.get(properties.name) ?? 0) + 1);
+    const key = chainKey(properties.name);
+    counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   return new Set([...counts].filter(([, n]) => n >= CHAIN_MIN_LOCATIONS).map(([name]) => name));
 }
@@ -48,7 +59,7 @@ export function isEligible(props, { asOf, chains, dealt }) {
     Number.isFinite(inspected) &&
     ageDays >= 0 &&
     ageDays <= MAX_INSPECTION_AGE_DAYS &&
-    !chains.has(props.name) &&
+    !chains.has(chainKey(props.name)) &&
     !dealt.has(props.camis)
   );
 }
