@@ -56,6 +56,16 @@ export const RESTAURANT_OUT_FIELDS = [
   "most_improved",
 ];
 
+// The out fields the loaded data actually has. ArcGIS fails a whole query
+// over one missing field, so data built before a field was added (a stale
+// local public/data) would otherwise empty the list. Call after layer.load().
+export function restaurantOutFields(layer: GeoJSONLayer): string[] {
+  const present = new Set((layer.fields ?? []).map((field) => field.name));
+  return present.size > 0
+    ? RESTAURANT_OUT_FIELDS.filter((name) => present.has(name))
+    : RESTAURANT_OUT_FIELDS;
+}
+
 // Same closure strings isClosedInspection() checks — avoids
 // hand-duplicating CLOSED_ACTIONS. Escaped like escapeSqlString() below.
 function buildClosedClause(): string {
@@ -240,7 +250,7 @@ export async function queryVisibleRestaurants(
   }
   baseQuery.spatialRelationship = "intersects";
   baseQuery.where = layer.definitionExpression ?? "1=1";
-  baseQuery.outFields = RESTAURANT_OUT_FIELDS;
+  baseQuery.outFields = restaurantOutFields(layer);
   baseQuery.returnGeometry = false;
 
   const allFeatures: Graphic[] = [];
@@ -393,7 +403,7 @@ export async function queryRestaurantByCamis(
   const query = layer.createQuery();
   const escapedCamis = escapeSqlString(camis);
   query.where = `id = '${escapedCamis}' OR camis = '${escapedCamis}'`;
-  query.outFields = RESTAURANT_OUT_FIELDS;
+  query.outFields = restaurantOutFields(layer);
   query.returnGeometry = false;
   query.num = 1;
 

@@ -59,6 +59,7 @@ import {
   findRestaurantGraphicHit,
   queryCitywideGradeCounts,
   RESTAURANT_OUT_FIELDS,
+  restaurantOutFields,
 } from "../queries/mapQueries";
 
 esriConfig.apiKey = import.meta.env.PUBLIC_ARCGIS_API_KEY;
@@ -913,7 +914,7 @@ export default function InspectionMapView({
           where,
           returnGeometry: true,
           // Rings carry the full record so hover and click can use them directly.
-          outFields: RESTAURANT_OUT_FIELDS,
+          outFields: restaurantOutFields(layer),
         }),
       )
       .then(({ features }) => {

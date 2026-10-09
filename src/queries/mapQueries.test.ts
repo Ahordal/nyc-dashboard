@@ -18,6 +18,7 @@ import {
   findRestaurantGraphicHit,
   CATEGORY_CLAUSES,
   RESTAURANT_OUT_FIELDS,
+  restaurantOutFields,
 } from "./mapQueries";
 import type { Filters } from "../types/filters";
 
@@ -251,7 +252,7 @@ describe("queryRestaurantByCamis", () => {
 
     const q = layer.captured[0];
     expect(q.where).toBe("id = 'O''Brien''s 5' OR camis = 'O''Brien''s 5'");
-    expect(q.outFields).toBe(RESTAURANT_OUT_FIELDS);
+    expect(q.outFields).toEqual(RESTAURANT_OUT_FIELDS);
     expect(q.returnGeometry).toBe(false);
     expect(q.num).toBe(1);
     expect(layer.loadCount).toBe(1);
@@ -468,5 +469,27 @@ describe("buildTwoPointFitBounds", () => {
     // the bottom 40%, so everything real must be in the top 60%.
     const cutoff = inset.ymin + (inset.ymax - inset.ymin) * 0.4;
     for (const p of args) expect(p.latitude).toBeGreaterThan(cutoff);
+  });
+});
+
+describe("restaurantOutFields", () => {
+  const withFields = (names: string[]) =>
+    ({ fields: names.map((name) => ({ name })) }) as unknown as Parameters<
+      typeof restaurantOutFields
+    >[0];
+
+  it("drops fields the loaded data doesn't have, so stale data can't fail a query", () => {
+    const stale = RESTAURANT_OUT_FIELDS.filter((name) => !name.startsWith("award_"));
+    expect(restaurantOutFields(withFields(stale))).toEqual(stale);
+  });
+
+  it("keeps every field when the data has them all", () => {
+    expect(restaurantOutFields(withFields([...RESTAURANT_OUT_FIELDS, "search_index"]))).toEqual(
+      RESTAURANT_OUT_FIELDS,
+    );
+  });
+
+  it("falls back to the full list before the layer has loaded its fields", () => {
+    expect(restaurantOutFields(withFields([]))).toEqual(RESTAURANT_OUT_FIELDS);
   });
 });
