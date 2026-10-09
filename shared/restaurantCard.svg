@@ -49,7 +49,7 @@
     <text x="250" y="{{SCORE_Y}}" class="rc-label" font-weight="700" font-size="64" fill="{{GRADE_COLOR}}" text-anchor="middle">{{SCORE}}</text>
 {{STATUS_LINE}}
 
-    <!-- Award icons held now, a quarter of the way from score to footer; empty when none -->
+    <!-- Award icons held now, 30% of the way from score to footer; empty when none -->
 {{AWARD_ICONS}}
 
     <!-- Footer between the bottom grade boxes, vertically centred on them -->

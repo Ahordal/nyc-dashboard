@@ -20,8 +20,13 @@ const SCORE_GAP = 66; // label -> score (64px digits)
 const GROUP_CENTRE_Y = 355;
 
 // Award icons: Font Awesome paths (512 tall, width varies), drawn AWARD_ICON_SIZE
-// tall, centred a quarter of the way from the score's baseline to the footer's cap top.
+// tall, centred AWARD_ROW_POSITION of the way from the score's baseline to the
+// footer's cap top.
 const AWARD_ICON_SIZE = 32;
+const AWARD_ROW_POSITION = 0.3;
+// Fine black outline, in card units. Drawn under the fill (paint-order), so
+// only this much shows outside the icon and its shape stays intact.
+const AWARD_OUTLINE = 1;
 const AWARD_ICON_GAP = 12;
 const FOOTER_CAP_TOP = 660;
 
@@ -178,14 +183,14 @@ function statusLine(category, scoreY, color) {
 // Award icons as a centred row. Each is { width, d, color }: a Font Awesome
 // path (512 tall) and its colour, supplied by the caller's award catalogue.
 export function awardIcons(awards, scoreY) {
-  const centreY = scoreY + (FOOTER_CAP_TOP - scoreY) / 4;
+  const centreY = scoreY + (FOOTER_CAP_TOP - scoreY) * AWARD_ROW_POSITION;
   const scale = AWARD_ICON_SIZE / 512;
   const widths = awards.map(({ width }) => width * scale);
   const rowWidth = widths.reduce((sum, w) => sum + w, 0) + (awards.length - 1) * AWARD_ICON_GAP;
   let x = 250 - rowWidth / 2;
   return awards
     .map(({ d, color }, i) => {
-      const path = `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${escapeXml(color)}" d="${escapeXml(d)}"/>`;
+      const path = `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${escapeXml(color)}" stroke="#000" stroke-width="${(2 * AWARD_OUTLINE) / scale}" stroke-linejoin="round" paint-order="stroke" d="${escapeXml(d)}"/>`;
       x += widths[i] + AWARD_ICON_GAP;
       return path;
     })
