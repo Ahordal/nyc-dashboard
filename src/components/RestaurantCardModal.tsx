@@ -61,7 +61,11 @@ export default function RestaurantCardModal({ dealt, isOpen, onClose }: Restaura
         </div>
       </div>
 
-      {showInfo ? FEATURED_INFO_CONTENT : <FeaturedRestaurantView dealt={dealt} />}
+      {/* The card always sizes the frame, so toggling info never resizes the modal. */}
+      <div className="restaurant-card-frame" data-show-info={showInfo || undefined}>
+        <FeaturedRestaurantView dealt={dealt} />
+        {showInfo && <div className="restaurant-card-info">{FEATURED_INFO_CONTENT}</div>}
+      </div>
     </PanelInfoModal>
   );
 }

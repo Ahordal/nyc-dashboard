@@ -221,9 +221,10 @@
   display: grid;
   grid-template-columns: subgrid;
 
-  /* The popover's own padding already provides the left inset; this
-     section's own left padding would stack on top of it (1rem total). */
+  /* The popover's own padding already provides the inset; this section's
+     would stack on it and pull the X in from the header's right edge. */
   padding-left: 0;
+  padding-right: 0;
 }
 
 .desktop-filters-popover .dashboard-grade-filters .panel {
@@ -245,10 +246,15 @@
   display: none;
 }
 
-/* Pushed to the row's end, so every group's X lines up on the right. */
+/* Pushed to the row's end, so every group's X lines up on the right.
+   32px square, matching the map's .control-chip buttons. */
 .desktop-filters-popover .filter-clear-x {
   display: flex;
   margin-left: auto;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  box-sizing: border-box;
 }
 
 /* The grid's column gap is the label's spacing here. */

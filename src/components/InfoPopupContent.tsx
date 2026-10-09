@@ -79,7 +79,7 @@ export default function InfoPopupContent({
       )}
 
       {grades && (
-        <InfoPopupSection title="Grades & Score Ranges">
+        <InfoPopupSection title="Grades, Statuses & Score Ranges">
           {grades}
         </InfoPopupSection>
       )}

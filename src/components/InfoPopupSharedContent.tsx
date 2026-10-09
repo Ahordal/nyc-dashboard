@@ -280,6 +280,13 @@ export function DataNotes() {
   return (
     <ul>
       <li>
+        Grades and scores measure how closely a restaurant followed food
+        safety rules on the day it was inspected. Lower scores are better:
+        each violation adds points. They don&apos;t rate the food, taste, or
+        service.
+      </li>
+
+      <li>
         Data comes from NYC&apos;s Department of Health and Mental Hygiene
         (DOHMH) and may not include the most recent inspections yet.
       </li>
