@@ -423,7 +423,7 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Featured certificate: gold rather than the grade colour, an honour
+/* Featured star: gold rather than the grade colour, an honour
    rather than a measurement. */
 .badge-box-featured {
   border-color: color-mix(in srgb, var(--award-gold) 80%, transparent);

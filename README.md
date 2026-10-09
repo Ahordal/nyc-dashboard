@@ -35,8 +35,8 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 ### Featured restaurants
 
 - Each day five restaurants are featured, one per borough (see [Restaurant cards](#restaurant-cards-dealt-daily) for how they're picked).
-- Today's five get a gold ring on the map. A gold certificate button among the map controls (or Featured > Today in Filters) narrows the map and list to just them; it's kept in the URL as `featured=today`.
-- Featured is a one-day status: today's five carry a gold certificate beside their grade and score, and it passes to the next five each day. The score chart marks the inspection that earned it. Restaurant Details also lists the date a restaurant was last featured.
+- Today's five get a gold ring on the map. A gold star button among the map controls (or Featured > Today in Filters) narrows the map and list to just them; it's kept in the URL as `featured=today`.
+- Featured is a one-day status: today's five carry a gold star beside their grade and score, and it passes to the next five each day. The score chart marks the inspection that earned it. Restaurant Details also lists the date a restaurant was last featured.
 - Every restaurant has a card, opened from the gold awards button beside its grade and score in Restaurant Details. The card takes the colour of its current grade or status, the same as its map dot (closed restaurants get a ban icon in the corners), and shows the awards it holds now below the score. It's a 3D slab you can drag to rotate, with the citywide grade mix of every restaurant on its back. Scroll zooms it. It spins slowly on its own unless the system asks for reduced motion, a loading animation holds its place while it loads, and a flat card stands in where WebGL isn't available.
 
 ### Restaurant details

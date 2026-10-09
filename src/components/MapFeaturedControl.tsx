@@ -1,10 +1,10 @@
 // MapFeaturedControl.tsx
 //
-// Map-corner gold certificate: shows only today's featured restaurants
+// Map-corner gold star: shows only today's featured restaurants
 // and zooms to them; same 32px shell as the other map controls.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCertificate } from "@fortawesome/free-solid-svg-icons";
+import { faStar } from "@fortawesome/free-solid-svg-icons";
 import MapControlButton from "./MapControlButton";
 
 type MapFeaturedControlProps = {
@@ -25,7 +25,7 @@ export default function MapFeaturedControl({ active, disabled, onToggle }: MapFe
         tooltip={disabled ? undefined : label}
         ariaLabel={label}
         className={`control-chip map-featured-button tooltip-left${active ? " active" : ""}`}>
-        <FontAwesomeIcon icon={faCertificate} aria-hidden="true" />
+        <FontAwesomeIcon icon={faStar} aria-hidden="true" />
       </MapControlButton>
     </div>
   );

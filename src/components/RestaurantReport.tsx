@@ -85,7 +85,7 @@ const REPORT_INFO_CONTENT = (
 type RestaurantReportProps = {
   restaurant: RestaurantProperties | null;
 
-  // The inspection that earned this restaurant's card; only its report shows the certificate.
+  // The inspection that earned this restaurant's card; only its report shows the Featured star.
   earningInspectionId?: string | null;
 
   history: InspectionEvent[];

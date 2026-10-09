@@ -236,7 +236,7 @@ type RestaurantDetailsProps = {
   // touch has no hover, and the row tap opens the report instead.
   isMobile?: boolean;
 
-  // Featured restaurants only: the header's gold certificate opens this card.
+  // Its latest feature, for the Featured row in Restaurant Information.
   featuredCard?: DealtCard | null;
 
   // Every restaurant's grade mix, for the 3D card's back.

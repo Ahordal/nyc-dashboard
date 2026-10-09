@@ -42,7 +42,7 @@ import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 type PerformanceChartProps = {
   restaurant: RestaurantProperties | null;
-  // The inspection that earned this restaurant's card; only its point shows the certificate.
+  // The inspection that earned this restaurant's card; only its point shows the Featured star.
   earningInspectionId?: string | null;
   history: InspectionEvent[];
   isLoadingHistory?: boolean;

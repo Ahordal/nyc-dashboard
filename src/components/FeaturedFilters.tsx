@@ -3,7 +3,7 @@
 // The Filters panel's view of the map's gold chip: today's featured
 // restaurants. One toggle, so no Clear: "Today" clears itself.
 
-import { faCertificate } from "@fortawesome/free-solid-svg-icons";
+import { faStar } from "@fortawesome/free-solid-svg-icons";
 import FilterSection from "./FiltersSection";
 import type { Filters, SetFilters } from "../types/filters";
 
@@ -19,7 +19,7 @@ export default function FeaturedFilters({
   return (
     <FilterSection
       label="Featured"
-      icon={faCertificate}
+      icon={faStar}
       options={[TODAY]}
       selected={filters.featured ? [TODAY] : []}
       onChange={(next) => {

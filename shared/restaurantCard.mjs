@@ -19,14 +19,14 @@ const LABEL_GAP = 62; // last line of the restaurant block -> SCORE label
 const SCORE_GAP = 66; // label -> score (64px digits)
 const GROUP_CENTRE_Y = 355;
 
-// Award icons: Font Awesome paths in their 576x512 box, drawn AWARD_ICON_SIZE
+// Award icons: Font Awesome paths (512 tall, width varies), drawn AWARD_ICON_SIZE
 // tall, centred a quarter of the way from the score's baseline to the footer's cap top.
 const AWARD_ICON_SIZE = 32;
 const AWARD_ICON_GAP = 12;
 const FOOTER_CAP_TOP = 660;
 const AWARD_GOLD = "#d4af37"; // --award-gold
 const AWARD_ICONS = {
-  featured: "M239.2-8c-6.1-6.2-15-8.7-23.4-6.4S200.9-5.6 198.8 2.8L183.5 63c-1.1 4.4-5.6 7-9.9 5.7L113.8 51.9c-8.4-2.4-17.4 0-23.5 6.1s-8.5 15.1-6.1 23.5l16.9 59.8c1.2 4.3-1.4 8.8-5.7 9.9L35.1 166.5c-8.4 2.1-15 8.7-17.3 17.1s.2 17.3 6.4 23.4l44.5 43.3c3.2 3.1 3.2 8.3 0 11.5L24.3 305.1c-6.2 6.1-8.7 15-6.4 23.4s8.9 14.9 17.3 17.1l60.2 15.3c4.4 1.1 7 5.6 5.7 9.9L84.2 430.5c-2.4 8.4 0 17.4 6.1 23.5s15.1 8.5 23.5 6.1l59.8-16.9c4.3-1.2 8.8 1.4 9.9 5.7l15.3 60.2c2.1 8.4 8.7 15 17.1 17.3s17.3-.2 23.4-6.4l43.3-44.5c3.1-3.2 8.3-3.2 11.5 0L337.3 520c6.1 6.2 15 8.7 23.4 6.4s14.9-8.9 17.1-17.3L393.1 449c1.1-4.4 5.6-7 9.9-5.7l59.8 16.9c8.4 2.4 17.4 0 23.5-6.1s8.5-15.1 6.1-23.5l-16.9-59.8c-1.2-4.3 1.4-8.8 5.7-9.9l60.2-15.3c8.4-2.1 15-8.7 17.3-17.1s-.2-17.4-6.4-23.4l-44.5-43.3c-3.2-3.1-3.2-8.3 0-11.5l44.5-43.3c6.2-6.1 8.7-15 6.4-23.4s-8.9-14.9-17.3-17.1l-60.2-15.3c-4.4-1.1-7-5.6-5.7-9.9l16.9-59.8c2.4-8.4 0-17.4-6.1-23.5s-15.1-8.5-23.5-6.1L403 68.8c-4.3 1.2-8.8-1.4-9.9-5.7L377.8 2.8c-2.1-8.4-8.7-15-17.1-17.3s-17.3 .2-23.4 6.4L294 36.5c-3.1 3.2-8.3 3.2-11.5 0L239.2-8z",
+  featured: { width: 576, d: "M309.5-18.9c-4.1-8-12.4-13.1-21.4-13.1s-17.3 5.1-21.4 13.1L193.1 125.3 33.2 150.7c-8.9 1.4-16.3 7.7-19.1 16.3s-.5 18 5.8 24.4l114.4 114.5-25.2 159.9c-1.4 8.9 2.3 17.9 9.6 23.2s16.9 6.1 25 2L288.1 417.6 432.4 491c8 4.1 17.7 3.3 25-2s11-14.2 9.6-23.2L441.7 305.9 556.1 191.4c6.4-6.4 8.6-15.8 5.8-24.4s-10.1-14.9-19.1-16.3L383 125.3 309.5-18.9z" },
 };
 
 // Corner letter per status. Closed gets Font Awesome's ban icon instead, so
@@ -184,12 +184,14 @@ export function awardIcons(awards, scoreY) {
   const known = awards.filter((id) => id in AWARD_ICONS);
   const centreY = scoreY + (FOOTER_CAP_TOP - scoreY) / 4;
   const scale = AWARD_ICON_SIZE / 512;
-  const width = 576 * scale;
-  const rowWidth = known.length * width + (known.length - 1) * AWARD_ICON_GAP;
+  const widths = known.map((id) => AWARD_ICONS[id].width * scale);
+  const rowWidth = widths.reduce((sum, w) => sum + w, 0) + (known.length - 1) * AWARD_ICON_GAP;
+  let x = 250 - rowWidth / 2;
   return known
     .map((id, i) => {
-      const x = 250 - rowWidth / 2 + i * (width + AWARD_ICON_GAP);
-      return `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${AWARD_GOLD}" d="${AWARD_ICONS[id]}"/>`;
+      const path = `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${AWARD_GOLD}" d="${AWARD_ICONS[id].d}"/>`;
+      x += widths[i] + AWARD_ICON_GAP;
+      return path;
     })
     .join("\n");
 }

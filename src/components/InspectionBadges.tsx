@@ -1,13 +1,13 @@
 // InspectionBadges.tsx
 //
 // Renders the grade and score badge pair with category-based colour and
-// fallbacks for missing values, plus the gold certificate when featured today.
+// fallbacks for missing values, plus the gold Featured star when featured today.
 // With onViewCard (Details) a third box, the gold award icon, opens the
 // restaurant's card.
 
 import type { CSSProperties } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAward, faCertificate } from "@fortawesome/free-solid-svg-icons";
+import { faAward, faStar } from "@fortawesome/free-solid-svg-icons";
 import {
   getGradeCategory,
   CATEGORY_COLORS,
@@ -19,12 +19,12 @@ type InspectionBadgesProps = {
   grade: string | null;
   action?: string | null;
   style?: CSSProperties;
-  // Featured today: the gold certificate box (Restaurant List, hover card).
+  // Featured today: the gold star box (Restaurant List, hover card).
   featured?: boolean;
   onViewCard?: () => void;
 };
 
-const certificate = <FontAwesomeIcon icon={faCertificate} className="badge-icon" aria-hidden="true" />;
+const featuredStar = <FontAwesomeIcon icon={faStar} className="badge-icon" aria-hidden="true" />;
 const award = <FontAwesomeIcon icon={faAward} className="badge-icon" aria-hidden="true" />;
 
 export default function InspectionBadges({
@@ -68,7 +68,7 @@ export default function InspectionBadges({
       ) : (
         featured && (
           <span className="badge-box badge-box-featured" role="img" aria-label="Featured restaurant">
-            {certificate}
+            {featuredStar}
           </span>
         )
       )}

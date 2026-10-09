@@ -4,7 +4,7 @@
 // Restaurant List's header in featured mode.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCertificate } from "@fortawesome/free-solid-svg-icons";
+import { faStar } from "@fortawesome/free-solid-svg-icons";
 import InfoPopupContent from "./InfoPopupContent";
 
 // Mirrors the eligibility rules in pipeline/deal-cards.mjs.
@@ -23,9 +23,9 @@ const FEATURED_INFO_CONTENT = (
         </li>
 
         <li>
-          The gold certificate{" "}
+          The gold star{" "}
           <FontAwesomeIcon
-            icon={faCertificate}
+            icon={faStar}
             className="legend-featured-text"
             aria-hidden="true"
           />{" "}
@@ -38,14 +38,14 @@ const FEATURED_INFO_CONTENT = (
     howToUse={
       <ul>
         <li>
-          Select the gold certificate on the map, or Today under Featured in
+          Select the gold star on the map, or Today under Featured in
           Filters, to show only today&apos;s featured restaurants; select it
           again to show all.
         </li>
 
         <li>
-          Select the gold certificate in Restaurant Details to see a featured
-          restaurant&apos;s card, with the certificate among its awards.
+          Select the gold Awards button in Restaurant Details to see a
+          featured restaurant&apos;s card, with the star among its awards.
         </li>
       </ul>
     }
