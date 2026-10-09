@@ -25,6 +25,7 @@ import AppBar from "./AppBar";
 import DashboardTitle from "./DashboardTitle";
 import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
+import FeaturedFilters from "./FeaturedFilters";
 import StatsPanel from "./StatsPanel";
 import FilterSummary from "./FilterSummary";
 import DashboardGuide from "./DashboardGuide";
@@ -65,6 +66,13 @@ import type {
 } from "../types/restaurant";
 
 import type { DashboardMeta } from "../types/dashboardMeta";
+import type { FeaturedData } from "../types/featured";
+import {
+  EMPTY_FEATURED,
+  earningInspectionId,
+  indexFeaturedByCamis,
+  latestFeaturedDate,
+} from "../utils/featured";
 import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 import type {
   SelectionState,
@@ -102,6 +110,7 @@ export default function Dashboard() {
   const [filters, setFilters] = useState<Filters>({
     grades: [],
     boroughs: [],
+    featured: false,
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -119,9 +128,9 @@ export default function Dashboard() {
   const gradeDrawerId = useId();
 
   // Below this, Grade/Borough buttons stop fitting one line — swap to a popover trigger instead.
-  const isFullDesktop = useMediaQuery("(min-width: 2360px)");
   const desktopFiltersPopoverId = useId();
-  const activeFilterCount = filters.grades.length + filters.boroughs.length;
+  const activeFilterCount =
+    filters.grades.length + filters.boroughs.length + (filters.featured ? 1 : 0);
 
   // Selection, hover, and tab state move together — rules live in selectionReducer.
   const [selection, dispatchSelection] = useReducer(
@@ -178,18 +187,27 @@ export default function Dashboard() {
     null,
   );
 
+  const featured = useJsonFetch<FeaturedData>("/data/featured.json", EMPTY_FEATURED);
+  const featuredByCamis = useMemo(() => indexFeaturedByCamis(featured), [featured]);
+  // Latest hand's restaurants get gold rings on the map.
+  const featuredDate = useMemo(() => latestFeaturedDate(featured), [featured]);
+  const selectedFeaturedCard = selectedRestaurant
+    ? (featuredByCamis.get(selectedRestaurant.camis) ?? null)
+    : null;
+
   // Stable reference needed here since RestaurantList is memoized too —
   // a fresh element every render would defeat that.
   const restaurantListFilterNotice = useMemo(
     () => (
       <NoticeOverlay
-        triggerKey={`${filters.grades.join(",")}-${filters.boroughs.join(",")}-${searchQuery}-${
+        triggerKey={`${filters.grades.join(",")}-${filters.boroughs.join(",")}-${filters.featured}-${searchQuery}-${
           searchRadiusPoint ? `radius-${activeRadiusMiles}` : ""
         }`}
         durationMs={FILTER_NOTICE_DURATION_MS}>
         {getFilterNoticeParts({
           grades: filters.grades,
           boroughs: filters.boroughs,
+          featured: filters.featured,
           searchQuery,
           hasSearchRadius: Boolean(searchRadiusPoint),
         }).map((part, index) => (
@@ -214,6 +232,9 @@ export default function Dashboard() {
               {part.kind === "boroughs" && (
                 <>Borough: {part.boroughs.join(", ")}</>
               )}
+              {part.kind === "featured" && (
+                <span className="filter-notice-featured">Featured today</span>
+              )}
               {part.kind === "search" && (
                 <>Search: &quot;{part.query}&quot;</>
               )}
@@ -235,6 +256,7 @@ export default function Dashboard() {
     [
       filters.grades,
       filters.boroughs,
+      filters.featured,
       searchQuery,
       searchRadiusPoint,
       activeRadiusMiles,
@@ -247,10 +269,11 @@ export default function Dashboard() {
   );
 
   const handleInitialUrlState = useCallback((initial: InitialUrlState) => {
-    if (initial.grades.length > 0 || initial.boroughs.length > 0) {
+    if (initial.grades.length > 0 || initial.boroughs.length > 0 || initial.featured) {
       setFilters({
         grades: initial.grades,
         boroughs: initial.boroughs,
+        featured: initial.featured,
       });
     }
 
@@ -273,6 +296,7 @@ export default function Dashboard() {
     {
       grades: filters.grades,
       boroughs: filters.boroughs,
+      featured: filters.featured,
       searchQuery,
       selectedRestaurantCamis: selectedRestaurant?.camis ?? null,
       searchRadiusPoint,
@@ -316,6 +340,17 @@ export default function Dashboard() {
     dispatchSelection({ type: "changeTab", tab });
   }, []);
 
+  // Turning featured mode on shows its restaurants in the list.
+  const handleToggleFeatured = useCallback(() => {
+    if (!filters.featured) dispatchSelection({ type: "changeTab", tab: "list" });
+    // Featured and Grade cancel out (see GradeFilters).
+    setFilters((current) => ({
+      ...current,
+      featured: !current.featured,
+      grades: current.featured ? current.grades : [],
+    }));
+  }, [filters.featured]);
+
   const handleInitialSelectionResolved = useCallback(() => {
     setPendingCamisFromUrl(null);
   }, []);
@@ -337,6 +372,7 @@ export default function Dashboard() {
       activeTab: activeExplorerTab,
       history,
       isLoadingHistory,
+      featuredCard: selectedFeaturedCard,
     };
 
     const mobileSelectionHandlers: SelectionHandlers = {
@@ -378,6 +414,8 @@ export default function Dashboard() {
         onInitialSelectionResolved={handleInitialSelectionResolved}
         violationCodes={violationCodes}
         dashboardMeta={dashboardMeta}
+        featuredDate={featuredDate}
+        onToggleFeatured={handleToggleFeatured}
       />
     );
   }
@@ -427,7 +465,9 @@ export default function Dashboard() {
       <div className="desktop-filters-button-wrap">
         <button
           type="button"
-          className="control-chip desktop-filters-button"
+          className="control-chip desktop-filters-button tooltip-left"
+          // Hidden while open, so it can't sit over the popover.
+          data-tooltip={activeDrawer === "filters" ? undefined : "Filters"}
           aria-expanded={activeDrawer === "filters"}
           aria-controls={desktopFiltersPopoverId}
           aria-label={
@@ -464,6 +504,10 @@ export default function Dashboard() {
 
             <div className="dashboard-borough-filters">
               <BoroughFilters filters={filters} setFilters={setFilters} />
+            </div>
+
+            <div className="dashboard-featured-filters">
+              <FeaturedFilters filters={filters} setFilters={setFilters} />
             </div>
           </div>
         </div>
@@ -525,24 +569,7 @@ export default function Dashboard() {
         </div>
 
         <div className="map-column">
-          <div
-            className={
-              !isTablet && !isFullDesktop
-                ? "map-top map-top-single-row"
-                : "map-top"
-            }>
-            {!isTablet && isFullDesktop && (
-              <div className="dashboard-filters">
-                <div className="dashboard-grade-filters">
-                  <GradeFilters filters={filters} setFilters={setFilters} />
-                </div>
-
-                <div className="dashboard-borough-filters">
-                  <BoroughFilters filters={filters} setFilters={setFilters} />
-                </div>
-              </div>
-            )}
-
+          <div className={isTablet ? "map-top" : "map-top map-top-single-row"}>
             {isTablet ? (
               <div className="tablet-kpi-region">
                 <div className="tablet-kpi-bar">
@@ -582,8 +609,6 @@ export default function Dashboard() {
                   )}
                 </div>
               </div>
-            ) : isFullDesktop ? (
-              statsPanel
             ) : (
               compactDesktopStatsPanel
             )}
@@ -609,6 +634,8 @@ export default function Dashboard() {
                   initialSelectedCamis={pendingCamisFromUrl}
                   onInitialSelectionResolved={handleInitialSelectionResolved}
                   showLocateControl={isTablet}
+                  featuredDate={featuredDate}
+                  onToggleFeatured={handleToggleFeatured}
                 />
               </Suspense>
             </ErrorBoundary>
@@ -643,7 +670,8 @@ export default function Dashboard() {
                 onSelectRestaurant={handleSelectRestaurant}
                 onHoverRestaurant={handleHoverRestaurant}
                 searchRadiusPoint={searchRadiusPoint}
-                userLocationPoint={locateDistanceOrigin}>
+                userLocationPoint={locateDistanceOrigin}
+                featuredMode={filters.featured}>
                 {restaurantListFilterNotice}
               </RestaurantList>
             </div>
@@ -666,6 +694,7 @@ export default function Dashboard() {
                 selectedInspectionId={reportInspectionId}
                 onSelectInspection={handleSelectInspection}
                 onHoverInspection={handleHoverInspection}
+                featuredCard={selectedFeaturedCard}
               />
             </div>
 
@@ -678,6 +707,9 @@ export default function Dashboard() {
               }`}>
               <RestaurantReport
                 restaurant={selectedRestaurant}
+                earningInspectionId={
+                  selectedFeaturedCard ? earningInspectionId(selectedFeaturedCard.card) : null
+                }
                 history={history}
                 isLoadingHistory={isLoadingHistory}
                 selectedInspectionId={reportInspectionId}
@@ -685,6 +717,7 @@ export default function Dashboard() {
                 onSelectInspection={handleSelectInspection}
               />
             </div>
+
           </div>
         </div>
 
@@ -699,6 +732,9 @@ export default function Dashboard() {
               fallback={<ChartSkeleton label="Loading score history…" />}>
               <PerformanceChart
                 restaurant={selectedRestaurant}
+                earningInspectionId={
+                  selectedFeaturedCard ? earningInspectionId(selectedFeaturedCard.card) : null
+                }
                 history={history}
                 isLoadingHistory={isLoadingHistory}
                 onSelectInspection={handleSelectInspection}

@@ -28,6 +28,8 @@ import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 import { getGradeCategory } from "../utils/gradeCategory";
 import { pointsRenderer } from "../utils/mapRenderer";
 import { buildUserLocationGraphics } from "../utils/userLocationGraphics";
+import { buildFeaturedRingGraphics } from "../utils/featuredRingGraphics";
+import MapFeaturedControl from "./MapFeaturedControl";
 import { useSearchRadiusTool } from "../hooks/useSearchRadiusTool";
 import { useSelectionHighlight } from "../hooks/useSelectionHighlight";
 import { useMapHover } from "../hooks/useMapHover";
@@ -47,6 +49,7 @@ import { isWithinNYC } from "../../shared/nycBounds.mjs";
 import {
   buildDefinitionExpression,
   buildGradeWhereClause,
+  buildFeaturedWhereClause,
   queryVisibleRestaurants,
   queryRestaurantByCamis,
   checkSelectionAgainstFilters,
@@ -69,6 +72,11 @@ function isAbortError(err: unknown): boolean {
     err instanceof Error &&
     (err.name === "AbortError" || err.name.startsWith("cancelled"))
   );
+}
+
+function featuredDayNumber(date: string | null | undefined): number | null {
+  const day = date ? Number(date.replaceAll("-", "")) : NaN;
+  return Number.isInteger(day) && day > 0 ? day : null;
 }
 
 type MapViewProps = {
@@ -115,6 +123,10 @@ type MapViewProps = {
   // the locate action fits both the fix and a selected restaurant above
   // the sheet rather than just recentring on the fix. Omitted on desktop.
   getViewBottomInset?: () => number;
+  // Latest hand's date (YYYY-MM-DD); its restaurants get gold rings.
+  featuredDate?: string | null;
+  // The gold chip; filters.featured is its on/off state.
+  onToggleFeatured?: () => void;
 };
 
 // Shared by both "locate + selection" paths: locate with a restaurant
@@ -221,6 +233,8 @@ export default function InspectionMapView({
   showHoverGlow = true,
   showLocateControl = false,
   getViewBottomInset,
+  featuredDate = null,
+  onToggleFeatured,
 }: MapViewProps) {
   const [hoverCard, setHoverCard] = useState<HoverCardState | null>(null);
   const [mapView, setMapView] = useState<MapView | null>(null);
@@ -241,6 +255,9 @@ export default function InspectionMapView({
   const layerRef = useRef<GeoJSONLayer | null>(null);
   const viewRef = useRef<MapView | null>(null);
   const ringsLayerRef = useRef<GraphicsLayer | null>(null);
+  const featuredRingsLayerRef = useRef<GraphicsLayer | null>(null);
+  const featuredDateRef = useRef(featuredDate);
+  featuredDateRef.current = featuredDate;
   const userLocationLayerRef = useRef<GraphicsLayer | null>(null);
 
   const searchRadius = useSearchRadiusTool(
@@ -275,6 +292,8 @@ export default function InspectionMapView({
   );
 
   const prevBoroughsRef = useRef<string[]>(filters.boroughs);
+  // Date last framed in featured mode; re-frames once a late-loading date arrives.
+  const prevFeaturedKeyRef = useRef<string | null>(null);
   const prevSearchRef = useRef<string>(searchQuery);
 
   const queryRequestIdRef = useRef(0);
@@ -355,8 +374,16 @@ export default function InspectionMapView({
       : null;
 
     try {
-      const restaurants = await queryVisibleRestaurants(view, layer, radius);
+      const queried = await queryVisibleRestaurants(view, layer, radius);
       if (requestId !== queryRequestIdRef.current) return;
+
+      const featuredDay = filtersRef.current.featured
+        ? featuredDayNumber(featuredDateRef.current)
+        : null;
+      const restaurants =
+        featuredDay === null
+          ? queried
+          : queried.filter((r) => r.featured_date === featuredDay);
 
       // GradeChart tallies before the grade filter so it shows the full
       // distribution (matching slices highlighted, not removed);
@@ -404,14 +431,19 @@ export default function InspectionMapView({
     const ringsLayer = new GraphicsLayer({ title: "Search Radius Rings" });
     ringsLayerRef.current = ringsLayer;
 
+    // Own layer, so adding or toggling rings never redraws the restaurant dots.
+    const featuredRingsLayer = new GraphicsLayer({ title: "Featured Rings" });
+    featuredRingsLayerRef.current = featuredRingsLayer;
+
     const userLocationLayer = new GraphicsLayer({ title: "User Location" });
     userLocationLayerRef.current = userLocationLayer;
 
     const map = new Map({
       basemap: "arcgis/dark-gray/base",
-      // ArcGIS draws array order bottom-to-top: rings under every
-      // restaurant point, user location on top so it's never buried in a cluster.
-      layers: [ringsLayer, layer, userLocationLayer],
+      // ArcGIS draws array order bottom-to-top: search rings under every
+      // point; hollow featured rings above, so neighbouring dots can't cover
+      // them; user location on top so it's never buried in a cluster.
+      layers: [ringsLayer, layer, featuredRingsLayer, userLocationLayer],
     });
 
     const view = new MapView({
@@ -695,13 +727,17 @@ export default function InspectionMapView({
     );
     layer.definitionExpression = newDefinitionExpression;
 
-    const gradeWhereClause = buildGradeWhereClause(filters.grades);
+    const featuredWhereClause =
+      filters.featured && featuredDate ? buildFeaturedWhereClause(featuredDate) : null;
+    const displayWhereClause =
+      [buildGradeWhereClause(filters.grades), featuredWhereClause].filter(Boolean).join(" AND ") ||
+      null;
     if (view) {
       view
         .whenLayerView(layer)
         .then((layerView) => {
-          layerView.filter = gradeWhereClause
-            ? new FeatureFilter({ where: gradeWhereClause })
+          layerView.filter = displayWhereClause
+            ? new FeatureFilter({ where: displayWhereClause })
             : null;
         })
         .catch((err) => {
@@ -721,7 +757,12 @@ export default function InspectionMapView({
     const searchChanged = prevSearchRef.current !== searchQuery;
     prevSearchRef.current = searchQuery;
 
-    const cameraTrigger = boroughsChanged || searchChanged;
+    // Only switching featured on moves the camera; off leaves the view put.
+    const featuredKey = filters.featured && featuredDate ? featuredDate : null;
+    const featuredTurnedOn = featuredKey !== null && featuredKey !== prevFeaturedKeyRef.current;
+    prevFeaturedKeyRef.current = featuredKey;
+
+    const cameraTrigger = boroughsChanged || searchChanged || featuredTurnedOn;
 
     // Guards every side effect below: a fast filter/search edit can start a
     // new run before this one's awaits resolve, and a stale run must not
@@ -738,7 +779,7 @@ export default function InspectionMapView({
       if (currentId) {
         const selectionCheckExpression = [
           newDefinitionExpression,
-          gradeWhereClause,
+          displayWhereClause,
         ]
           .filter(Boolean)
           .join(" AND ");
@@ -775,12 +816,17 @@ export default function InspectionMapView({
       // it doesn't override the circle view; the query still re-runs.
       const radiusActive = searchRadius.searchRadiusPointRef.current !== null;
 
+      // Featured mode frames today's restaurants within any borough/search.
+      const extentExpression = [newDefinitionExpression, featuredWhereClause]
+        .filter(Boolean)
+        .join(" AND ");
+
       if (cameraTrigger && view && !radiusActive) {
-        if (newDefinitionExpression) {
+        if (extentExpression) {
           try {
             const { count, extent, isDegenerate } = await queryFilterExtent(
               layer,
-              newDefinitionExpression,
+              extentExpression,
             );
 
             if (cancelled) return;
@@ -825,10 +871,52 @@ export default function InspectionMapView({
   }, [
     filters,
     searchQuery,
+    featuredDate,
     onVisibleRestaurantsChange,
     onGradeCountsChange,
     applyHighlightForId,
   ]);
+
+  // Queries respect definitionExpression, so rings follow borough and search;
+  // a grade filter without A hides them, as featured restaurants are all A.
+  useEffect(() => {
+    const layer = layerRef.current;
+    const ringsLayer = featuredRingsLayerRef.current;
+    if (!layer || !ringsLayer) return;
+
+    const showsA = filters.grades.length === 0 || filters.grades.includes("A");
+    const where = featuredDate ? buildFeaturedWhereClause(featuredDate) : null;
+    if (!where || !showsA) {
+      ringsLayer.removeAll();
+      return;
+    }
+
+    let cancelled = false;
+    layer
+      .load()
+      .then(() =>
+        layer.queryFeatures({
+          where,
+          returnGeometry: true,
+          outFields: ["camis"],
+        }),
+      )
+      .then(({ features }) => {
+        if (cancelled) return;
+        ringsLayer.removeAll();
+        ringsLayer.addMany(
+          buildFeaturedRingGraphics(features.flatMap((f) => (f.geometry ? [f.geometry] : []))),
+        );
+      })
+      .catch((err) => {
+        if (isAbortError(err)) return;
+        console.error("MapView: failed to place featured rings", err);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [featuredDate, filters, searchQuery, retryNonce]);
 
   return (
     <div className="map-view-container">
@@ -856,6 +944,13 @@ export default function InspectionMapView({
           onDismiss={searchRadius.handleDismiss}
           onRadiusChange={searchRadius.handleRadiusChange}
         />
+        {onToggleFeatured && (
+          <MapFeaturedControl
+            active={filters.featured}
+            disabled={!featuredDate}
+            onToggle={onToggleFeatured}
+          />
+        )}
 
         {showLocateControl && (
           <>

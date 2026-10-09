@@ -86,17 +86,6 @@
     grid-template-columns: clamp(320px, 22vw, 400px) minmax(480px, 1fr) clamp(325px, 22.5vw, 430px);
   }
 
-  /* Filter row compressed so Grade + Borough have a better chance of
-     staying on one line at this band's narrower widths (>=2360px has
-     the room to spare); .dashboard-filters still wraps them if not. */
-  .dashboard-grade-filters .panel,
-  .dashboard-borough-filters .panel {
-    padding: 0.4rem 0.5rem;
-  }
-
-  .filter-clear {
-    margin-right: var(--space-xs);
-  }
 }
 
 /* Tighter panel chrome across the whole desktop range (>=1751px), not just
@@ -145,7 +134,8 @@
 
   .map-view-top-header,
   .map-basemap-toggle-container,
-  .map-search-radius-container {
+  .map-search-radius-container,
+  .map-featured-container {
     right: var(--space-xs);
   }
 
@@ -159,6 +149,10 @@
 
   .map-search-radius-container {
     top: calc(var(--space-xs) + 40px + 32px + 8px);
+  }
+
+  .map-featured-container {
+    top: calc(var(--space-xs) + 40px + 32px + 8px + 40px);
   }
 
   .map-scale-bar-container {
@@ -425,7 +419,8 @@
 
   .dashboard .map-basemap-toggle-container,
   .dashboard .map-search-radius-container,
-  .dashboard .map-user-location-container {
+  .dashboard .map-user-location-container,
+  .dashboard .map-featured-container {
     right: var(--space-xs);
   }
 
@@ -446,6 +441,10 @@
      hidden legend button frees the 40px it reserved. */
   .dashboard .map-user-location-container {
     top: calc(1rem + 80px);
+  }
+
+  .dashboard .map-featured-container {
+    top: calc(1rem + 120px);
   }
 
   /* Scale readout (bottom-left) and scale bar (bottom-right) tucked 0.5rem

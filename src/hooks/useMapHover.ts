@@ -14,7 +14,6 @@ import type MapView from "@arcgis/core/views/MapView";
 
 import type { RestaurantProperties } from "../types/restaurant";
 import type { HoverCardState } from "../components/MapHoverCard";
-import { getGradeCategory } from "../utils/gradeCategory";
 import { findRestaurantGraphicHit } from "../queries/mapQueries";
 
 // Hover cards need distinguishable dots; below this scale the handler
@@ -80,9 +79,10 @@ export function useMapHover({
           x: event.x,
           y: event.y,
           name: attrs.name,
-          category: getGradeCategory(attrs.action, attrs.grade, attrs.score),
-          gradeText: attrs.grade ? attrs.grade : "N/A",
-          scoreText: attrs.score != null ? String(attrs.score) : "—",
+          grade: attrs.grade ?? null,
+          score: attrs.score ?? null,
+          action: attrs.action ?? "",
+          featured: Boolean(attrs.featured_date),
         });
       } else {
         setHoverCard(null);

@@ -159,6 +159,11 @@
   text-transform: uppercase;
 }
 
+/* Gold, like the map chip and rings it reports. */
+.filter-notice-featured {
+  color: var(--award-gold);
+}
+
 @keyframes filter-notice-fade {
   0% { opacity: 0; }
   10% { opacity: 1; }

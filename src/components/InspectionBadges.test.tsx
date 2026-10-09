@@ -36,4 +36,18 @@ describe("InspectionBadges", () => {
     const scoreVal = screen.getByText("10");
     expect(scoreVal.style.color).toBe(hexToRgb(CATEGORY_COLORS.A));
   });
+
+  it("shows no certificate unless featured", () => {
+    render(<InspectionBadges score={10} grade="A" />);
+    expect(screen.queryByLabelText(/featured restaurant/i)).toBeNull();
+  });
+
+  it("shows a plain certificate when featured, a button only with onViewCard", () => {
+    const { rerender } = render(<InspectionBadges score={10} grade="A" featured />);
+    expect(screen.getByRole("img", { name: "Featured restaurant" })).toBeTruthy();
+    expect(screen.queryByRole("button")).toBeNull();
+
+    rerender(<InspectionBadges score={10} grade="A" featured onViewCard={() => {}} />);
+    expect(screen.getByRole("button", { name: "View featured restaurant" })).toBeTruthy();
+  });
 });

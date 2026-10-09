@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   BOROUGHS,
   EMPTY_FEATURED,
+  applyFeaturedDates,
   chainNames,
   dealHand,
   isEligible,
@@ -108,6 +109,15 @@ test("mergeFeatured keeps every date, sorted, with the committed hand winning a 
     { date: DATE, cards: ["remote-7"] },
     { date: "2026-10-08", cards: ["local-8"] },
   ]);
+});
+
+test("applyFeaturedDates stamps featured restaurants and nulls everyone else", () => {
+  const featuredOne = restaurant();
+  const other = restaurant();
+  const featured = { ...EMPTY_FEATURED, hands: [{ date: DATE, cards: [{ camis: featuredOne.properties.camis }] }] };
+  applyFeaturedDates([featuredOne, other], featured);
+  assert.equal(featuredOne.properties.featured_date, 20261007);
+  assert.equal(other.properties.featured_date, null);
 });
 
 test("newYorkDate uses New York's calendar", () => {

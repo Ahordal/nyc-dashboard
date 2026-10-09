@@ -56,6 +56,7 @@ function makeRestaurant(id: string, date: string): RestaurantProperties {
     action: "No violations were recorded at the time of this inspection.",
     current_status_code: "open",
     current_status_label: "Open",
+    featured_date: null,
   };
 }
 

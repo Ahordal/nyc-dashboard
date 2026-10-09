@@ -46,6 +46,7 @@ export const RESTAURANT_OUT_FIELDS = [
   "action",
   "current_status_code",
   "current_status_label",
+  "featured_date",
 ];
 
 // Same closure strings isClosedInspection() checks — avoids
@@ -171,6 +172,13 @@ export function buildGradeWhereClause(grades: string[]): string | null {
     .join(" OR ");
 
   return gradeClause ? `(${gradeClause})` : null;
+}
+
+// Restaurants featured on one day (YYYY-MM-DD): the gold rings and the
+// featured filter. featured_date is a YYYYMMDD number on the layer.
+export function buildFeaturedWhereClause(date: string): string | null {
+  const day = Number(date.replaceAll("-", ""));
+  return Number.isInteger(day) && day > 0 ? `featured_date = ${day}` : null;
 }
 
 // Client-side twin of buildGradeWhereClause: filters an already-fetched

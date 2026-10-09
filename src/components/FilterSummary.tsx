@@ -31,6 +31,7 @@ function FilterSummary({
   const parts = getFilterNoticeParts({
     grades: filters.grades,
     boroughs: filters.boroughs,
+    featured: filters.featured,
     searchQuery,
     hasSearchRadius: false,
   });
@@ -61,6 +62,9 @@ function FilterSummary({
                 {part.boroughs.join(", ")}
               </span>
             </>
+          )}
+          {part.kind === "featured" && (
+            <span className="filter-notice-featured">Featured today</span>
           )}
           {part.kind === "search" && (
             <>

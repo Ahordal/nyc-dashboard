@@ -2,10 +2,10 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { escapeXml, fitName, layoutText, cuisineLine, subLines, scoreGlyphs, renderCard } from "./generate-featured-card.mjs";
+import { escapeXml, fitName, layoutText, cuisineLine, subLines, scoreGlyphs, renderCard } from "../shared/restaurantCard.mjs";
 import { CATEGORY_COLORS } from "../shared/gradeColours.mjs";
 
-const template = readFileSync(path.join(import.meta.dirname, "templates", "featured-card.svg"), "utf8");
+const template = readFileSync(path.join(import.meta.dirname, "..", "shared", "restaurantCard.svg"), "utf8");
 
 test("fitName keeps the largest size when the name wraps into two lines", () => {
   assert.deepEqual(fitName("Morris Park Bake Shop"), { size: 44, lines: ["MORRIS PARK", "BAKE SHOP"] });

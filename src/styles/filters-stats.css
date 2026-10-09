@@ -16,18 +16,20 @@
 }
 
 .dashboard-grade-filters,
-.dashboard-borough-filters {
+.dashboard-borough-filters,
+.dashboard-featured-filters {
   min-width: 0;
 }
 
 .dashboard-grade-filters .panel,
-.dashboard-borough-filters .panel {
+.dashboard-borough-filters .panel,
+.dashboard-featured-filters .panel {
   display: flex;
   align-items: center;
   justify-content: center;
   width: auto;
   height: 100%;
-  padding: 0.4rem 1rem;
+  padding: 0.4rem 0.5rem;
   background: transparent;
   border: none;
 }
@@ -98,6 +100,11 @@
   margin-right: var(--space-s);
 }
 
+/* Only the desktop popover uses the X; the mobile drawer keeps Clear. */
+.filter-clear-x {
+  display: none;
+}
+
 /* Shell (shape/color/type) for the small numeric/dot notification badges
    anchored to a corner of their trigger button - the app-bar badge
    (mobile.css, responsive.css) and this file's desktop filters badge.
@@ -120,9 +127,9 @@
   line-height: 1;
 }
 
-/* 7.2 COMPACT-DESKTOP FILTERS BUTTON (1751-2359px)
-   Below the width the inline row above fits on one line, Grade/Borough
-   move behind this small button instead -- sized and styled like
+/* 7.2 DESKTOP FILTERS BUTTON
+   Every desktop width keeps the filters behind this small button, so new
+   filter groups never wrap a row -- sized and styled like
    MapView's own 32px control chips. Nested inside the KPI panel itself
    (StatsPanel's filtersButton prop) rather than an adjacent box: the
    panel's own outer edge keeps lining up with the search panel beside
@@ -142,12 +149,13 @@
   font-size: var(--fs-lg);
 }
 
-/* Only aria-expanded drives the highlighted look, not :hover -- otherwise
-   closing the popover while the cursor is still resting on the button
-   (the normal case right after a click) leaves it looking selected. */
-.desktop-filters-button[aria-expanded="true"] {
-  background-color: var(--link-background-hover);
-  color: var(--link-hover);
+/* Same hover as the map's control chips; real hover only, so touch's
+   sticky :hover can't hold it. */
+@media (hover: hover) {
+  .desktop-filters-button:hover {
+    color: var(--link-hover);
+    background-color: var(--link-background-hover);
+  }
 }
 
 .desktop-filters-badge {
@@ -160,10 +168,8 @@
    resize it. Positioned off .stats-panel (its nearest positioned
    ancestor, a sibling here, not the button) so it sits 0.5rem below the
    KPI panel's own bottom edge and flush with the map's right edge,
-   independent of where the button sits inside that panel. Reuses
-   .dashboard-filters (the >=2360px inline row) rather than duplicating
-   filter markup; stacked/left-aligned here since even at this width
-   it's narrower than that row. */
+   independent of where the button sits inside that panel. Groups stack
+   and left-align. */
 .desktop-filters-popover {
   position: absolute;
   top: calc(100% + var(--space-xs));
@@ -186,15 +192,32 @@
   margin-bottom: 0;
 }
 
+/* One grid shared by every row (via subgrid): the label column is as wide
+   as the longest label, so options line up with exactly 0.5rem after it. */
 .desktop-filters-popover .dashboard-filters {
-  flex-direction: column;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  column-gap: var(--space-xs);
   border: none;
   width: auto;
 }
 
+.desktop-filters-popover .dashboard-grade-filters,
+.desktop-filters-popover .dashboard-borough-filters,
+.desktop-filters-popover .dashboard-featured-filters,
+.desktop-filters-popover .filter-group {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
+  align-items: center;
+}
+
 .desktop-filters-popover .dashboard-grade-filters .panel,
-.desktop-filters-popover .dashboard-borough-filters .panel {
-  justify-content: flex-start;
+.desktop-filters-popover .dashboard-borough-filters .panel,
+.desktop-filters-popover .dashboard-featured-filters .panel {
+  grid-column: 1 / -1;
+  display: grid;
+  grid-template-columns: subgrid;
 
   /* The popover's own padding already provides the left inset; this
      section's own left padding would stack on top of it (1rem total). */
@@ -208,19 +231,35 @@
 
 .desktop-filters-popover .dashboard-borough-filters .panel {
   padding-top: var(--space-xs);
+  border-bottom: 1px solid var(--border-panel);
+  padding-bottom: var(--space-xs);
 }
 
-.desktop-filters-popover .filter-group {
-  justify-content: flex-start;
+.desktop-filters-popover .dashboard-featured-filters .panel {
+  padding-top: var(--space-xs);
 }
 
-/* Fixed label column so Clear (and the buttons after it) start at the
-   same x position in both rows, regardless of "Grade" vs "Borough"
-   being different lengths -- text stays left-aligned within the wider
-   box. */
+.desktop-filters-popover .filter-clear {
+  display: none;
+}
+
+/* Pushed to the row's end, so every group's X lines up on the right. */
+.desktop-filters-popover .filter-clear-x {
+  display: flex;
+  margin-left: auto;
+}
+
+/* The grid's column gap is the label's spacing here. */
 .desktop-filters-popover .filter-label {
-  width: 5.5rem;
-  flex-shrink: 0;
+  margin-right: 0;
+}
+
+/* A real wrapping row in the options column (display:contents elsewhere). */
+.desktop-filters-popover .filter-options {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
 }
 
 /* ///////////////////////////////////////////// 8. STATS PANEL ////////////////////////////////////////////// */

@@ -42,6 +42,8 @@ import { CATEGORY_COLORS } from "../utils/gradeCategory";
 
 type PerformanceChartProps = {
   restaurant: RestaurantProperties | null;
+  // The inspection that earned this restaurant's card; only its point shows the certificate.
+  earningInspectionId?: string | null;
   history: InspectionEvent[];
   isLoadingHistory?: boolean;
   onSelectInspection?: (inspectionId: string) => void;
@@ -300,6 +302,7 @@ function generateTimeTicks(
 
 function PerformanceChart({
   restaurant,
+  earningInspectionId = null,
   history,
   isLoadingHistory = false,
   onSelectInspection,
@@ -714,6 +717,10 @@ function PerformanceChart({
         <PerformanceTooltip
           hoveredPoint={tooltipPriority.activeTooltipPoint}
           variant={tooltipVariant}
+          featured={
+            earningInspectionId != null &&
+            tooltipPriority.activeTooltipPoint?.payload.id === earningInspectionId
+          }
           formattedDate={
             tooltipPriority.activeTooltipPoint
               ? formatTooltipDate(

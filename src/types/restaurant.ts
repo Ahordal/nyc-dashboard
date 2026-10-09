@@ -53,6 +53,8 @@ export type RestaurantProperties = {
   action: string;
   current_status_code: CurrentStatus;
   current_status_label: string;
+  // Day this restaurant was featured, as YYYYMMDD (NYC); null if never.
+  featured_date: number | null;
 };
 
 // Inspection history

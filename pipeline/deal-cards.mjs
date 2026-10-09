@@ -1,14 +1,10 @@
 // deal-cards.mjs
 //
-// Deals the daily hand of restaurant cards: one eligible restaurant per
-// borough, recorded as a snapshot in featured.json on the `data` branch.
-// run-geocode-backfill.mjs deals once a day; merge-and-commit-cache.mjs
-// commits it; the build copies featured.json to public/data for the
-// dashboard, which draws each card from its snapshot.
+// Deals the daily hand: one eligible restaurant per borough, snapshotted
+// into featured.json on `data`. Run by run-geocode-backfill.mjs.
 //
 // Local dev: node pipeline/deal-cards.mjs [YYYY-MM-DD]
-// Deals from public/data/latest-inspections.geojson into
-// pipeline/featured.json and copies it to public/data.
+// Deals from the local GeoJSON and stamps featured_date, like the build.
 
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
@@ -16,8 +12,7 @@ import { pathToFileURL } from "node:url";
 
 export const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"];
 
-// A name at this many locations or more counts as a chain: the cards
-// promote independents.
+// Names at this many locations count as chains; cards promote independents.
 const CHAIN_MIN_LOCATIONS = 3;
 // Recent enough that the grade on the card is still the restaurant's.
 const MAX_INSPECTION_AGE_DAYS = 365;
@@ -117,6 +112,21 @@ export function mergeFeatured(local, remote) {
   return { ...EMPTY_FEATURED, hands: [...byDate.values()].sort((a, b) => a.date.localeCompare(b.date)) };
 }
 
+// On the map data itself, so the dashboard needs no featured.json lookup.
+// A YYYYMMDD number: ArcGIS reads date-like strings as date fields, which
+// breaks plain equality queries.
+export function applyFeaturedDates(features, featured) {
+  const dates = new Map();
+  for (const hand of featured.hands) {
+    const day = Number(hand.date.replaceAll("-", ""));
+    for (const card of hand.cards) dates.set(card.camis, day);
+  }
+  for (const { properties } of features) {
+    properties.featured_date = dates.get(properties.camis) ?? null;
+  }
+  return features;
+}
+
 // Missing or unreadable file reads as no hands yet, never a crash.
 export async function loadFeatured(filePath) {
   try {
@@ -146,6 +156,13 @@ async function main() {
   await writeFile(featuredPath, JSON.stringify(updated, null, 2), "utf-8");
   await mkdir(path.join(root, "public/data"), { recursive: true });
   await writeFile(path.join(root, "public/data/featured.json"), JSON.stringify(updated), "utf-8");
+  // Same stamping as the build, so local dev sees the hand without a full rebuild.
+  applyFeaturedDates(geojson.features, updated);
+  await writeFile(
+    path.join(root, "public/data/latest-inspections.geojson"),
+    JSON.stringify(geojson),
+    "utf-8",
+  );
   console.log(`Dealt ${date}: ${hand.cards.map((c) => `${c.name} (${c.boro})`).join(", ")}`);
 }
 

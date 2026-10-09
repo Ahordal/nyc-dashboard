@@ -9,6 +9,7 @@ import type {
 } from "./restaurant";
 import type { SearchRadiusPoint, SearchRadiusMiles } from "./searchRadius";
 import type { InitialRadiusState } from "../hooks/useUrlSync";
+import type { DealtCard } from "./featured";
 
 export type SelectionState = {
   restaurant: RestaurantProperties | null;
@@ -18,6 +19,7 @@ export type SelectionState = {
   activeTab: ExplorerTab;
   history: InspectionEvent[];
   isLoadingHistory: boolean;
+  featuredCard: DealtCard | null;
 };
 
 export type SelectionHandlers = {

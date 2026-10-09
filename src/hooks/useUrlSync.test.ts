@@ -71,6 +71,7 @@ describe("parseInitialUrlState", () => {
     expect(parseInitialUrlState("")).toEqual({
       grades: [],
       boroughs: [],
+      featured: false,
       searchQuery: "",
       camis: null,
       radius: null,
@@ -104,6 +105,7 @@ describe("buildUrlQuery", () => {
   const empty: UrlSyncState = {
     grades: [],
     boroughs: [],
+    featured: false,
     searchQuery: "",
     selectedRestaurantCamis: null,
     searchRadiusPoint: null,
@@ -112,6 +114,20 @@ describe("buildUrlQuery", () => {
 
   it("emits nothing when no state is active", () => {
     expect(buildUrlQuery({ ...empty })).toBe("");
+  });
+
+  it("round-trips featured mode as featured=today", () => {
+    const query = buildUrlQuery({ ...empty, featured: true });
+    expect(query).toBe("featured=today");
+    expect(parseInitialUrlState(`?${query}`).featured).toBe(true);
+    expect(parseInitialUrlState("?featured=yes").featured).toBe(false);
+  });
+
+  it("drops grades when featured is on, since the two cancel out", () => {
+    const state = parseInitialUrlState("?grades=B,C&boroughs=Queens&featured=today");
+    expect(state.grades).toEqual([]);
+    expect(state.boroughs).toEqual(["Queens"]);
+    expect(state.featured).toBe(true);
   });
 
   it("serializes filters, search, and selection", () => {
@@ -170,6 +186,7 @@ describe("useUrlSync", () => {
     return {
       grades: [],
       boroughs: [],
+      featured: false,
       searchQuery: "",
       selectedRestaurantCamis: null,
       searchRadiusPoint: null,

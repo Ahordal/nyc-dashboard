@@ -85,6 +85,9 @@ const REPORT_INFO_CONTENT = (
 type RestaurantReportProps = {
   restaurant: RestaurantProperties | null;
 
+  // The inspection that earned this restaurant's card; only its report shows the certificate.
+  earningInspectionId?: string | null;
+
   history: InspectionEvent[];
 
   // History carries the violation data (the GeoJSON feature no longer
@@ -100,6 +103,7 @@ type RestaurantReportProps = {
 
 function RestaurantReport({
   restaurant,
+  earningInspectionId = null,
   history,
   isLoadingHistory = false,
   selectedInspectionId,
@@ -219,6 +223,10 @@ function RestaurantReport({
           score={displayed.score}
           grade={displayed.grade}
           action={displayed.action}
+          featured={
+            earningInspectionId != null &&
+            (selectedEvent?.id ?? restaurant.id) === earningInspectionId
+          }
         />
 
         {history.length > 1 && (

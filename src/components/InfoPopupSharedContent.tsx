@@ -433,6 +433,19 @@ export function LegendTable() {
         {LEGEND_ROWS.map((row) => (
           <LegendRow key={row.label} row={row} />
         ))}
+
+        <tr>
+          <td>
+            <span className="legend-grade-text legend-featured-text">Featured</span>
+          </td>
+          <td>
+            <div className="legend-scale-visual single-dot-align">
+              {/* Ring alone: the dot inside varies with score like any A. */}
+              <span className="legend-featured-ring" />
+            </div>
+          </td>
+          <td className="legend-score-text">Today&apos;s featured restaurants</td>
+        </tr>
       </tbody>
     </table>
   );

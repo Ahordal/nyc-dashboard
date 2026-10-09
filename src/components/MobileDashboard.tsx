@@ -32,6 +32,7 @@ import ExplorerTabs from "./ExplorerTabs";
 import RestaurantList from "./RestaurantList";
 import RestaurantDetails from "./RestaurantDetails";
 import RestaurantReport from "./RestaurantReport";
+import { earningInspectionId } from "../utils/featured";
 import RestaurantCard from "./RestaurantCard";
 import MapViewSkeleton from "./MapViewSkeleton";
 import ChartSkeleton from "./ChartSkeleton";
@@ -80,6 +81,10 @@ type MobileDashboardProps = {
 
   violationCodes: ViolationCodeLookup;
   dashboardMeta: DashboardMeta | null;
+
+  // Latest hand's date: its restaurants get gold rings on the map.
+  featuredDate: string | null;
+  onToggleFeatured: () => void;
 };
 
 export default function MobileDashboard({
@@ -99,6 +104,8 @@ export default function MobileDashboard({
   onInitialSelectionResolved,
   violationCodes,
   dashboardMeta,
+  featuredDate,
+  onToggleFeatured,
 }: MobileDashboardProps) {
   const {
     restaurant: selectedRestaurant,
@@ -108,6 +115,7 @@ export default function MobileDashboard({
     activeTab: activeExplorerTab,
     history,
     isLoadingHistory,
+    featuredCard,
   } = selection;
   const {
     onSelectRestaurant,
@@ -330,7 +338,8 @@ export default function MobileDashboard({
 
   // Names whichever of search/filters/radius is actually narrowing
   // results, rather than a generic "Browse restaurants".
-  const hasActiveFilters = filters.grades.length > 0 || filters.boroughs.length > 0;
+  const hasActiveFilters =
+    filters.grades.length > 0 || filters.boroughs.length > 0 || filters.featured;
   const browsePromptNoun = searching
     ? hasActiveFilters
       ? "Filtered Search Results"
@@ -402,6 +411,8 @@ export default function MobileDashboard({
               showHoverGlow={false}
               showLocateControl
               getViewBottomInset={getViewBottomInset}
+              featuredDate={featuredDate}
+              onToggleFeatured={onToggleFeatured}
             />
           </Suspense>
         </ErrorBoundary>
@@ -485,6 +496,7 @@ export default function MobileDashboard({
                       searchRadiusPoint={searchRadiusPoint}
                       userLocationPoint={userLocationPoint}
                       isMobile
+                      featuredMode={filters.featured}
                     />
                   </div>
 
@@ -506,6 +518,7 @@ export default function MobileDashboard({
                       onHoverInspection={onHoverInspection}
                       historyScrollTarget={historyScrollTarget}
                       isMobile
+                      featuredCard={featuredCard}
                     />
                   </div>
 
@@ -516,6 +529,9 @@ export default function MobileDashboard({
                     className={paneClass("report", "restaurant-report")}>
                     <RestaurantReport
                       restaurant={selectedRestaurant}
+                      earningInspectionId={
+                        featuredCard ? earningInspectionId(featuredCard.card) : null
+                      }
                       history={history}
                       isLoadingHistory={isLoadingHistory}
                       selectedInspectionId={reportInspectionId}
@@ -523,6 +539,7 @@ export default function MobileDashboard({
                       onSelectInspection={onSelectInspection}
                     />
                   </div>
+
                 </div>
 
                 {showPerformanceChart && (
@@ -540,6 +557,9 @@ export default function MobileDashboard({
                         fallback={<ChartSkeleton label="Loading score history…" />}>
                         <PerformanceChart
                           restaurant={selectedRestaurant}
+                          earningInspectionId={
+                            featuredCard ? earningInspectionId(featuredCard.card) : null
+                          }
                           history={history}
                           isLoadingHistory={isLoadingHistory}
                           onSelectInspection={handleChartPreview}

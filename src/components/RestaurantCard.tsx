@@ -90,6 +90,7 @@ export default function RestaurantCard({
   const ariaLabel = [
     name,
     gradeLabel,
+    restaurant.featured_date && "featured restaurant",
     address && `at ${address}`,
     restaurant.cuisine && `${restaurant.cuisine} cuisine`,
     distanceMiles != null && `${formatApproxMilesSpoken(distanceMiles)} away`,
@@ -151,6 +152,7 @@ export default function RestaurantCard({
         score={restaurant.score}
         grade={restaurant.grade}
         action={restaurant.action}
+        featured={Boolean(restaurant.featured_date)}
       />
     </div>
   );

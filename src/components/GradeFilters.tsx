@@ -40,7 +40,10 @@ export default function GradeFilters({
       icon={faGraduationCap}
       options={gradeCategories}
       selected={filters.grades}
-      onChange={(grades) => setFilters({ ...filters, grades })}
+      // Featured picks are all A, so a grade filter replaces featured mode.
+      onChange={(grades) =>
+        setFilters({ ...filters, grades, featured: grades.length > 0 ? false : filters.featured })
+      }
       getActiveColor={(option) => GRADE_FILTER_COLORS[option]}
     />
   );

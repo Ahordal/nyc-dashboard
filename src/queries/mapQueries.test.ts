@@ -10,6 +10,7 @@ import {
   buildSearchClause,
   buildDefinitionExpression,
   buildGradeWhereClause,
+  buildFeaturedWhereClause,
   buildTwoPointFitBounds,
   queryVisibleRestaurants,
   queryRestaurantByCamis,
@@ -20,7 +21,7 @@ import {
 } from "./mapQueries";
 import type { Filters } from "../types/filters";
 
-const NO_FILTERS: Filters = { grades: [], boroughs: [] };
+const NO_FILTERS: Filters = { grades: [], boroughs: [], featured: false };
 
 describe("buildSearchClause", () => {
   it("returns null for an empty or whitespace-only query", () => {
@@ -59,22 +60,32 @@ describe("buildDefinitionExpression", () => {
   });
 
   it("combines a borough filter and a search clause with AND", () => {
-    const filters: Filters = { grades: [], boroughs: ["Manhattan", "Queens"] };
+    const filters: Filters = { grades: [], boroughs: ["Manhattan", "Queens"], featured: false };
     expect(buildDefinitionExpression(filters, "pizza")).toBe(
       "boro IN ('Manhattan','Queens') AND (UPPER(search_index) LIKE '%PIZZA%')",
     );
   });
 
   it("applies only the borough clause when search is empty", () => {
-    const filters: Filters = { grades: [], boroughs: ["Brooklyn"] };
+    const filters: Filters = { grades: [], boroughs: ["Brooklyn"], featured: false };
     expect(buildDefinitionExpression(filters, "")).toBe("boro IN ('Brooklyn')");
   });
 
   it("escapes single quotes in borough values (e.g. a hand-edited URL)", () => {
-    const filters: Filters = { grades: [], boroughs: ["X')) OR (('1'='1"] };
+    const filters: Filters = { grades: [], boroughs: ["X')) OR (('1'='1"], featured: false };
     expect(buildDefinitionExpression(filters, "")).toBe(
       "boro IN ('X'')) OR ((''1''=''1')",
     );
+  });
+});
+
+describe("buildFeaturedWhereClause", () => {
+  it("matches one featured day as the layer's YYYYMMDD number", () => {
+    expect(buildFeaturedWhereClause("2026-10-09")).toBe("featured_date = 20261009");
+  });
+
+  it("returns null for anything that isn't a date, so nothing is interpolated", () => {
+    expect(buildFeaturedWhereClause("x' OR '1'='1")).toBeNull();
   });
 });
 

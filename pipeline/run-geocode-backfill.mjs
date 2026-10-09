@@ -113,9 +113,8 @@ async function main() {
       `${inspectionCount} inspections [${formatDelta(inspectionDelta)}]).`,
   );
 
-  // Dealt here because this GeoJSON already reflects today's geocodes, and
-  // the run commits to `data` once a day. Last, so a dealing failure can't
-  // cost the geocode or count results above.
+  // Here because this GeoJSON has today's geocodes and the run commits daily.
+  // Last, so a dealing failure can't cost the results above.
   const featured = await loadFeatured(FEATURED_PATH);
   const date = newYorkDate();
   const hand = dealHand(latestGeoJSON.features, featured, date);

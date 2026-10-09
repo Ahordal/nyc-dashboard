@@ -62,9 +62,7 @@
 }
 
 /* Flex, not subgrid: map-top's row1 no longer needs to match whatever
-   height search/sidebar's row1 happens to need (it can vary a lot --
-   e.g. the filters row not rendering at all in the compact-desktop
-   band). map-top takes only what its own content needs; map-view (flex:1)
+   height search/sidebar's row1 happens to need. map-top takes only what its own content needs; map-view (flex:1)
    absorbs the rest, so the gap above the map is always this row-gap,
    not leftover subgrid-row slack. */
 .map-column {
@@ -94,10 +92,8 @@
   z-index: 30;
 }
 
-/* Compact desktop: the filters row above doesn't render at all here (see
-   .desktop-filters-button), so the row-gap above has nothing to
-   separate -- it was just adding 0.5rem of dead space before the KPI
-   row. One row, no gap. */
+/* Desktop: filters live behind .desktop-filters-button, so map-top is
+   just the KPI row. One row, no gap. */
 .map-top-single-row {
   grid-template-rows: minmax(0, 1fr);
   gap: 0;

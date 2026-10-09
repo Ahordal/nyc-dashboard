@@ -1,7 +1,7 @@
 // RestaurantHeroHeader.tsx
 //
 // Shared header block: the restaurant name coloured by grade category,
-// with its inspection badges.
+// with its inspection badges (and card box, when featured).
 
 import InspectionBadges from "./InspectionBadges";
 import { getGradeCategory, CATEGORY_COLORS } from "../utils/gradeCategory";
@@ -12,6 +12,8 @@ type RestaurantHeroHeaderProps = {
   score: number | null;
   grade: string | null;
   action?: string | null;
+  featured?: boolean;
+  onViewCard?: () => void;
 };
 
 export default function RestaurantHeroHeader({
@@ -19,6 +21,8 @@ export default function RestaurantHeroHeader({
   score,
   grade,
   action,
+  featured = false,
+  onViewCard,
 }: RestaurantHeroHeaderProps) {
   const category = getGradeCategory(action ?? "", grade, score ?? 0);
   const categoryColor = CATEGORY_COLORS[category];
@@ -36,7 +40,9 @@ export default function RestaurantHeroHeader({
       </div>
 
       <div className="details-hero-badges">
-        <InspectionBadges score={score} grade={grade} action={action} />
+        <InspectionBadges score={score} grade={grade} action={action} featured={featured}
+          onViewCard={onViewCard}
+        />
       </div>
     </div>
   );

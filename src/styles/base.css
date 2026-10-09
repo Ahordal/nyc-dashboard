@@ -184,6 +184,9 @@ summary:focus-visible,
   --status-negative-text: #fff;
   --status-warning-bg: #e6b800;
   --status-warning-text: #1a1a1a;
+
+  /* Restaurant card award: metallic, kept clear of the warning yellow above. */
+  --award-gold: #d4af37;
   --status-delta-positive: #66bb6a;
   --status-delta-negative: #ef5350;
   --bg-score: #272727;

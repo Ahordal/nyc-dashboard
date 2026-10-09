@@ -19,6 +19,16 @@ describe("getFilterNoticeParts", () => {
     expect(getFilterNoticeParts(base)).toEqual([{ kind: "all" }]);
   });
 
+  it("adds a featured segment after boroughs, before search", () => {
+    expect(
+      getFilterNoticeParts({ ...base, boroughs: ["Queens"], featured: true, searchQuery: "pho" }),
+    ).toEqual([
+      { kind: "boroughs", boroughs: ["Queens"] },
+      { kind: "featured" },
+      { kind: "search", query: "pho" },
+    ]);
+  });
+
   it("emits a single segment for each filter on its own", () => {
     expect(getFilterNoticeParts({ ...base, grades: ["A", "B"] })).toEqual([
       { kind: "grades", grades: ["A", "B"] },

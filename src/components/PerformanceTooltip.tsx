@@ -24,6 +24,7 @@ type PerformanceTooltipProps = {
   } | null;
   formattedDate: string;
   variant?: "full" | "compact";
+  featured?: boolean;
 };
 
 // Padding kept from the chart edges
@@ -37,6 +38,7 @@ export default function PerformanceTooltip({
   hoveredPoint,
   formattedDate,
   variant = "full",
+  featured = false,
 }: PerformanceTooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<CSSProperties>({
@@ -137,6 +139,7 @@ export default function PerformanceTooltip({
         score={score}
         grade={grade}
         action={action}
+        featured={featured}
         style={{
           justifyContent: "center",
         }}

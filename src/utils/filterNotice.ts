@@ -6,6 +6,7 @@
 export type FilterNoticePart =
   | { kind: "grades"; grades: string[] }
   | { kind: "boroughs"; boroughs: string[] }
+  | { kind: "featured" }
   | { kind: "search"; query: string }
   | { kind: "radius" }
   | { kind: "all" };
@@ -13,6 +14,7 @@ export type FilterNoticePart =
 export type FilterNoticeInput = {
   grades: string[];
   boroughs: string[];
+  featured?: boolean;
   searchQuery: string;
   hasSearchRadius: boolean;
 };
@@ -20,6 +22,7 @@ export type FilterNoticeInput = {
 export function getFilterNoticeParts({
   grades,
   boroughs,
+  featured = false,
   searchQuery,
   hasSearchRadius,
 }: FilterNoticeInput): FilterNoticePart[] {
@@ -30,6 +33,9 @@ export function getFilterNoticeParts({
   }
   if (boroughs.length > 0) {
     parts.push({ kind: "boroughs", boroughs });
+  }
+  if (featured) {
+    parts.push({ kind: "featured" });
   }
   if (searchQuery) {
     parts.push({ kind: "search", query: searchQuery });

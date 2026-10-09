@@ -20,7 +20,7 @@ import {
   UNINSPECTED_GRADE,
 } from "../shared/inspectionStatus.mjs";
 import { isWithinNYC } from "../shared/nycBounds.mjs";
-import { loadFeatured } from "./deal-cards.mjs";
+import { applyFeaturedDates, loadFeatured } from "./deal-cards.mjs";
 
 // Read-only geocode cache committed by scheduled backfill. If absent, falls back to raw DOHMH coords.
 const GEOCODE_CACHE_PATH = path.join(import.meta.dirname, "geocode-cache.json");
@@ -722,6 +722,7 @@ async function main() {
       generatedAt,
       geocodeCache,
     );
+    applyFeaturedDates(latestGeoJSON.features, featured);
     history = buildInspectionHistory(eventsByRestaurant, generatedAt);
     violationCodes = buildViolationCodeLookup(rows, categoryMapping);
     dashboardMeta = buildDashboardMeta(

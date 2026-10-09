@@ -16,6 +16,7 @@ import {
 
 import GradeFilters from "./GradeFilters";
 import BoroughFilters from "./BoroughFilters";
+import FeaturedFilters from "./FeaturedFilters";
 import ExplorerSearch from "./ExplorerSearch";
 import DashboardGuideMeta from "./DashboardGuideMeta";
 import DashboardFooter from "./DashboardFooter";
@@ -71,7 +72,8 @@ export default function AppBar({
     onDrawerChange(infoOpen ? null : "info");
   }
 
-  const activeFilterCount = filters.grades.length + filters.boroughs.length;
+  const activeFilterCount =
+    filters.grades.length + filters.boroughs.length + (filters.featured ? 1 : 0);
 
   return (
     <>
@@ -166,6 +168,7 @@ export default function AppBar({
           <div className="mobile-filter-groups">
             <GradeFilters filters={filters} setFilters={setFilters} />
             <BoroughFilters filters={filters} setFilters={setFilters} />
+            <FeaturedFilters filters={filters} setFilters={setFilters} />
           </div>
         </div>
       </div>

@@ -10,8 +10,10 @@ import { memo, useEffect, useMemo, useRef, useState } from "react";
 import PanelHeader from "./PanelHeader";
 import InfoPopupContent from "./InfoPopupContent";
 import RestaurantHeroHeader from "./RestaurantHeroHeader";
+import RestaurantCardModal from "./RestaurantCardModal";
 import Badge from "./Badge";
 import type { BadgeVariant } from "./Badge";
+import type { DealtCard } from "../types/featured";
 
 import type {
   RestaurantProperties,
@@ -231,6 +233,9 @@ type RestaurantDetailsProps = {
   // Mobile drops the hover/focus preview bullet from the info panel —
   // touch has no hover, and the row tap opens the report instead.
   isMobile?: boolean;
+
+  // Featured restaurants only: the header's gold certificate opens this card.
+  featuredCard?: DealtCard | null;
 };
 
 function RestaurantDetails({
@@ -244,8 +249,10 @@ function RestaurantDetails({
   distanceOriginKind = "your-location",
   historyScrollTarget,
   isMobile = false,
+  featuredCard = null,
 }: RestaurantDetailsProps) {
   const [showInfo, setShowInfo] = useState(false);
+  const [showCard, setShowCard] = useState(false);
 
   const infoContent = useMemo(
     () => restaurantInfoContent(isMobile),
@@ -338,7 +345,17 @@ function RestaurantDetails({
           score={restaurant.score}
           grade={restaurant.grade}
           action={restaurant.action}
+          featured={Boolean(restaurant.featured_date)}
+          onViewCard={featuredCard ? () => setShowCard(true) : undefined}
         />
+
+        {featuredCard && (
+          <RestaurantCardModal
+            dealt={featuredCard}
+            isOpen={showCard}
+            onClose={() => setShowCard(false)}
+          />
+        )}
 
         <h3 className="section-header">Restaurant Information</h3>
 
@@ -384,6 +401,7 @@ function RestaurantDetails({
                 </div>
               </td>
             </tr>
+
           </tbody>
         </table>
 

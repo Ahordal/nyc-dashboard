@@ -8,15 +8,17 @@
 
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
-import { CATEGORY_COLORS } from "../utils/gradeCategory";
+import InspectionBadges from "./InspectionBadges";
+import { CATEGORY_COLORS, getGradeCategory } from "../utils/gradeCategory";
 
 export type HoverCardState = {
   x: number;
   y: number;
   name: string;
-  category: keyof typeof CATEGORY_COLORS;
-  gradeText: string;
-  scoreText: string;
+  grade: string | null;
+  score: number | null;
+  action: string;
+  featured: boolean;
 };
 
 // Offset from the cursor on its default (below-right) side.
@@ -25,7 +27,7 @@ const CURSOR_OFFSET = 12;
 const EDGE_PADDING = 8;
 
 export default function MapHoverCard({ card }: { card: HoverCardState }) {
-  const color = CATEGORY_COLORS[card.category];
+  const color = CATEGORY_COLORS[getGradeCategory(card.action, card.grade, card.score)];
   const cardRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<CSSProperties>({ visibility: "hidden" });
 
@@ -59,28 +61,12 @@ export default function MapHoverCard({ card }: { card: HoverCardState }) {
       <span className="map-hover-card-name" style={{ color }}>
         {card.name}
       </span>
-      <div className="map-hover-card-stats">
-        <div
-          className="badge-box"
-          style={{
-            borderColor: `color-mix(in srgb, ${color} 80%, transparent)`,
-          }}>
-          <span className="badge-label">GRADE</span>
-          <span className="badge-val" style={{ color }}>
-            {card.gradeText}
-          </span>
-        </div>
-        <div
-          className="badge-box"
-          style={{
-            borderColor: `color-mix(in srgb, ${color} 80%, transparent)`,
-          }}>
-          <span className="badge-label">SCORE</span>
-          <span className="badge-val" style={{ color }}>
-            {card.scoreText}
-          </span>
-        </div>
-      </div>
+      <InspectionBadges
+        score={card.score}
+        grade={card.grade}
+        action={card.action}
+        featured={card.featured}
+      />
     </div>
   );
 }

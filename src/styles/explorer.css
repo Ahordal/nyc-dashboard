@@ -412,7 +412,7 @@
   letter-spacing: 0.05em;
   color: var(--text-muted);
   line-height: 1;
-  margin-bottom: 2px;
+  margin-bottom: 4px;
 }
 
 .badge-val {
@@ -421,6 +421,29 @@
   font-size: var(--fs-lg);
   line-height: 1;
   font-variant-numeric: tabular-nums;
+}
+
+/* Featured certificate: gold rather than the grade colour, an honour
+   rather than a measurement. */
+.badge-box-featured {
+  border-color: color-mix(in srgb, var(--award-gold) 80%, transparent);
+}
+
+/* In Details only, where it opens the card. */
+.badge-box-button {
+  padding: 0;
+  font: inherit;
+  cursor: pointer;
+}
+
+.badge-box-button:hover {
+  background-color: var(--link-background-hover);
+}
+
+/* No label above it, so the icon takes the box's full height. */
+.badge-icon {
+  font-size: var(--fs-xl);
+  color: var(--award-gold);
 }
 
 /* ///////////////////////////////////////////// 11. RESTAURANT DETAILS & REPORTS ////////////////////////////////////////////// */
@@ -480,6 +503,45 @@
   align-items: center;
   gap: 0.5rem;
   flex-shrink: 0;
+}
+
+.restaurant-card-modal-actions {
+  display: flex;
+  align-items: center;
+}
+
+.restaurant-card-modal-icon {
+  color: var(--award-gold);
+}
+
+/* Featured restaurant card in its modal. */
+.featured-card-body {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-bottom: var(--space-s);
+}
+
+/* Capped so the 5:7 card stays a sensible size on a wide panel. */
+.restaurant-card-art {
+  width: min(100%, 320px);
+
+  /* Artwork, not copy: no text cursor or selection on its SVG text. */
+  cursor: default;
+  user-select: none;
+}
+
+.restaurant-card-art svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.restaurant-card-caption {
+  color: var(--text-muted);
+  font-size: var(--fs-sm);
+  text-align: center;
 }
 
 .details-table {

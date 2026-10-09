@@ -82,6 +82,20 @@
   justify-content: center;
 }
 
+.legend-featured-text {
+  color: var(--award-gold);
+}
+
+/* Mirrors the map's ring (featuredRingGraphics.ts). */
+.legend-featured-ring {
+  display: inline-block;
+  width: 16px;
+  height: 16px;
+  border: 2px solid var(--award-gold);
+  border-radius: 50%;
+  box-sizing: border-box;
+}
+
 .legend-score-text {
   font-size: var(--fs-md);
   line-height: 1.35;
@@ -143,14 +157,7 @@
   white-space: nowrap;
 }
 
-.map-hover-card-stats {
-  display: flex;
-  align-items: center;
-  gap: 0.35rem;
-}
-
-/* Size/layout/type come from shared .badge-box/.badge-label/.badge-val;
-   only the square corner is specific here. */
+/* Boxes come from the shared InspectionBadges; only the square corner is specific. */
 .map-hover-card .badge-box {
   border-radius: 0;
 }
@@ -409,6 +416,34 @@
   box-shadow: inset 0 -2px 0 0 var(--border-panel);
 }
 
+/* Featured chip: bottom of the right column (below "locate me" where that
+   shows; see mobile.css / responsive.css). Gold icon always, gold border when on. */
+.map-featured-container {
+  position: absolute;
+  top: calc(1rem + 40px + 32px + 8px + 32px + 8px);
+  right: 1rem;
+  z-index: 10;
+  pointer-events: auto;
+}
+
+.map-featured-button {
+  padding: 0;
+  color: var(--award-gold);
+}
+
+.map-featured-button:hover:not(:disabled) {
+  background-color: var(--link-background-hover);
+}
+
+.map-featured-button.active {
+  border-color: var(--award-gold);
+}
+
+.map-featured-button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+
 /* "Locate me" chip: same 32x32 shell as the other map controls, below the
    Search Radius button. Mobile-only, but the base rule carries desktop
    coords for consistency. */
@@ -572,7 +607,8 @@
   white-space: nowrap;
 }
 
-/* Styled tooltip for map icon buttons, replacing the native title attribute. */
+/* Styled tooltip for icon buttons (map controls, the details card box),
+   replacing the native title attribute. */
 [data-tooltip] {
   position: relative;
 }
@@ -624,6 +660,14 @@
 
 [data-tooltip].tooltip-left::after {
   right: calc(100% + 0.5rem);
+}
+
+/* Below, right-aligned: for buttons with neighbours on both sides or the
+   panel edge beside them. */
+[data-tooltip].tooltip-bottom::after {
+  top: calc(100% + 0.5rem);
+  right: 0;
+  transform: none;
 }
 
 .map-scale-bar-container {

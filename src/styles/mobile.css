@@ -67,7 +67,8 @@
 
   .mobile-dashboard .map-basemap-toggle-container,
   .mobile-dashboard .map-search-radius-container,
-  .mobile-dashboard .map-user-location-container {
+  .mobile-dashboard .map-user-location-container,
+  .mobile-dashboard .map-featured-container {
     right: 0.5rem;
   }
 
@@ -87,6 +88,10 @@
 
   .mobile-dashboard .map-user-location-container {
     top: calc(1rem + 80px);
+  }
+
+  .mobile-dashboard .map-featured-container {
+    top: calc(1rem + 120px);
   }
 
   /* Touch's sticky :hover reads as held: pin controls to their resting

@@ -53,7 +53,7 @@ function texture(c) {
   return t;
 }
 
-const GRADE_COLOR = svgText.match(/<g id="grade-box">[^]*?stroke="([^"]+)"/)[1];
+const GRADE_COLOR = svgText.match(/<g id="rc-grade-box">[^]*?stroke="([^"]+)"/)[1];
 const BOX = 128;   // flush corner box, 64 card units
 const DEPTH = 64;  // card thickness 0.16 world units = 32 card units
 const LINE = "rgba(" + [1, 3, 5].map((i) => parseInt(GRADE_COLOR.slice(i, i + 2), 16)).join(",") + ",0.8)";
@@ -63,10 +63,10 @@ async function cardFront() {
   const flush = svgText
     .replace('<rect x="0.5" y="0.5" width="55" height="55"', '<rect x="0.5" y="0.5" width="63" height="63"')
     .replace('<text x="28" y="38"', '<text x="32" y="42"')
-    .replace('<use href="#grade-box" x="8" y="8"/>', '<use href="#grade-box" x="0" y="0"/>')
-    .replace('<use href="#grade-box" x="436" y="8"/>', '<use href="#grade-box" x="436" y="0"/>')
-    .replace('<use href="#grade-box" x="8" y="636" transform="rotate(180 36 664)"/>', '<use href="#grade-box" x="0" y="636" transform="rotate(180 32 668)"/>')
-    .replace('<use href="#grade-box" x="436" y="636" transform="rotate(180 464 664)"/>', '<use href="#grade-box" x="436" y="636" transform="rotate(180 468 668)"/>')
+    .replace('<use href="#rc-grade-box" x="8" y="8"/>', '<use href="#rc-grade-box" x="0" y="0"/>')
+    .replace('<use href="#rc-grade-box" x="436" y="8"/>', '<use href="#rc-grade-box" x="436" y="0"/>')
+    .replace('<use href="#rc-grade-box" x="8" y="636" transform="rotate(180 36 664)"/>', '<use href="#rc-grade-box" x="0" y="636" transform="rotate(180 32 668)"/>')
+    .replace('<use href="#rc-grade-box" x="436" y="636" transform="rotate(180 464 664)"/>', '<use href="#rc-grade-box" x="436" y="636" transform="rotate(180 468 668)"/>')
     // Border (and the texture clip that shares its path) runs on the card edge, stepping 8 around each box.
     .replaceAll(
       "M72.5 8.5 L427.5 8.5 L427.5 72.5 L491.5 72.5 L491.5 627.5 L427.5 627.5 L427.5 691.5 L72.5 691.5 L72.5 627.5 L8.5 627.5 L8.5 72.5 L72.5 72.5 Z",
@@ -90,7 +90,7 @@ function cardBack() {
   for (const [x, y] of [[145,1],[855,1],[855,145],[999,145],[999,1255],[855,1255],[855,1399],[145,1399],[145,1255],[1,1255],[1,145],[145,145]]) g.lineTo(x, y);
   g.closePath(); g.stroke();
   // Corner boxes match the front's: grade letter, bottom pair upside down.
-  const letter = svgText.match(/<g id="grade-box">[^]*?<text[^>]*>([^<]+)<.text>/)[1];
+  const letter = svgText.match(/<g id="rc-grade-box">[^]*?<text[^>]*>([^<]+)<.text>/)[1];
   for (const [x, y, flip] of [[0, 0, false], [1000 - BOX, 0, false], [0, 1400 - BOX, true], [1000 - BOX, 1400 - BOX, true]]) {
     g.fillStyle = "#272727"; g.fillRect(x, y, BOX, BOX);
     g.strokeStyle = LINE; g.lineWidth = 2; g.strokeRect(x + 1, y + 1, BOX - 2, BOX - 2);
@@ -146,9 +146,8 @@ function edgeStrip(lengthPx, vertical) {
   const [c, g] = vertical ? canvas(DEPTH, lengthPx) : canvas(lengthPx, DEPTH);
   g.fillStyle = "#2b2b2b"; g.fillRect(0, 0, c.width, c.height);
 
-  // 45° hatch on the border span and the corner boxes, never in the gaps between them.
-  // One continuous line set, clipped per region, so the stripes line up across the gaps.
-  // Each stripe sits one step darker than its fill, like the faded score on the face.
+  // Clipped per region from one line set, so stripes align across the gaps.
+  // One shade darker than its fill, like the faded score on the face.
   const hatch = (from, len, color) => {
     g.save();
     g.beginPath();

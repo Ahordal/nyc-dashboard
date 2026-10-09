@@ -15,6 +15,7 @@ import {
 export type UrlSyncState = {
   grades: string[];
   boroughs: string[];
+  featured: boolean;
   searchQuery: string;
   selectedRestaurantCamis: string | null;
   // The active Search Radius centre, or null when the tool is inactive.
@@ -31,6 +32,7 @@ export type InitialRadiusState = {
 export type InitialUrlState = {
   grades: string[];
   boroughs: string[];
+  featured: boolean;
   searchQuery: string;
   camis: string | null;
   radius: InitialRadiusState | null;
@@ -77,9 +79,13 @@ export function parseInitialUrlState(search: string): InitialUrlState {
   const qParam = params.get("q");
   const camisParam = params.get("camis") || params.get("id");
 
+  const featured = params.get("featured") === "today";
+
   return {
-    grades: gradesParam ? gradesParam.split(",").filter(Boolean) : [],
+    // Featured and Grade cancel out, so a hand-edited URL can't combine them.
+    grades: gradesParam && !featured ? gradesParam.split(",").filter(Boolean) : [],
     boroughs: boroughsParam ? boroughsParam.split(",").filter(Boolean) : [],
+    featured,
     searchQuery: qParam ? qParam.trim() : "",
     camis: camisParam || null,
     radius: parseRadiusParam(params.get("radius")),
@@ -90,6 +96,7 @@ function hasAnyInitialState(initial: InitialUrlState): boolean {
   return (
     initial.grades.length > 0 ||
     initial.boroughs.length > 0 ||
+    initial.featured ||
     initial.searchQuery !== "" ||
     initial.camis !== null ||
     initial.radius !== null
@@ -105,6 +112,10 @@ export function buildUrlQuery(state: UrlSyncState): string {
 
   if (state.boroughs.length > 0) {
     params.set("boroughs", state.boroughs.join(","));
+  }
+
+  if (state.featured) {
+    params.set("featured", "today");
   }
 
   if (state.searchQuery.trim()) {
@@ -138,6 +149,7 @@ export function useUrlSync(
   const {
     grades,
     boroughs,
+    featured,
     searchQuery,
     selectedRestaurantCamis,
     searchRadiusPoint,
@@ -171,6 +183,7 @@ export function useUrlSync(
     const queryString = buildUrlQuery({
       grades,
       boroughs,
+      featured,
       searchQuery,
       selectedRestaurantCamis,
       searchRadiusPoint,
@@ -184,6 +197,7 @@ export function useUrlSync(
   }, [
     grades,
     boroughs,
+    featured,
     searchQuery,
     selectedRestaurantCamis,
     searchRadiusPoint,

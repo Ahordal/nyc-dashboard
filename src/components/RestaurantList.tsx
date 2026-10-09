@@ -11,6 +11,7 @@ import SortDropdown from "./SortDropdown";
 import RestaurantCard from "./RestaurantCard";
 import PaginationBar from "./PaginationBar";
 import NoticeOverlay from "./NoticeOverlay";
+import FEATURED_INFO_CONTENT from "./FeaturedInfoContent";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp } from "@fortawesome/free-solid-svg-icons";
@@ -100,6 +101,8 @@ type RestaurantListProps = {
   // Mobile: the search field lives in the app-bar drawer, not directly
   // above the list, so the info panel drops the "above" wording.
   isMobile?: boolean;
+  // Today's featured restaurants only: retitles the panel and its info.
+  featuredMode?: boolean;
   children?: React.ReactNode; // Slot for external filter notice overlay
 };
 
@@ -113,6 +116,7 @@ function RestaurantList({
   searchRadiusPoint = null,
   userLocationPoint = null,
   isMobile = false,
+  featuredMode = false,
   children,
 }: RestaurantListProps) {
   // Distance origin for both the per-card readout and the sort key:
@@ -295,14 +299,17 @@ function RestaurantList({
     : SORT_KEYS[primarySort].label;
 
   const infoContent = useMemo(
-    () => restaurantListInfoContent(searchRadiusPoint != null, isMobile),
-    [searchRadiusPoint, isMobile],
+    () =>
+      featuredMode
+        ? FEATURED_INFO_CONTENT
+        : restaurantListInfoContent(searchRadiusPoint != null, isMobile),
+    [featuredMode, searchRadiusPoint, isMobile],
   );
 
   return (
     <section className="panel restaurant-list-panel">
       <PanelHeader
-        title="Restaurant List"
+        title={featuredMode ? "Featured Restaurants" : "Restaurant List"}
         infoContent={infoContent}
         onInfoClick={() => {
           setShowInfo((currentValue) => !currentValue);

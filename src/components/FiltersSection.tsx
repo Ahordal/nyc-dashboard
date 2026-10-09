@@ -5,6 +5,7 @@
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import type { IconDefinition } from "@fortawesome/fontawesome-svg-core";
+import { faXmark } from "@fortawesome/free-solid-svg-icons";
 import FilterButton from "./FilterButton";
 
 type FilterSectionProps = {
@@ -14,6 +15,10 @@ type FilterSectionProps = {
   selected: string[];
   onChange: (next: string[]) => void;
   getActiveColor?: (option: string) => string | undefined;
+  // For light active colours (gold) that white text can't sit on.
+  activeTextColor?: string;
+  // Off for single-option toggles, where the option already clears itself.
+  showClear?: boolean;
 };
 
 export default function FilterSection({
@@ -23,6 +28,8 @@ export default function FilterSection({
   selected,
   onChange,
   getActiveColor,
+  activeTextColor,
+  showClear = true,
 }: FilterSectionProps) {
   function renderButton(option: string) {
     const isActive = selected.includes(option);
@@ -35,7 +42,7 @@ export default function FilterSection({
         aria-pressed={isActive}
         style={
           activeColor
-            ? { backgroundColor: activeColor, borderColor: activeColor }
+            ? { backgroundColor: activeColor, borderColor: activeColor, color: activeTextColor }
             : undefined
         }
         onClick={() =>
@@ -61,10 +68,22 @@ export default function FilterSection({
         {/* display:contents on desktop; on the mobile drawer it becomes a
            flex row hanging Clear into the gutter. */}
         <div className="filter-options">
-          <span className="filter-clear">
-            <FilterButton onClick={() => onChange([])}>Clear</FilterButton>
-          </span>
+          {showClear && (
+            <span className="filter-clear">
+              <FilterButton onClick={() => onChange([])}>Clear</FilterButton>
+            </span>
+          )}
           {options.map(renderButton)}
+          {/* Desktop popover's clear; CSS shows one of the two per layout. */}
+          {showClear && (
+            <FilterButton
+              className="filter-clear-x"
+              aria-label={`Clear ${label} filter`}
+              onClick={() => onChange([])}
+            >
+              <FontAwesomeIcon icon={faXmark} aria-hidden="true" />
+            </FilterButton>
+          )}
         </div>
       </div>
     </section>
