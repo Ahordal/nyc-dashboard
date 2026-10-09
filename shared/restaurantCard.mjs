@@ -168,7 +168,7 @@ export function renderCard(
     SCORE_LABEL_Y: labelY,
     SCORE_Y: scoreY,
     SUB_LINES: subLineText,
-    FOOTER: `RESTAURANT OF THE DAY · ${formatCardDate(date)}`,
+    FOOTER: `FEATURED AWARD · ${formatCardDate(date)}`,
   };
   return template.replace(/\{\{([A-Z_]+)\}\}/g, (match, key) =>
     key in tokens ? String(tokens[key]) : match,

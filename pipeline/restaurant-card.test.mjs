@@ -69,7 +69,7 @@ test("layoutText shifts the group up to keep it centred when sub-lines are added
 test("renderCard footer uses the New York calendar date", () => {
   // 02:00 UTC on Oct 8 is still Oct 7 in New York.
   const svg = renderCard({ name: "X", grade: "A", score: 7 }, { template, date: new Date("2026-10-08T02:00:00Z") });
-  assert.match(svg, /RESTAURANT OF THE DAY · OCT 7, 2026/);
+  assert.match(svg, /FEATURED AWARD · OCT 7, 2026/);
 });
 
 test("renderCard rejects restaurants without a letter grade or score", () => {

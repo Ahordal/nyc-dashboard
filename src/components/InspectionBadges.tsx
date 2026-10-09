@@ -59,8 +59,8 @@ export default function InspectionBadges({
             type="button"
             className="badge-box badge-box-featured badge-box-button tooltip-bottom"
             onClick={onViewCard}
-            aria-label="View featured restaurant"
-            data-tooltip="View featured restaurant">
+            aria-label="View Featured Award"
+            data-tooltip="View award">
             {certificate}
           </button>
         ) : (

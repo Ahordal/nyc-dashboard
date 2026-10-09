@@ -1,6 +1,6 @@
 // FeaturedInfoContent.tsx
 //
-// What featured restaurants are, shared by the card modal and the
+// What featured restaurants are, shown in the
 // Restaurant List's header in featured mode.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

@@ -1,16 +1,14 @@
 // RestaurantCardModal.tsx
 //
 // A featured restaurant's card in a floating modal, opened from the gold
-// certificate in Restaurant Details. Its info button swaps in what being
-// featured means.
+// certificate in Restaurant Details. What the award means lives in the
+// Restaurant List's featured header, not here.
 
-import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCertificate, faCircleInfo, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faCertificate, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 import PanelInfoModal from "./PanelInfoModal";
 import FeaturedRestaurantView from "./FeaturedRestaurantView";
-import FEATURED_INFO_CONTENT from "./FeaturedInfoContent";
 import type { DealtCard } from "../types/featured";
 
 type RestaurantCardModalProps = {
@@ -20,16 +18,8 @@ type RestaurantCardModalProps = {
 };
 
 export default function RestaurantCardModal({ dealt, isOpen, onClose }: RestaurantCardModalProps) {
-  const [showInfo, setShowInfo] = useState(false);
-
-  // Reopens on the card, not wherever the info toggle was left.
-  const handleClose = () => {
-    setShowInfo(false);
-    onClose();
-  };
-
   return (
-    <PanelInfoModal isOpen={isOpen} onClose={handleClose} ariaLabel="Featured restaurant">
+    <PanelInfoModal isOpen={isOpen} onClose={onClose} ariaLabel="Featured Award">
       <div className="panel-header info-modal-panel-header">
         <h2 className="panel-header-title">
           <FontAwesomeIcon
@@ -37,35 +27,19 @@ export default function RestaurantCardModal({ dealt, isOpen, onClose }: Restaura
             className="panel-header-title-icon restaurant-card-modal-icon"
             aria-hidden="true"
           />
-          Featured Restaurant
+          Featured Award
         </h2>
 
-        <div className="restaurant-card-modal-actions">
-          <button
-            type="button"
-            className="panel-header-info-button tooltip-left"
-            data-tooltip={showInfo ? undefined : "Info"}
-            onClick={() => setShowInfo((current) => !current)}
-            aria-label="About featured restaurants"
-            aria-expanded={showInfo}>
-            <FontAwesomeIcon icon={faCircleInfo} />
-          </button>
-
-          <button
-            type="button"
-            className="panel-header-info-button"
-            onClick={handleClose}
-            aria-label="Close">
-            <FontAwesomeIcon icon={faXmark} />
-          </button>
-        </div>
+        <button
+          type="button"
+          className="panel-header-info-button"
+          onClick={onClose}
+          aria-label="Close">
+          <FontAwesomeIcon icon={faXmark} />
+        </button>
       </div>
 
-      {/* The card always sizes the frame, so toggling info never resizes the modal. */}
-      <div className="restaurant-card-frame" data-show-info={showInfo || undefined}>
-        <FeaturedRestaurantView dealt={dealt} />
-        {showInfo && <div className="restaurant-card-info">{FEATURED_INFO_CONTENT}</div>}
-      </div>
+      <FeaturedRestaurantView dealt={dealt} />
     </PanelInfoModal>
   );
 }

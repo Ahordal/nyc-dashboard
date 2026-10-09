@@ -35,7 +35,7 @@ export default function FeaturedRestaurantView({ dealt }: FeaturedRestaurantView
       {/* Rendered from our own pipeline data; renderCard escapes every text field. */}
       <div className="restaurant-card-art" dangerouslySetInnerHTML={{ __html: cardSvg }} />
 
-      <p className="restaurant-card-caption">Featured · {formatDate(dealt.date)}</p>
+      <p className="restaurant-card-caption">Awarded · {formatDate(dealt.date)}</p>
     </div>
   );
 }

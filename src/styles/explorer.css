@@ -505,11 +505,6 @@
   flex-shrink: 0;
 }
 
-.restaurant-card-modal-actions {
-  display: flex;
-  align-items: center;
-}
-
 .restaurant-card-modal-icon {
   color: var(--award-gold);
 }
@@ -521,22 +516,6 @@
   align-items: center;
   gap: var(--space-xs);
   margin-bottom: var(--space-s);
-}
-
-/* flow-root keeps the card body's margin inside the frame. */
-.restaurant-card-frame {
-  position: relative;
-  display: flow-root;
-}
-
-.restaurant-card-frame[data-show-info] .featured-card-body {
-  visibility: hidden;
-}
-
-.restaurant-card-info {
-  position: absolute;
-  inset: 0;
-  overflow-y: auto;
 }
 
 /* Capped so the 5:7 card stays a sensible size on a wide panel. */
