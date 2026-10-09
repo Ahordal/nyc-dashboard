@@ -27,7 +27,7 @@ import { formatPhoneNumber } from "../utils/formatPhoneNumber";
 import { toTitleCase } from "../utils/toTitleCase";
 import { formatDate } from "../utils/formatDate";
 import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
-import { hasFeaturedCertificate } from "../utils/featured";
+import { isFeaturedToday } from "../utils/featured";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 
@@ -239,8 +239,11 @@ type RestaurantDetailsProps = {
   // Featured restaurants only: the header's gold certificate opens this card.
   featuredCard?: DealtCard | null;
 
-  // The map view's grade mix, for the 3D card's back.
+  // Every restaurant's grade mix, for the 3D card's back.
   gradeCounts?: GradeCounts;
+
+  // Latest hand's date: the Featured badge shows only on that day.
+  featuredDate?: string | null;
 };
 
 function RestaurantDetails({
@@ -256,6 +259,7 @@ function RestaurantDetails({
   isMobile = false,
   featuredCard = null,
   gradeCounts = EMPTY_GRADE_COUNTS,
+  featuredDate = null,
 }: RestaurantDetailsProps) {
   const [showInfo, setShowInfo] = useState(false);
   const [showCard, setShowCard] = useState(false);
@@ -322,6 +326,7 @@ function RestaurantDetails({
   );
 
   const inspectionAge = yearsSince(restaurant.inspection_date);
+  const featuredToday = isFeaturedToday(restaurant, featuredDate);
 
   // Excludes uninspected restaurants: DOHMH's 1900-01-01 placeholder for
   // "no inspection on record" would otherwise compute as 100+ years stale.
@@ -351,18 +356,17 @@ function RestaurantDetails({
           score={restaurant.score}
           grade={restaurant.grade}
           action={restaurant.action}
-          featured={hasFeaturedCertificate(restaurant)}
-          onViewCard={featuredCard ? () => setShowCard(true) : undefined}
+          featured={featuredToday}
+          onViewCard={() => setShowCard(true)}
         />
 
-        {featuredCard && (
-          <RestaurantCardModal
-            dealt={featuredCard}
-            gradeCounts={gradeCounts}
-            isOpen={showCard}
-            onClose={() => setShowCard(false)}
-          />
-        )}
+        <RestaurantCardModal
+          restaurant={restaurant}
+          featuredToday={featuredToday}
+          gradeCounts={gradeCounts}
+          isOpen={showCard}
+          onClose={() => setShowCard(false)}
+        />
 
         <h3 className="section-header">Restaurant Information</h3>
 
@@ -409,6 +413,14 @@ function RestaurantDetails({
               </td>
             </tr>
 
+            {/* History, not an award: Featured is only held on its day. */}
+            {featuredCard && (
+              <tr>
+                <td>Featured</td>
+
+                <td>{formatDate(featuredCard.date)}</td>
+              </tr>
+            )}
           </tbody>
         </table>
 

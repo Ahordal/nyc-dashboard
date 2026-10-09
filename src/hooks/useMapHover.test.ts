@@ -100,6 +100,7 @@ function setup(opts: SetupOpts = {}) {
       view,
       layerRef: { current: layer } as RefObject<GeoJSONLayer | null>,
       featuredRingsLayerRef: { current: ringsLayer } as RefObject<GraphicsLayer | null>,
+      featuredDateRef: { current: null },
       isPlacingPointRef,
       onHoverRestaurantRef: { current: onHoverRestaurant } as RefObject<
         ((r: RestaurantProperties | null) => void) | undefined

@@ -12,7 +12,7 @@
 import { readFileSync, writeFileSync, mkdirSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
-import { renderCard } from "../shared/restaurantCard.mjs";
+import { formatCardDate, renderCard } from "../shared/restaurantCard.mjs";
 
 const ROOT = path.resolve(import.meta.dirname, "..");
 export const TEMPLATE_PATH = path.join(ROOT, "shared", "restaurantCard.svg");
@@ -46,10 +46,20 @@ if (import.meta.url === pathToFileURL(process.argv[1]).href) {
     process.exit(1);
   }
   const restaurant = findRestaurant(camis);
-  const { name, grade, score } = restaurant;
+  const { name, grade, score, inspection_date: inspected } = restaurant;
+  // The dashboard colours cards with getGradeCategory (TypeScript, not
+  // importable here); this dev tool only draws plainly graded restaurants.
+  if (!["A", "B", "C"].includes(grade)) {
+    console.error(`${name} has no letter grade (${grade}); only A/B/C cards can be generated here.`);
+    process.exit(1);
+  }
   const svg = renderCard(
-    restaurant,
-    { template: readFileSync(TEMPLATE_PATH, "utf8"), fontFacesCss: fontFaces() },
+    { ...restaurant, category: grade },
+    {
+      template: readFileSync(TEMPLATE_PATH, "utf8"),
+      fontFacesCss: fontFaces(),
+      footer: `INSPECTED · ${formatCardDate(new Date(`${inspected.slice(0, 10)}T12:00:00Z`))}`,
+    },
   );
   mkdirSync(path.dirname(outPath), { recursive: true });
   writeFileSync(outPath, svg);

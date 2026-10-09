@@ -8,6 +8,7 @@ import {
   chainNames,
   dealHand,
   isEligible,
+  lastDealtDates,
   mergeFeatured,
   newYorkDate,
 } from "./deal-cards.mjs";
@@ -34,8 +35,8 @@ function restaurant(overrides = {}) {
   };
 }
 
-const eligible = (props, dealt = new Set()) =>
-  isEligible(props, { asOf: DATE, chains: new Set(), dealt });
+const eligible = (props, lastDealt = new Map()) =>
+  isEligible(props, { asOf: DATE, chains: new Set(), lastDealt });
 
 test("isEligible accepts an open, verified, recent A with a matching score", () => {
   assert.equal(eligible(restaurant().properties), true);
@@ -57,10 +58,27 @@ test("isEligible rejects each rule failure", () => {
   }
 });
 
-test("isEligible rejects chains and restaurants already dealt", () => {
+test("isEligible rejects chains and restaurants dealt within the cooldown", () => {
   const props = restaurant({ name: "BIG CHAIN" }).properties;
-  assert.equal(isEligible(props, { asOf: DATE, chains: new Set(["BIG CHAIN"]), dealt: new Set() }), false);
-  assert.equal(eligible(props, new Set([props.camis])), false);
+  assert.equal(isEligible(props, { asOf: DATE, chains: new Set(["BIG CHAIN"]), lastDealt: new Map() }), false);
+  assert.equal(eligible(props, new Map([[props.camis, "2026-03-01"]])), false);
+});
+
+test("isEligible allows a restaurant again once the cooldown has passed", () => {
+  const props = restaurant().properties;
+  assert.equal(eligible(props, new Map([[props.camis, "2025-10-07"]])), true); // exactly 365 days
+  assert.equal(eligible(props, new Map([[props.camis, "2025-10-08"]])), false); // 364 days
+});
+
+test("lastDealtDates keeps each restaurant's latest hand", () => {
+  const featured = {
+    ...EMPTY_FEATURED,
+    hands: [
+      { date: "2026-10-08", cards: [{ camis: "1" }] },
+      { date: "2025-10-01", cards: [{ camis: "1" }, { camis: "2" }] },
+    ],
+  };
+  assert.deepEqual([...lastDealtDates(featured)], [["1", "2026-10-08"], ["2", "2025-10-01"]]);
 });
 
 test("chainNames flags names at three or more locations", () => {
@@ -91,7 +109,7 @@ test("numbered branches count as one chain and are ineligible", () => {
   ];
   const chains = chainNames(features);
   assert.deepEqual([...chains], ["CHIPOTLE MEXICAN GRILL"]);
-  assert.equal(isEligible(features[2].properties, { asOf: DATE, chains, dealt: new Set() }), false);
+  assert.equal(isEligible(features[2].properties, { asOf: DATE, chains, lastDealt: new Map() }), false);
 });
 
 test("dealHand deals one card per borough, snapshotting the restaurant", () => {
@@ -105,7 +123,7 @@ test("dealHand deals one card per borough, snapshotting the restaurant", () => {
   assert.deepEqual(hand.cards[0].posts, []);
 });
 
-test("dealHand is repeatable for a date and never re-deals a restaurant", () => {
+test("dealHand is repeatable for a date and doesn't re-deal within the cooldown", () => {
   const features = BOROUGHS.flatMap((boro) => Array.from({ length: 5 }, () => restaurant({ boro })));
   const first = dealHand(features, EMPTY_FEATURED, DATE);
   assert.deepEqual(dealHand(features, EMPTY_FEATURED, DATE), first);

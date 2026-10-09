@@ -7,6 +7,7 @@
 import * as THREE from "three";
 import { OrbitControls } from "three/addons/controls/OrbitControls.js";
 
+import { BAN_ICON_PATH } from "../../shared/restaurantCard.mjs";
 import { CATEGORY_COLORS } from "./gradeColours";
 import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 
@@ -77,7 +78,7 @@ async function cardFront(svgText: string, maxAnisotropy: number) {
   // Corner boxes sit flush and the border runs on the card edge, so they wrap the edges.
   const flush = svgText
     .replace('<rect x="0.5" y="0.5" width="55" height="55"', '<rect x="0.5" y="0.5" width="63" height="63"')
-    .replace('<text x="28" y="38"', '<text x="32" y="42"')
+    .replace('<g class="rc-grade-mark">', '<g class="rc-grade-mark" transform="translate(4 4)">')
     .replace('<use href="#rc-grade-box" x="8" y="8"/>', '<use href="#rc-grade-box" x="0" y="0"/>')
     .replace('<use href="#rc-grade-box" x="436" y="8"/>', '<use href="#rc-grade-box" x="436" y="0"/>')
     .replace(
@@ -116,7 +117,7 @@ function cardBack(
   maxAnisotropy: number,
 ) {
   const [c, g] = canvas(1000, 1400);
-  g.fillStyle = "#2b2b2b";
+  g.fillStyle = "#252525";
   g.fillRect(0, 0, 1000, 1400);
   g.strokeStyle = line;
   g.lineWidth = 2;
@@ -127,8 +128,10 @@ function cardBack(
   g.closePath();
   g.stroke();
 
-  // Corner boxes match the front's: grade letter, bottom pair upside down.
-  const letter = svgText.match(/<g id="rc-grade-box">[^]*?<text[^>]*>([^<]+)<\/text>/)?.[1] ?? "";
+  // Corner boxes match the front's: grade letter (or closed's ban icon),
+  // bottom pair upside down.
+  const letter = svgText.match(/<g class="rc-grade-mark"><text[^>]*>([^<]+)<\/text>/)?.[1];
+  const ban = new Path2D(BAN_ICON_PATH);
   const corners: [number, number, boolean][] = [
     [0, 0, false],
     [1000 - BOX, 0, false],
@@ -136,7 +139,7 @@ function cardBack(
     [1000 - BOX, 1400 - BOX, true],
   ];
   for (const [x, y, flip] of corners) {
-    g.fillStyle = "#272727";
+    g.fillStyle = "#212121";
     g.fillRect(x, y, BOX, BOX);
     g.strokeStyle = line;
     g.lineWidth = 2;
@@ -144,14 +147,21 @@ function cardBack(
     g.save();
     g.translate(x + BOX / 2, y + BOX / 2);
     if (flip) g.rotate(Math.PI);
-    g.font = "700 56px 'Public Sans'";
     g.fillStyle = gradeColor;
-    g.textAlign = "center";
-    g.fillText(letter, 0, 20);
+    if (letter === undefined) {
+      const size = 56;
+      g.translate(-size / 2, -size / 2);
+      g.scale(size / 512, size / 512);
+      g.fill(ban);
+    } else {
+      g.font = "700 56px 'Public Sans'";
+      g.textAlign = "center";
+      g.fillText(letter, 0, 20);
+    }
     g.restore();
   }
 
-  // Ring of the current map view's grade mix.
+  // Ring of every restaurant's grade mix (citywide).
   const cx = 500, cy = 508, outer = 220, inner = 148;
   const segments = (Object.keys(EMPTY_GRADE_COUNTS) as (keyof GradeCounts)[]).map((key) => ({
     n: counts[key],
@@ -178,7 +188,7 @@ function cardBack(
   // Wordmark with the dashboard's hard offset shadow, as on the front title.
   g.font = "800 170px Archivo";
   g.letterSpacing = "-3px";
-  g.fillStyle = "#252525";
+  g.fillStyle = "#1f1f1f";
   g.fillText("NYC", 494, 928);
   g.fillStyle = "#a0a0a0";
   g.fillText("NYC", 500, 920);
@@ -212,7 +222,7 @@ function cardBack(
 
 function edgeStrip(lengthPx: number, vertical: boolean, line: string, maxAnisotropy: number) {
   const [c, g] = vertical ? canvas(DEPTH, lengthPx) : canvas(lengthPx, DEPTH);
-  g.fillStyle = "#2b2b2b";
+  g.fillStyle = "#252525";
   g.fillRect(0, 0, c.width, c.height);
 
   // Clipped per region from one line set, so stripes align across the gaps.
@@ -238,14 +248,14 @@ function edgeStrip(lengthPx: number, vertical: boolean, line: string, maxAnisotr
     }
     g.restore();
   };
-  hatch(BOX + 17, lengthPx - 2 * (BOX + 17), "#272727");
+  hatch(BOX + 17, lengthPx - 2 * (BOX + 17), "#212121");
 
   for (const start of [0, lengthPx - BOX]) {
     const inner = start === 0 ? BOX - 1 : lengthPx - BOX + 1;
-    g.fillStyle = "#272727";
+    g.fillStyle = "#212121";
     if (vertical) g.fillRect(0, start, DEPTH, BOX);
     else g.fillRect(start, 0, BOX, DEPTH);
-    hatch(start, BOX, "#222222");
+    hatch(start, BOX, "#1c1c1c");
     g.strokeStyle = line;
     g.lineWidth = 2;
     g.beginPath();
@@ -331,12 +341,14 @@ export async function mountCardSlab(
     disposables.push(side, end, frontMat, backMat, geometry);
 
     const scene = new THREE.Scene();
-    // Mostly ambient so faces keep their true colours; keys just separate the edges.
-    const key = new THREE.DirectionalLight("#ffffff", 0.45);
+    // Lambert divides light by pi, so intensities are scaled by it: the front
+    // at rest gets ambient 0.65 + key 0.35 (0.45 at this angle) = its true colour.
+    // Mostly ambient so faces keep their colours; keys just separate the edges.
+    const key = new THREE.DirectionalLight("#ffffff", 0.45 * Math.PI);
     key.position.set(3, 4, 6);
-    const backKey = new THREE.DirectionalLight("#ffffff", 0.45);
+    const backKey = new THREE.DirectionalLight("#ffffff", 0.45 * Math.PI);
     backKey.position.set(-3, 4, -6);
-    scene.add(key, backKey, new THREE.AmbientLight("#ffffff", 0.75));
+    scene.add(key, backKey, new THREE.AmbientLight("#ffffff", 0.65 * Math.PI));
     // Box face order: +x, -x, +y, -y, front, back.
     scene.add(new THREE.Mesh(geometry, [side, side, end, end, frontMat, backMat]));
 

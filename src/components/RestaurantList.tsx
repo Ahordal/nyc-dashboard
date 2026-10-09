@@ -25,6 +25,7 @@ import {
   sortRestaurants,
 } from "../utils/restaurantSort";
 import type { SortKeyId, SortDirection } from "../utils/restaurantSort";
+import { isFeaturedToday } from "../utils/featured";
 
 function restaurantListInfoContent(withinRadius: boolean, isMobile: boolean) {
   return (
@@ -103,6 +104,8 @@ type RestaurantListProps = {
   isMobile?: boolean;
   // Today's featured restaurants only: retitles the panel and its info.
   featuredMode?: boolean;
+  // Latest hand's date, for each card's Featured badge.
+  featuredDate?: string | null;
   children?: React.ReactNode; // Slot for external filter notice overlay
 };
 
@@ -117,6 +120,7 @@ function RestaurantList({
   userLocationPoint = null,
   isMobile = false,
   featuredMode = false,
+  featuredDate = null,
   children,
 }: RestaurantListProps) {
   // Distance origin for both the per-card readout and the sort key:
@@ -378,6 +382,7 @@ function RestaurantList({
                 onClick={(selected) => onSelectRestaurant?.(selected)}
                 onHover={onHoverRestaurant}
                 distanceOrigin={distanceOrigin}
+                isFeatured={isFeaturedToday(restaurant, featuredDate)}
               />
             ))}
 

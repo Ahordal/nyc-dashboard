@@ -2,7 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   dealtDate,
   earningInspectionId,
-  hasFeaturedCertificate,
+  featuredDayNumber,
+  isFeaturedToday,
   indexFeaturedByCamis,
   latestFeaturedDate,
 } from "./featured";
@@ -81,21 +82,26 @@ describe("dealtDate", () => {
   });
 });
 
-describe("hasFeaturedCertificate", () => {
-  const open = "Violations were cited in the following area(s).";
-  const closed = "Establishment Closed by DOHMH. Violations were cited in the following area(s) and those requiring immediate action were addressed.";
-  const featured = { featured_date: 20261009, action: open, grade: "A", score: 9 };
-
-  it("keeps the certificate while the latest inspection is an A", () => {
-    expect(hasFeaturedCertificate(featured)).toBe(true);
+describe("featuredDayNumber", () => {
+  it("turns a hand date into the YYYYMMDD number on the map data", () => {
+    expect(featuredDayNumber("2026-10-09")).toBe(20261009);
   });
 
-  it("drops it after a lower grade or a closure", () => {
-    expect(hasFeaturedCertificate({ ...featured, grade: "B", score: 20 })).toBe(false);
-    expect(hasFeaturedCertificate({ ...featured, action: closed })).toBe(false);
+  it("returns null for a missing or malformed date", () => {
+    expect(featuredDayNumber(null)).toBeNull();
+    expect(featuredDayNumber("")).toBeNull();
+    expect(featuredDayNumber("not a date")).toBeNull();
+  });
+});
+
+describe("isFeaturedToday", () => {
+  it("holds only for restaurants in the latest hand", () => {
+    expect(isFeaturedToday({ featured_date: 20261009 }, "2026-10-09")).toBe(true);
+    expect(isFeaturedToday({ featured_date: 20261008 }, "2026-10-09")).toBe(false);
   });
 
-  it("never shows for a restaurant that wasn't featured", () => {
-    expect(hasFeaturedCertificate({ ...featured, featured_date: null })).toBe(false);
+  it("never holds without a featured date or a hand", () => {
+    expect(isFeaturedToday({ featured_date: null }, "2026-10-09")).toBe(false);
+    expect(isFeaturedToday({ featured_date: 20261009 }, null)).toBe(false);
   });
 });

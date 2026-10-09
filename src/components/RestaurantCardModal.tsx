@@ -1,35 +1,43 @@
 // RestaurantCardModal.tsx
 //
-// A featured restaurant's card in a floating modal, opened from the gold
-// certificate in Restaurant Details. What the award means lives in the
-// Restaurant List's featured header, not here.
+// Any restaurant's card in a floating modal, opened from Restaurant
+// Details. The card carries the awards it holds now; the right-hand panel
+// (awards list and statistics) is still to come.
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCertificate, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faAward, faXmark } from "@fortawesome/free-solid-svg-icons";
 
+import ErrorBoundary from "./ErrorBoundary";
 import PanelInfoModal from "./PanelInfoModal";
-import FeaturedRestaurantView from "./FeaturedRestaurantView";
-import type { DealtCard } from "../types/featured";
+import RestaurantCardView from "./RestaurantCardView";
 import type { GradeCounts } from "../types/gradeCounts";
+import type { RestaurantProperties } from "../types/restaurant";
 
 type RestaurantCardModalProps = {
-  dealt: DealtCard;
+  restaurant: RestaurantProperties;
+  featuredToday: boolean;
   gradeCounts: GradeCounts;
   isOpen: boolean;
   onClose: () => void;
 };
 
-export default function RestaurantCardModal({ dealt, gradeCounts, isOpen, onClose }: RestaurantCardModalProps) {
+export default function RestaurantCardModal({
+  restaurant,
+  featuredToday,
+  gradeCounts,
+  isOpen,
+  onClose,
+}: RestaurantCardModalProps) {
   return (
-    <PanelInfoModal isOpen={isOpen} onClose={onClose} ariaLabel="Featured Award">
+    <PanelInfoModal isOpen={isOpen} onClose={onClose} ariaLabel="Awards & Statistics">
       <div className="panel-header info-modal-panel-header">
         <h2 className="panel-header-title">
           <FontAwesomeIcon
-            icon={faCertificate}
+            icon={faAward}
             className="panel-header-title-icon restaurant-card-modal-icon"
             aria-hidden="true"
           />
-          Featured Award
+          Awards &amp; Statistics
         </h2>
 
         <button
@@ -41,7 +49,17 @@ export default function RestaurantCardModal({ dealt, gradeCounts, isOpen, onClos
         </button>
       </div>
 
-      <FeaturedRestaurantView dealt={dealt} gradeCounts={gradeCounts} />
+      {/* A card failure stays in the modal instead of blanking the dashboard. */}
+      <ErrorBoundary
+        context="restaurant card"
+        resetKey={restaurant.id}
+        fallback={<p className="restaurant-card-caption">This card couldn&apos;t be drawn.</p>}>
+        <RestaurantCardView
+          restaurant={restaurant}
+          featuredToday={featuredToday}
+          gradeCounts={gradeCounts}
+        />
+      </ErrorBoundary>
     </PanelInfoModal>
   );
 }

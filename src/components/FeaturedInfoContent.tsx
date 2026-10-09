@@ -14,8 +14,8 @@ const FEATURED_INFO_CONTENT = (
       <ul>
         <li>
           Each day, five independent restaurants with an A on their last two
-          graded inspections are featured, one from each borough. Each
-          restaurant is only featured once.
+          graded inspections are featured, one from each borough. A
+          restaurant can be featured again after a year.
         </li>
 
         <li>
@@ -29,9 +29,9 @@ const FEATURED_INFO_CONTENT = (
             className="legend-featured-text"
             aria-hidden="true"
           />{" "}
-          beside a grade and score means the restaurant has been featured. It
-          stays only while the latest inspection is still an A: a lower grade
-          or a closure hides it, and a return to A brings it back.
+          beside a grade and score marks today&apos;s featured restaurants.
+          It passes to the next five each day; Restaurant Details keeps the
+          date a restaurant was featured.
         </li>
       </ul>
     }
@@ -45,7 +45,7 @@ const FEATURED_INFO_CONTENT = (
 
         <li>
           Select the gold certificate in Restaurant Details to see a featured
-          restaurant&apos;s card.
+          restaurant&apos;s card, with the certificate among its awards.
         </li>
       </ul>
     }
@@ -54,8 +54,9 @@ const FEATURED_INFO_CONTENT = (
         <li>
           To be featured, a restaurant needs an A grade from an inspection in
           the last 12 months and an A on the graded inspection before that,
-          must be open, must have a verified location, and
-          must not be a chain (its name, ignoring store numbers, appears at fewer than three locations).
+          must be open, must have a verified location, must not be a chain
+          (its name, ignoring store numbers, appears at fewer than three
+          locations), and must not have been featured in the past year.
         </li>
 
         <li>

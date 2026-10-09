@@ -527,11 +527,11 @@
 }
 
 /* The flat card at 80%, leaving room around it; the 3D card rests at
-   exactly this size and position (cardSlab.ts). */
+   exactly this size and position (cardSlab.ts). A grid, so the loading
+   animation can share the card's cell. */
 .restaurant-card-stage {
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
 
   /* Height-capped too: the modal (100dvh - 64px) less ~10rem of header,
      spacing, and caption, so the card always fits without the modal scrolling. */
@@ -541,6 +541,7 @@
 }
 
 .restaurant-card-art {
+  grid-area: 1 / 1;
   width: 80%;
 
   /* Artwork, not copy: no text cursor or selection on its SVG text. */
@@ -550,6 +551,30 @@
 
 .restaurant-card-art[data-hidden] {
   visibility: hidden;
+}
+
+/* Over the hidden flat card while 3D loads; same pulse as the map's skeleton. */
+.restaurant-card-loading {
+  grid-area: 1 / 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  color: var(--text-muted);
+  animation: map-view-skeleton-pulse 1.6s ease-in-out infinite;
+}
+
+.restaurant-card-loading-icon {
+  font-size: 2.5rem;
+  color: var(--award-gold);
+}
+
+.restaurant-card-loading-label {
+  font-family: var(--font-display);
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-transform: uppercase;
 }
 
 /* Fills the card body; cardSlab.ts keeps the resting card centred on the flat one. */

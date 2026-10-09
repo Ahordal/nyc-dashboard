@@ -48,6 +48,12 @@ describe("InspectionBadges", () => {
     expect(screen.queryByRole("button")).toBeNull();
 
     rerender(<InspectionBadges score={10} grade="A" featured onViewCard={() => {}} />);
-    expect(screen.getByRole("button", { name: "View Featured Award" })).toBeTruthy();
+    expect(screen.getByRole("button", { name: "View awards, featured today" })).toBeTruthy();
+  });
+
+  it("offers the awards button to every restaurant with onViewCard", () => {
+    render(<InspectionBadges score={30} grade="C" onViewCard={() => {}} />);
+    expect(screen.getByRole("button", { name: "View awards" })).toBeTruthy();
+    expect(screen.queryByLabelText(/featured/i)).toBeNull();
   });
 });

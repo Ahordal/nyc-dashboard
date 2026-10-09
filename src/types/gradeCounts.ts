@@ -2,6 +2,8 @@
 //
 // Lives here, not MapView/dashboard/GradeChart, since all three need it.
 
+import { getGradeCategory } from "../utils/gradeCategory";
+
 export type GradeCounts = Record<
   "A" | "B" | "C" | "pending" | "uninspected" | "closed",
   number
@@ -43,4 +45,15 @@ export function scopeGradeCounts(
     if (selected.has(key)) scoped[key] = counts[key];
   }
   return scoped;
+}
+
+// One tally for the chart (map view) and the card back (citywide).
+export function countGradeCategories(
+  restaurants: { action: string; grade: string | null; score: number | null }[],
+): GradeCounts {
+  const counts: GradeCounts = { ...EMPTY_GRADE_COUNTS };
+  for (const r of restaurants) {
+    counts[getGradeCategory(r.action, r.grade, r.score)] += 1;
+  }
+  return counts;
 }

@@ -4,7 +4,6 @@
 
 import type { DealtCard, FeaturedCard, FeaturedData } from "../types/featured";
 import type { RestaurantProperties } from "../types/restaurant";
-import { getGradeCategory } from "./gradeCategory";
 
 export const EMPTY_FEATURED: FeaturedData = { version: 1, hands: [] };
 
@@ -40,13 +39,18 @@ export function dealtDate(date: string): Date {
   return new Date(`${date}T12:00:00Z`);
 }
 
-// The certificate stays only while the latest inspection still reads as an A
-// (a closure or a lower grade hides it; a return to A brings it back).
-export function hasFeaturedCertificate(
-  restaurant: Pick<RestaurantProperties, "featured_date" | "action" | "grade" | "score">,
+// A hand date (YYYY-MM-DD) as the YYYYMMDD number stamped on the map data.
+export function featuredDayNumber(date: string | null | undefined): number | null {
+  const day = date ? Number(date.replaceAll("-", "")) : NaN;
+  return Number.isInteger(day) && day > 0 ? day : null;
+}
+
+// Featured is a status award: held only on its day, by the same five the
+// map rings. Past features are history (Details), not an award.
+export function isFeaturedToday(
+  restaurant: Pick<RestaurantProperties, "featured_date">,
+  featuredDate: string | null | undefined,
 ): boolean {
-  return (
-    Boolean(restaurant.featured_date) &&
-    getGradeCategory(restaurant.action, restaurant.grade, restaurant.score) === "A"
-  );
+  const today = featuredDayNumber(featuredDate);
+  return today !== null && restaurant.featured_date === today;
 }

@@ -2,7 +2,7 @@ import { test } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { escapeXml, fitName, layoutText, cuisineLine, subLines, scoreGlyphs, renderCard } from "../shared/restaurantCard.mjs";
+import { awardIcons, BAN_ICON_PATH, blendHex, cardColor, escapeXml, fitName, formatCardDate, layoutText, cuisineLine, subLines, scoreGlyphs, renderCard } from "../shared/restaurantCard.mjs";
 import { CATEGORY_COLORS } from "../shared/gradeColours.mjs";
 
 const template = readFileSync(path.join(import.meta.dirname, "..", "shared", "restaurantCard.svg"), "utf8");
@@ -36,10 +36,16 @@ test("escapeXml escapes characters common in restaurant names", () => {
 });
 
 test("renderCard fills every template token and uses the shared grade colour", () => {
-  const svg = renderCard({ name: "Ben & Jerry's", grade: "B", score: 18 }, { template });
+  const svg = renderCard({ name: "Ben & Jerry's", category: "B", score: 18 }, { template });
   assert.doesNotMatch(svg, /\{\{[A-Z_]+\}\}/);
   assert.match(svg, /BEN &amp; JERRY&apos;S/);
-  assert.ok(svg.includes(CATEGORY_COLORS.B));
+  assert.ok(svg.includes(cardColor("B")));
+});
+
+test("blendHex mixes a colour into the card body at the given strength", () => {
+  assert.equal(blendHex("#ffffff", "#000000", 0.7), "#b3b3b3");
+  assert.equal(blendHex("#2E7BE4", "#252525", 1), "#2e7be4");
+  assert.equal(cardColor("A"), blendHex(CATEGORY_COLORS.A, "#252525", 0.7));
 });
 
 test("cuisineLine drops DOHMH's placeholder cuisine", () => {
@@ -66,15 +72,42 @@ test("layoutText shifts the group up to keep it centred when sub-lines are added
   assert.equal(full.labelY, full.sublineYs[1] + 62);
 });
 
-test("renderCard footer uses the New York calendar date", () => {
+test("formatCardDate uses the New York calendar date", () => {
   // 02:00 UTC on Oct 8 is still Oct 7 in New York.
-  const svg = renderCard({ name: "X", grade: "A", score: 7 }, { template, date: new Date("2026-10-08T02:00:00Z") });
-  assert.match(svg, /FEATURED AWARD · OCT 7, 2026/);
+  assert.equal(formatCardDate(new Date("2026-10-08T02:00:00Z")), "OCT 7, 2026");
 });
 
-test("renderCard rejects restaurants without a letter grade or score", () => {
-  assert.throws(() => renderCard({ name: "X", grade: "P", score: 10 }, { template }));
-  assert.throws(() => renderCard({ name: "X", grade: "A", score: null }, { template }));
+test("renderCard writes the footer it's given", () => {
+  const svg = renderCard({ name: "X", category: "A", score: 7 }, { template, footer: "INSPECTED · OCT 7, 2026" });
+  assert.match(svg, /INSPECTED · OCT 7, 2026/);
+});
+
+test("renderCard colours and marks every status, not just A/B/C", () => {
+  const pending = renderCard({ name: "X", category: "pending", score: 30 }, { template });
+  assert.ok(pending.includes(cardColor("pending")));
+  assert.match(pending, />P<\/text><\/g>/);
+  const closed = renderCard({ name: "X", category: "closed", score: 40 }, { template });
+  assert.ok(closed.includes(cardColor("closed")));
+  assert.ok(closed.includes(`d="${BAN_ICON_PATH}"`));
+  assert.match(closed, />CLOSED BY DOHMH<\/text>/);
+  assert.doesNotMatch(pending, /CLOSED BY DOHMH/);
+  assert.throws(() => renderCard({ name: "X", category: "Z", score: 10 }, { template }));
+});
+
+test("renderCard shows a dash and no score texture without a score", () => {
+  const svg = renderCard({ name: "X", category: "uninspected", score: null }, { template });
+  assert.match(svg, />—<\/text>/);
+  assert.equal(scoreGlyphs(null), "");
+});
+
+test("awardIcons draws known awards as a centred row and skips unknown ids", () => {
+  assert.equal(awardIcons([], 500), "");
+  assert.equal(awardIcons(["nope"], 500), "");
+  const one = awardIcons(["featured"], 500);
+  assert.equal(one.match(/<path /g).length, 1);
+  assert.match(one, /fill="#d4af37"/);
+  const x = Number(one.match(/translate\(([\d.]+)/)[1]);
+  assert.equal(x + (576 * 32) / 512 / 2, 250); // centred on the card
 });
 
 // The 3D card loads the SVG as a standalone image, which must be strict XML.

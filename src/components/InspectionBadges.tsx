@@ -1,11 +1,13 @@
 // InspectionBadges.tsx
 //
 // Renders the grade and score badge pair with category-based colour and
-// fallbacks for missing values, plus the gold certificate when featured.
+// fallbacks for missing values, plus the gold certificate when featured today.
+// With onViewCard (Details) a third box, the gold award icon, opens the
+// restaurant's card.
 
 import type { CSSProperties } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faCertificate } from "@fortawesome/free-solid-svg-icons";
+import { faAward, faCertificate } from "@fortawesome/free-solid-svg-icons";
 import {
   getGradeCategory,
   CATEGORY_COLORS,
@@ -17,12 +19,13 @@ type InspectionBadgesProps = {
   grade: string | null;
   action?: string | null;
   style?: CSSProperties;
-  // Adds the gold certificate box; a button only where onViewCard is given.
+  // Featured today: the gold certificate box (Restaurant List, hover card).
   featured?: boolean;
   onViewCard?: () => void;
 };
 
 const certificate = <FontAwesomeIcon icon={faCertificate} className="badge-icon" aria-hidden="true" />;
+const award = <FontAwesomeIcon icon={faAward} className="badge-icon" aria-hidden="true" />;
 
 export default function InspectionBadges({
   score,
@@ -53,21 +56,22 @@ export default function InspectionBadges({
         </span>
       </div>
 
-      {featured &&
-        (onViewCard ? (
-          <button
-            type="button"
-            className="badge-box badge-box-featured badge-box-button tooltip-bottom"
-            onClick={onViewCard}
-            aria-label="View Featured Award"
-            data-tooltip="View award">
-            {certificate}
-          </button>
-        ) : (
+      {onViewCard ? (
+        <button
+          type="button"
+          className={`badge-box badge-box-button tooltip-bottom${featured ? " badge-box-featured" : ""}`}
+          onClick={onViewCard}
+          aria-label={featured ? "View awards, featured today" : "View awards"}
+          data-tooltip="View awards">
+          {award}
+        </button>
+      ) : (
+        featured && (
           <span className="badge-box badge-box-featured" role="img" aria-label="Featured restaurant">
             {certificate}
           </span>
-        ))}
+        )
+      )}
     </div>
   );
 }

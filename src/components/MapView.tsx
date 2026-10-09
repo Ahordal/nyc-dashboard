@@ -24,11 +24,11 @@ import type {
   SearchRadiusPoint,
   SearchRadiusMiles,
 } from "../types/searchRadius";
-import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
-import { getGradeCategory } from "../utils/gradeCategory";
+import { countGradeCategories, type GradeCounts } from "../types/gradeCounts";
 import { pointsRenderer } from "../utils/mapRenderer";
 import { buildUserLocationGraphics } from "../utils/userLocationGraphics";
 import { buildFeaturedRingGraphics } from "../utils/featuredRingGraphics";
+import { featuredDayNumber } from "../utils/featured";
 import MapFeaturedControl from "./MapFeaturedControl";
 import { useSearchRadiusTool } from "../hooks/useSearchRadiusTool";
 import { useSelectionHighlight } from "../hooks/useSelectionHighlight";
@@ -57,6 +57,7 @@ import {
   queryFilterExtent,
   filterRestaurantsByGradeCategory,
   findRestaurantGraphicHit,
+  queryCitywideGradeCounts,
   RESTAURANT_OUT_FIELDS,
 } from "../queries/mapQueries";
 
@@ -74,11 +75,6 @@ function isAbortError(err: unknown): boolean {
   );
 }
 
-function featuredDayNumber(date: string | null | undefined): number | null {
-  const day = date ? Number(date.replaceAll("-", "")) : NaN;
-  return Number.isInteger(day) && day > 0 ? day : null;
-}
-
 type MapViewProps = {
   filters: Filters;
   searchQuery?: string;
@@ -88,6 +84,8 @@ type MapViewProps = {
   onHoverRestaurant?: (restaurant: RestaurantProperties | null) => void;
   onVisibleRestaurantsChange?: (restaurants: RestaurantProperties[]) => void;
   onGradeCountsChange?: (counts: GradeCounts) => void;
+  // Every restaurant's category, once the layer loads: the card back's ring.
+  onCitywideGradeCounts?: (counts: GradeCounts) => void;
   onSearchRadiusChange?: (
     point: SearchRadiusPoint | null,
     radiusMiles: SearchRadiusMiles,
@@ -224,6 +222,7 @@ export default function InspectionMapView({
   onHoverRestaurant,
   onVisibleRestaurantsChange,
   onGradeCountsChange,
+  onCitywideGradeCounts,
   onSearchRadiusChange,
   onUserLocationChange,
   initialSearchRadius = null,
@@ -280,6 +279,8 @@ export default function InspectionMapView({
   const filtersRef = useRef(filters);
   const onVisibleRestaurantsChangeRef = useRef(onVisibleRestaurantsChange);
   const onGradeCountsChangeRef = useRef(onGradeCountsChange);
+  const onCitywideGradeCountsRef = useRef(onCitywideGradeCounts);
+  onCitywideGradeCountsRef.current = onCitywideGradeCounts;
   const onSearchRadiusChangeRef = useRef(onSearchRadiusChange);
   const onUserLocationChangeRef = useRef(onUserLocationChange);
   const onInitialSelectionResolvedRef = useRef(onInitialSelectionResolved);
@@ -302,6 +303,7 @@ export default function InspectionMapView({
     view: mapView,
     layerRef,
     featuredRingsLayerRef,
+    featuredDateRef,
     isPlacingPointRef: searchRadius.isPlacingPointRef,
     onHoverRestaurantRef,
     setHoverCard,
@@ -390,14 +392,7 @@ export default function InspectionMapView({
       // distribution (matching slices highlighted, not removed);
       // RestaurantList/StatsPanel use filteredRestaurants instead.
       if (onGradeCountsChange) {
-        const counts: GradeCounts = { ...EMPTY_GRADE_COUNTS };
-        for (const r of restaurants) {
-          const category = getGradeCategory(r.action, r.grade, r.score);
-          if (counts[category] !== undefined) {
-            counts[category] += 1;
-          }
-        }
-        onGradeCountsChange(counts);
+        onGradeCountsChange(countGradeCategories(restaurants));
       }
 
       const filteredRestaurants = filterRestaurantsByGradeCategory(
@@ -481,6 +476,14 @@ export default function InspectionMapView({
       .load()
       .then(() => {
         if (disposed) return;
+        // Off the critical path: only the card back needs it.
+        queryCitywideGradeCounts(layer)
+          .then((counts) => {
+            if (!disposed) onCitywideGradeCountsRef.current?.(counts);
+          })
+          .catch((err) => {
+            if (!isAbortError(err)) console.error("MapView: citywide count failed", err);
+          });
         // No animation: replaces the placeholder camera set before the
         // real extent was known, so it reads as the initial view.
         return goToFullExtent(view, layer, { duration: 0 });

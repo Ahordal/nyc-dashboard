@@ -18,6 +18,9 @@ const CHAIN_MIN_LOCATIONS = 3;
 const MAX_INSPECTION_AGE_DAYS = 365;
 // Top of the A score band, so the letter and the dashboard's colour agree.
 const MAX_A_SCORE = 13;
+// Featured is held only on its day, so a restaurant can be dealt again;
+// the cooldown keeps small borough pools from running dry.
+export const REDEAL_COOLDOWN_DAYS = 365;
 
 export const EMPTY_FEATURED = { version: 1, hands: [] };
 
@@ -45,7 +48,8 @@ export function chainNames(features) {
   return new Set([...counts].filter(([, n]) => n >= CHAIN_MIN_LOCATIONS).map(([name]) => name));
 }
 
-export function isEligible(props, { asOf, chains, dealt }) {
+// lastDealt: CAMIS -> date (YYYY-MM-DD) it was last dealt.
+export function isEligible(props, { asOf, chains, lastDealt }) {
   const inspected = Date.parse(props.inspection_date);
   const ageDays = (Date.parse(asOf) - inspected) / 86_400_000;
   return (
@@ -60,7 +64,7 @@ export function isEligible(props, { asOf, chains, dealt }) {
     ageDays >= 0 &&
     ageDays <= MAX_INSPECTION_AGE_DAYS &&
     !chains.has(chainKey(props.name)) &&
-    !dealt.has(props.camis)
+    !dealtWithin(lastDealt.get(props.camis), asOf, REDEAL_COOLDOWN_DAYS)
   );
 }
 
@@ -92,12 +96,26 @@ export function cardSnapshot(props) {
   };
 }
 
+function dealtWithin(lastDate, asOf, days) {
+  return lastDate !== undefined && (Date.parse(asOf) - Date.parse(lastDate)) / 86_400_000 < days;
+}
+
+export function lastDealtDates(featured) {
+  const lastDealt = new Map();
+  for (const hand of featured.hands) {
+    for (const { camis } of hand.cards) {
+      if (!(lastDealt.get(camis) >= hand.date)) lastDealt.set(camis, hand.date);
+    }
+  }
+  return lastDealt;
+}
+
 // Returns the hand for `date`, or null if that date was already dealt. A
 // borough with nobody eligible is skipped rather than blocking the hand.
 export function dealHand(features, featured, date) {
   if (featured.hands.some((hand) => hand.date === date)) return null;
 
-  const dealt = new Set(featured.hands.flatMap((hand) => hand.cards.map((card) => card.camis)));
+  const lastDealt = lastDealtDates(featured);
   const chains = chainNames(features);
   const random = seededRandom(date);
   const cards = [];
@@ -105,7 +123,7 @@ export function dealHand(features, featured, date) {
   for (const boro of BOROUGHS) {
     const pool = features
       .map((f) => f.properties)
-      .filter((p) => p.boro === boro && isEligible(p, { asOf: date, chains, dealt }))
+      .filter((p) => p.boro === boro && isEligible(p, { asOf: date, chains, lastDealt }))
       .sort((a, b) => a.camis.localeCompare(b.camis)); // stable order, so the seed alone decides
     if (pool.length === 0) {
       console.warn(`deal-cards: no eligible restaurant in ${boro} for ${date}.`);
@@ -128,14 +146,12 @@ export function mergeFeatured(local, remote) {
 // On the map data itself, so the dashboard needs no featured.json lookup.
 // A YYYYMMDD number: ArcGIS reads date-like strings as date fields, which
 // breaks plain equality queries.
+// A restaurant dealt more than once carries its latest date.
 export function applyFeaturedDates(features, featured) {
-  const dates = new Map();
-  for (const hand of featured.hands) {
-    const day = Number(hand.date.replaceAll("-", ""));
-    for (const card of hand.cards) dates.set(card.camis, day);
-  }
+  const lastDealt = lastDealtDates(featured);
   for (const { properties } of features) {
-    properties.featured_date = dates.get(properties.camis) ?? null;
+    const date = lastDealt.get(properties.camis);
+    properties.featured_date = date ? Number(date.replaceAll("-", "")) : null;
   }
   return features;
 }

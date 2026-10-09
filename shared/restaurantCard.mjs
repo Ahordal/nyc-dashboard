@@ -19,17 +19,59 @@ const LABEL_GAP = 62; // last line of the restaurant block -> SCORE label
 const SCORE_GAP = 66; // label -> score (64px digits)
 const GROUP_CENTRE_Y = 355;
 
-// Award certificate: faCertificate's 576x512 box, drawn AWARD_ICON_SIZE tall,
-// centred a quarter of the way from the score's baseline to the footer's cap top.
+// Award icons: Font Awesome paths in their 576x512 box, drawn AWARD_ICON_SIZE
+// tall, centred a quarter of the way from the score's baseline to the footer's cap top.
 const AWARD_ICON_SIZE = 32;
+const AWARD_ICON_GAP = 12;
 const FOOTER_CAP_TOP = 660;
+const AWARD_GOLD = "#d4af37"; // --award-gold
+const AWARD_ICONS = {
+  featured: "M239.2-8c-6.1-6.2-15-8.7-23.4-6.4S200.9-5.6 198.8 2.8L183.5 63c-1.1 4.4-5.6 7-9.9 5.7L113.8 51.9c-8.4-2.4-17.4 0-23.5 6.1s-8.5 15.1-6.1 23.5l16.9 59.8c1.2 4.3-1.4 8.8-5.7 9.9L35.1 166.5c-8.4 2.1-15 8.7-17.3 17.1s.2 17.3 6.4 23.4l44.5 43.3c3.2 3.1 3.2 8.3 0 11.5L24.3 305.1c-6.2 6.1-8.7 15-6.4 23.4s8.9 14.9 17.3 17.1l60.2 15.3c4.4 1.1 7 5.6 5.7 9.9L84.2 430.5c-2.4 8.4 0 17.4 6.1 23.5s15.1 8.5 23.5 6.1l59.8-16.9c4.3-1.2 8.8 1.4 9.9 5.7l15.3 60.2c2.1 8.4 8.7 15 17.1 17.3s17.3-.2 23.4-6.4l43.3-44.5c3.1-3.2 8.3-3.2 11.5 0L337.3 520c6.1 6.2 15 8.7 23.4 6.4s14.9-8.9 17.1-17.3L393.1 449c1.1-4.4 5.6-7 9.9-5.7l59.8 16.9c8.4 2.4 17.4 0 23.5-6.1s8.5-15.1 6.1-23.5l-16.9-59.8c-1.2-4.3 1.4-8.8 5.7-9.9l60.2-15.3c8.4-2.1 15-8.7 17.3-17.1s-.2-17.4-6.4-23.4l-44.5-43.3c-3.2-3.1-3.2-8.3 0-11.5l44.5-43.3c6.2-6.1 8.7-15 6.4-23.4s-8.9-14.9-17.3-17.1l-60.2-15.3c-4.4-1.1-7-5.6-5.7-9.9l16.9-59.8c2.4-8.4 0-17.4-6.1-23.5s-15.1-8.5-23.5-6.1L403 68.8c-4.3 1.2-8.8-1.4-9.9-5.7L377.8 2.8c-2.1-8.4-8.7-15-17.1-17.3s-17.3 .2-23.4 6.4L294 36.5c-3.1 3.2-8.3 3.2-11.5 0L239.2-8z",
+};
+
+// Corner letter per status. Closed gets Font Awesome's ban icon instead, so
+// it can't read as grade C.
+const CATEGORY_LABELS = { A: "A", B: "B", C: "C", pending: "P", uninspected: "U", closed: null };
+// Spelled-out status under the score, where the corner mark isn't a grade.
+const STATUS_LINES = { closed: "CLOSED BY DOHMH" };
+const STATUS_LINE_GAP = 30; // score baseline -> status line baseline
+
+export const BAN_ICON_PATH = "M367.2 412.5L99.5 144.8c-22.4 31.4-35.5 69.8-35.5 111.2 0 106 86 192 192 192 41.5 0 79.9-13.1 111.2-35.5zm45.3-45.3c22.4-31.4 35.5-69.8 35.5-111.2 0-106-86-192-192-192-41.5 0-79.9 13.1-111.2 35.5L412.5 367.2zM0 256a256 256 0 1 1 512 0 256 256 0 1 1 -512 0z";
+
+// Letter or icon centred in the 56px corner box (cardSlab.ts shifts the group
+// to centre it in the 3D card's flush 64px box).
+function gradeMark(label, color) {
+  if (label === null) {
+    const size = 28;
+    const offset = 28 - size / 2;
+    return `<path transform="translate(${offset} ${offset}) scale(${size / 512})" fill="${color}" d="${BAN_ICON_PATH}"/>`;
+  }
+  return `<text x="28" y="38" class="rc-label" font-weight="700" font-size="28" fill="${color}" text-anchor="middle">${escapeXml(label)}</text>`;
+}
 
 const NO_CUISINE = "Not Listed/Not Applicable";
 
 const MUTED_COLOR = "#a0a0a0"; // --text-muted
-const NAME_SHADOW_COLOR = "#252525"; // --bg-alt
+const NAME_SHADOW_COLOR = "#1f1f1f"; // a step below the card body, as --bg-alt is to --bg-panel
+const CARD_BODY_COLOR = "#252525";
+// Grade colours on the card sit at 70%, blended into the body: softer
+// against the dark card than the map's full-strength dots.
+const CARD_COLOR_STRENGTH = 0.7;
 
-const GRADED = new Set(["A", "B", "C"]);
+// Solid hex of `color` at `strength` over `base`, so canvas and SVG both
+// read it as a plain colour (cardSlab.ts takes it from the grade box).
+export function blendHex(color, base, strength) {
+  const channel = (hex, i) => parseInt(hex.slice(1 + i * 2, 3 + i * 2), 16);
+  return `#${[0, 1, 2]
+    .map((i) => Math.round(channel(color, i) * strength + channel(base, i) * (1 - strength)))
+    .map((v) => v.toString(16).padStart(2, "0"))
+    .join("")}`;
+}
+
+export function cardColor(category) {
+  return blendHex(CATEGORY_COLORS[category], CARD_BODY_COLOR, CARD_COLOR_STRENGTH);
+}
+
 
 export function escapeXml(value) {
   return String(value)
@@ -103,6 +145,7 @@ export function layoutText({ size, lines }, sublineGaps = []) {
 // of a column so the 45° turn doesn't collapse it into a square grid.
 // Columns widen with digit count so two-digit scores don't overlap.
 export function scoreGlyphs(score) {
+  if (!Number.isFinite(score)) return "";
   const text = escapeXml(score);
   const colStep = 100 + 120 * String(score).length;
   const rowStep = 210;
@@ -118,7 +161,7 @@ export function scoreGlyphs(score) {
   return glyphs.join("\n");
 }
 
-// The cards are a New York daily feature, so dates follow NYC's calendar.
+// Card dates follow NYC's calendar.
 export function formatCardDate(date) {
   return new Intl.DateTimeFormat("en-US", {
     timeZone: "America/New_York",
@@ -130,20 +173,37 @@ export function formatCardDate(date) {
     .toUpperCase();
 }
 
-// fontFacesCss embeds fonts for standalone files; inline in the dashboard
-// it stays empty and the page's own @font-face rules apply.
-function awardIconTransform(scoreY) {
-  const centreY = scoreY + (FOOTER_CAP_TOP - scoreY) / 4;
-  const scale = AWARD_ICON_SIZE / 512;
-  return `translate(${250 - 288 * scale} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})`;
+function statusLine(category, scoreY, color) {
+  const text = STATUS_LINES[category];
+  if (!text) return "";
+  return `    <text x="250" y="${scoreY + STATUS_LINE_GAP}" class="rc-label" font-weight="700" font-size="14" letter-spacing="1.4" fill="${color}" text-anchor="middle">${text}</text>`;
 }
 
+// One gold icon per award id, centred as a row; unknown ids are skipped.
+export function awardIcons(awards, scoreY) {
+  const known = awards.filter((id) => id in AWARD_ICONS);
+  const centreY = scoreY + (FOOTER_CAP_TOP - scoreY) / 4;
+  const scale = AWARD_ICON_SIZE / 512;
+  const width = 576 * scale;
+  const rowWidth = known.length * width + (known.length - 1) * AWARD_ICON_GAP;
+  return known
+    .map((id, i) => {
+      const x = 250 - rowWidth / 2 + i * (width + AWARD_ICON_GAP);
+      return `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${AWARD_GOLD}" d="${AWARD_ICONS[id]}"/>`;
+    })
+    .join("\n");
+}
+
+// category: the dashboard's grade category (getGradeCategory), which sets the
+// card's colour and corner letter. footer: e.g. "INSPECTED · OCT 9, 2026".
+// fontFacesCss embeds fonts for standalone files; inline in the dashboard
+// it stays empty and the page's own @font-face rules apply.
 export function renderCard(
-  { name, grade, score, boro, cuisine },
-  { template, fontFacesCss = "", date = new Date() },
+  { name, category, score, boro, cuisine, awards = [] },
+  { template, fontFacesCss = "", footer = "" },
 ) {
-  if (!GRADED.has(grade)) throw new Error(`Card needs a letter grade A/B/C, got ${grade}`);
-  if (!Number.isFinite(score)) throw new Error(`Card needs a numeric score, got ${score}`);
+  if (!(category in CATEGORY_LABELS)) throw new Error(`Unknown card category: ${category}`);
+  const hasScore = Number.isFinite(score);
 
   const fitted = fitName(name);
   const subs = subLines({ boro, cuisine });
@@ -151,7 +211,8 @@ export function renderCard(
     fitted,
     subs.map((sub) => sub.gap),
   );
-  const gradeColor = CATEGORY_COLORS[grade];
+  const gradeColor = cardColor(category);
+  const label = CATEGORY_LABELS[category];
   const nameText = (dx, dy, fill) =>
     fitted.lines
       .map(
@@ -169,18 +230,19 @@ export function renderCard(
     .join("\n");
 
   const tokens = {
-    TITLE: escapeXml(`${name}: grade ${grade}, score ${score}`),
+    TITLE: escapeXml(`${name}: ${label ?? "closed"}, score ${hasScore ? score : "none"}`),
     FONT_FACES: fontFacesCss,
     GRADE_COLOR: gradeColor,
-    GRADE: grade,
-    SCORE: escapeXml(score),
+    GRADE_MARK: gradeMark(label, gradeColor),
+    SCORE: hasScore ? escapeXml(score) : "—",
     NAME_LINES: nameLines,
     SCORE_GLYPHS: scoreGlyphs(score),
     SCORE_LABEL_Y: labelY,
     SCORE_Y: scoreY,
-    AWARD_ICON_TRANSFORM: awardIconTransform(scoreY),
+    STATUS_LINE: statusLine(category, scoreY, gradeColor),
+    AWARD_ICONS: awardIcons(awards, scoreY),
     SUB_LINES: subLineText,
-    FOOTER: `FEATURED AWARD · ${formatCardDate(date)}`,
+    FOOTER: escapeXml(footer),
   };
   return template.replace(/\{\{([A-Z_]+)\}\}/g, (match, key) =>
     key in tokens ? String(tokens[key]) : match,

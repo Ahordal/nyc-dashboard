@@ -17,7 +17,6 @@ import {
 } from "../utils/distance";
 import { toTitleCase } from "../utils/toTitleCase";
 import { formatDate } from "../utils/formatDate";
-import { hasFeaturedCertificate } from "../utils/featured";
 
 type RestaurantCardProps = {
   restaurant: RestaurantProperties;
@@ -30,6 +29,8 @@ type RestaurantCardProps = {
   // Distance origin: Search Radius centre or the locate dot.
   // Null/undefined hides the Distance line.
   distanceOrigin?: SearchRadiusPoint | null;
+  // In today's hand: shows the Featured badge.
+  isFeatured?: boolean;
 };
 
 // Local formatting helpers
@@ -60,6 +61,7 @@ export default function RestaurantCard({
   onClick,
   onHover,
   distanceOrigin = null,
+  isFeatured = false,
 }: RestaurantCardProps) {
   const category = getGradeCategory(
     restaurant.action,
@@ -91,7 +93,7 @@ export default function RestaurantCard({
   const ariaLabel = [
     name,
     gradeLabel,
-    hasFeaturedCertificate(restaurant) && "featured restaurant",
+    isFeatured && "featured restaurant",
     address && `at ${address}`,
     restaurant.cuisine && `${restaurant.cuisine} cuisine`,
     distanceMiles != null && `${formatApproxMilesSpoken(distanceMiles)} away`,
@@ -153,7 +155,7 @@ export default function RestaurantCard({
         score={restaurant.score}
         grade={restaurant.grade}
         action={restaurant.action}
-        featured={hasFeaturedCertificate(restaurant)}
+        featured={isFeatured}
       />
     </div>
   );

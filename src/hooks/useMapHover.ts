@@ -17,7 +17,7 @@ import type MapView from "@arcgis/core/views/MapView";
 import type { RestaurantProperties } from "../types/restaurant";
 import type { HoverCardState } from "../components/MapHoverCard";
 import { findRestaurantGraphicHit } from "../queries/mapQueries";
-import { hasFeaturedCertificate } from "../utils/featured";
+import { isFeaturedToday } from "../utils/featured";
 
 // Hover cards need distinguishable dots; below this scale the handler
 // still runs (cursor, hover callback) but shows no card.
@@ -29,6 +29,8 @@ type UseMapHoverArgs = {
   view: MapView | null;
   layerRef: RefObject<GeoJSONLayer | null>;
   featuredRingsLayerRef: RefObject<GraphicsLayer | null>;
+  // Latest hand's date, for the hover card's Featured badge.
+  featuredDateRef: RefObject<string | null>;
   isPlacingPointRef: RefObject<boolean>;
   onHoverRestaurantRef: RefObject<
     ((restaurant: RestaurantProperties | null) => void) | undefined
@@ -40,6 +42,7 @@ export function useMapHover({
   view,
   layerRef,
   featuredRingsLayerRef,
+  featuredDateRef,
   isPlacingPointRef,
   onHoverRestaurantRef,
   setHoverCard,
@@ -95,7 +98,7 @@ export function useMapHover({
           grade: attrs.grade ?? null,
           score: attrs.score ?? null,
           action: attrs.action ?? "",
-          featured: hasFeaturedCertificate(attrs),
+          featured: isFeaturedToday(attrs, featuredDateRef.current),
         });
       } else {
         setHoverCard(null);
@@ -138,6 +141,7 @@ export function useMapHover({
     view,
     layerRef,
     featuredRingsLayerRef,
+    featuredDateRef,
     isPlacingPointRef,
     onHoverRestaurantRef,
     setHoverCard,

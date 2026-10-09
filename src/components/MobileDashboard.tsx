@@ -73,6 +73,10 @@ type MobileDashboardProps = {
   gradeCounts: GradeCounts;
   onGradeCountsChange: (counts: GradeCounts) => void;
 
+  // Every restaurant, regardless of view: the card back's ring.
+  citywideGradeCounts: GradeCounts;
+  onCitywideGradeCounts: (counts: GradeCounts) => void;
+
   radius: RadiusState;
   radiusHandlers: RadiusHandlers;
 
@@ -98,6 +102,8 @@ export default function MobileDashboard({
   onVisibleRestaurantsChange,
   gradeCounts,
   onGradeCountsChange,
+  citywideGradeCounts,
+  onCitywideGradeCounts,
   radius,
   radiusHandlers,
   pendingCamisFromUrl,
@@ -402,6 +408,7 @@ export default function MobileDashboard({
               onHoverRestaurant={onHoverRestaurant}
               onVisibleRestaurantsChange={onVisibleRestaurantsChange}
               onGradeCountsChange={onGradeCountsChange}
+              onCitywideGradeCounts={onCitywideGradeCounts}
               onSearchRadiusChange={onSearchRadiusChange}
               onUserLocationChange={onUserLocationChange}
               initialSearchRadius={initialSearchRadius}
@@ -497,6 +504,7 @@ export default function MobileDashboard({
                       userLocationPoint={userLocationPoint}
                       isMobile
                       featuredMode={filters.featured}
+                      featuredDate={featuredDate}
                     />
                   </div>
 
@@ -519,7 +527,8 @@ export default function MobileDashboard({
                       historyScrollTarget={historyScrollTarget}
                       isMobile
                       featuredCard={featuredCard}
-                      gradeCounts={gradeCounts}
+                      gradeCounts={citywideGradeCounts}
+                      featuredDate={featuredDate}
                     />
                   </div>
 

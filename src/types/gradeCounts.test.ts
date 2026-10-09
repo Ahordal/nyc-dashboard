@@ -1,7 +1,7 @@
 // gradeCounts.test.ts
 
 import { describe, it, expect } from "vitest";
-import { scopeGradeCounts, EMPTY_GRADE_COUNTS } from "./gradeCounts";
+import { scopeGradeCounts, EMPTY_GRADE_COUNTS, countGradeCategories } from "./gradeCounts";
 import type { GradeCounts } from "./gradeCounts";
 
 const FULL_COUNTS: GradeCounts = {
@@ -45,5 +45,20 @@ describe("scopeGradeCounts", () => {
     expect(scopeGradeCounts(FULL_COUNTS, ["Nonsense"])).toEqual(
       EMPTY_GRADE_COUNTS,
     );
+  });
+});
+
+describe("countGradeCategories", () => {
+  it("tallies each restaurant by its display category", () => {
+    const open = "Violations were cited in the following area(s).";
+    expect(
+      countGradeCategories([
+        { action: open, grade: "A", score: 9 },
+        { action: open, grade: "A", score: 12 },
+        { action: open, grade: "B", score: 20 },
+        { action: open, grade: "Z", score: 30 },
+        { action: open, grade: "U", score: null },
+      ]),
+    ).toEqual({ A: 2, B: 1, C: 0, pending: 1, uninspected: 1, closed: 0 });
   });
 });

@@ -14,6 +14,7 @@ import Extent from "@arcgis/core/geometry/Extent";
 import type { Filters } from "../types/filters";
 import type { RestaurantProperties } from "../types/restaurant";
 import type { SearchRadiusPoint } from "../types/searchRadius";
+import { countGradeCategories, type GradeCounts } from "../types/gradeCounts";
 import {
   CLOSED_ACTIONS,
   UNINSPECTED_GRADE,
@@ -257,6 +258,25 @@ export async function queryVisibleRestaurants(
   return allFeatures.map(
     (feature) => feature.attributes as RestaurantProperties,
   );
+}
+
+// Every restaurant, ignoring the view and filters (an explicit 1=1, as
+// queries don't pick up definitionExpression): the card back's citywide ring.
+export async function queryCitywideGradeCounts(layer: GeoJSONLayer): Promise<GradeCounts> {
+  await layer.load();
+  const records: RestaurantProperties[] = [];
+  for (let start = 0; ; start += VISIBLE_QUERY_PAGE_SIZE) {
+    const query = layer.createQuery();
+    query.where = "1=1";
+    query.outFields = ["action", "grade", "score"];
+    query.returnGeometry = false;
+    query.start = start;
+    query.num = VISIBLE_QUERY_PAGE_SIZE;
+    const result = await layer.queryFeatures(query);
+    records.push(...result.features.map((f) => f.attributes as RestaurantProperties));
+    if (!result.exceededTransferLimit || result.features.length === 0) break;
+  }
+  return countGradeCategories(records);
 }
 
 // Combines two former queries (match check + objectId re-fetch) into

@@ -158,6 +158,10 @@ export default function Dashboard() {
   const [gradeCounts, setGradeCounts] =
     useState<GradeCounts>(EMPTY_GRADE_COUNTS);
 
+  // Every restaurant, regardless of view: the card back's ring.
+  const [citywideGradeCounts, setCitywideGradeCounts] =
+    useState<GradeCounts>(EMPTY_GRADE_COUNTS);
+
   const [searchRadiusPoint, setSearchRadiusPoint] =
     useState<SearchRadiusPoint | null>(null);
 
@@ -408,6 +412,8 @@ export default function Dashboard() {
         onVisibleRestaurantsChange={setVisibleRestaurants}
         gradeCounts={gradeCounts}
         onGradeCountsChange={setGradeCounts}
+        citywideGradeCounts={citywideGradeCounts}
+        onCitywideGradeCounts={setCitywideGradeCounts}
         radius={mobileRadius}
         radiusHandlers={mobileRadiusHandlers}
         pendingCamisFromUrl={pendingCamisFromUrl}
@@ -628,6 +634,7 @@ export default function Dashboard() {
                   onHoverRestaurant={handleHoverRestaurant}
                   onVisibleRestaurantsChange={setVisibleRestaurants}
                   onGradeCountsChange={setGradeCounts}
+                  onCitywideGradeCounts={setCitywideGradeCounts}
                   onSearchRadiusChange={handleSearchRadiusChange}
                   onUserLocationChange={setUserLocationPoint}
                   initialSearchRadius={initialSearchRadius}
@@ -671,7 +678,8 @@ export default function Dashboard() {
                 onHoverRestaurant={handleHoverRestaurant}
                 searchRadiusPoint={searchRadiusPoint}
                 userLocationPoint={locateDistanceOrigin}
-                featuredMode={filters.featured}>
+                featuredMode={filters.featured}
+                featuredDate={featuredDate}>
                 {restaurantListFilterNotice}
               </RestaurantList>
             </div>
@@ -695,7 +703,8 @@ export default function Dashboard() {
                 onSelectInspection={handleSelectInspection}
                 onHoverInspection={handleHoverInspection}
                 featuredCard={selectedFeaturedCard}
-                gradeCounts={gradeCounts}
+                gradeCounts={citywideGradeCounts}
+                featuredDate={featuredDate}
               />
             </div>
 
