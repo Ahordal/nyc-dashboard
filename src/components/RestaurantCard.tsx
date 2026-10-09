@@ -17,6 +17,7 @@ import {
 } from "../utils/distance";
 import { toTitleCase } from "../utils/toTitleCase";
 import { formatDate } from "../utils/formatDate";
+import { hasFeaturedCertificate } from "../utils/featured";
 
 type RestaurantCardProps = {
   restaurant: RestaurantProperties;
@@ -90,7 +91,7 @@ export default function RestaurantCard({
   const ariaLabel = [
     name,
     gradeLabel,
-    restaurant.featured_date && "featured restaurant",
+    hasFeaturedCertificate(restaurant) && "featured restaurant",
     address && `at ${address}`,
     restaurant.cuisine && `${restaurant.cuisine} cuisine`,
     distanceMiles != null && `${formatApproxMilesSpoken(distanceMiles)} away`,
@@ -152,7 +153,7 @@ export default function RestaurantCard({
         score={restaurant.score}
         grade={restaurant.grade}
         action={restaurant.action}
-        featured={Boolean(restaurant.featured_date)}
+        featured={hasFeaturedCertificate(restaurant)}
       />
     </div>
   );

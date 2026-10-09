@@ -23,6 +23,7 @@ function restaurant(overrides = {}) {
       neighbourhood: null,
       cuisine: "American",
       grade: "A",
+      previous_grade: "A",
       score: 9,
       inspection_date: "2026-06-01T00:00:00.000",
       current_status_code: "open",
@@ -42,6 +43,8 @@ test("isEligible accepts an open, verified, recent A with a matching score", () 
 test("isEligible rejects each rule failure", () => {
   const cases = {
     "grade B": { grade: "B" },
+    "previous graded inspection a B": { previous_grade: "B" },
+    "no previous graded inspection": { previous_grade: null },
     "A letter with a B-band score": { score: 20 },
     "missing score": { score: null },
     closed: { current_status_code: "closed" },

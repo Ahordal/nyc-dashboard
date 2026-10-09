@@ -3,6 +3,8 @@
 // Lookups over the dealt restaurant cards in featured.json.
 
 import type { DealtCard, FeaturedCard, FeaturedData } from "../types/featured";
+import type { RestaurantProperties } from "../types/restaurant";
+import { getGradeCategory } from "./gradeCategory";
 
 export const EMPTY_FEATURED: FeaturedData = { version: 1, hands: [] };
 
@@ -36,4 +38,15 @@ export function earningInspectionId(card: FeaturedCard): string {
 // Noon UTC keeps a YYYY-MM-DD on the same calendar day in New York.
 export function dealtDate(date: string): Date {
   return new Date(`${date}T12:00:00Z`);
+}
+
+// The certificate stays only while the latest inspection still reads as an A
+// (a closure or a lower grade hides it; a return to A brings it back).
+export function hasFeaturedCertificate(
+  restaurant: Pick<RestaurantProperties, "featured_date" | "action" | "grade" | "score">,
+): boolean {
+  return (
+    Boolean(restaurant.featured_date) &&
+    getGradeCategory(restaurant.action, restaurant.grade, restaurant.score) === "A"
+  );
 }

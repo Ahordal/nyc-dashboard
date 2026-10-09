@@ -36,7 +36,7 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 
 - Each day five restaurants are featured, one per borough (see [Restaurant cards](#restaurant-cards-dealt-daily) for how they're picked).
 - Today's five get a gold ring on the map. A gold certificate button among the map controls (or Featured > Today in Filters) narrows the map and list to just them; it's kept in the URL as `featured=today`.
-- Every restaurant that has ever been featured carries a gold certificate beside its grade and score. In Restaurant Details that certificate opens the restaurant's card, and the score chart marks the inspection that earned it.
+- A restaurant that has been featured carries a gold certificate beside its grade and score for as long as its latest inspection is still an A. A lower grade or a closure hides it, and a return to A brings it back. In Restaurant Details that certificate opens the restaurant's card, and the score chart marks the inspection that earned it.
 
 ### Restaurant details
 
@@ -96,7 +96,7 @@ Each cache entry is marked `verified`, `unverified`, or `pending`, and stamped w
 
 ### Restaurant cards (dealt daily)
 
-The same daily run also deals a hand of five restaurant cards, one per borough, and commits it to `featured.json` on the `data` branch (`deal-cards.mjs`). A restaurant is eligible if it is independent (its name appears at fewer than three locations), holds an A from the last 12 months with a score in the A band, is open, has a verified location, and hasn't been dealt before. Each card is stored as a snapshot of the restaurant on the day it was dealt, so a later grade change doesn't rewrite it. The hand is seeded by the date, so re-running a day deals the same cards. The build stamps each dealt restaurant's map point with a `featured_date` (a `YYYYMMDD` number, since ArcGIS would otherwise read a date-like string as a date), which drives the rings, the filter, and the certificate badge. The card itself is drawn by `shared/restaurantCard.mjs`, used by both the pipeline and the dashboard's card modal.
+The same daily run also deals a hand of five restaurant cards, one per borough, and commits it to `featured.json` on the `data` branch (`deal-cards.mjs`). A restaurant is eligible if it is independent (its name appears at fewer than three locations), holds an A from the last 12 months with a score in the A band, had an A on its graded inspection before that too (ungraded inspections are skipped), is open, has a verified location, and hasn't been dealt before. Each card is stored as a snapshot of the restaurant on the day it was dealt, so a later grade change doesn't rewrite it. The hand is seeded by the date, so re-running a day deals the same cards. The build stamps each dealt restaurant's map point with a `featured_date` (a `YYYYMMDD` number, since ArcGIS would otherwise read a date-like string as a date), which drives the rings, the filter, and the certificate badge. The card itself is drawn by `shared/restaurantCard.mjs`, used by both the pipeline and the dashboard's card modal.
 
 ### Key pipeline files
 

@@ -17,6 +17,7 @@ import type MapView from "@arcgis/core/views/MapView";
 import type { RestaurantProperties } from "../types/restaurant";
 import type { HoverCardState } from "../components/MapHoverCard";
 import { findRestaurantGraphicHit } from "../queries/mapQueries";
+import { hasFeaturedCertificate } from "../utils/featured";
 
 // Hover cards need distinguishable dots; below this scale the handler
 // still runs (cursor, hover callback) but shows no card.
@@ -94,7 +95,7 @@ export function useMapHover({
           grade: attrs.grade ?? null,
           score: attrs.score ?? null,
           action: attrs.action ?? "",
-          featured: Boolean(attrs.featured_date),
+          featured: hasFeaturedCertificate(attrs),
         });
       } else {
         setHoverCard(null);

@@ -39,6 +39,8 @@ export function isEligible(props, { asOf, chains, dealt }) {
   const ageDays = (Date.parse(asOf) - inspected) / 86_400_000;
   return (
     props.grade === "A" &&
+    // Consistency: the graded inspection before this one was an A too.
+    props.previous_grade === "A" &&
     Number.isFinite(props.score) &&
     props.score <= MAX_A_SCORE &&
     props.current_status_code === "open" &&

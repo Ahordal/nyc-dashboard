@@ -26,6 +26,7 @@ import { haversineDistanceMiles, formatApproxMiles } from "../utils/distance";
 import { formatPhoneNumber } from "../utils/formatPhoneNumber";
 import { toTitleCase } from "../utils/toTitleCase";
 import { formatDate } from "../utils/formatDate";
+import { hasFeaturedCertificate } from "../utils/featured";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
 
@@ -345,7 +346,7 @@ function RestaurantDetails({
           score={restaurant.score}
           grade={restaurant.grade}
           action={restaurant.action}
-          featured={Boolean(restaurant.featured_date)}
+          featured={hasFeaturedCertificate(restaurant)}
           onViewCard={featuredCard ? () => setShowCard(true) : undefined}
         />
 

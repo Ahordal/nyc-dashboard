@@ -476,6 +476,18 @@ export function findRestaurantsWithInvalidDohmhCoords(eventsByRestaurant) {
  * Builds the primary GeoJSON feature collection for the map.
  * Enforces spatial validity (NYC bounding box) and resolves geocode cache overrides.
  */
+const LETTER_GRADES = new Set(["A", "B", "C"]);
+
+// Letter grade of the last graded inspection before the latest scored one.
+// Skips ungraded inspections (e.g. an initial inspection awaiting re-inspection).
+export function previousGrade(scoredEvents) {
+  for (let i = scoredEvents.length - 2; i >= 0; i--) {
+    const grade = scoredEvents[i].primary.grade;
+    if (LETTER_GRADES.has(grade)) return grade;
+  }
+  return null;
+}
+
 export function buildLatestInspectionsGeoJSON(
   eventsByRestaurant,
   generatedAt,
@@ -568,6 +580,8 @@ export function buildLatestInspectionsGeoJSON(
         cuisine: primary.cuisine_description ?? "",
         location_status: locationStatus,
         grade: isUninspected ? UNINSPECTED_GRADE : primary.grade || null,
+        // Dealing reads it for consistency; the dashboard doesn't yet.
+        previous_grade: previousGrade(scoredEvents),
         score: isUninspected ? null : Number(primary.score),
         inspection_date: latest.date,
         inspection_type: primary.inspection_type ?? "",
