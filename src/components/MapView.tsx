@@ -882,15 +882,21 @@ export default function InspectionMapView({
     applyHighlightForId,
   ]);
 
-  // Queries respect definitionExpression, so rings follow borough and search;
-  // a grade filter without A hides them, as featured restaurants are all A.
+  // Rings follow borough and search, passed explicitly since this query
+  // doesn't pick up definitionExpression. A grade filter without A hides
+  // them, as featured restaurants are all A.
   useEffect(() => {
     const layer = layerRef.current;
     const ringsLayer = featuredRingsLayerRef.current;
     if (!layer || !ringsLayer) return;
 
     const showsA = filters.grades.length === 0 || filters.grades.includes("A");
-    const where = featuredDate ? buildFeaturedWhereClause(featuredDate) : null;
+    const featuredWhere = featuredDate ? buildFeaturedWhereClause(featuredDate) : null;
+    const where =
+      featuredWhere &&
+      [buildDefinitionExpression(filters, searchQuery), featuredWhere]
+        .filter(Boolean)
+        .join(" AND ");
     if (!where || !showsA) {
       ringsLayer.removeAll();
       return;

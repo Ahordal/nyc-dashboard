@@ -10,14 +10,16 @@ import { faCertificate, faXmark } from "@fortawesome/free-solid-svg-icons";
 import PanelInfoModal from "./PanelInfoModal";
 import FeaturedRestaurantView from "./FeaturedRestaurantView";
 import type { DealtCard } from "../types/featured";
+import type { GradeCounts } from "../types/gradeCounts";
 
 type RestaurantCardModalProps = {
   dealt: DealtCard;
+  gradeCounts: GradeCounts;
   isOpen: boolean;
   onClose: () => void;
 };
 
-export default function RestaurantCardModal({ dealt, isOpen, onClose }: RestaurantCardModalProps) {
+export default function RestaurantCardModal({ dealt, gradeCounts, isOpen, onClose }: RestaurantCardModalProps) {
   return (
     <PanelInfoModal isOpen={isOpen} onClose={onClose} ariaLabel="Featured Award">
       <div className="panel-header info-modal-panel-header">
@@ -39,7 +41,7 @@ export default function RestaurantCardModal({ dealt, isOpen, onClose }: Restaura
         </button>
       </div>
 
-      <FeaturedRestaurantView dealt={dealt} />
+      <FeaturedRestaurantView dealt={dealt} gradeCounts={gradeCounts} />
     </PanelInfoModal>
   );
 }

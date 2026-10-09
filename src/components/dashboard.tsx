@@ -695,6 +695,7 @@ export default function Dashboard() {
                 onSelectInspection={handleSelectInspection}
                 onHoverInspection={handleHoverInspection}
                 featuredCard={selectedFeaturedCard}
+                gradeCounts={gradeCounts}
               />
             </div>
 

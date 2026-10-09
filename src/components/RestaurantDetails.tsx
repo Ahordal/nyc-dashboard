@@ -26,6 +26,7 @@ import { haversineDistanceMiles, formatApproxMiles } from "../utils/distance";
 import { formatPhoneNumber } from "../utils/formatPhoneNumber";
 import { toTitleCase } from "../utils/toTitleCase";
 import { formatDate } from "../utils/formatDate";
+import { EMPTY_GRADE_COUNTS, type GradeCounts } from "../types/gradeCounts";
 import { hasFeaturedCertificate } from "../utils/featured";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUpRightFromSquare } from "@fortawesome/free-solid-svg-icons";
@@ -237,6 +238,9 @@ type RestaurantDetailsProps = {
 
   // Featured restaurants only: the header's gold certificate opens this card.
   featuredCard?: DealtCard | null;
+
+  // The map view's grade mix, for the 3D card's back.
+  gradeCounts?: GradeCounts;
 };
 
 function RestaurantDetails({
@@ -251,6 +255,7 @@ function RestaurantDetails({
   historyScrollTarget,
   isMobile = false,
   featuredCard = null,
+  gradeCounts = EMPTY_GRADE_COUNTS,
 }: RestaurantDetailsProps) {
   const [showInfo, setShowInfo] = useState(false);
   const [showCard, setShowCard] = useState(false);
@@ -353,6 +358,7 @@ function RestaurantDetails({
         {featuredCard && (
           <RestaurantCardModal
             dealt={featuredCard}
+            gradeCounts={gradeCounts}
             isOpen={showCard}
             onClose={() => setShowCard(false)}
           />

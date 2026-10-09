@@ -19,6 +19,11 @@ const LABEL_GAP = 62; // last line of the restaurant block -> SCORE label
 const SCORE_GAP = 66; // label -> score (64px digits)
 const GROUP_CENTRE_Y = 355;
 
+// Award certificate: faCertificate's 576x512 box, drawn AWARD_ICON_SIZE tall,
+// centred a quarter of the way from the score's baseline to the footer's cap top.
+const AWARD_ICON_SIZE = 32;
+const FOOTER_CAP_TOP = 660;
+
 const NO_CUISINE = "Not Listed/Not Applicable";
 
 const MUTED_COLOR = "#a0a0a0"; // --text-muted
@@ -127,6 +132,12 @@ export function formatCardDate(date) {
 
 // fontFacesCss embeds fonts for standalone files; inline in the dashboard
 // it stays empty and the page's own @font-face rules apply.
+function awardIconTransform(scoreY) {
+  const centreY = scoreY + (FOOTER_CAP_TOP - scoreY) / 4;
+  const scale = AWARD_ICON_SIZE / 512;
+  return `translate(${250 - 288 * scale} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})`;
+}
+
 export function renderCard(
   { name, grade, score, boro, cuisine },
   { template, fontFacesCss = "", date = new Date() },
@@ -167,6 +178,7 @@ export function renderCard(
     SCORE_GLYPHS: scoreGlyphs(score),
     SCORE_LABEL_Y: labelY,
     SCORE_Y: scoreY,
+    AWARD_ICON_TRANSFORM: awardIconTransform(scoreY),
     SUB_LINES: subLineText,
     FOOTER: `FEATURED AWARD · ${formatCardDate(date)}`,
   };

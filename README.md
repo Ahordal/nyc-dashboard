@@ -36,7 +36,8 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 
 - Each day five restaurants are featured, one per borough (see [Restaurant cards](#restaurant-cards-dealt-daily) for how they're picked).
 - Today's five get a gold ring on the map. A gold certificate button among the map controls (or Featured > Today in Filters) narrows the map and list to just them; it's kept in the URL as `featured=today`.
-- A restaurant that has been featured carries a gold certificate beside its grade and score for as long as its latest inspection is still an A. A lower grade or a closure hides it, and a return to A brings it back. In Restaurant Details that certificate opens the restaurant's card, and the score chart marks the inspection that earned it.
+- A restaurant that has been featured carries a gold certificate beside its grade and score for as long as its latest inspection is still an A. A lower grade or a closure hides it, and a return to A brings it back. In Restaurant Details that certificate opens the restaurant's Featured Award card, and the score chart marks the inspection that earned it.
+- The card is a 3D slab you can drag to rotate, with the current map view's grade mix on its back. Scroll zooms it. It spins slowly on its own unless the system asks for reduced motion, and the flat card stands in while it loads or where WebGL isn't available.
 
 ### Restaurant details
 
@@ -58,7 +59,7 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 
 ### Keeping it fast
 
-The map is the heaviest part of the app (the ArcGIS SDK), so it loads on its own after the rest of the page, with a placeholder in the meantime. The two charts load the same way. If any of them fails to load, that one panel shows a reload message instead of taking down the whole dashboard.
+The map is the heaviest part of the app (the ArcGIS SDK), so it loads on its own after the rest of the page, with a placeholder in the meantime. The two charts load the same way, and three.js (for the 3D award card) only downloads when someone opens a card. If any of them fails to load, that one panel shows a reload message instead of taking down the whole dashboard.
 
 ### Responsive layout
 
@@ -130,6 +131,7 @@ Two separate suites, both run in CI on every push and pull request to `main`, al
 - **Vite + React 19 + TypeScript** — app and build
 - **ArcGIS Maps SDK** — the map
 - **Recharts** — the donut and score-history charts
+- **three.js** — the 3D Featured Award card
 - **Font Awesome** — icons
 - **Public Sans and Archivo** — fonts, self-hosted with no CDN
 - **Node.js** — the build and geocoding scripts

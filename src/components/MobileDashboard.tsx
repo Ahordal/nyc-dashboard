@@ -519,6 +519,7 @@ export default function MobileDashboard({
                       historyScrollTarget={historyScrollTarget}
                       isMobile
                       featuredCard={featuredCard}
+                      gradeCounts={gradeCounts}
                     />
                   </div>
 

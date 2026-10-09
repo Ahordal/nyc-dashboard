@@ -509,22 +509,62 @@
   color: var(--award-gold);
 }
 
-/* Featured restaurant card in its modal. */
+/* Featured restaurant card in its modal. Spans the header's width from
+   0.5rem below it to 0.5rem above the modal's bottom: the 3D canvas's area.
+   Padding keeps the content where the header's 1.5rem margin put it. */
 .featured-card-body {
+  position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: var(--space-xs);
-  margin-bottom: var(--space-s);
+  padding: calc(1.5rem - var(--space-xs)) 0 var(--space-s);
+  border: 1px solid var(--border-panel);
 }
 
-/* Capped so the 5:7 card stays a sensible size on a wide panel. */
+.info-modal-panel-header:has(+ .featured-card-body) {
+  margin-bottom: var(--space-xs);
+}
+
+/* The flat card at 80%, leaving room around it; the 3D card rests at
+   exactly this size and position (cardSlab.ts). */
+.restaurant-card-stage {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  /* Height-capped too: the modal (100dvh - 64px) less ~10rem of header,
+     spacing, and caption, so the card always fits without the modal scrolling. */
+  width: min(100%, 400px, calc((100vh - 64px - 10rem) * 540 / 744));
+  width: min(100%, 400px, calc((100dvh - 64px - 10rem) * 540 / 744));
+  aspect-ratio: 540 / 744;
+}
+
 .restaurant-card-art {
-  width: min(100%, 320px);
+  width: 80%;
 
   /* Artwork, not copy: no text cursor or selection on its SVG text. */
   cursor: default;
   user-select: none;
+}
+
+.restaurant-card-art[data-hidden] {
+  visibility: hidden;
+}
+
+/* Fills the card body; cardSlab.ts keeps the resting card centred on the flat one. */
+.restaurant-card-slab {
+  position: absolute;
+  inset: 0;
+}
+
+.restaurant-card-slab canvas {
+  display: block;
+  cursor: grab;
+}
+
+.restaurant-card-slab canvas:active {
+  cursor: grabbing;
 }
 
 .restaurant-card-art svg {
@@ -537,6 +577,14 @@
   color: var(--text-muted);
   font-size: var(--fs-sm);
   text-align: center;
+}
+
+.restaurant-card-hint {
+  color: var(--text-muted);
+  font-family: var(--font-display);
+  font-size: var(--fs-xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
 }
 
 .details-table {

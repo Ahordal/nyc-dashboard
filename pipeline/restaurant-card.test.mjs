@@ -76,3 +76,10 @@ test("renderCard rejects restaurants without a letter grade or score", () => {
   assert.throws(() => renderCard({ name: "X", grade: "P", score: 10 }, { template }));
   assert.throws(() => renderCard({ name: "X", grade: "A", score: null }, { template }));
 });
+
+// The 3D card loads the SVG as a standalone image, which must be strict XML.
+test("template comments never contain a double hyphen", () => {
+  for (const [comment] of template.matchAll(/<!--([\s\S]*?)-->/g)) {
+    assert.equal(comment.slice(4, -3).includes("--"), false, comment);
+  }
+});
