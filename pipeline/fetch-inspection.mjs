@@ -488,6 +488,52 @@ export function previousGrade(scoredEvents) {
   return null;
 }
 
+// YYYYMMDD number: the form the map data uses for dates, since ArcGIS reads
+// date-like strings as date fields.
+function dayNumber(date) {
+  return Number(date.slice(0, 10).replaceAll("-", ""));
+}
+
+// Awards worked out from a restaurant's history. Permanent awards are the
+// date first earned (null if never); statuses are 1/0 for held right now.
+export function awardFields(scoredEvents, grade) {
+  let firstA = null;
+  let tripleCrown = null;
+  let run = 0;
+  for (const event of scoredEvents) {
+    const eventGrade = event.primary.grade;
+    if (!LETTER_GRADES.has(eventGrade)) continue;
+    if (eventGrade !== "A") {
+      run = 0;
+      continue;
+    }
+    firstA ??= dayNumber(event.date);
+    run += 1;
+    if (run === 3) tripleCrown ??= dayNumber(event.date);
+  }
+
+  const previous = previousGrade(scoredEvents);
+  const currentA = grade === "A";
+  return {
+    award_first_a: firstA,
+    award_triple_crown: tripleCrown,
+    consistent: currentA && previous === "A" ? 1 : 0,
+    most_improved: currentA && previous === "C" ? 1 : 0,
+  };
+}
+
+// Holders per award, for the legend's "held by N%" (total = every restaurant).
+export function countAwards(features) {
+  const counts = { total: features.length, first_a: 0, triple_crown: 0, consistent: 0, most_improved: 0 };
+  for (const { properties: p } of features) {
+    if (p.award_first_a) counts.first_a += 1;
+    if (p.award_triple_crown) counts.triple_crown += 1;
+    if (p.consistent) counts.consistent += 1;
+    if (p.most_improved) counts.most_improved += 1;
+  }
+  return counts;
+}
+
 export function buildLatestInspectionsGeoJSON(
   eventsByRestaurant,
   generatedAt,
@@ -582,6 +628,7 @@ export function buildLatestInspectionsGeoJSON(
         grade: isUninspected ? UNINSPECTED_GRADE : primary.grade || null,
         // Dealing reads it for consistency; the dashboard doesn't yet.
         previous_grade: previousGrade(scoredEvents),
+        ...awardFields(scoredEvents, isUninspected ? UNINSPECTED_GRADE : primary.grade || null),
         score: isUninspected ? null : Number(primary.score),
         inspection_date: latest.date,
         inspection_type: primary.inspection_type ?? "",
@@ -739,12 +786,15 @@ async function main() {
     applyFeaturedDates(latestGeoJSON.features, featured);
     history = buildInspectionHistory(eventsByRestaurant, generatedAt);
     violationCodes = buildViolationCodeLookup(rows, categoryMapping);
-    dashboardMeta = buildDashboardMeta(
-      generatedAt,
-      latestGeoJSON.features.length,
-      history.restaurants,
-      countsSnapshot,
-    );
+    dashboardMeta = {
+      ...buildDashboardMeta(
+        generatedAt,
+        latestGeoJSON.features.length,
+        history.restaurants,
+        countsSnapshot,
+      ),
+      awardCounts: countAwards(latestGeoJSON.features),
+    };
   } catch (err) {
     throw new Error(`Failed while building output data: ${err.message}`, {
       cause: err,
