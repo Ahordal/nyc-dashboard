@@ -20,13 +20,14 @@ const SCORE_GAP = 66; // label -> score (64px digits)
 const GROUP_CENTRE_Y = 355;
 
 // Award icons: Font Awesome paths (512 tall, width varies), drawn AWARD_ICON_SIZE
-// tall, centred AWARD_ROW_POSITION of the way from the score's baseline to the
-// footer's cap top.
+// tall, centred AWARD_ROW_POSITION of the way from the last text above (score,
+// or status line if any) to the footer's cap top.
 const AWARD_ICON_SIZE = 32;
 const AWARD_ROW_POSITION = 0.3;
-// Fine black outline, in card units. Drawn under the fill (paint-order), so
+// Fine near-black outline, in card units. Drawn under the fill (paint-order), so
 // only this much shows outside the icon and its shape stays intact.
-const AWARD_OUTLINE = 1;
+const AWARD_OUTLINE = 1.5;
+const AWARD_OUTLINE_COLOR = "#212121";
 const AWARD_ICON_GAP = 12;
 const FOOTER_CAP_TOP = 660;
 
@@ -177,20 +178,25 @@ export function formatCardDate(date) {
 function statusLine(category, scoreY, color) {
   const text = STATUS_LINES[category];
   if (!text) return "";
-  return `    <text x="250" y="${scoreY + STATUS_LINE_GAP}" class="rc-label" font-weight="700" font-size="14" letter-spacing="1.4" fill="${color}" text-anchor="middle">${text}</text>`;
+  return `    <text x="250" y="${statusLineY(scoreY)}" class="rc-label" font-weight="700" font-size="14" letter-spacing="1.4" fill="${color}" text-anchor="middle">${text}</text>`;
+}
+
+function statusLineY(scoreY) {
+  return scoreY + STATUS_LINE_GAP;
 }
 
 // Award icons as a centred row. Each is { width, d, color }: a Font Awesome
 // path (512 tall) and its colour, supplied by the caller's award catalogue.
-export function awardIcons(awards, scoreY) {
-  const centreY = scoreY + (FOOTER_CAP_TOP - scoreY) * AWARD_ROW_POSITION;
+// aboveY: baseline of the last text line above the row.
+export function awardIcons(awards, aboveY) {
+  const centreY = aboveY + (FOOTER_CAP_TOP - aboveY) * AWARD_ROW_POSITION;
   const scale = AWARD_ICON_SIZE / 512;
   const widths = awards.map(({ width }) => width * scale);
   const rowWidth = widths.reduce((sum, w) => sum + w, 0) + (awards.length - 1) * AWARD_ICON_GAP;
   let x = 250 - rowWidth / 2;
   return awards
     .map(({ d, color }, i) => {
-      const path = `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${escapeXml(color)}" stroke="#000" stroke-width="${(2 * AWARD_OUTLINE) / scale}" stroke-linejoin="round" paint-order="stroke" d="${escapeXml(d)}"/>`;
+      const path = `    <path transform="translate(${x.toFixed(1)} ${(centreY - 256 * scale).toFixed(1)}) scale(${scale})" fill="${escapeXml(color)}" stroke="${AWARD_OUTLINE_COLOR}" stroke-width="${(2 * AWARD_OUTLINE) / scale}" stroke-linejoin="round" paint-order="stroke" d="${escapeXml(d)}"/>`;
       x += widths[i] + AWARD_ICON_GAP;
       return path;
     })
@@ -243,7 +249,7 @@ export function renderCard(
     SCORE_LABEL_Y: labelY,
     SCORE_Y: scoreY,
     STATUS_LINE: statusLine(category, scoreY, gradeColor),
-    AWARD_ICONS: awardIcons(awards, scoreY),
+    AWARD_ICONS: awardIcons(awards, STATUS_LINES[category] ? statusLineY(scoreY) : scoreY),
     SUB_LINES: subLineText,
     FOOTER: escapeXml(footer),
   };

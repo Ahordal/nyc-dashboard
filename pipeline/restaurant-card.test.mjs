@@ -116,6 +116,13 @@ test("awardIcons draws each award in its colour as a centred row", () => {
   assert.ok(Math.abs(xs[0] + ((576 + 320) * scale + 12) / 2 - 250) < 0.1); // whole row centred
 });
 
+test("renderCard drops the award row below a status line", () => {
+  const star = { width: 576, d: "M0 0z", color: "#d4af37" };
+  const rowY = (category) =>
+    Number(renderCard({ name: "X", category, score: 12, awards: [star] }, { template }).match(/translate\([\d.]+ ([\d.]+)\) scale\(0\.0625\)/)[1]);
+  assert.ok(rowY("closed") > rowY("pending"));
+});
+
 // The 3D card loads the SVG as a standalone image, which must be strict XML.
 test("template comments never contain a double hyphen", () => {
   for (const [comment] of template.matchAll(/<!--([\s\S]*?)-->/g)) {
