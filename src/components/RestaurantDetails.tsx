@@ -13,6 +13,7 @@ import RestaurantHeroHeader from "./RestaurantHeroHeader";
 import RestaurantCardModal from "./RestaurantCardModal";
 import Badge from "./Badge";
 import type { BadgeVariant } from "./Badge";
+import type { AwardCounts } from "../types/dashboardMeta";
 import type { DealtCard } from "../types/featured";
 
 import type {
@@ -203,6 +204,14 @@ const restaurantInfoContent = (isMobile: boolean) => (
           Geographical Information: Verified, Unverified, or Pending
           (described above).
         </li>
+
+        <li>
+          Not every inspection is awarded a grade. An initial inspection
+          scoring 14 or more isn&apos;t graded on the day; the grade comes
+          from the re-inspection. In Awards &amp; Statistics, an ungraded
+          inspection shows DOHMH&apos;s code (such as N) or N/A in place of a
+          grade, as in the Inspection History.
+        </li>
       </ul>
     }
   />
@@ -244,6 +253,9 @@ type RestaurantDetailsProps = {
 
   // Latest hand's date: the Featured badge shows only on that day.
   featuredDate?: string | null;
+
+  // How many restaurants hold each award, for the Awards modal's rarity.
+  awardCounts?: AwardCounts | null;
 };
 
 function RestaurantDetails({
@@ -260,6 +272,7 @@ function RestaurantDetails({
   featuredCard = null,
   gradeCounts = EMPTY_GRADE_COUNTS,
   featuredDate = null,
+  awardCounts = null,
 }: RestaurantDetailsProps) {
   const [showInfo, setShowInfo] = useState(false);
   const [showCard, setShowCard] = useState(false);
@@ -364,6 +377,9 @@ function RestaurantDetails({
           restaurant={restaurant}
           featuredDate={featuredDate}
           gradeCounts={gradeCounts}
+          awardCounts={awardCounts}
+          history={history}
+          isLoadingHistory={isLoadingHistory}
           isOpen={showCard}
           onClose={() => setShowCard(false)}
         />

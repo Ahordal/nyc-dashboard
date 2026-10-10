@@ -705,6 +705,7 @@ export default function Dashboard() {
                 featuredCard={selectedFeaturedCard}
                 gradeCounts={citywideGradeCounts}
                 featuredDate={featuredDate}
+                awardCounts={dashboardMeta?.awardCounts ?? null}
               />
             </div>
 

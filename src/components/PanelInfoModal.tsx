@@ -23,6 +23,8 @@ type PanelInfoModalProps = {
   // `children` instead of using `title`'s built-in header - both real
   // usages do this today, so `title` alone leaves the dialog unnamed.
   ariaLabel?: string;
+  // Extra class on the dialog, for modals that need their own width.
+  className?: string;
   children: ReactNode;
 };
 
@@ -31,6 +33,7 @@ export default function PanelInfoModal({
   onClose,
   title,
   ariaLabel,
+  className,
   children,
 }: PanelInfoModalProps) {
   const titleId = useId();
@@ -116,7 +119,7 @@ export default function PanelInfoModal({
     >
       <div
         ref={dialogRef}
-        className="info-modal"
+        className={className ? `info-modal ${className}` : "info-modal"}
         role="dialog"
         aria-modal="true"
         tabIndex={-1}

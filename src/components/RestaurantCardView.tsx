@@ -133,40 +133,45 @@ export default function RestaurantCardView({
   const spokenScore = card.score == null ? "no score" : `score ${card.score}`;
 
   return (
-    <div className="featured-card-body">
-      <div className="restaurant-card-stage">
-        {/* Rendered from our own pipeline data; renderCard escapes every text field. */}
-        <div
-          ref={artRef}
-          className="restaurant-card-art"
-          data-hidden={phase !== "flat" || undefined}
-          dangerouslySetInnerHTML={{ __html: cardSvg }}
-        />
-        <div
-          ref={slabRef}
-          className="restaurant-card-slab"
-          role={showSlab ? "img" : undefined}
-          aria-label={
-            showSlab
-              ? `${restaurant.name}, ${SPOKEN_STATUS[category]}, ${spokenScore}. Rotatable 3D card.`
-              : undefined
-          }
-          aria-hidden={showSlab ? undefined : true}
-        />
-        {phase === "loading" && (
-          <div className="restaurant-card-loading" role="status">
-            <FontAwesomeIcon icon={faAward} className="restaurant-card-loading-icon" aria-hidden="true" />
-            <span className="restaurant-card-loading-label">Loading card…</span>
-          </div>
-        )}
+    <div className="restaurant-card-view">
+      {/* The 3D canvas fills only this box; the footer below stays still. */}
+      <div className="restaurant-card-canvas">
+        <div className="restaurant-card-stage">
+          {/* Rendered from our own pipeline data; renderCard escapes every text field. */}
+          <div
+            ref={artRef}
+            className="restaurant-card-art"
+            data-hidden={phase !== "flat" || undefined}
+            dangerouslySetInnerHTML={{ __html: cardSvg }}
+          />
+          <div
+            ref={slabRef}
+            className="restaurant-card-slab"
+            role={showSlab ? "img" : undefined}
+            aria-label={
+              showSlab
+                ? `${restaurant.name}, ${SPOKEN_STATUS[category]}, ${spokenScore}. Rotatable 3D card.`
+                : undefined
+            }
+            aria-hidden={showSlab ? undefined : true}
+          />
+          {phase === "loading" && (
+            <div className="restaurant-card-loading" role="status">
+              <FontAwesomeIcon icon={faAward} className="restaurant-card-loading-icon" aria-hidden="true" />
+              <span className="restaurant-card-loading-label">Loading card…</span>
+            </div>
+          )}
+        </div>
       </div>
 
-      <p className="restaurant-card-caption">
-        {category === "uninspected"
-          ? "Not yet inspected"
-          : `Inspected · ${formatDate(restaurant.inspection_date)}`}
-      </p>
-      {showSlab && <p className="restaurant-card-hint">Drag to rotate · Scroll to zoom</p>}
+      <div className="restaurant-card-footer">
+        <p className="restaurant-card-caption">
+          {category === "uninspected"
+            ? "Not yet inspected"
+            : `Inspected · ${formatDate(restaurant.inspection_date)}`}
+        </p>
+        {showSlab && <p className="restaurant-card-hint">Drag to rotate · Scroll to zoom</p>}
+      </div>
     </div>
   );
 }

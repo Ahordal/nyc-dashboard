@@ -193,6 +193,11 @@
   margin-bottom: 1.5rem;
 }
 
+/* Modal close X sits 0.5rem in from the bar's right edge. */
+.info-modal-panel-header .panel-header-info-button {
+  padding-right: 0.5rem;
+}
+
 /* Matches the gap between .section-header and its body elsewhere. */
 .ai-assisted-modal-header {
   margin-bottom: 0.4rem;

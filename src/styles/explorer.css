@@ -509,20 +509,36 @@
   color: var(--award-gold);
 }
 
-/* Featured restaurant card in its modal. Spans the header's width from
-   0.5rem below it to 0.5rem above the modal's bottom: the 3D canvas's area.
-   Padding keeps the content where the header's 1.5rem margin put it. */
-.featured-card-body {
-  position: relative;
+.restaurant-card-view {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: var(--space-xs);
+}
+
+/* The 3D canvas's area, and nothing else: the card can't rotate or zoom
+   over the footer. Padding keeps the card where the header's 1.5rem margin put it. */
+.restaurant-card-canvas {
+  position: relative;
+  display: flex;
+  justify-content: center;
   padding: calc(1.5rem - var(--space-xs)) 0 var(--space-s);
   border: 1px solid var(--border-panel);
 }
 
-.info-modal-panel-header:has(+ .featured-card-body) {
+/* Plain text under the canvas: inspection date, then the controls. */
+.restaurant-card-footer {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.25rem var(--space-xs);
+  padding: var(--space-xs) 0.4rem 0;
+}
+
+.restaurant-card-footer p {
+  margin: 0;
+}
+
+.info-modal-panel-header:has(+ .awards-modal-body) {
   margin-bottom: var(--space-xs);
 }
 
@@ -612,6 +628,119 @@
   text-transform: uppercase;
 }
 
+/* Awards & Statistics modal: card column, then the awards/stats panel. */
+.info-modal.awards-modal {
+  width: min(1000px, calc(100vw - 32px));
+}
+
+.awards-modal-body {
+  display: grid;
+  grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+  gap: var(--space-s);
+  align-items: start;
+}
+
+/* Phones only (mobile block below). */
+.awards-drawer-toggle {
+  display: none;
+}
+
+/* Doubled class: .section-header's padding shorthand comes later and would win. */
+.section-header.awards-section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding-right: 0.5rem;
+}
+
+/* A step below the header: body font, smaller, lighter. */
+.awards-header-note {
+  font-family: var(--font-body);
+  font-size: var(--fs-xs);
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+.awards-earned-count {
+  margin-left: var(--space-xs);
+}
+
+.awards-legend-list {
+  list-style: none;
+  margin: 0 0 var(--space-s);
+  padding: 0;
+}
+
+.awards-legend-row {
+  display: grid;
+  grid-template-columns: 2.25rem minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: 0.5rem 0.4rem;
+}
+
+.awards-legend-row:nth-child(even) {
+  background-color: var(--bg-row-alt);
+}
+
+/* Same near-black outline as the card's icons, drawn under the fill. */
+.awards-legend-icon {
+  justify-self: center;
+  font-size: 1.5rem;
+  color: var(--scrollbar-thumb);
+}
+
+.awards-legend-icon path {
+  stroke: #212121;
+  stroke-width: 40;
+  stroke-linejoin: round;
+  paint-order: stroke;
+}
+
+.awards-legend-text p {
+  margin: 0;
+}
+
+/* Text follows Restaurant Details: name as a table label, status and
+   description as values, share like a history row's score. */
+.awards-legend-name {
+  font-size: var(--fs-sm);
+  font-weight: 600;
+  text-transform: uppercase;
+  color: var(--text-body);
+}
+
+.awards-legend-status {
+  margin-left: var(--space-xs);
+  font-weight: 400;
+  text-transform: none;
+}
+
+.awards-legend-description {
+  font-size: var(--fs-sm);
+  color: var(--text-body);
+}
+
+/* Not held: muted like Details' labels, still readable so it reads as
+   "to earn", not a failure. */
+.awards-legend-row:not([data-held]) .awards-legend-name,
+.awards-legend-row:not([data-held]) .awards-legend-description {
+  color: var(--text-muted);
+}
+
+.awards-legend-share {
+  font-size: var(--fs-sm);
+  color: var(--text-muted);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+/* Grade-coloured figures, bold like the inspection history's grades. */
+.awards-stat-graded {
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
 .details-table {
   width: 100%;
   border-collapse: collapse;
@@ -628,7 +757,8 @@
   width: 40%;
 }
 
-.restaurant-details-panel .details-table td:first-child {
+.restaurant-details-panel .details-table td:first-child,
+.awards-stats .details-table td:first-child {
   text-transform: uppercase;
   font-size: var(--fs-sm);
   font-weight: 600;

@@ -37,7 +37,7 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 - Each day five restaurants are featured, one per borough (see [Restaurant cards](#restaurant-cards-dealt-daily) for how they're picked).
 - Today's five get a gold ring on the map. A gold star button among the map controls (or Featured > Today in Filters) narrows the map and list to just them; it's kept in the URL as `featured=today`.
 - Featured is a one-day status: today's five carry a gold star beside their grade and score, and it passes to the next five each day. The score chart marks the inspection that earned it. Restaurant Details also lists the date a restaurant was last featured.
-- Every restaurant has a card, opened from the gold awards button beside its grade and score in Restaurant Details. The card takes the colour of its current grade or status, the same as its map dot (closed restaurants get a ban icon in the corners), and shows the awards it holds now below the score. It's a 3D slab you can drag to rotate, with the citywide grade mix of every restaurant on its back. Scroll zooms it. It spins slowly on its own unless the system asks for reduced motion, a loading animation holds its place while it loads, and a flat card stands in where WebGL isn't available.
+- Every restaurant has a card, opened from the gold awards button beside its grade and score in Restaurant Details. The card takes the colour of its current grade or status, the same as its map dot (closed restaurants get a ban icon in the corners), and shows the awards it holds now below the score. It's a 3D slab you can drag to rotate, with the citywide grade mix of every restaurant on its back. Scroll zooms it. It spins slowly on its own unless the system asks for reduced motion, a loading animation holds its place while it loads, and a flat card stands in where WebGL isn't available. Beside the card, the modal lists every award: the ones held in colour (with the date first earned, or "Current" for statuses), the rest muted, each with how many restaurants hold it. Below that are statistics from its inspection history (inspections on record, current A streak, and its best and worst inspection as grade / score, in grade colour). On phones the list folds into a bar under the card that slides up over it.
 
 ### Restaurant details
 
@@ -133,7 +133,7 @@ Two separate suites, both run in CI on every push and pull request to `main`, al
 - **Vite + React 19 + TypeScript** — app and build
 - **ArcGIS Maps SDK** — the map
 - **Recharts** — the donut and score-history charts
-- **three.js** — the 3D Featured Award card
+- **three.js** — the 3D restaurant card
 - **Font Awesome** — icons
 - **Public Sans and Archivo** — fonts, self-hosted with no CDN
 - **Node.js** — the build and geocoding scripts

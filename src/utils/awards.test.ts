@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AWARDS, heldAwards } from "./awards";
+import { AWARDS, awardShare, formatAwardDate, heldAwards } from "./awards";
 
 const none = {
   award_first_a: null,
@@ -46,5 +46,31 @@ describe("AWARDS", () => {
   it("has a unique id and icon per award", () => {
     expect(new Set(AWARDS.map((a) => a.id)).size).toBe(AWARDS.length);
     expect(new Set(AWARDS.map((a) => a.icon.iconName)).size).toBe(AWARDS.length);
+  });
+});
+
+describe("awardShare", () => {
+  const counts = { total: 1000, first_a: 740, consistent: 420, triple_crown: 190, perfect_score: 49, most_improved: 0 };
+
+  it("rounds common awards and keeps a decimal under 10%", () => {
+    expect(awardShare("first_a", counts)).toBe("74%");
+    expect(awardShare("consistency", counts)).toBe("42%");
+    expect(awardShare("perfect_score", counts)).toBe("4.9%");
+    expect(awardShare("most_improved", counts)).toBe("0.0%");
+  });
+
+  it("flags tiny shares instead of rounding them to zero", () => {
+    expect(awardShare("perfect_score", { ...counts, total: 100000, perfect_score: 5 })).toBe("<0.1%");
+  });
+
+  it("describes Featured by its daily count, and is unknown without counts", () => {
+    expect(awardShare("featured", null)).toBe("5 a day");
+    expect(awardShare("first_a", null)).toBeNull();
+  });
+});
+
+describe("formatAwardDate", () => {
+  it("formats a YYYYMMDD day", () => {
+    expect(formatAwardDate(20230304)).toBe("3/4/2023");
   });
 });

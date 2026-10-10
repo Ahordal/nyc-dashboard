@@ -594,6 +594,91 @@
     transform: rotate(180deg);
   }
 
+  /* Awards modal: the panel folds into a bar under the card and grows up
+     over it when opened; padding keeps the bar's own space below the card. */
+  .awards-modal-body {
+    --awards-bar-h: 2.75rem;
+
+    display: block;
+    position: relative;
+    padding-bottom: calc(var(--awards-bar-h) + var(--space-xs));
+  }
+
+  .awards-modal-body .restaurant-card-stage {
+    width: min(100%, 400px, calc((100dvh - 64px - 13rem) * 540 / 744));
+  }
+
+  .awards-modal-panel {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    height: var(--awards-bar-h);
+    overflow: hidden;
+    background-color: var(--bg-panel);
+    transition: height 0.25s ease;
+  }
+
+  .awards-modal-panel[data-open="true"] {
+    height: 100%;
+  }
+
+  .awards-drawer-toggle {
+    display: flex;
+    flex-shrink: 0;
+    align-items: center;
+    gap: 0.5rem;
+    height: var(--awards-bar-h);
+    padding: 0 0.5rem 0 0.75rem;
+    background-color: var(--bg-alt);
+    border: none;
+    color: var(--text-muted);
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    cursor: pointer;
+  }
+
+  .awards-drawer-count {
+    margin-left: 0.25rem;
+    color: var(--text-body);
+    font-family: var(--font-body);
+  }
+
+  .awards-drawer-preview {
+    display: flex;
+    gap: 0.4rem;
+    margin-left: auto;
+    font-size: var(--fs-md);
+  }
+
+  /* Box matches the area strip's, so the chevron sits in the same column. */
+  .awards-drawer-chevron {
+    width: 32px;
+    font-size: var(--fs-md);
+  }
+
+  /* faChevronUp: points up to open the panel over the card, down to close. */
+  .awards-modal-panel[data-open="true"] .awards-drawer-chevron {
+    transform: rotate(180deg);
+  }
+
+  .awards-modal-panel-content {
+    flex: 1;
+    overflow-y: auto;
+    padding-top: var(--space-xs);
+  }
+
+  /* Out of the tab order while folded away. */
+  .awards-modal-panel:not([data-open="true"]) .awards-modal-panel-content {
+    visibility: hidden;
+  }
+
   /* Drops from under the strip over the map (top-area counterpart of the
      sheet). Full-bleed --bg-panel, card 0.5rem in, filled only when open. */
   .mobile-area-drawer {

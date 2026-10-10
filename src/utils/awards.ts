@@ -14,8 +14,10 @@ import {
   faStar,
 } from "@fortawesome/free-solid-svg-icons";
 
+import type { AwardCounts } from "../types/dashboardMeta";
 import type { RestaurantProperties } from "../types/restaurant";
 import { isFeaturedToday } from "./featured";
+import { formatDate } from "./formatDate";
 
 // Permanent: kept for good once earned. Status: held only while true now.
 export type AwardKind = "permanent" | "status";
@@ -34,11 +36,10 @@ export type Award = {
   icon: IconDefinition;
   kind: AwardKind;
   description: string;
-  // Per-award colours are still to be picked; gold (--award-gold) until then.
+  // "Moody Sunset", tuned for the card: cool to warm as awards get rarer,
+  // kept clear of the grade colours.
   color: string;
 };
-
-const AWARD_GOLD = "#d4af37";
 
 // Display order: from the most common to the rarest.
 export const AWARDS: readonly Award[] = [
@@ -48,7 +49,7 @@ export const AWARDS: readonly Award[] = [
     icon: faA,
     kind: "permanent",
     description: "Earned an A grade.",
-    color: AWARD_GOLD,
+    color: "#4A9DB5",
   },
   {
     id: "consistency",
@@ -56,7 +57,7 @@ export const AWARDS: readonly Award[] = [
     icon: faCertificate,
     kind: "status",
     description: "An A on its last two graded inspections.",
-    color: AWARD_GOLD,
+    color: "#7A74C2",
   },
   {
     id: "triple_crown",
@@ -64,15 +65,7 @@ export const AWARDS: readonly Award[] = [
     icon: faCrown,
     kind: "permanent",
     description: "Three A grades in a row.",
-    color: AWARD_GOLD,
-  },
-  {
-    id: "most_improved",
-    name: "Most Improved",
-    icon: faSeedling,
-    kind: "status",
-    description: "An A straight after a C.",
-    color: AWARD_GOLD,
+    color: "#A86FB5",
   },
   {
     id: "perfect_score",
@@ -80,7 +73,15 @@ export const AWARDS: readonly Award[] = [
     icon: fa0,
     kind: "permanent",
     description: "Scored 0 on an inspection: no violations found.",
-    color: AWARD_GOLD,
+    color: "#DE7FAE",
+  },
+  {
+    id: "most_improved",
+    name: "Most Improved",
+    icon: faSeedling,
+    kind: "status",
+    description: "An A straight after a C.",
+    color: "#FF8A80",
   },
   {
     id: "featured",
@@ -88,7 +89,7 @@ export const AWARDS: readonly Award[] = [
     icon: faStar,
     kind: "status",
     description: "One of today's five featured restaurants.",
-    color: AWARD_GOLD,
+    color: "#FFB33D",
   },
 ];
 
@@ -133,4 +134,30 @@ export function heldAwards(restaurant: AwardFields, featuredDate: string | null)
     if (!held) return [];
     return [{ award, since: typeof held === "number" ? held : null }];
   });
+}
+
+// Build-side count key for each award; Featured isn't counted (always five).
+const COUNT_KEYS: Record<Exclude<AwardId, "featured">, Exclude<keyof AwardCounts, "total">> = {
+  first_a: "first_a",
+  consistency: "consistent",
+  triple_crown: "triple_crown",
+  most_improved: "most_improved",
+  perfect_score: "perfect_score",
+};
+
+// Share of restaurants holding the award, e.g. "42%" or "1.9%"; null if unknown.
+export function awardShare(id: AwardId, counts: AwardCounts | null | undefined): string | null {
+  // One per borough, every day.
+  if (id === "featured") return "5 a day";
+  const held = counts?.[COUNT_KEYS[id]];
+  if (!counts?.total || held == null) return null;
+  const pct = (100 * held) / counts.total;
+  if (held > 0 && pct < 0.1) return "<0.1%";
+  return `${pct < 10 ? pct.toFixed(1) : Math.round(pct)}%`;
+}
+
+// A YYYYMMDD award date, formatted like every other date in Details.
+export function formatAwardDate(day: number): string {
+  const date = new Date(Date.UTC(Math.floor(day / 10000), (Math.floor(day / 100) % 100) - 1, day % 100));
+  return formatDate(date.toISOString());
 }

@@ -529,6 +529,7 @@ export default function MobileDashboard({
                       featuredCard={featuredCard}
                       gradeCounts={citywideGradeCounts}
                       featuredDate={featuredDate}
+                      awardCounts={dashboardMeta?.awardCounts ?? null}
                     />
                   </div>
 
