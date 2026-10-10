@@ -109,6 +109,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-10",
+      "cards": [
+        {
+          "camis": "50056507",
+          "name": "LA BURDICK CHOCOLATE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-04-22T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41710646",
+          "name": "WINDY CITY ALE HOUSE",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-06-03T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50147355",
+          "name": "MONARCA RESTAURANT",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-08-26T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50156300",
+          "name": "CHRIS SUPER DELI",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Sandwiches/Salads/Mixed Buffet",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-03-27T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41507398",
+          "name": "GRIFF'S PLACE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-01-20T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
