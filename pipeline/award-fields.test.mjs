@@ -7,7 +7,7 @@
 
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { awardFields, countAwards } from './fetch-inspection.mjs';
+import { awardFields, buildInspectionHistory, countAwards, earnedAwards } from './fetch-inspection.mjs';
 
 // One scored inspection per grade, a month apart, oldest first.
 const history = (...grades) =>
@@ -82,4 +82,38 @@ test('countAwards tallies holders of each award', () => {
     consistent: 1,
     most_improved: 1,
   });
+});
+
+test('earnedAwards marks each award on the inspection that earned it', () => {
+  assert.deepEqual(earnedAwards(history('B', 'A', 'A', 'A', 'C', 'A')), [
+    [],
+    ['first_a'],
+    ['consistency'],
+    ['triple_crown'],
+    [],
+    ['most_improved'],
+  ]);
+});
+
+test('earnedAwards repeats statuses each time they begin, permanent awards only once', () => {
+  assert.deepEqual(earnedAwards(history('C', 'A', 'C', 'A', 'A')), [
+    [],
+    ['first_a', 'most_improved'],
+    [],
+    ['most_improved'],
+    ['consistency'],
+  ]);
+  assert.deepEqual(earnedAwards(withScores(0, 0)), [['perfect_score', 'first_a'], ['consistency']]);
+});
+
+test('Most Improved needs the A straight after the C, ungraded aside', () => {
+  assert.deepEqual(earnedAwards(history('C', 'B', 'A')).at(-1), ['first_a']);
+  assert.deepEqual(earnedAwards(history('C', null, 'A')).at(-1), ['first_a', 'most_improved']);
+});
+
+test('history points carry their earned awards, omitted when none', () => {
+  const events = history('B', 'A').map((event, i) => ({ ...event, id: `1-${i}`, violations: [] }));
+  const [first, second] = buildInspectionHistory(new Map([['1', events]]), 'now').restaurants['1'];
+  assert.equal('awards' in first, false);
+  assert.deepEqual(second.awards, ['first_a']);
 });

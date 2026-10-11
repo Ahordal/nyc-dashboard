@@ -147,7 +147,7 @@ describe("useMapHover", () => {
     atLimit.firePointerMove({ x: 5, y: 5 });
     await vi.advanceTimersByTimeAsync(60);
     expect(atLimit.setHoverCard).toHaveBeenLastCalledWith(
-      expect.objectContaining({ name: "Joe's Pizza", grade: "A", score: 10, featured: false }),
+      expect.objectContaining({ name: "Joe's Pizza", grade: "A", score: 10, status: null }),
     );
 
     const zoomedOut = setup({ scale: HOVER_CARD_MAX_SCALE + 1 });

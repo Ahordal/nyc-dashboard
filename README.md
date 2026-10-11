@@ -36,7 +36,8 @@ Every inspected NYC restaurant shows up as a dot on the map, coloured by its hea
 
 - Each day five restaurants are featured, one per borough (see [Restaurant cards](#restaurant-cards-dealt-daily) for how they're picked).
 - Today's five get a gold ring on the map. A gold star button among the map controls (or Featured > Today in Filters) narrows the map and list to just them; it's kept in the URL as `featured=today`.
-- Featured is a one-day status: today's five carry a gold star beside their grade and score, and it passes to the next five each day. The score chart marks the inspection that earned it. Restaurant Details also lists the date a restaurant was last featured.
+- Featured is a one-day status: today's five hold it, and it passes to the next five each day. Restaurant Details also lists the date a restaurant was last featured.
+- Rare awards (Featured, Most Improved, Perfect Score, Triple Crown) also get an icon beside the grade and score boxes, named on hover; common ones (First A, Consistency) appear only in Awards & Statistics. Boxes about the restaurant now (list cards, map hover card, Details header) show one icon for its rarest status held today. Boxes about one inspection (Inspection Report header, score chart tooltip) show the awards that inspection earned, whether or not they're still held: Triple Crown and Perfect Score the first time, Most Improved on every A straight after a C, and Featured on the inspection that earned the card. Hover labels work on the chart's pinned tooltip (latest or clicked inspection).
 - Every restaurant has a card, opened from the gold awards button beside its grade and score in Restaurant Details. The card takes the colour of its current grade or status, the same as its map dot (closed restaurants get a ban icon in the corners), and shows the awards it holds now below the score. It's a 3D slab you can drag to rotate, with the citywide grade mix of every restaurant on its back. Scroll zooms it. It spins slowly on its own unless the system asks for reduced motion, a loading animation holds its place while it loads, and a flat card stands in where WebGL isn't available. Beside the card, the modal lists every award: the ones held in colour (with the date first earned, or "Current" for statuses), the rest muted, each with how many restaurants hold it. Below that are statistics from its inspection history (inspections on record, current A streak, and its best and worst inspection as grade / score, in grade colour). On phones the list folds into a bar under the card that slides up over it.
 
 ### Restaurant details
@@ -80,7 +81,7 @@ The dashboard works with a keyboard and a screen reader: visible focus outlines 
 | File | What it holds |
 |---|---|
 | `latest-inspections.geojson` | One point per restaurant with its most recent scored inspection — drives the map, stats, and chart |
-| `history/{camis}.json` | Each restaurant's full inspection history, loaded on demand when it's selected |
+| `history/{camis}.json` | Each restaurant's full inspection history, loaded on demand when it's selected. Each inspection lists the awards it earned (`awards`), for the score chart |
 | `violation-codes.json` | Violation code to description and category |
 | `dashboard-meta.json` | Dataset totals and last-updated info shown in the app, plus how many restaurants hold each award |
 | `featured.json` | Every restaurant card dealt so far, passed through from the `data` branch |

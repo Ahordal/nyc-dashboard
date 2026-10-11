@@ -1,13 +1,14 @@
 // InspectionBadges.tsx
 //
 // Renders the grade and score badge pair with category-based colour and
-// fallbacks for missing values, plus the gold Featured star when featured today.
-// With onViewCard (Details) a third box, the gold award icon, opens the
-// restaurant's card.
+// fallbacks for missing values, plus a box of award icons when given any.
+// With onViewCard (Details) a last box, the gold award icon, opens the
+// Awards & Statistics modal.
 
 import type { CSSProperties } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faAward, faStar } from "@fortawesome/free-solid-svg-icons";
+import { faAward } from "@fortawesome/free-solid-svg-icons";
+import type { Award } from "../utils/awards";
 import {
   getGradeCategory,
   CATEGORY_COLORS,
@@ -19,26 +20,27 @@ type InspectionBadgesProps = {
   grade: string | null;
   action?: string | null;
   style?: CSSProperties;
-  // Featured today: the gold star box (Restaurant List, hover card).
-  featured?: boolean;
+  // Restaurant boxes pass current statuses; inspection boxes, that inspection's awards.
+  awards?: readonly Award[];
   onViewCard?: () => void;
 };
 
-const featuredStar = <FontAwesomeIcon icon={faStar} className="badge-icon" aria-hidden="true" />;
-const award = <FontAwesomeIcon icon={faAward} className="badge-icon" aria-hidden="true" />;
+const awardButtonIcon = <FontAwesomeIcon icon={faAward} className="badge-icon" aria-hidden="true" />;
 
 export default function InspectionBadges({
   score,
   grade,
   action,
   style,
-  featured = false,
+  awards = [],
   onViewCard,
 }: InspectionBadgesProps) {
   const category = getGradeCategory(action ?? "", grade, score);
   const categoryColor = CATEGORY_COLORS[category];
   const isUninspected = grade === UNINSPECTED_GRADE;
   const boxBorder = { borderColor: `color-mix(in srgb, ${categoryColor} 80%, transparent)` };
+  // Catalogue order runs common to rare, so the border takes the rarest award's colour.
+  const rarest = awards[awards.length - 1];
 
   return (
     <div className="card-badges" style={style}>
@@ -56,21 +58,34 @@ export default function InspectionBadges({
         </span>
       </div>
 
-      {onViewCard ? (
+      {rarest && (
+        <span
+          className="badge-box badge-box-awards"
+          style={{ borderColor: `color-mix(in srgb, ${rarest.color} 80%, transparent)` }}
+          role="img"
+          aria-label={`Awards: ${awards.map((a) => a.name).join(", ")}`}>
+          {awards.map((a) => (
+            <span key={a.id} className="badge-award tooltip-bottom" data-tooltip={a.name}>
+              <FontAwesomeIcon
+                icon={a.icon}
+                className="badge-icon"
+                style={{ color: a.color }}
+                aria-hidden="true"
+              />
+            </span>
+          ))}
+        </span>
+      )}
+
+      {onViewCard && (
         <button
           type="button"
-          className={`badge-box badge-box-button tooltip-bottom${featured ? " badge-box-featured" : ""}`}
+          className="badge-box badge-box-button tooltip-bottom"
           onClick={onViewCard}
-          aria-label={featured ? "View awards, featured today" : "View awards"}
+          aria-label="View awards"
           data-tooltip="View awards">
-          {award}
+          {awardButtonIcon}
         </button>
-      ) : (
-        featured && (
-          <span className="badge-box badge-box-featured" role="img" aria-label="Featured restaurant">
-            {featuredStar}
-          </span>
-        )
       )}
     </div>
   );

@@ -494,25 +494,45 @@ function dayNumber(date) {
   return Number(date.slice(0, 10).replaceAll("-", ""));
 }
 
+// Award ids each inspection earned, parallel to scoredEvents: the chart's
+// "when". Permanent awards mark their first time; statuses, each time they begin.
+export function earnedAwards(scoredEvents) {
+  const earned = new Set();
+  let run = 0;
+  let previous = null;
+  return scoredEvents.map((event) => {
+    const ids = [];
+    const earnOnce = (id) => {
+      if (!earned.has(id)) ids.push(id);
+      earned.add(id);
+    };
+    if (Number(event.primary.score) === 0) earnOnce("perfect_score");
+
+    // Ungraded inspections neither count toward nor break a run.
+    const grade = event.primary.grade;
+    if (LETTER_GRADES.has(grade)) {
+      run = grade === "A" ? run + 1 : 0;
+      if (grade === "A") earnOnce("first_a");
+      if (run === 2) ids.push("consistency");
+      if (run === 3) earnOnce("triple_crown");
+      if (grade === "A" && previous === "C") ids.push("most_improved");
+      previous = grade;
+    }
+    return ids;
+  });
+}
+
 // Awards worked out from a restaurant's history. Permanent awards are the
 // date first earned (null if never); statuses are 1/0 for held right now.
 export function awardFields(scoredEvents, grade) {
-  let firstA = null;
-  let tripleCrown = null;
-  let perfectScore = null;
-  let run = 0;
-  for (const event of scoredEvents) {
-    if (Number(event.primary.score) === 0) perfectScore ??= dayNumber(event.date);
-    const eventGrade = event.primary.grade;
-    if (!LETTER_GRADES.has(eventGrade)) continue;
-    if (eventGrade !== "A") {
-      run = 0;
-      continue;
-    }
-    firstA ??= dayNumber(event.date);
-    run += 1;
-    if (run === 3) tripleCrown ??= dayNumber(event.date);
-  }
+  const earned = earnedAwards(scoredEvents);
+  const firstEarned = (id) => {
+    const index = earned.findIndex((ids) => ids.includes(id));
+    return index === -1 ? null : dayNumber(scoredEvents[index].date);
+  };
+  const firstA = firstEarned("first_a");
+  const tripleCrown = firstEarned("triple_crown");
+  const perfectScore = firstEarned("perfect_score");
 
   const previous = previousGrade(scoredEvents);
   const currentA = grade === "A";
@@ -666,17 +686,19 @@ export function buildInspectionHistory(eventsByRestaurant, generatedAt) {
   const restaurants = {};
 
   for (const [camis, events] of eventsByRestaurant) {
-    const points = events
-      .filter((event) => event.primary.score != null)
-      .map((event) => ({
-        id: event.id,
-        date: event.date,
-        score: Number(event.primary.score),
-        grade: event.primary.grade || null,
-        inspection_type: event.primary.inspection_type ?? "",
-        action: event.primary.action ?? "",
-        violations: event.violations,
-      }));
+    const scored = events.filter((event) => event.primary.score != null);
+    const earned = earnedAwards(scored);
+    const points = scored.map((event, i) => ({
+      id: event.id,
+      date: event.date,
+      score: Number(event.primary.score),
+      grade: event.primary.grade || null,
+      inspection_type: event.primary.inspection_type ?? "",
+      action: event.primary.action ?? "",
+      violations: event.violations,
+      // Omitted when none, keeping ~27k history files lean.
+      ...(earned[i].length > 0 && { awards: earned[i] }),
+    }));
 
     if (points.length > 0) {
       restaurants[camis] = points;

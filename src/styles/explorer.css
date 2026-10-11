@@ -423,10 +423,20 @@
   font-variant-numeric: tabular-nums;
 }
 
-/* Featured star: gold rather than the grade colour, an honour
-   rather than a measurement. */
-.badge-box-featured {
-  border-color: color-mix(in srgb, var(--award-gold) 80%, transparent);
+/* Grows sideways past the square when an inspection earns several awards. */
+.badge-box-awards {
+  flex-direction: row;
+  gap: 6px;
+  width: auto;
+  min-width: 44px;
+  padding: 0 9px;
+  position: relative;
+}
+
+/* Static, so each icon's label anchors to the box's right edge, not the icon's. */
+.badge-box-awards .badge-award {
+  display: inline-flex;
+  position: static;
 }
 
 /* In Details only, where it opens the card. */

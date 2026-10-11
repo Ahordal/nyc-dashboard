@@ -9,6 +9,7 @@ import { describe, it, expect, afterEach } from "vitest";
 import { render, screen, cleanup } from "@testing-library/react";
 import InspectionBadges from "./InspectionBadges";
 import { CATEGORY_COLORS } from "../utils/gradeColours";
+import { AWARDS } from "../utils/awards";
 
 afterEach(() => cleanup());
 
@@ -37,23 +38,18 @@ describe("InspectionBadges", () => {
     expect(scoreVal.style.color).toBe(hexToRgb(CATEGORY_COLORS.A));
   });
 
-  it("shows no certificate unless featured", () => {
+  it("shows no awards box without awards", () => {
     render(<InspectionBadges score={10} grade="A" />);
-    expect(screen.queryByLabelText(/featured restaurant/i)).toBeNull();
+    expect(screen.queryByRole("img", { name: /awards/i })).toBeNull();
   });
 
-  it("shows a plain certificate when featured, a button only with onViewCard", () => {
-    const { rerender } = render(<InspectionBadges score={10} grade="A" featured />);
-    expect(screen.getByRole("img", { name: "Featured restaurant" })).toBeTruthy();
+  it("shows every award given in one box, and the button only with onViewCard", () => {
+    const awards = AWARDS.filter((a) => a.id === "perfect_score" || a.id === "featured");
+    const { rerender } = render(<InspectionBadges score={10} grade="A" awards={awards} />);
+    expect(screen.getByRole("img", { name: "Awards: Perfect Score, Featured" })).toBeTruthy();
     expect(screen.queryByRole("button")).toBeNull();
 
-    rerender(<InspectionBadges score={10} grade="A" featured onViewCard={() => {}} />);
-    expect(screen.getByRole("button", { name: "View awards, featured today" })).toBeTruthy();
-  });
-
-  it("offers the awards button to every restaurant with onViewCard", () => {
-    render(<InspectionBadges score={30} grade="C" onViewCard={() => {}} />);
+    rerender(<InspectionBadges score={10} grade="A" awards={awards} onViewCard={() => {}} />);
     expect(screen.getByRole("button", { name: "View awards" })).toBeTruthy();
-    expect(screen.queryByLabelText(/featured/i)).toBeNull();
   });
 });

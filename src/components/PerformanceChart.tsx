@@ -39,10 +39,11 @@ import type {
 } from "../types/restaurant";
 
 import { CATEGORY_COLORS } from "../utils/gradeCategory";
+import { inspectionAwards } from "../utils/awards";
 
 type PerformanceChartProps = {
   restaurant: RestaurantProperties | null;
-  // The inspection that earned this restaurant's card; only its point shows the Featured star.
+  // The inspection that earned this restaurant's card; its point shows the Featured star.
   earningInspectionId?: string | null;
   history: InspectionEvent[];
   isLoadingHistory?: boolean;
@@ -717,9 +718,17 @@ function PerformanceChart({
         <PerformanceTooltip
           hoveredPoint={tooltipPriority.activeTooltipPoint}
           variant={tooltipVariant}
-          featured={
-            earningInspectionId != null &&
-            tooltipPriority.activeTooltipPoint?.payload.id === earningInspectionId
+          interactive={
+            selectedChartPoint != null &&
+            tooltipPriority.activeTooltipPoint?.payload.id === selectedChartPoint.id
+          }
+          awards={
+            tooltipPriority.activeTooltipPoint
+              ? inspectionAwards(
+                  history.find((event) => event.id === tooltipPriority.activeTooltipPoint?.payload.id),
+                  tooltipPriority.activeTooltipPoint.payload.id === earningInspectionId,
+                )
+              : []
           }
           formattedDate={
             tooltipPriority.activeTooltipPoint

@@ -1,5 +1,12 @@
 import { describe, expect, it } from "vitest";
-import { AWARDS, awardShare, formatAwardDate, heldAwards } from "./awards";
+import {
+  AWARDS,
+  awardShare,
+  currentStatusAward,
+  formatAwardDate,
+  heldAwards,
+  inspectionAwards,
+} from "./awards";
 
 const none = {
   award_first_a: null,
@@ -39,6 +46,37 @@ describe("heldAwards", () => {
 
   it("tolerates map data built before the award fields existed", () => {
     expect(heldAwards({ featured_date: null } as unknown as typeof none, null)).toEqual([]);
+  });
+});
+
+describe("currentStatusAward", () => {
+  it("picks the rarest status and ignores permanent awards", () => {
+    const restaurant = { ...none, award_triple_crown: 20240115, most_improved: 1, featured_date: 20261009 };
+    expect(currentStatusAward(restaurant, "2026-10-09")?.id).toBe("featured");
+    expect(currentStatusAward(restaurant, "2026-10-10")?.id).toBe("most_improved");
+    expect(currentStatusAward({ ...none, award_triple_crown: 20240115 }, null)).toBeNull();
+  });
+
+  it("leaves Consistency to the modal: too common to stand out", () => {
+    expect(currentStatusAward({ ...none, consistent: 1 }, null)).toBeNull();
+  });
+});
+
+describe("inspectionAwards", () => {
+  const ids = (awards: ReturnType<typeof inspectionAwards>) => awards.map((a) => a.id);
+
+  it("shows the rare awards the build tagged on the inspection", () => {
+    const inspection = { awards: ["first_a", "perfect_score", "consistency", "most_improved"] };
+    expect(ids(inspectionAwards(inspection, false))).toEqual(["perfect_score", "most_improved"]);
+  });
+
+  it("adds Featured on the inspection that earned the card, whenever it was", () => {
+    expect(ids(inspectionAwards({ awards: ["triple_crown"] }, true))).toEqual(["triple_crown", "featured"]);
+    expect(ids(inspectionAwards(undefined, true))).toEqual(["featured"]);
+  });
+
+  it("tolerates history built before awards were tagged", () => {
+    expect(inspectionAwards({}, false)).toEqual([]);
   });
 });
 

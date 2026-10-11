@@ -17,7 +17,7 @@ import type MapView from "@arcgis/core/views/MapView";
 import type { RestaurantProperties } from "../types/restaurant";
 import type { HoverCardState } from "../components/MapHoverCard";
 import { findRestaurantGraphicHit } from "../queries/mapQueries";
-import { isFeaturedToday } from "../utils/featured";
+import { currentStatusAward } from "../utils/awards";
 
 // Hover cards need distinguishable dots; below this scale the handler
 // still runs (cursor, hover callback) but shows no card.
@@ -98,7 +98,7 @@ export function useMapHover({
           grade: attrs.grade ?? null,
           score: attrs.score ?? null,
           action: attrs.action ?? "",
-          featured: isFeaturedToday(attrs, featuredDateRef.current),
+          status: currentStatusAward(attrs, featuredDateRef.current),
         });
       } else {
         setHoverCard(null);

@@ -5,6 +5,7 @@
 
 import type { RestaurantProperties } from "../types/restaurant";
 import type { SearchRadiusPoint } from "../types/searchRadius";
+import type { Award } from "../utils/awards";
 import InspectionBadges from "./InspectionBadges";
 import {
   getGradeCategory,
@@ -29,8 +30,8 @@ type RestaurantCardProps = {
   // Distance origin: Search Radius centre or the locate dot.
   // Null/undefined hides the Distance line.
   distanceOrigin?: SearchRadiusPoint | null;
-  // In today's hand: shows the Featured badge.
-  isFeatured?: boolean;
+  // Its rarest status award right now, if any.
+  status?: Award | null;
 };
 
 // Local formatting helpers
@@ -61,7 +62,7 @@ export default function RestaurantCard({
   onClick,
   onHover,
   distanceOrigin = null,
-  isFeatured = false,
+  status = null,
 }: RestaurantCardProps) {
   const category = getGradeCategory(
     restaurant.action,
@@ -93,7 +94,7 @@ export default function RestaurantCard({
   const ariaLabel = [
     name,
     gradeLabel,
-    isFeatured && "featured restaurant",
+    status && `${status.name} award`,
     address && `at ${address}`,
     restaurant.cuisine && `${restaurant.cuisine} cuisine`,
     distanceMiles != null && `${formatApproxMilesSpoken(distanceMiles)} away`,
@@ -155,7 +156,7 @@ export default function RestaurantCard({
         score={restaurant.score}
         grade={restaurant.grade}
         action={restaurant.action}
-        featured={isFeatured}
+        awards={status ? [status] : []}
       />
     </div>
   );

@@ -21,6 +21,7 @@ import type {
 
 import { isClosedInspection, UNINSPECTED_GRADE } from "../utils/gradeCategory";
 import { formatDate } from "../utils/formatDate";
+import { inspectionAwards } from "../utils/awards";
 
 const REPORT_INFO_CONTENT = (
   <InfoPopupContent
@@ -85,7 +86,7 @@ const REPORT_INFO_CONTENT = (
 type RestaurantReportProps = {
   restaurant: RestaurantProperties | null;
 
-  // The inspection that earned this restaurant's card; only its report shows the Featured star.
+  // The inspection that earned this restaurant's card; its report shows the Featured star.
   earningInspectionId?: string | null;
 
   history: InspectionEvent[];
@@ -223,10 +224,10 @@ function RestaurantReport({
           score={displayed.score}
           grade={displayed.grade}
           action={displayed.action}
-          featured={
-            earningInspectionId != null &&
-            (selectedEvent?.id ?? restaurant.id) === earningInspectionId
-          }
+          awards={inspectionAwards(
+            selectedEvent ?? currentEvent,
+            earningInspectionId != null && (selectedEvent?.id ?? restaurant.id) === earningInspectionId,
+          )}
         />
 
         {history.length > 1 && (

@@ -77,6 +77,8 @@ export type InspectionEvent = {
   inspection_type: string;
   action: string;
   violations: Violation[];
+  // Award ids this inspection earned (AwardId); absent when none or on older data.
+  awards?: string[];
 };
 export type ChartPoint = {
   id: string;

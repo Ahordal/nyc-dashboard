@@ -15,7 +15,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 
 import type { AwardCounts } from "../types/dashboardMeta";
-import type { RestaurantProperties } from "../types/restaurant";
+import type { InspectionEvent, RestaurantProperties } from "../types/restaurant";
 import { isFeaturedToday } from "./featured";
 import { formatDate } from "./formatDate";
 
@@ -35,6 +35,8 @@ export type Award = {
   name: string;
   icon: IconDefinition;
   kind: AwardKind;
+  // Rare enough to stand out beside the grade boxes; common ones stay in the modal.
+  inline: boolean;
   description: string;
   // "Moody Sunset", tuned for the card: cool to warm as awards get rarer,
   // kept clear of the grade colours.
@@ -48,6 +50,7 @@ export const AWARDS: readonly Award[] = [
     name: "First A",
     icon: faA,
     kind: "permanent",
+    inline: false,
     description: "Earned an A grade.",
     color: "#4A9DB5",
   },
@@ -56,6 +59,7 @@ export const AWARDS: readonly Award[] = [
     name: "Consistency",
     icon: faCertificate,
     kind: "status",
+    inline: false,
     description: "An A on its last two graded inspections.",
     color: "#7A74C2",
   },
@@ -64,6 +68,7 @@ export const AWARDS: readonly Award[] = [
     name: "Triple Crown",
     icon: faCrown,
     kind: "permanent",
+    inline: true,
     description: "Three A grades in a row.",
     color: "#A86FB5",
   },
@@ -72,6 +77,7 @@ export const AWARDS: readonly Award[] = [
     name: "Perfect Score",
     icon: fa0,
     kind: "permanent",
+    inline: true,
     description: "Scored 0 on an inspection: no violations found.",
     color: "#DE7FAE",
   },
@@ -80,6 +86,7 @@ export const AWARDS: readonly Award[] = [
     name: "Most Improved",
     icon: faSeedling,
     kind: "status",
+    inline: true,
     description: "An A straight after a C.",
     color: "#FF8A80",
   },
@@ -88,6 +95,7 @@ export const AWARDS: readonly Award[] = [
     name: "Featured",
     icon: faStar,
     kind: "status",
+    inline: true,
     description: "One of today's five featured restaurants.",
     color: "#FFB33D",
   },
@@ -160,4 +168,26 @@ export function awardShare(id: AwardId, counts: AwardCounts | null | undefined):
 export function formatAwardDate(day: number): string {
   const date = new Date(Date.UTC(Math.floor(day / 10000), (Math.floor(day / 100) % 100) - 1, day % 100));
   return formatDate(date.toISOString());
+}
+
+// The restaurant-now boxes show one status icon: the rarest held, since
+// catalogue order runs common to rare. The modal lists the rest.
+export function currentStatusAward(restaurant: AwardFields, featuredDate: string | null): Award | null {
+  const statuses = heldAwards(restaurant, featuredDate).filter(
+    ({ award }) => award.inline && award.kind === "status",
+  );
+  return statuses[statuses.length - 1]?.award ?? null;
+}
+
+// One inspection's inline awards, held now or not: the chart is the "when".
+// The build tags what each earned; Featured comes from the card instead.
+export function inspectionAwards(
+  inspection: Pick<InspectionEvent, "awards"> | null | undefined,
+  earnedCard: boolean,
+): Award[] {
+  return AWARDS.filter(
+    (award) =>
+      award.inline &&
+      (award.id === "featured" ? earnedCard : (inspection?.awards?.includes(award.id) ?? false)),
+  );
 }

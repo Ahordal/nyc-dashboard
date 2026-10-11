@@ -8,6 +8,7 @@ import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import type { ChartPoint } from "../types/restaurant";
 import InspectionBadges from "./InspectionBadges";
+import type { Award } from "../utils/awards";
 import Badge from "./Badge";
 import {
   getGradeCategory,
@@ -24,7 +25,9 @@ type PerformanceTooltipProps = {
   } | null;
   formattedDate: string;
   variant?: "full" | "compact";
-  featured?: boolean;
+  awards?: readonly Award[];
+  // Pinned (latest or clicked) tooltips hold still, so their award icons can take hover.
+  interactive?: boolean;
 };
 
 // Padding kept from the chart edges
@@ -38,7 +41,8 @@ export default function PerformanceTooltip({
   hoveredPoint,
   formattedDate,
   variant = "full",
-  featured = false,
+  awards,
+  interactive = false,
 }: PerformanceTooltipProps) {
   const tooltipRef = useRef<HTMLDivElement>(null);
   const [style, setStyle] = useState<CSSProperties>({
@@ -94,9 +98,9 @@ export default function PerformanceTooltip({
       transform: "none",
       marginTop: 0,
       visibility: "visible",
-      pointerEvents: "none",
+      pointerEvents: interactive ? "auto" : "none",
     });
-  }, [hoveredPoint]);
+  }, [hoveredPoint, interactive]);
 
   if (!hoveredPoint) {
     return null;
@@ -139,7 +143,7 @@ export default function PerformanceTooltip({
         score={score}
         grade={grade}
         action={action}
-        featured={featured}
+        awards={awards}
         style={{
           justifyContent: "center",
         }}

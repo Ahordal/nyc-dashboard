@@ -9,6 +9,7 @@
 import { useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import InspectionBadges from "./InspectionBadges";
+import type { Award } from "../utils/awards";
 import { CATEGORY_COLORS, getGradeCategory } from "../utils/gradeCategory";
 
 export type HoverCardState = {
@@ -18,7 +19,7 @@ export type HoverCardState = {
   grade: string | null;
   score: number | null;
   action: string;
-  featured: boolean;
+  status: Award | null;
 };
 
 // Offset from the cursor on its default (below-right) side.
@@ -65,7 +66,7 @@ export default function MapHoverCard({ card }: { card: HoverCardState }) {
         score={card.score}
         grade={card.grade}
         action={card.action}
-        featured={card.featured}
+        awards={card.status ? [card.status] : []}
       />
     </div>
   );
