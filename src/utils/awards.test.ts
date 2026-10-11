@@ -65,9 +65,14 @@ describe("currentStatusAward", () => {
 describe("inspectionAwards", () => {
   const ids = (awards: ReturnType<typeof inspectionAwards>) => awards.map((a) => a.id);
 
-  it("shows the rare awards the build tagged on the inspection", () => {
+  it("shows every award the build tagged on the inspection, common ones too", () => {
     const inspection = { awards: ["first_a", "perfect_score", "consistency", "most_improved"] };
-    expect(ids(inspectionAwards(inspection, false))).toEqual(["perfect_score", "most_improved"]);
+    expect(ids(inspectionAwards(inspection, false))).toEqual([
+      "first_a",
+      "consistency",
+      "perfect_score",
+      "most_improved",
+    ]);
   });
 
   it("adds Featured on the inspection that earned the card, whenever it was", () => {

@@ -35,7 +35,7 @@ export type Award = {
   name: string;
   icon: IconDefinition;
   kind: AwardKind;
-  // Rare enough to stand out beside the grade boxes; common ones stay in the modal.
+  // Rare enough for the restaurant-now boxes; common ones show only on the chart and modal.
   inline: boolean;
   description: string;
   // "Moody Sunset", tuned for the card: cool to warm as awards get rarer,
@@ -179,15 +179,14 @@ export function currentStatusAward(restaurant: AwardFields, featuredDate: string
   return statuses[statuses.length - 1]?.award ?? null;
 }
 
-// One inspection's inline awards, held now or not: the chart is the "when".
-// The build tags what each earned; Featured comes from the card instead.
+// Every award one inspection earned, held now or not: the chart is the "when".
+// Rarity doesn't filter here; one mark per moment never clutters. Featured comes from the card.
 export function inspectionAwards(
   inspection: Pick<InspectionEvent, "awards"> | null | undefined,
   earnedCard: boolean,
 ): Award[] {
   return AWARDS.filter(
     (award) =>
-      award.inline &&
-      (award.id === "featured" ? earnedCard : (inspection?.awards?.includes(award.id) ?? false)),
+      award.id === "featured" ? earnedCard : (inspection?.awards?.includes(award.id) ?? false),
   );
 }
