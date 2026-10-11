@@ -169,6 +169,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-11",
+      "cards": [
+        {
+          "camis": "50108040",
+          "name": "LIGHTHOUSE FISH MARKET",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Seafood",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-03-16T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50044131",
+          "name": "EL SALVADOR RESTAURANT",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Spanish",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-01-07T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50133578",
+          "name": "PORTA 23",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "New American",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-03-27T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50145873",
+          "name": "MY VALLE",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Spanish",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-08-19T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50075719",
+          "name": "LA IGUANA AZUL RESTAURANT",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-08-20T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
