@@ -229,6 +229,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-12",
+      "cards": [
+        {
+          "camis": "50147425",
+          "name": "HYPERION (10TH FLOOR) CAFE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-08-14T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50131914",
+          "name": "ABBY'S COFFEE SHOP",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-10-06T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50014908",
+          "name": "PACIFIC MOON",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2025-12-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50131889",
+          "name": "BRYAN'S BAKERY",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-07-17T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40424709",
+          "name": "THE CAKE CHEF",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2025-11-26T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
