@@ -289,6 +289,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-13",
+      "cards": [
+        {
+          "camis": "41691247",
+          "name": "RAMINI ESPRESSO BAR",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-05-12T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50118233",
+          "name": "TASTY HOUSE",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2025-10-23T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50114404",
+          "name": "LUCKY DHABA",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Indian",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2025-11-21T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50059886",
+          "name": "SABBA'S CHICKEN",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Chicken",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2025-12-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50062863",
+          "name": "MARK'S BAKE SHOPPE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-09-04T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }

@@ -1,7 +1,7 @@
 {
-  "generatedAt": "2026-10-12T17:20:00.493Z",
-  "restaurantCount": 30742,
-  "inspectionCount": 82910,
-  "restaurantDelta": 0,
-  "inspectionDelta": 0
+  "generatedAt": "2026-10-13T15:35:59.551Z",
+  "restaurantCount": 30715,
+  "inspectionCount": 83014,
+  "restaurantDelta": -27,
+  "inspectionDelta": 104
 }

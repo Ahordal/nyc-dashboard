@@ -7819,5 +7819,104 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "41085065",
+    "dba": "THE LEVEE",
+    "address": "212 BERRY STREET, 0 11249",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.716375,
+    "resolvedLon": -73.961576,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "50005984",
+    "dba": "LA NONNA RISTORANTE & BAR",
+    "address": "184 KENT AVE, 0 11249",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.718374,
+    "resolvedLon": -73.963969,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "50045891",
+    "dba": "BARANO",
+    "address": "26 BROADWAY, 0 10004",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.7105754,
+    "resolvedLon": -73.9679413,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "50059027",
+    "dba": "DEMO KITCHEN",
+    "address": "1000 3rd Ave, 0 ",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.761941,
+    "resolvedLon": -73.966527,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "50116168",
+    "dba": "SAUCE PIZZERIA",
+    "address": "421 8 AVENUE, Manhattan 10001",
+    "dohmhLat": 40.750608332464,
+    "dohmhLon": -73.994622278067,
+    "resolvedLat": 40.7518526,
+    "resolvedLon": -73.9958286,
+    "distanceMeters": 171.66293355982452,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 118.28337066440176,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
