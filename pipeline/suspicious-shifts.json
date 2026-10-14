@@ -585,7 +585,12 @@
     "resolvedLon": -73.9893332,
     "distanceMeters": 151.27021601033186,
     "matchType": "house+street",
-    "resolvedVia": "hyphenated"
+    "resolvedVia": "hyphenated",
+    "score": 128.48729783989668,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   },
   {
     "camis": "41166868",
@@ -1718,14 +1723,19 @@
   {
     "camis": "50019128",
     "dba": "IKI MODERN JAPANESE CUISINE",
-    "address": "133-42 39 AVENUE, Queens 11354",
+    "address": "13342 39TH AVE, Queens 11354",
     "dohmhLat": 40.759098909404,
     "dohmhLon": -73.834139118565,
     "resolvedLat": 40.7594671,
     "resolvedLon": -73.8330222,
     "distanceMeters": 102.59590152000006,
     "matchType": "house+street",
-    "resolvedVia": "no-hyphen"
+    "resolvedVia": "hyphenated",
+    "score": 128.9740409848,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   },
   {
     "camis": "50033304",
@@ -2625,7 +2635,12 @@
     "resolvedLon": -73.827943,
     "distanceMeters": 268.3478532661067,
     "matchType": "house+street",
-    "resolvedVia": "hyphenated"
+    "resolvedVia": "hyphenated",
+    "score": 127.31652146733893,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   },
   {
     "camis": "50047406",
@@ -7912,6 +7927,25 @@
     "matchType": "house+street",
     "resolvedVia": "hyphenated",
     "score": 118.28337066440176,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "50106300",
+    "dba": "LUSOM FOOD",
+    "address": "1 NEW YORK TIMES PLAZA, Queens 11357",
+    "dohmhLat": 40.778288900348,
+    "dohmhLon": -73.827613499586,
+    "resolvedLat": 40.776115,
+    "resolvedLon": -73.829678,
+    "distanceMeters": 297.7433080801316,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 117.02256691919868,
     "reasons": [
       "zip_unconfirmed"
     ],
