@@ -409,6 +409,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-15",
+      "cards": [
+        {
+          "camis": "50129833",
+          "name": "ANDY'S RESTAURANT",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Latin American",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-04-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50131511",
+          "name": "GREEN STREETS SALADS",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Salads",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2025-11-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50131443",
+          "name": "TROPIX LOUNGE",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Caribbean",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2025-11-15T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50131006",
+          "name": "EAST STAR RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2025-12-08T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41008928",
+          "name": "ALOYSIA'S LOUNGE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2025-11-13T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
