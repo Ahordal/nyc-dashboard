@@ -7952,5 +7952,39 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50193721",
+    "dba": "POPUP BAGELS 2162",
+    "address": "23-90 BELL BLVD, Queens 11360",
+    "dohmhLat": 40.779911255442,
+    "dohmhLon": -73.775353595063,
+    "resolvedLat": 40.780318,
+    "resolvedLon": -73.776719,
+    "distanceMeters": 123.54252062594354,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.76457479374056,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "50193725",
+    "dba": "NOTHING BUNDT CAKES #1435",
+    "address": "23-92 BELL BLVD, Queens 11360",
+    "dohmhLat": 40.77984540984,
+    "dohmhLon": -73.775368261314,
+    "resolvedLat": 40.780277,
+    "resolvedLon": -73.776795,
+    "distanceMeters": 129.36154796562525,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.70638452034376,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]

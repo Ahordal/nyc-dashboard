@@ -469,6 +469,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-16",
+      "cards": [
+        {
+          "camis": "50144721",
+          "name": "TINTO TAPAS RESTAURANT & WINE BAR",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Spanish",
+          "grade": "A",
+          "score": 4,
+          "inspectionDate": "2025-12-02T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50153106",
+          "name": "NIC & GAB",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 4,
+          "inspectionDate": "2026-03-17T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50164317",
+          "name": "CIRO'S PASTRY SHOP",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-09-09T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50075247",
+          "name": "MARIOS HOMEMADE CUISINE",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2025-12-08T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50121360",
+          "name": "KUNGFU TEA",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-09-17T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
