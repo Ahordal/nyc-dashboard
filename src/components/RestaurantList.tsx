@@ -26,6 +26,7 @@ import {
 } from "../utils/restaurantSort";
 import type { SortKeyId, SortDirection } from "../utils/restaurantSort";
 import { currentStatusAward } from "../utils/awards";
+import { useSwipe } from "../hooks/useSwipe";
 
 function restaurantListInfoContent(withinRadius: boolean, isMobile: boolean) {
   return (
@@ -52,7 +53,11 @@ function restaurantListInfoContent(withinRadius: boolean, isMobile: boolean) {
             results.
           </li>
 
-          <li>Use the pagination controls to move between pages of results.</li>
+          <li>
+            Use the pagination controls
+            {isMobile ? ", or swipe left and right across the cards," : ""} to
+            move between pages of results.
+          </li>
 
           <li>
             When a Search Radius or your location is set, each card shows its
@@ -260,6 +265,17 @@ function RestaurantList({
   const pageStart = (clampedPage - 1) * PAGE_SIZE;
   const pageItems = sorted.slice(pageStart, pageStart + PAGE_SIZE);
 
+  // Swipe left for the next page, like turning one; buttons still work.
+  const swipeHandlers = useSwipe({
+    enabled: isMobile,
+    onSwipeLeft: () => {
+      if (clampedPage < totalPages) setPage(clampedPage + 1);
+    },
+    onSwipeRight: () => {
+      if (clampedPage > 1) setPage(clampedPage - 1);
+    },
+  });
+
   // A page change swaps the whole card set; return to the top. Desktop
   // scrolls the card list itself; mobile scrolls the bottom sheet —
   // closest() finds it there and returns null elsewhere.
@@ -372,7 +388,10 @@ function RestaurantList({
             </button>
           </div>
 
-          <div ref={cardListRef} className="restaurant-card-list">
+          <div
+            ref={cardListRef}
+            className="restaurant-card-list"
+            {...swipeHandlers}>
             {pageItems.map((restaurant) => (
               <RestaurantCard
                 key={restaurant.id}
