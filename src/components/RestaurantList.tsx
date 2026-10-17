@@ -80,6 +80,8 @@ function restaurantListInfoContent(withinRadius: boolean, isMobile: boolean) {
 const NO_SECONDARY = "none";
 
 const SORT_NOTICE_DURATION_MS = 1300;
+// Matches the CSS fade on .list-page-notice; quicker than filter notices.
+const PAGE_NOTICE_DURATION_MS = 900;
 
 // Fixed page size. The card area scrolls on overflow, so this ignores
 // viewport height — page N always holds the same restaurants.
@@ -140,6 +142,8 @@ function RestaurantList({
   const [secondarySort, setSecondarySort] = useState<SortKeyId | null>(null);
   const [sortDirection, setSortDirection] = useState<SortDirection>("desc");
   const [page, setPage] = useState(1);
+  // Bumped per swipe-driven page change; the pagination bar is below the fold on mobile.
+  const [swipeCount, setSwipeCount] = useState(0);
 
   // Everything below (sort, pagination, navigate-to-selection) works off
   // this, so a map-click selection always resolves to a real card even
@@ -269,10 +273,14 @@ function RestaurantList({
   const swipeHandlers = useSwipe({
     enabled: isMobile,
     onSwipeLeft: () => {
-      if (clampedPage < totalPages) setPage(clampedPage + 1);
+      if (clampedPage >= totalPages) return;
+      setPage(clampedPage + 1);
+      setSwipeCount((count) => count + 1);
     },
     onSwipeRight: () => {
-      if (clampedPage > 1) setPage(clampedPage - 1);
+      if (clampedPage <= 1) return;
+      setPage(clampedPage - 1);
+      setSwipeCount((count) => count + 1);
     },
   });
 
@@ -417,6 +425,16 @@ function RestaurantList({
               Sorted by {sortSummary} —{" "}
               {sortDirection === "asc" ? "Ascending" : "Descending"}
             </NoticeOverlay>
+
+            {isMobile && (
+              <div className="list-page-notice">
+                <NoticeOverlay
+                  triggerKey={swipeCount}
+                  durationMs={PAGE_NOTICE_DURATION_MS}>
+                  Page {clampedPage} of {totalPages}
+                </NoticeOverlay>
+              </div>
+            )}
 
             {children}
           </div>

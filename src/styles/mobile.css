@@ -1024,6 +1024,18 @@
     overflow: visible;
   }
 
+  /* Swipe page notice: text near the top, since a ten-card list's centre
+     sits below the sheet's fold. Fade matches PAGE_NOTICE_DURATION_MS. */
+  .list-page-notice {
+    display: contents;
+  }
+
+  .list-page-notice .filter-notice-overlay {
+    align-items: flex-start;
+    padding-top: 4rem;
+    animation-duration: 0.9s;
+  }
+
   /* Pagination: Prev/Next on the edges, status text centred, count on its own line. */
   .mobile-explorer .restaurant-list-pagination .pagination-text {
     flex: 1;
