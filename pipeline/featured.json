@@ -529,6 +529,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-17",
+      "cards": [
+        {
+          "camis": "50143815",
+          "name": "LUCIA PIZZA OF SOHO/LUCIA ALIMENTARI",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-03-02T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40892913",
+          "name": "JOJO'S PIZZA",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 3,
+          "inspectionDate": "2026-04-01T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50131003",
+          "name": "COCO HOTPOT",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Asian/Asian Fusion",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-10-08T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50123909",
+          "name": "D'MORENA RESTAURANT CORP",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Spanish",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-03-03T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50144191",
+          "name": "SEA BAR",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Mediterranean",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2025-10-21T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }

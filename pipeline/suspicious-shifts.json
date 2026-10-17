@@ -7986,5 +7986,22 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50193465",
+    "dba": "AUXILLIARY CAMPUS CENTER CAFETERIA",
+    "address": "2800 VICTORY BLVD, Staten Island 10314",
+    "dohmhLat": 40.608825897511,
+    "dohmhLon": -74.153417398241,
+    "resolvedLat": 40.605525,
+    "resolvedLon": -74.151682,
+    "distanceMeters": 395.1993745624584,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 126.04800625437542,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
