@@ -589,6 +589,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-18",
+      "cards": [
+        {
+          "camis": "50151813",
+          "name": "GREEN LANE COFFEE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2025-11-17T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40369608",
+          "name": "THE RIVER CAFE",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-09-19T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41547604",
+          "name": "FENG'S GARDEN",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-09-23T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41276395",
+          "name": "SAM'S PIZZA",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-09-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40391086",
+          "name": "A & S PIZZERIA",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 3,
+          "inspectionDate": "2026-03-16T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
