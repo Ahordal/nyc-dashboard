@@ -649,6 +649,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-19",
+      "cards": [
+        {
+          "camis": "50046997",
+          "name": "SOBA NOODLE AZUMA",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Japanese",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-08-04T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41279817",
+          "name": "MOTHER'S",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2025-10-21T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40517120",
+          "name": "BLUE BAY DINER",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 8,
+          "inspectionDate": "2026-09-09T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50053660",
+          "name": "CHINA KING OGDEN RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-10-07T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40962159",
+          "name": "CAFE MILANO",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2025-11-25T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
