@@ -8003,5 +8003,24 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "40989507",
+    "dba": "AMC THEATRES",
+    "address": "2210 BARTOW AVENUE, Bronx 10475",
+    "dohmhLat": 40.869297942269,
+    "dohmhLon": -73.824964997367,
+    "resolvedLat": 40.8670408,
+    "resolvedLon": -73.8251735,
+    "distanceMeters": 251.5943912609927,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 117.48405608739007,
+    "reasons": [
+      "borough_unconfirmed"
+    ],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]

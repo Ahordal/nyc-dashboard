@@ -889,6 +889,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-23",
+      "cards": [
+        {
+          "camis": "50045891",
+          "name": "BARANO",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-02-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50159293",
+          "name": "DRURY COFFEE",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 8,
+          "inspectionDate": "2026-03-19T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50132656",
+          "name": "SWEET LIL SWEETS",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2025-12-11T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50007321",
+          "name": "NEW DRAGON SEA CHINESE RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-03-25T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50124421",
+          "name": "NEW CHOI HEE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-02-12T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
