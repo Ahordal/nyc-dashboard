@@ -949,6 +949,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-24",
+      "cards": [
+        {
+          "camis": "50073648",
+          "name": "BRONI & BELLE’S PIZZERIA",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-02-02T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50109577",
+          "name": "THE GRAHAM PIZZA & CHICKEN",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Chicken",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2025-11-18T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50107021",
+          "name": "CHINA PAGODA",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-05-05T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50049968",
+          "name": "SALOME LATIN CUISINE",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Latin American",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-08-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41560435",
+          "name": "BASILIO'S INN RESTAURANT",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2025-10-24T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
