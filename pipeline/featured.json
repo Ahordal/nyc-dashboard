@@ -1009,6 +1009,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-25",
+      "cards": [
+        {
+          "camis": "50056708",
+          "name": "THE GARRETT",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2025-11-20T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50060105",
+          "name": "BIRDS OF A FEATHER",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-06-09T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50146268",
+          "name": "DOUBLE RESTAURANT",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2025-11-21T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50047323",
+          "name": "TANA THAI RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Thai",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-03-02T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50010629",
+          "name": "PANINI GRILL",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-03-31T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
