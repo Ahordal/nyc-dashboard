@@ -1069,6 +1069,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-26",
+      "cards": [
+        {
+          "camis": "50106092",
+          "name": "MANOUSHEH",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Middle Eastern",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-01-07T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41394714",
+          "name": "NEW FOOD KING",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 8,
+          "inspectionDate": "2026-09-17T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50150982",
+          "name": "ELYSIAN CAFE",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Greek",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-08-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50150849",
+          "name": "WENDY'S RESTAURANT #19406",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Sandwiches",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2025-11-18T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40369158",
+          "name": "JODY'S CLUB",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-06-01T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
