@@ -1129,6 +1129,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-27",
+      "cards": [
+        {
+          "camis": "50144778",
+          "name": "DA CAPO CAFFE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-08-03T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41333637",
+          "name": "DOWNS RIVER",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Caribbean",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-05-29T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41713178",
+          "name": "DARO'S PIZZA & FRIED CHICKEN",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Chicken",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-07-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50105398",
+          "name": "YANKEE'S 99 CENTS HOT PIZZA",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-04-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50122106",
+          "name": "W'S BAR AND RESTAURANT",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-03-12T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }

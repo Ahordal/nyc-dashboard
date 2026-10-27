@@ -8022,5 +8022,41 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50189305",
+    "dba": "GRASSFED MARKET, LLC",
+    "address": "32-46 37TH ST, Queens 11103",
+    "dohmhLat": 40.759309561571,
+    "dohmhLon": -73.920940719761,
+    "resolvedLat": 40.7545472,
+    "resolvedLon": -73.9248012,
+    "distanceMeters": 621.4133596907774,
+    "matchType": "house+street",
+    "resolvedVia": "no-hyphen",
+    "score": 113.78586640309223,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "50192571",
+    "dba": "QC CAMOUS EATS (RATHAUS HALL)",
+    "address": "65-30 KISSENA BOULEVARD, Queens 11367",
+    "dohmhLat": 40.736699315322,
+    "dohmhLon": -73.814702189285,
+    "resolvedLat": 40.735855,
+    "resolvedLon": -73.815751,
+    "distanceMeters": 128.92985064570172,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.71070149354298,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
