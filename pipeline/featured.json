@@ -1189,6 +1189,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-28",
+      "cards": [
+        {
+          "camis": "40926520",
+          "name": "HILLSIDE CAFE / HAKUBAI / ROOF 66",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Japanese",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2025-12-23T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41337181",
+          "name": "EL TIO PIO",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Latin American",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2025-11-20T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50146410",
+          "name": "MAGIA EN TU VIDA",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Pancakes/Waffles",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2025-12-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50106032",
+          "name": "TREMONT DINER",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-10-21T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50092930",
+          "name": "MASTER WOK",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-10-07T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
