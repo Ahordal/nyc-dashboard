@@ -1249,6 +1249,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-29",
+      "cards": [
+        {
+          "camis": "50010297",
+          "name": "FONDA OF CHELSEA",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-04-23T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50123740",
+          "name": "CAFE NUBE",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-10-13T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50072950",
+          "name": "SZECHUAN MOUNTAIN HOUSE",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-10-15T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41179165",
+          "name": "BROOK AVENUE DELI & PIZZA",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2025-12-03T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50139014",
+          "name": "LUCKY GOURMET CHEF",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2025-12-04T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
