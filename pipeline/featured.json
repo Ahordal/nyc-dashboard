@@ -1309,6 +1309,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-30",
+      "cards": [
+        {
+          "camis": "40599004",
+          "name": "BOTANICA",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-06-02T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50095524",
+          "name": "TWIST",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Seafood",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2025-11-22T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50149596",
+          "name": "CHICKEN BOX",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Fusion",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-06-15T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50105364",
+          "name": "DUNKIN'/BASKIN ROBBINS",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Donuts",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2026-03-04T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50094788",
+          "name": "THE KOVA",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2025-12-03T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
