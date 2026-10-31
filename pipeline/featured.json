@@ -1369,6 +1369,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-10-31",
+      "cards": [
+        {
+          "camis": "50071109",
+          "name": "AMERICAN GIRL CAFE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-04-09T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50134101",
+          "name": "TIENDA GUATEMALTECA EL QUETZALITO",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Latin American",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-07-18T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50088905",
+          "name": "SWEET HABIT",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2026-03-04T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50124520",
+          "name": "TACOS EL CHULETON",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2025-12-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50141296",
+          "name": "SWEETIE HOUSE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2025-11-06T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
