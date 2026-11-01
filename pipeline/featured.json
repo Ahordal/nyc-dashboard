@@ -1429,6 +1429,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-01",
+      "cards": [
+        {
+          "camis": "50158747",
+          "name": "SALT & STRAW",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Frozen Desserts",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-10-06T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50160426",
+          "name": "PRESTIGE FRESH BAR",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Vegetarian",
+          "grade": "A",
+          "score": 0,
+          "inspectionDate": "2026-08-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50159177",
+          "name": "ELITE CAFE",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Other",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-07-16T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50086502",
+          "name": "ESTRELLITA POBLANA TAQUERIA EXPRESS",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-10-02T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50144757",
+          "name": "JERSEY MIKE'S SUBS",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-07-07T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
