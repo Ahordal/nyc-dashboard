@@ -1489,6 +1489,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-02",
+      "cards": [
+        {
+          "camis": "40544576",
+          "name": "YONAH SHIMMEL'S KNISH BAKERY",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Jewish/Kosher",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-03-05T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50073316",
+          "name": "NEXT LEVEL BURGER",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Vegetarian",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-05-18T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50064498",
+          "name": "BRILLA TU VIDA",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Juice, Smoothies, Fruit Salads",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-10-02T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50145553",
+          "name": "BAINBRIDGE BAKERY",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 8,
+          "inspectionDate": "2025-12-12T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40366132",
+          "name": "DENINO'S PIZZERIA TAVERN",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2025-12-03T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
