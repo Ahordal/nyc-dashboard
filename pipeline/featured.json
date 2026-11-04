@@ -1609,6 +1609,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-04",
+      "cards": [
+        {
+          "camis": "50048257",
+          "name": "PATE PALO",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Latin American",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-08-26T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41704437",
+          "name": "MA-N-POP SOUL FOOD",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Soul Food",
+          "grade": "A",
+          "score": 4,
+          "inspectionDate": "2026-10-23T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41381335",
+          "name": "ISLAND ROTI SHOP",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Caribbean",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-02-04T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50122434",
+          "name": "FIESTA LOUNGE & RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Spanish",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-07-15T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41198352",
+          "name": "TAQUERIA EL GALLO AZTECA",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-02-10T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
