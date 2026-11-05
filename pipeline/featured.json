@@ -1669,6 +1669,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-05",
+      "cards": [
+        {
+          "camis": "41084188",
+          "name": "UVA",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-03-11T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40605839",
+          "name": "OFF SHORE RESTAURANT",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 8,
+          "inspectionDate": "2026-10-08T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50094746",
+          "name": "EL VAQUERITO",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-02-20T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50122546",
+          "name": "TAQUERIA LOS ANGELES",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-09-16T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50138923",
+          "name": "LOS PASTORCITOS G'S",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-07-29T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
