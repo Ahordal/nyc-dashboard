@@ -1729,6 +1729,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-06",
+      "cards": [
+        {
+          "camis": "41176172",
+          "name": "GENNARO",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-02-19T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40577204",
+          "name": "IMPERIAL BIKER BAR",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2025-11-12T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50088740",
+          "name": "CHILLATO",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Frozen Desserts",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-04-03T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50132084",
+          "name": "PIKASSO EMPANADAS Y MAS",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Juice, Smoothies, Fruit Salads",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-08-17T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50106405",
+          "name": "CHINA CHALET",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2025-11-25T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }

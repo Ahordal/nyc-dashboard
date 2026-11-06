@@ -8077,5 +8077,22 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50194479",
+    "dba": "YALA HALAL INC",
+    "address": "3271 RICHMOND AVE, Staten Island 10312",
+    "dohmhLat": 40.55943805624,
+    "dohmhLon": -74.169534354073,
+    "resolvedLat": 40.559652,
+    "resolvedLon": -74.168337,
+    "distanceMeters": 103.91016567797521,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.96089834322024,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
