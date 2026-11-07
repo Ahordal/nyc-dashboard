@@ -8094,5 +8094,39 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50194543",
+    "dba": "que lo que",
+    "address": "108-46 ROOSEVELT AVE, Queens 11368",
+    "dohmhLat": 40.750844816694,
+    "dohmhLon": -73.858276609142,
+    "resolvedLat": 40.751069,
+    "resolvedLon": -73.857061,
+    "distanceMeters": 105.38885593912059,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.9461114406088,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "50194544",
+    "dba": "ROCCO'S ITALIAN SAUSAGES & CHEESE STEAKS",
+    "address": "124-04 31ST AVE, Queens 11354",
+    "dohmhLat": 40.769485606702,
+    "dohmhLon": -73.844304865268,
+    "resolvedLat": 40.767424,
+    "resolvedLon": -73.84384,
+    "distanceMeters": 232.558918875634,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 127.67441081124366,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]

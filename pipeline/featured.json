@@ -1789,6 +1789,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-07",
+      "cards": [
+        {
+          "camis": "50105982",
+          "name": "CKA KA QELLUE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Mediterranean",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-02-19T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50119820",
+          "name": "PARAGON",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-08-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40695260",
+          "name": "KEW GARDENS CINEMAS",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-06-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50058121",
+          "name": "MOE'S SOUTHWEST GRILL",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2025-12-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41555821",
+          "name": "TALK OF THE TOWN",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Bottled Beverages",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-05-20T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
