@@ -1849,6 +1849,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-08",
+      "cards": [
+        {
+          "camis": "50055419",
+          "name": "KIRKLAND & ELLIS CONFERENCE ROOMS",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-03-20T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50086076",
+          "name": "LA CHOLITA MEXICANA",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-04-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40831475",
+          "name": "ROSARIO'S",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-09-25T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50116574",
+          "name": "CESTRA'S PIZZERIA & RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-06-01T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50101276",
+          "name": "BAGEL ON THE BLVD",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Bagels/Pretzels",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-06-04T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
