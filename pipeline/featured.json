@@ -1909,6 +1909,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-10",
+      "cards": [
+        {
+          "camis": "50146056",
+          "name": "VILLAGE SQUARE PIZZA - UPPER WEST SIDE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-07-27T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50048297",
+          "name": "CAFE GOURMET",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-10-07T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41218543",
+          "name": "PLAKA ESTIATORIO",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Greek",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-03-06T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50014473",
+          "name": "CENTRAL CARIBBEAN BAKERY",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-01-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41629524",
+          "name": "COMMONS CAFE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2025-12-17T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }

@@ -434628,10 +434628,10 @@
   "50133002": {
     "camis": "50133002",
     "dohmh": {
-      "building": "",
+      "building": "L2-2339",
       "street": "LAGUARDIA AIRPORT",
       "boro": "Queens",
-      "zip": "11369",
+      "zip": "11371",
       "lat": null,
       "lon": null
     },
@@ -434641,8 +434641,11 @@
     "resolvedVia": null,
     "distanceFromDohmh": null,
     "reason": "no_acceptable_match",
-    "resolvedAt": "2026-08-18T09:29:02.755Z",
-    "addressHash": "50133002||laguardia airport|queens|11369",
+    "error": null,
+    "score": null,
+    "reasons": null,
+    "resolvedAt": "2026-11-10T16:04:33.679Z",
+    "addressHash": "50133002|22339|laguardia airport|queens|11371",
     "resolverVersion": 1
   },
   "50133003": {
@@ -758483,6 +758486,704 @@
     "reasons": [],
     "resolvedAt": "2026-11-07T14:41:27.206Z",
     "addressHash": "50194587|22519|merrick boulevard|queens|11413",
+    "resolverVersion": 1
+  },
+  "50194588": {
+    "camis": "50194588",
+    "dohmh": {
+      "building": "78-14",
+      "street": "ATLANTIC AVENUE",
+      "boro": "Queens",
+      "zip": "11416",
+      "lat": 40.684597915631,
+      "lon": -73.861259182953
+    },
+    "resolved": null,
+    "status": "unverified",
+    "matchType": null,
+    "resolvedVia": null,
+    "distanceFromDohmh": null,
+    "reason": "no_acceptable_match",
+    "error": null,
+    "score": null,
+    "reasons": null,
+    "resolvedAt": "2026-11-10T16:04:36.222Z",
+    "addressHash": "50194588|7814|atlantic avenue|queens|11416",
+    "resolverVersion": 1
+  },
+  "50194590": {
+    "camis": "50194590",
+    "dohmh": {
+      "building": "71-26",
+      "street": "ROOSEVELT AVENUE",
+      "boro": "Queens",
+      "zip": "11372",
+      "lat": 40.746560403834,
+      "lon": -73.894029223931
+    },
+    "resolved": {
+      "lat": 40.74646,
+      "lon": -73.893913,
+      "neighbourhood": "Woodside"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 14.84943595147721,
+    "reason": null,
+    "error": null,
+    "score": 119.85150564048523,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "resolvedAt": "2026-11-10T16:04:38.693Z",
+    "addressHash": "50194590|7126|roosevelt avenue|queens|11372",
+    "resolverVersion": 1
+  },
+  "50194591": {
+    "camis": "50194591",
+    "dohmh": {
+      "building": "2012",
+      "street": "86 STREET",
+      "boro": "Brooklyn",
+      "zip": "11214",
+      "lat": 40.6044052552,
+      "lon": -73.997943671849
+    },
+    "resolved": {
+      "lat": 40.60421,
+      "lon": -73.998089,
+      "neighbourhood": "Bath Beach"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 24.93810216874837,
+    "reason": null,
+    "error": null,
+    "score": 129.7506189783125,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:40.000Z",
+    "addressHash": "50194591|2012|86 street|brooklyn|11214",
+    "resolverVersion": 1
+  },
+  "50194592": {
+    "camis": "50194592",
+    "dohmh": {
+      "building": "740",
+      "street": "DRIGGS AVENUE",
+      "boro": "Brooklyn",
+      "zip": "11211",
+      "lat": 40.712600431762,
+      "lon": -73.960638850181
+    },
+    "resolved": {
+      "lat": 40.712658,
+      "lon": -73.960739,
+      "neighbourhood": "Williamsburg"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 10.593806145168415,
+    "reason": null,
+    "error": null,
+    "score": 129.8940619385483,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:41.189Z",
+    "addressHash": "50194592|740|driggs avenue|brooklyn|11211",
+    "resolverVersion": 1
+  },
+  "50194595": {
+    "camis": "50194595",
+    "dohmh": {
+      "building": "1780",
+      "street": "SHEEPSHEAD BAY ROAD",
+      "boro": "Brooklyn",
+      "zip": "11235",
+      "lat": 40.584165620645,
+      "lon": -73.950810743368
+    },
+    "resolved": {
+      "lat": 40.584182,
+      "lon": -73.95094,
+      "neighbourhood": "Sheepshead Bay"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 11.066253201064455,
+    "reason": null,
+    "error": null,
+    "score": 129.88933746798935,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:42.520Z",
+    "addressHash": "50194595|1780|sheepshead bay road|brooklyn|11235",
+    "resolverVersion": 1
+  },
+  "50194597": {
+    "camis": "50194597",
+    "dohmh": {
+      "building": "129-03",
+      "street": "LIBERTY AVENUE",
+      "boro": "Queens",
+      "zip": "11419",
+      "lat": 40.689291401016,
+      "lon": -73.81630925027
+    },
+    "resolved": {
+      "lat": 40.689428,
+      "lon": -73.816306,
+      "neighbourhood": "Richmond Hill"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 15.191585969312984,
+    "reason": null,
+    "error": null,
+    "score": 129.84808414030687,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:45.249Z",
+    "addressHash": "50194597|12903|liberty avenue|queens|11419",
+    "resolverVersion": 1
+  },
+  "50194599": {
+    "camis": "50194599",
+    "dohmh": {
+      "building": "250",
+      "street": "EAST  204 STREET",
+      "boro": "Bronx",
+      "zip": "10458",
+      "lat": 40.874146065435,
+      "lon": -73.884304322497
+    },
+    "resolved": {
+      "lat": 40.874049,
+      "lon": -73.884369,
+      "neighbourhood": "Norwood"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 12.085758758766195,
+    "reason": null,
+    "error": null,
+    "score": 129.87914241241234,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:46.673Z",
+    "addressHash": "50194599|250|east 204 street|bronx|10458",
+    "resolverVersion": 1
+  },
+  "50194600": {
+    "camis": "50194600",
+    "dohmh": {
+      "building": "151",
+      "street": "NAGLE AVENUE",
+      "boro": "Manhattan",
+      "zip": "10040",
+      "lat": 40.861112835535,
+      "lon": -73.926032395724
+    },
+    "resolved": {
+      "lat": 40.861017,
+      "lon": -73.925878,
+      "neighbourhood": "Inwood"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 16.79724359534508,
+    "reason": null,
+    "error": null,
+    "score": 129.83202756404654,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:48.142Z",
+    "addressHash": "50194600|151|nagle avenue|manhattan|10040",
+    "resolverVersion": 1
+  },
+  "50194601": {
+    "camis": "50194601",
+    "dohmh": {
+      "building": "1111",
+      "street": "1 AVENUE",
+      "boro": "Manhattan",
+      "zip": "10065",
+      "lat": 40.760760235711,
+      "lon": -73.961144525151
+    },
+    "resolved": {
+      "lat": 40.760837,
+      "lon": -73.961302,
+      "neighbourhood": "Upper East Side"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 15.772446972972784,
+    "reason": null,
+    "error": null,
+    "score": 129.84227553027029,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:49.471Z",
+    "addressHash": "50194601|1111|1 avenue|manhattan|10065",
+    "resolverVersion": 1
+  },
+  "50194606": {
+    "camis": "50194606",
+    "dohmh": {
+      "building": "2618",
+      "street": "JEROME AVENUE",
+      "boro": "Bronx",
+      "zip": "10468",
+      "lat": 40.866868901289,
+      "lon": -73.897850022548
+    },
+    "resolved": {
+      "lat": 40.866809,
+      "lon": -73.897686,
+      "neighbourhood": "Fordham"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 15.316621564626018,
+    "reason": null,
+    "error": null,
+    "score": 129.84683378435375,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:50.651Z",
+    "addressHash": "50194606|2618|jerome avenue|bronx|10468",
+    "resolverVersion": 1
+  },
+  "50194607": {
+    "camis": "50194607",
+    "dohmh": {
+      "building": "654",
+      "street": "BEACH AVENUE",
+      "boro": "Bronx",
+      "zip": "10473",
+      "lat": 40.81876440057,
+      "lon": -73.863305114985
+    },
+    "resolved": {
+      "lat": 40.818882,
+      "lon": -73.8632,
+      "neighbourhood": "Clason Point"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 15.787197931523464,
+    "reason": null,
+    "error": null,
+    "score": 129.84212802068475,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:52.025Z",
+    "addressHash": "50194607|654|beach avenue|bronx|10473",
+    "resolverVersion": 1
+  },
+  "50194608": {
+    "camis": "50194608",
+    "dohmh": {
+      "building": "23",
+      "street": "EAST  109 STREET",
+      "boro": "Manhattan",
+      "zip": "10029",
+      "lat": 40.795748167371,
+      "lon": -73.948580707084
+    },
+    "resolved": {
+      "lat": 40.795753,
+      "lon": -73.948341,
+      "neighbourhood": "East Harlem"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 20.185551971153917,
+    "reason": null,
+    "error": null,
+    "score": 129.79814448028847,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:53.342Z",
+    "addressHash": "50194608|23|east 109 street|manhattan|10029",
+    "resolverVersion": 1
+  },
+  "50194609": {
+    "camis": "50194609",
+    "dohmh": {
+      "building": "3964",
+      "street": "10 AVENUE",
+      "boro": "Manhattan",
+      "zip": "10034",
+      "lat": 40.867386450877,
+      "lon": -73.91678036952
+    },
+    "resolved": {
+      "lat": 40.8673895,
+      "lon": -73.9167709,
+      "neighbourhood": "Inwood"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 0.8654542433353452,
+    "reason": null,
+    "error": null,
+    "score": 129.99134545756664,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:54.735Z",
+    "addressHash": "50194609|3964|10 avenue|manhattan|10034",
+    "resolverVersion": 1
+  },
+  "50194612": {
+    "camis": "50194612",
+    "dohmh": {
+      "building": "1290",
+      "street": "AVENUE OF THE AMERICAS",
+      "boro": "Manhattan",
+      "zip": "10119",
+      "lat": 40.760850108553,
+      "lon": -73.979716722068
+    },
+    "resolved": {
+      "lat": 40.760728,
+      "lon": -73.979487,
+      "neighbourhood": "Midtown West"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 23.636939829400983,
+    "reason": null,
+    "error": null,
+    "score": 119.76363060170598,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "resolvedAt": "2026-11-10T16:04:56.035Z",
+    "addressHash": "50194612|1290|avenue of the americas|manhattan|10119",
+    "resolverVersion": 1
+  },
+  "50194613": {
+    "camis": "50194613",
+    "dohmh": {
+      "building": "1194",
+      "street": "CROMWELL AVENUE",
+      "boro": "Bronx",
+      "zip": "10452",
+      "lat": 40.835908310032,
+      "lon": -73.922435828316
+    },
+    "resolved": {
+      "lat": 40.835819,
+      "lon": -73.922294,
+      "neighbourhood": "Concourse"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 15.523827411525062,
+    "reason": null,
+    "error": null,
+    "score": 129.84476172588475,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:57.336Z",
+    "addressHash": "50194613|1194|cromwell avenue|bronx|10452",
+    "resolverVersion": 1
+  },
+  "50194615": {
+    "camis": "50194615",
+    "dohmh": {
+      "building": "617",
+      "street": "WASHINGTON AVENUE",
+      "boro": "Brooklyn",
+      "zip": "11238",
+      "lat": 40.679076885195,
+      "lon": -73.964004452975
+    },
+    "resolved": {
+      "lat": 40.679047,
+      "lon": -73.963841,
+      "neighbourhood": "Crown Heights"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 14.178453713481135,
+    "reason": null,
+    "error": null,
+    "score": 129.8582154628652,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:58.682Z",
+    "addressHash": "50194615|617|washington avenue|brooklyn|11238",
+    "resolverVersion": 1
+  },
+  "50194616": {
+    "camis": "50194616",
+    "dohmh": {
+      "building": "379",
+      "street": "1 AVENUE",
+      "boro": "Manhattan",
+      "zip": "10010",
+      "lat": 40.736289824998,
+      "lon": -73.978832944916
+    },
+    "resolved": {
+      "lat": 40.736457,
+      "lon": -73.979077,
+      "neighbourhood": "Gramercy"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 27.71965085146922,
+    "reason": null,
+    "error": null,
+    "score": 129.7228034914853,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:04:59.919Z",
+    "addressHash": "50194616|379|1 avenue|manhattan|10010",
+    "resolverVersion": 1
+  },
+  "50194617": {
+    "camis": "50194617",
+    "dohmh": {
+      "building": "151",
+      "street": "WEST   34 STREET",
+      "boro": "Manhattan",
+      "zip": "10001",
+      "lat": 40.750509164767,
+      "lon": -73.989479170444
+    },
+    "resolved": {
+      "lat": 40.751046,
+      "lon": -73.99033,
+      "neighbourhood": "Midtown West"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 93.2738042251704,
+    "reason": null,
+    "error": null,
+    "score": 129.0672619577483,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:05:01.358Z",
+    "addressHash": "50194617|151|west 34 street|manhattan|10001",
+    "resolverVersion": 1
+  },
+  "50194618": {
+    "camis": "50194618",
+    "dohmh": {
+      "building": "133-35",
+      "street": "ROOSEVELT AVENUE",
+      "boro": "Queens",
+      "zip": "11354",
+      "lat": 40.758501995257,
+      "lon": -73.833241808988
+    },
+    "resolved": {
+      "lat": 40.758697,
+      "lon": -73.833075,
+      "neighbourhood": "Flushing"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 25.83739312771336,
+    "reason": null,
+    "error": null,
+    "score": 129.74162606872287,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:05:03.812Z",
+    "addressHash": "50194618|13335|roosevelt avenue|queens|11354",
+    "resolverVersion": 1
+  },
+  "50194619": {
+    "camis": "50194619",
+    "dohmh": {
+      "building": "6905",
+      "street": "5 AVENUE",
+      "boro": "Brooklyn",
+      "zip": "11209",
+      "lat": 40.633300427927,
+      "lon": -74.021065808765
+    },
+    "resolved": {
+      "lat": 40.633193,
+      "lon": -74.020951,
+      "neighbourhood": "Bayridge"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 15.380305954500363,
+    "reason": null,
+    "error": null,
+    "score": 129.846196940455,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:05:05.148Z",
+    "addressHash": "50194619|6905|5 avenue|brooklyn|11209",
+    "resolverVersion": 1
+  },
+  "50194627": {
+    "camis": "50194627",
+    "dohmh": {
+      "building": "42-02",
+      "street": "BROADWAY",
+      "boro": "Queens",
+      "zip": "11103",
+      "lat": 40.758148691304,
+      "lon": -73.917278337563
+    },
+    "resolved": {
+      "lat": 40.758069,
+      "lon": -73.91735,
+      "neighbourhood": "Astoria"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 10.721679553362115,
+    "reason": null,
+    "error": null,
+    "score": 129.89278320446638,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:05:08.169Z",
+    "addressHash": "50194627|4202|broadway|queens|11103",
+    "resolverVersion": 1
+  },
+  "50194631": {
+    "camis": "50194631",
+    "dohmh": {
+      "building": "6015",
+      "street": "11 AVENUE",
+      "boro": "Brooklyn",
+      "zip": "11219",
+      "lat": 40.631345293178,
+      "lon": -74.003094748997
+    },
+    "resolved": null,
+    "status": "unverified",
+    "matchType": null,
+    "resolvedVia": null,
+    "distanceFromDohmh": null,
+    "reason": "no_acceptable_match",
+    "error": null,
+    "score": null,
+    "reasons": null,
+    "resolvedAt": "2026-11-10T16:05:09.560Z",
+    "addressHash": "50194631|6015|11 avenue|brooklyn|11219",
+    "resolverVersion": 1
+  },
+  "50194632": {
+    "camis": "50194632",
+    "dohmh": {
+      "building": "214-18",
+      "street": "41ST AVE",
+      "boro": "Queens",
+      "zip": "11361",
+      "lat": 40.763652730321,
+      "lon": -73.770542457748
+    },
+    "resolved": {
+      "lat": 40.763634,
+      "lon": -73.770195,
+      "neighbourhood": "Bayside"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 29.336947649519075,
+    "reason": null,
+    "error": null,
+    "score": 129.7066305235048,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:05:11.934Z",
+    "addressHash": "50194632|21418|41 avenue|queens|11361",
+    "resolverVersion": 1
+  },
+  "50194636": {
+    "camis": "50194636",
+    "dohmh": {
+      "building": "745",
+      "street": "DEKALB AVE",
+      "boro": "Brooklyn",
+      "zip": "11216",
+      "lat": 40.691926617491,
+      "lon": -73.946587619357
+    },
+    "resolved": {
+      "lat": 40.692046,
+      "lon": -73.946412,
+      "neighbourhood": "Bedford-Stuyvesant"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 19.886031875630508,
+    "reason": null,
+    "error": null,
+    "score": 129.80113968124368,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:05:13.182Z",
+    "addressHash": "50194636|745|dekalb avenue|brooklyn|11216",
+    "resolverVersion": 1
+  },
+  "50194639": {
+    "camis": "50194639",
+    "dohmh": {
+      "building": "1410",
+      "street": "MADISON AVE",
+      "boro": "Manhattan",
+      "zip": "10029",
+      "lat": 40.788306451913,
+      "lon": -73.95337862044
+    },
+    "resolved": {
+      "lat": 40.788428,
+      "lon": -73.95346,
+      "neighbourhood": "East Harlem"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 15.152858313574841,
+    "reason": null,
+    "error": null,
+    "score": 129.84847141686424,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:05:15.105Z",
+    "addressHash": "50194639|1410|madison avenue|manhattan|10029",
+    "resolverVersion": 1
+  },
+  "50194640": {
+    "camis": "50194640",
+    "dohmh": {
+      "building": "462",
+      "street": "1ST AVE",
+      "boro": "Manhattan",
+      "zip": "10016",
+      "lat": 40.739489790595,
+      "lon": -73.976623458224
+    },
+    "resolved": {
+      "lat": 40.73954,
+      "lon": -73.976333,
+      "neighbourhood": "Kips Bay"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 25.100093163957496,
+    "reason": null,
+    "error": null,
+    "score": 129.74899906836043,
+    "reasons": [],
+    "resolvedAt": "2026-11-10T16:05:16.526Z",
+    "addressHash": "50194640|462|1 avenue|manhattan|10016",
     "resolverVersion": 1
   },
   "K79": {
