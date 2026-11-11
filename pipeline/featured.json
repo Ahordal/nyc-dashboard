@@ -1969,6 +1969,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-11",
+      "cards": [
+        {
+          "camis": "50069883",
+          "name": "DON ANGIE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-10-15T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50075170",
+          "name": "168 KIM WEI KITCHEN",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-11-05T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50129911",
+          "name": "ROSA  PIZZA",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-03-25T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41402869",
+          "name": "LA MORADA RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-02-17T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50108636",
+          "name": "LEBANESE EATERY",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Mediterranean",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-06-04T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
