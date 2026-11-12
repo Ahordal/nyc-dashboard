@@ -8128,5 +8128,125 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "40675892",
+    "dba": "DINER",
+    "address": "85 BROADWAY, 0 11249",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.7106766,
+    "resolvedLon": -73.9655977,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "41243506",
+    "dba": "SIMPLE CAFE",
+    "address": "346 BEDFORD AVENUE, 0 11249",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.71242,
+    "resolvedLon": -73.962782,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "41243544",
+    "dba": "CAFE COLETTE",
+    "address": "79 BERRY STREET, 0 11249",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.71977,
+    "resolvedLon": -73.95763,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "41568366",
+    "dba": "VISTA SKY LOUNGE / VISTA BANQUET HALL",
+    "address": "2705 39 AVENUE, 0 11101",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.773152,
+    "resolvedLon": -73.743976,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "41644360",
+    "dba": "CAFE MOGADOR",
+    "address": "133 WYTHE AVENUE, 0 11249",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.719703,
+    "resolvedLon": -73.95992,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
+  },
+  {
+    "camis": "41716092",
+    "dba": "DOMINO'S",
+    "address": "3624 Broadway, 0 10021",
+    "dohmhLat": null,
+    "dohmhLon": null,
+    "resolvedLat": 40.8296372,
+    "resolvedLon": -73.9477156,
+    "distanceMeters": null,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 100,
+    "reasons": [
+      "borough_unconfirmed",
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "low_confidence_match"
+    ]
   }
 ]

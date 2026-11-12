@@ -2029,6 +2029,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-12",
+      "cards": [
+        {
+          "camis": "50112739",
+          "name": "ERNST & YOUNG",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-09-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41632118",
+          "name": "JIMMY'S PIZZA",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-04-15T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50144430",
+          "name": "COFFEE CLOUD",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2025-12-15T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50128886",
+          "name": "FRESCO & RAPIDO",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Spanish",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-02-04T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50080503",
+          "name": "SAYORI",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Japanese",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2025-11-21T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
