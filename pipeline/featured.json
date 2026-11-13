@@ -2089,6 +2089,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-13",
+      "cards": [
+        {
+          "camis": "50005085",
+          "name": "EL NUEVO TINA",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Latin American",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2026-01-14T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50105428",
+          "name": "JOY INDIAN RESTAURANT",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Indian",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-04-01T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50077476",
+          "name": "L. M. CAFE",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-06-04T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50143476",
+          "name": "M & G RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-09-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50148727",
+          "name": "SIAM THAI RESTAURANT",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Thai",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-10-27T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }

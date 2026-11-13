@@ -8248,5 +8248,58 @@
     "flagReasons": [
       "low_confidence_match"
     ]
+  },
+  {
+    "camis": "41646919",
+    "dba": "LA PERRADA DE CHALO",
+    "address": "8312 NORTHERN BOULEVARD, Queens 11372",
+    "dohmhLat": 40.755666281239,
+    "dohmhLon": -73.884218532998,
+    "resolvedLat": 40.7574028,
+    "resolvedLon": -73.8672944,
+    "distanceMeters": 1438.5227838335359,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 110,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "41714316",
+    "dba": "CHEUNG HING KITCHEN",
+    "address": "11460 MERRICK BOULEVARD, Queens 11434",
+    "dohmhLat": 40.690635309992,
+    "dohmhLon": -73.778453768808,
+    "resolvedLat": 40.6816353,
+    "resolvedLon": -73.7657228,
+    "distanceMeters": 1467.5872850541577,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 120,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "50194224",
+    "dba": "YALA  HALAL",
+    "address": "3271 RICHMOND AVE, Staten Island 10312",
+    "dohmhLat": 40.55943805624,
+    "dohmhLon": -74.169534354073,
+    "resolvedLat": 40.559652,
+    "resolvedLon": -74.168337,
+    "distanceMeters": 103.91016567797521,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.96089834322024,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]
