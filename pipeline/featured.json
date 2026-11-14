@@ -2149,6 +2149,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-14",
+      "cards": [
+        {
+          "camis": "50082139",
+          "name": "ROLL & KATSU KITCHEN",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Korean",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2025-12-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50164616",
+          "name": "CHEROKEE DELI",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 8,
+          "inspectionDate": "2026-03-20T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50085995",
+          "name": "SPRING FOOD SPOT",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2025-12-15T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50092327",
+          "name": "FUH WAH RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-04-03T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50092619",
+          "name": "PEKING KITCHEN CHINESE CUISINE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-07-09T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }

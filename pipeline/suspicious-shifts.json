@@ -3636,7 +3636,14 @@
     "resolvedLon": -73.993099,
     "distanceMeters": 105.19444065342931,
     "matchType": "house+street",
-    "resolvedVia": "hyphenated"
+    "resolvedVia": "hyphenated",
+    "score": 118.94805559346571,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "flagReasons": [
+      "distance_shift"
+    ]
   },
   {
     "camis": "50089346",
