@@ -2209,6 +2209,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-15",
+      "cards": [
+        {
+          "camis": "50118392",
+          "name": "OH K-DOG & EGG TOAST",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Korean",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-04-17T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50047736",
+          "name": "TALON BAR",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 7,
+          "inspectionDate": "2025-11-24T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50098738",
+          "name": "THE BASAC",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Korean",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-05-13T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50113985",
+          "name": "SIENTASE DE MARAVILLA",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 8,
+          "inspectionDate": "2026-06-26T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50115302",
+          "name": "NORTHSIDE COFFEE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-07-27T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
