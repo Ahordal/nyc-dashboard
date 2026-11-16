@@ -2269,6 +2269,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-16",
+      "cards": [
+        {
+          "camis": "50045329",
+          "name": "SOCIAL TERRACE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Bottled Beverages",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-01-07T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41653485",
+          "name": "L' ANGE NOIR CAFE",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "French",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-07-01T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50114437",
+          "name": "RIPPERS 2",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-06-16T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50165433",
+          "name": "REGAL CONCOURSE 10",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-10-27T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50161088",
+          "name": "POKE CAFE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Hawaiian",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-11-05T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
