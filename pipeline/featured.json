@@ -2389,6 +2389,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-18",
+      "cards": [
+        {
+          "camis": "50082290",
+          "name": "KIRKLAND & ELLIS CAFE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 3,
+          "inspectionDate": "2026-06-04T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40804423",
+          "name": "LOCANDA VINI & OLII (LEWIS DRUG STORE)",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Italian",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-10-09T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50083809",
+          "name": "TOMO JAPANESE CAFE",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Japanese",
+          "grade": "A",
+          "score": 8,
+          "inspectionDate": "2026-08-25T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41491272",
+          "name": "AZUL TEQUILA MEXICAN RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-07-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40542345",
+          "name": "TOWNE DELI & PIZZA",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-03-17T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
