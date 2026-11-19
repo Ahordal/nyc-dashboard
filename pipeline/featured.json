@@ -2449,6 +2449,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-19",
+      "cards": [
+        {
+          "camis": "40400453",
+          "name": "CAFE EIGHTY TWO",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2025-11-21T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50152971",
+          "name": "PEP BAKE HOUSE & COFFEE SHOP",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2025-12-09T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41388432",
+          "name": "THE TAP HOUSE",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Irish",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-07-22T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50004498",
+          "name": "PEACHWAVE FROZEN YOGURT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Frozen Desserts",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-08-10T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50143580",
+          "name": "NONNA'S PIZZERIA",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-08-13T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
