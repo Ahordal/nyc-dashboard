@@ -2509,6 +2509,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-20",
+      "cards": [
+        {
+          "camis": "40402785",
+          "name": "HARMONIE CLUB",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-03-30T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40721728",
+          "name": "THREE JOLLY PIGEONS",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Irish",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-05-21T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50059939",
+          "name": "JUICE BAR NUTRITION",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Juice, Smoothies, Fruit Salads",
+          "grade": "A",
+          "score": 4,
+          "inspectionDate": "2026-02-17T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50104718",
+          "name": "THE WAY CAFE",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-07-22T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50090807",
+          "name": "WETZLE'S PRETZELS",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Bagels/Pretzels",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-09-30T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
