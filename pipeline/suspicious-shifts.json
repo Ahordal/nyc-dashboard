@@ -8308,5 +8308,39 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50195069",
+    "dba": "ILYAS",
+    "address": "120-20 MERRICK BOULEVARD, Queens 11434",
+    "dohmhLat": 40.684538445336,
+    "dohmhLon": -73.771111403341,
+    "resolvedLat": 40.68372,
+    "resolvedLon": -73.770226,
+    "distanceMeters": 117.71180773184791,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.82288192268152,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
+  },
+  {
+    "camis": "50195077",
+    "dba": "FOODCORNER INC",
+    "address": "43-54 162 STREET, Queens 11358",
+    "dohmhLat": 40.758308028927,
+    "dohmhLon": -73.804274967813,
+    "resolvedLat": 40.757189,
+    "resolvedLon": -73.804544,
+    "distanceMeters": 126.47680276025189,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 128.7352319723975,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]

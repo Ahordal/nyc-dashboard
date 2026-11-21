@@ -2569,6 +2569,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-21",
+      "cards": [
+        {
+          "camis": "50155847",
+          "name": "VALLARTA TROPICAL",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-09-29T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40698410",
+          "name": "ROCKY'S & NICKY'S PIZZERIA",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-10-07T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50127580",
+          "name": "NINJA JAPAN TERIYAKI",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Japanese",
+          "grade": "A",
+          "score": 12,
+          "inspectionDate": "2026-03-03T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50107104",
+          "name": "HOUSE PIZZA",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-04-16T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50049940",
+          "name": "HYLAN DINER",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-05-26T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
