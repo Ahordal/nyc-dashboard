@@ -2629,6 +2629,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-22",
+      "cards": [
+        {
+          "camis": "50145274",
+          "name": "RENAISSANCE TIMES SQUARE, MANAGED BY MERRITT HOSPITALITY LLC",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-02-05T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50116417",
+          "name": "A-UN",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Japanese",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-04-22T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50107671",
+          "name": "GOURMET BAKERY & DELI",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Sandwiches/Salads/Mixed Buffet",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-10-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50089076",
+          "name": "3A'S LEGACY SALAD & GRILL",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Soups/Salads/Sandwiches",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-02-12T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41397825",
+          "name": "CAFE CON PAN BAKERY II",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Bakery Products/Desserts",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-05-15T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
