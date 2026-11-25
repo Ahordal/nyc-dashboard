@@ -2809,6 +2809,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-25",
+      "cards": [
+        {
+          "camis": "50130211",
+          "name": "GREEN MANDALA",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Juice, Smoothies, Fruit Salads",
+          "grade": "A",
+          "score": 2,
+          "inspectionDate": "2026-03-18T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41018004",
+          "name": "ANGELICA PIZZERIA",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Pizza",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-09-21T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50134877",
+          "name": "SALUD PERFECTA",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Juice, Smoothies, Fruit Salads",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-09-02T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50109171",
+          "name": "FRONT PAGE",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Caribbean",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-03-20T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "40516511",
+          "name": "CYBER CAFE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Coffee/Tea",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-02-13T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
