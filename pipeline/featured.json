@@ -2869,6 +2869,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-26",
+      "cards": [
+        {
+          "camis": "50132426",
+          "name": "POULET SANS TETE",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Chicken",
+          "grade": "A",
+          "score": 5,
+          "inspectionDate": "2026-08-13T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50093872",
+          "name": "GOLDEN DYNASTY RESTAURANT",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Chinese",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2026-07-07T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50011089",
+          "name": "BAMBOO TROPICAL",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Juice, Smoothies, Fruit Salads",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-05-28T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50069760",
+          "name": "RANCHO ESTRELLA RESTAURANT",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-08-05T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50142784",
+          "name": "TIENDA VALENTINA'S RESTAURANTE",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "Mexican",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-03-25T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
