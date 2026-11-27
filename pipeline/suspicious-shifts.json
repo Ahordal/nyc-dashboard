@@ -8342,5 +8342,22 @@
     "flagReasons": [
       "distance_shift"
     ]
+  },
+  {
+    "camis": "50175203",
+    "dba": "PRINCE GRILL & JUICE BAR",
+    "address": "3801 VERNON BLVD, Queens 11101",
+    "dohmhLat": 40.759070811107,
+    "dohmhLon": -73.944407473766,
+    "resolvedLat": 40.7454591,
+    "resolvedLon": -73.9531875,
+    "distanceMeters": 1684.5841455018224,
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "score": 120,
+    "reasons": [],
+    "flagReasons": [
+      "distance_shift"
+    ]
   }
 ]

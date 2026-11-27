@@ -2929,6 +2929,66 @@
           "posts": []
         }
       ]
+    },
+    {
+      "date": "2026-11-27",
+      "cards": [
+        {
+          "camis": "50013238",
+          "name": "SPACE BILLARD",
+          "boro": "Manhattan",
+          "neighbourhood": null,
+          "cuisine": "Korean",
+          "grade": "A",
+          "score": 13,
+          "inspectionDate": "2026-08-11T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50106926",
+          "name": "NILI CAFE",
+          "boro": "Brooklyn",
+          "neighbourhood": null,
+          "cuisine": "Middle Eastern",
+          "grade": "A",
+          "score": 10,
+          "inspectionDate": "2025-12-23T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50130959",
+          "name": "EL KAMBUCHE DE LOLA 2",
+          "boro": "Queens",
+          "neighbourhood": null,
+          "cuisine": "Spanish",
+          "grade": "A",
+          "score": 9,
+          "inspectionDate": "2026-11-04T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "41444157",
+          "name": "MAMMA ROSA'S",
+          "boro": "Bronx",
+          "neighbourhood": null,
+          "cuisine": "Sandwiches",
+          "grade": "A",
+          "score": 3,
+          "inspectionDate": "2026-03-03T00:00:00.000",
+          "posts": []
+        },
+        {
+          "camis": "50080406",
+          "name": "DAVE & BUSTERS",
+          "boro": "Staten Island",
+          "neighbourhood": null,
+          "cuisine": "American",
+          "grade": "A",
+          "score": 11,
+          "inspectionDate": "2026-01-12T00:00:00.000",
+          "posts": []
+        }
+      ]
     }
   ]
 }
