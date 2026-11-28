@@ -23091,12 +23091,12 @@
   "40592285": {
     "camis": "40592285",
     "dohmh": {
-      "building": "60",
+      "building": "",
       "street": "CHELSEA PIERS",
       "boro": "Manhattan",
       "zip": "10011",
-      "lat": 40.747992386672,
-      "lon": -74.008495743918
+      "lat": null,
+      "lon": null
     },
     "resolved": null,
     "status": "unverified",
@@ -23107,8 +23107,8 @@
     "error": null,
     "score": null,
     "reasons": null,
-    "resolvedAt": "2026-11-27T17:51:18.099Z",
-    "addressHash": "40592285|60|chelsea piers|manhattan|10011",
+    "resolvedAt": "2026-11-28T16:37:54.825Z",
+    "addressHash": "40592285||chelsea piers|manhattan|10011",
     "resolverVersion": 1
   },
   "40592791": {
@@ -166055,7 +166055,7 @@
     "camis": "50017242",
     "dohmh": {
       "building": "1608",
-      "street": "SHORE PKWY SOUTH",
+      "street": "SHORE PARKWAY SOUTH SERVICE ROAD",
       "boro": "Brooklyn",
       "zip": "11214",
       "lat": 40.595613721595,
@@ -166070,8 +166070,8 @@
     "error": null,
     "score": null,
     "reasons": null,
-    "resolvedAt": "2026-11-26T18:07:24.012Z",
-    "addressHash": "50017242|1608|shore parkway south|brooklyn|11214",
+    "resolvedAt": "2026-11-28T16:37:56.072Z",
+    "addressHash": "50017242|1608|shore parkway south service road|brooklyn|11214",
     "resolverVersion": 1
   },
   "50017248": {
@@ -187018,23 +187018,29 @@
     "camis": "50044513",
     "dohmh": {
       "building": "4",
-      "street": "PENN PLZ",
+      "street": "PENN PLAZA",
       "boro": "Manhattan",
       "zip": "10121",
       "lat": 40.750654836632,
       "lon": -73.991944239076
     },
-    "resolved": null,
-    "status": "unverified",
-    "matchType": null,
-    "resolvedVia": null,
-    "distanceFromDohmh": null,
-    "reason": "no_acceptable_match",
+    "resolved": {
+      "lat": 40.751015,
+      "lon": -73.993099,
+      "neighbourhood": "Chelsea"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 105.19444065342931,
+    "reason": null,
     "error": null,
-    "score": null,
-    "reasons": null,
-    "resolvedAt": "2026-11-26T18:07:25.242Z",
-    "addressHash": "50044513|4|penn plz|manhattan|10121",
+    "score": 118.94805559346571,
+    "reasons": [
+      "zip_unconfirmed"
+    ],
+    "resolvedAt": "2026-11-28T16:37:57.297Z",
+    "addressHash": "50044513|4|penn plaza|manhattan|10121",
     "resolverVersion": 1
   },
   "50044515": {
@@ -187593,7 +187599,7 @@
     "camis": "50044595",
     "dohmh": {
       "building": "4",
-      "street": "PENN PLZ",
+      "street": "PENN PLAZA",
       "boro": "Manhattan",
       "zip": "10121",
       "lat": 40.750654836632,
@@ -187608,8 +187614,8 @@
     "error": null,
     "score": null,
     "reasons": null,
-    "resolvedAt": "2026-11-26T18:07:26.590Z",
-    "addressHash": "50044595|4|penn plz|manhattan|10121",
+    "resolvedAt": "2026-11-28T16:37:58.622Z",
+    "addressHash": "50044595|4|penn plaza|manhattan|10121",
     "resolverVersion": 1
   },
   "50044598": {
@@ -333371,7 +333377,7 @@
     "camis": "50107680",
     "dohmh": {
       "building": "179-06",
-      "street": "UNION TPKE",
+      "street": "UNION TURNPIKE",
       "boro": "Queens",
       "zip": "11366",
       "lat": 40.726677349363,
@@ -333386,8 +333392,8 @@
     "error": null,
     "score": null,
     "reasons": null,
-    "resolvedAt": "2026-11-27T17:51:26.570Z",
-    "addressHash": "50107680|17906|union tpke|queens|11366",
+    "resolvedAt": "2026-11-28T16:38:01.259Z",
+    "addressHash": "50107680|17906|union turnpike|queens|11366",
     "resolverVersion": 1
   },
   "50107683": {
@@ -500006,11 +500012,11 @@
     "camis": "50147715",
     "dohmh": {
       "building": "2",
-      "street": "W 69TH ST",
+      "street": "WEST   69 STREET",
       "boro": "Manhattan",
-      "zip": "10000",
-      "lat": 40.773565894411,
-      "lon": -73.976214299823
+      "zip": "10023",
+      "lat": 40.774386866316,
+      "lon": -73.977658206735
     },
     "resolved": null,
     "status": "unverified",
@@ -500021,8 +500027,8 @@
     "error": null,
     "score": null,
     "reasons": null,
-    "resolvedAt": "2026-11-26T18:07:30.254Z",
-    "addressHash": "50147715|2|west 69 street|manhattan|10000",
+    "resolvedAt": "2026-11-28T16:38:02.639Z",
+    "addressHash": "50147715|2|west 69 street|manhattan|10023",
     "resolverVersion": 1
   },
   "50147720": {
@@ -541286,11 +541292,11 @@
     "camis": "50158122",
     "dohmh": {
       "building": "475",
-      "street": "BRUCKNER BLVD",
+      "street": "BRUCKNER BOULEVARD",
       "boro": "Bronx",
-      "zip": "10454",
-      "lat": 40.809154854079,
-      "lon": -73.903711554942
+      "zip": "10455",
+      "lat": 40.809182298489,
+      "lon": -73.903707902685
     },
     "resolved": {
       "lat": 40.80985,
@@ -541300,15 +541306,13 @@
     "status": "verified",
     "matchType": "house+street",
     "resolvedVia": "hyphenated",
-    "distanceFromDohmh": 81.02195974782903,
+    "distanceFromDohmh": 78.02093169771426,
     "reason": null,
     "error": null,
-    "score": 119.1897804025217,
-    "reasons": [
-      "zip_unconfirmed"
-    ],
-    "resolvedAt": "2026-11-26T18:07:31.525Z",
-    "addressHash": "50158122|475|bruckner boulevard|bronx|10454",
+    "score": 129.21979068302286,
+    "reasons": [],
+    "resolvedAt": "2026-11-28T16:38:03.932Z",
+    "addressHash": "50158122|475|bruckner boulevard|bronx|10455",
     "resolverVersion": 1
   },
   "50158125": {
@@ -631617,7 +631621,7 @@
   "50175364": {
     "camis": "50175364",
     "dohmh": {
-      "building": "T8-M14",
+      "building": "",
       "street": "JFK INTERNATIONAL AIRPORT",
       "boro": "Queens",
       "zip": "11430",
@@ -631633,8 +631637,8 @@
     "error": null,
     "score": null,
     "reasons": null,
-    "resolvedAt": "2026-11-26T18:07:37.645Z",
-    "addressHash": "50175364|814|jfk international airport|queens|11430",
+    "resolvedAt": "2026-11-28T16:38:05.651Z",
+    "addressHash": "50175364||jfk international airport|queens|11430",
     "resolverVersion": 1
   },
   "50175365": {
@@ -763528,23 +763532,27 @@
     "camis": "50195047",
     "dohmh": {
       "building": "189-09",
-      "street": "UNION TPKE",
+      "street": "UNION TURNPIKE",
       "boro": "Queens",
       "zip": "11366",
       "lat": 40.729509965644,
       "lon": -73.780066726292
     },
-    "resolved": null,
-    "status": "unverified",
-    "matchType": null,
-    "resolvedVia": null,
-    "distanceFromDohmh": null,
-    "reason": "no_acceptable_match",
+    "resolved": {
+      "lat": 40.729695,
+      "lon": -73.779968,
+      "neighbourhood": "Fresh Meadows"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "hyphenated",
+    "distanceFromDohmh": 22.193049199539505,
+    "reason": null,
     "error": null,
-    "score": null,
-    "reasons": null,
-    "resolvedAt": "2026-11-26T18:07:43.700Z",
-    "addressHash": "50195047|18909|union tpke|queens|11366",
+    "score": 129.7780695080046,
+    "reasons": [],
+    "resolvedAt": "2026-11-28T16:38:08.145Z",
+    "addressHash": "50195047|18909|union turnpike|queens|11366",
     "resolverVersion": 1
   },
   "50195048": {
@@ -763892,23 +763900,27 @@
     "camis": "50195086",
     "dohmh": {
       "building": "271-11",
-      "street": "UNION TPKE",
+      "street": "UNION TURNPIKE",
       "boro": "Queens",
       "zip": "11040",
       "lat": 40.751867722884,
       "lon": -73.702815096973
     },
-    "resolved": null,
-    "status": "unverified",
-    "matchType": null,
-    "resolvedVia": null,
-    "distanceFromDohmh": null,
-    "reason": "no_acceptable_match",
+    "resolved": {
+      "lat": 40.7519149,
+      "lon": -73.7026422,
+      "neighbourhood": "Kew Gardens Hills"
+    },
+    "status": "verified",
+    "matchType": "house+street",
+    "resolvedVia": "no-hyphen",
+    "distanceFromDohmh": 15.479933805556826,
+    "reason": null,
     "error": null,
-    "score": null,
-    "reasons": null,
-    "resolvedAt": "2026-11-26T18:07:46.140Z",
-    "addressHash": "50195086|27111|union tpke|queens|11040",
+    "score": 129.84520066194443,
+    "reasons": [],
+    "resolvedAt": "2026-11-28T16:38:10.666Z",
+    "addressHash": "50195086|27111|union turnpike|queens|11040",
     "resolverVersion": 1
   },
   "50195089": {
@@ -765698,27 +765710,23 @@
     "camis": "50195257",
     "dohmh": {
       "building": "1890",
-      "street": "ADAM CLAYTON POWELL JR BLVD",
+      "street": "ADAM CLAYTON POWELL JR BOULEVARD",
       "boro": "Manhattan",
-      "zip": "10026",
-      "lat": 40.802246980669,
-      "lon": -73.953242398211
+      "zip": "",
+      "lat": 0,
+      "lon": 0
     },
-    "resolved": {
-      "lat": 40.802512,
-      "lon": -73.953377,
-      "neighbourhood": "Central Harlem"
-    },
-    "status": "verified",
-    "matchType": "house+street",
-    "resolvedVia": "hyphenated",
-    "distanceFromDohmh": 31.571657240496933,
-    "reason": null,
+    "resolved": null,
+    "status": "unverified",
+    "matchType": null,
+    "resolvedVia": null,
+    "distanceFromDohmh": null,
+    "reason": "no_acceptable_match",
     "error": null,
-    "score": 129.68428342759503,
-    "reasons": [],
-    "resolvedAt": "2026-11-27T17:52:05.413Z",
-    "addressHash": "50195257|1890|adam clayton powell jr boulevard|manhattan|10026",
+    "score": null,
+    "reasons": null,
+    "resolvedAt": "2026-11-28T16:38:12.001Z",
+    "addressHash": "50195257|1890|adam clayton powell jr boulevard|manhattan|",
     "resolverVersion": 1
   },
   "50195258": {
